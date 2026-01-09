@@ -1,0 +1,17 @@
+{
+  "description": "Example hooks demonstrating event-driven automation",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/pre-write-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
