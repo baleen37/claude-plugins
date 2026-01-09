@@ -4,11 +4,11 @@
   "description": "Example plugin demonstrating all Claude Code plugin component types",
   "version": "1.0.0",
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "jito",
+    "email": "git@baleen.me"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/claude-plugin-boilerplate",
-  "repository": "https://github.com/YOUR_USERNAME/claude-plugin-boilerplate",
+  "homepage": "https://github.com/jito/claude-plugin-boilerplate",
+  "repository": "https://github.com/jito/claude-plugin-boilerplate",
   "license": "MIT",
   "keywords": ["claude-code", "plugin", "boilerplate", "example"]
 }

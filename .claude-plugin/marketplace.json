@@ -3,8 +3,8 @@
   "name": "claude-plugin-boilerplate",
   "description": "Standard boilerplate for creating Claude Code plugins with testing, CI/CD, and validation",
   "owner": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "jito",
+    "email": "git@baleen.me"
   },
   "plugins": [
     {
@@ -12,12 +12,25 @@
       "description": "Example plugin demonstrating all component types",
       "version": "1.0.0",
       "author": {
-        "name": "Your Name",
-        "email": "your.email@example.com"
+        "name": "jito",
+        "email": "git@baleen.me"
       },
       "source": "./plugins/example-plugin",
       "category": "development",
       "tags": ["boilerplate", "example", "template"],
+      "strict": false
+    },
+    {
+      "name": "ralph-loop",
+      "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
+      "version": "1.0.0",
+      "author": {
+        "name": "Anthropic",
+        "email": "support@anthropic.com"
+      },
+      "source": "./plugins/ralph-loop",
+      "category": "development",
+      "tags": ["automation", "iteration", "loop", "ai"],
       "strict": false
     }
   ]
