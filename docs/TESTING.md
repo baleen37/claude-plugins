@@ -1,6 +1,12 @@
 # Testing Guide
 
-## Running Validation
+## Running Tests
+
+### All Tests
+
+```bash
+bash tests/run-tests.sh
+```
 
 ### All Validations
 

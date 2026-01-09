@@ -12,14 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install BATS and helpers
-        run: |
-          git clone --depth 1 --branch v1.10.0 https://github.com/bats-core/bats-core.git /tmp/bats
-          sudo /tmp/bats/install.sh /usr/local
-          mkdir -p tests/helpers
-          git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-support.git tests/helpers/bats-support
-          git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-assert.git tests/helpers/bats-assert
-
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -27,3 +19,6 @@ jobs:
 
       - name: Run validation
         run: bash scripts/validate-plugin.sh
+
+      - name: Run tests
+        run: bash tests/run-tests.sh

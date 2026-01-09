@@ -40,6 +40,9 @@ cp -r plugins/example-plugin plugins/my-plugin
 ### Running Validation
 
 ```bash
+# Run tests
+bash tests/run-tests.sh
+
 # Validate all plugins
 bash scripts/validate-plugin.sh
 
@@ -63,6 +66,7 @@ claude-plugin-boilerplate/
 │       └── hooks/
 ├── .github/workflows/            # CI/CD workflows
 ├── scripts/                      # Validation scripts
+├── tests/                        # Test scripts
 └── schemas/                      # JSON schemas
 ```
 
