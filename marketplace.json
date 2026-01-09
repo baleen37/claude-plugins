@@ -1,0 +1,20 @@
+{
+  "name": "baleen37-plugins",
+  "description": "Personal Claude Code plugins collection",
+  "owner": {
+    "name": "baleen37",
+    "email": "git@baleen.me"
+  },
+  "plugins": [
+    {
+      "name": "dotfiles-plugin",
+      "description": "Personal Claude Code configuration - commands, skills, agents, and hooks for dotfiles management",
+      "version": "1.0.0",
+      "author": "baleen37",
+      "source": "./plugins/dotfiles-plugin",
+      "category": "development",
+      "tags": ["dotfiles", "git", "nix", "workflow", "ci"],
+      "strict": false
+    }
+  ]
+}

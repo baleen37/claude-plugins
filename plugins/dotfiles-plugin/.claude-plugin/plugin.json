@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "dotfiles-plugin",
+  "description": "Personal Claude Code configuration - commands, skills, agents, and hooks for dotfiles management",
+  "version": "1.0.0",
+  "author": {
+    "name": "baleen37",
+    "email": "git@baleen.me"
+  },
+  "homepage": "https://github.com/baleen37/dotfiles",
+  "repository": "https://github.com/baleen37/dotfiles",
+  "license": "MIT",
+  "keywords": ["claude-code", "dotfiles", "workflow", "git", "nix"]
+}
