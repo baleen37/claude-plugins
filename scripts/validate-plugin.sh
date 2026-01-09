@@ -5,6 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=== Claude Plugin Validation ==="
 
+# Validate structure
+echo "Validating plugin structure..."
+bash "$SCRIPT_DIR/validate-structure.sh" || exit 1
+
 # Validate JSON files
 echo "Validating JSON files..."
 bash "$SCRIPT_DIR/validate-json.sh" || exit 1

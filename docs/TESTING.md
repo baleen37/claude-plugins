@@ -1,46 +1,30 @@
 # Testing Guide
 
-## Running Tests
+## Running Validation
 
-### All Tests
+### All Validations
 
 ```bash
-bats tests/
+bash scripts/validate-plugin.sh
 ```
 
-### Specific Test File
+### Individual Validations
 
 ```bash
-bats tests/test-plugin-structure.bats
-```
+# Structure validation
+bash scripts/validate-structure.sh
 
-### Specific Test
+# JSON validation
+bash scripts/validate-json.sh
 
-```bash
-bats tests/test-plugin-structure.bats::test_name
-```
+# YAML frontmatter validation
+python3 scripts/validate-frontmatter.py
 
-## Test Structure
+# Naming conventions
+bash scripts/validate-naming.sh
 
-- `test-plugin-structure.bats`: Directory and file structure
-- `test-json-validation.bats`: JSON schema validation
-- `test-frontmatter.bats`: YAML frontmatter validation
-
-## Writing Tests
-
-Create new test file:
-
-```bash
-bats new tests/test-my-feature.bats
-```
-
-Example test:
-
-```bash
-@test "My feature works" {
-    run bash scripts/validate-plugin.sh
-    assert_success
-}
+# Path validation
+bash scripts/validate-paths.sh
 ```
 
 ## Validation Scripts
@@ -48,14 +32,15 @@ Example test:
 | Script | Purpose |
 |--------|---------|
 | `validate-plugin.sh` | Run all validations |
-| `validate-json.sh` | Validate JSON files |
+| `validate-structure.sh` | Validate plugin structure and required files |
+| `validate-json.sh` | Validate JSON files and required fields |
 | `validate-frontmatter.py` | Validate YAML frontmatter |
 | `validate-naming.sh` | Check naming conventions |
 | `validate-paths.sh` | Check for hardcoded paths |
 
 ## CI/CD
 
-Tests run automatically on:
+Validations run automatically on:
 - Pull requests
 - Push to main branch
 - Releases

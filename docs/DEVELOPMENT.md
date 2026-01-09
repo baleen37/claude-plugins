@@ -94,5 +94,4 @@ Run before committing:
 
 ```bash
 bash scripts/validate-plugin.sh
-bats tests/
 ```

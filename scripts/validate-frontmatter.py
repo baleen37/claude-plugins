@@ -24,17 +24,39 @@ def validate_skill_file(skill_file):
 
     return True
 
-def main():
-    skill_files = list(Path('.').rglob('SKILL.md'))
-    if not skill_files:
-        print("No SKILL.md files found")
-        return 0
+def validate_md_file(md_file):
+    """Command/Agent 파일의 frontmatter 구분자 검증"""
+    with open(md_file) as f:
+        content = f.read()
 
+    frontmatter = extract_frontmatter(content)
+    if not frontmatter:
+        print(f"❌ No frontmatter: {md_file}")
+        return False
+
+    return True
+
+def main():
+    # SKILL.md 파일 검증
+    skill_files = list(Path('.').rglob('SKILL.md'))
     for skill_file in skill_files:
         if not validate_skill_file(skill_file):
             return 1
 
-    print(f"✓ All {len(skill_files)} SKILL.md files valid")
+    # Command 파일 검증
+    command_files = list(Path('plugins').rglob('commands/**/*.md'))
+    for command_file in command_files:
+        if not validate_md_file(command_file):
+            return 1
+
+    # Agent 파일 검증
+    agent_files = list(Path('plugins').rglob('agents/**/*.md'))
+    for agent_file in agent_files:
+        if not validate_md_file(agent_file):
+            return 1
+
+    total = len(skill_files) + len(command_files) + len(agent_files)
+    print(f"✓ All {total} markdown files with frontmatter valid")
     return 0
 
 if __name__ == '__main__':

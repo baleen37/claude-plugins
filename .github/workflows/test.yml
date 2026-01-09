@@ -20,5 +20,10 @@ jobs:
           git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-support.git tests/helpers/bats-support
           git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-assert.git tests/helpers/bats-assert
 
-      - name: Run tests
-        run: bats tests/
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq python3
+
+      - name: Run validation
+        run: bash scripts/validate-plugin.sh

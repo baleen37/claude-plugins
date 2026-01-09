@@ -6,7 +6,7 @@ repos:
       - id: check-json
       - id: end-of-file-fixer
       - id: trailing-whitespace
-        exclude: ^(tests/|\.bats$)
+        exclude: ^tests/
 
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.10.0.1
