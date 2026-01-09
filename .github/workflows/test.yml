@@ -11,13 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Install BATS
+      - name: Install BATS and helpers
         run: |
           git clone --depth 1 --branch v1.10.0 https://github.com/bats-core/bats-core.git /tmp/bats
           sudo /tmp/bats/install.sh /usr/local
+          mkdir -p tests/helpers
+          git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-support.git tests/helpers/bats-support
+          git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-assert.git tests/helpers/bats-assert
 
       - name: Run tests
         run: bats tests/
