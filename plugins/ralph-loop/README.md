@@ -45,6 +45,39 @@ Claude will:
 - Iterate until all requirements met
 - Output the completion promise when done
 
+## Multi-Session Support
+
+Ralph Loop now supports multiple concurrent sessions. Each session maintains its own independent loop state.
+
+### State File Location
+
+Loop state is stored in: `~/.claude/ralph-loop/ralph-loop-{session_id}.local.md`
+
+- **Session ID**: Automatically assigned by Claude Code
+- **Isolation**: Each session's loop is completely independent
+- **Concurrent Execution**: Run different Ralph loops in different terminal sessions simultaneously
+
+### Example
+
+```bash
+# Terminal 1
+/ralph-loop "Fix auth bug" --max-iterations 10
+
+# Terminal 2 (simultaneously)
+/ralph-loop "Refactor cache" --max-iterations 20
+
+# Each terminal runs its own loop independently
+```
+
+### Canceling a Loop
+
+Each session can only cancel its own loop:
+
+```bash
+/cancel-ralph
+# Cancels only the current session's loop
+```
+
 ## Commands
 
 ### /ralph-loop
