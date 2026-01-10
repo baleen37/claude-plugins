@@ -31,6 +31,9 @@ export default {
       ],
     ],
     'subject-case': [0],
+    // Disable max line length for release commits (they contain long URLs)
+    'body-max-line-length': [0],
+    'footer-max-line-length': [0],
   },
   parserPreset: {
     parserOpts: {
