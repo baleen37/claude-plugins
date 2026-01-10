@@ -12,21 +12,42 @@
       "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
       "source": "./plugins/ralph-loop",
       "category": "development",
-      "tags": ["automation", "iteration", "loop", "ai"]
+      "tags": [
+        "automation",
+        "iteration",
+        "loop",
+        "ai"
+      ],
+      "version": "1.1.0"
     },
     {
       "name": "git-guard",
       "description": "Git workflow protection hooks - prevents commit and PR bypasses, enforces pre-commit checks",
       "source": "./plugins/git-guard",
       "category": "development",
-      "tags": ["git", "hooks", "pre-commit", "pr", "security"]
+      "tags": [
+        "git",
+        "hooks",
+        "pre-commit",
+        "pr",
+        "security"
+      ],
+      "version": "1.1.0"
     },
     {
       "name": "me",
       "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, and development automation",
       "source": "./plugins/me",
       "category": "development",
-      "tags": ["workflow", "automation", "tdd", "git", "code-review", "debugging"]
+      "tags": [
+        "workflow",
+        "automation",
+        "tdd",
+        "git",
+        "code-review",
+        "debugging"
+      ],
+      "version": "1.1.0"
     }
   ]
 }
