@@ -125,6 +125,12 @@ if [[ -z "$PROMPT" ]]; then
     exit 1
 fi
 
+# Source session env file to get RALPH_SESSION_ID
+SESSION_ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
+if [[ -f "$SESSION_ENV_FILE" ]]; then
+    source "$SESSION_ENV_FILE"
+fi
+
 # Validate RALPH_SESSION_ID is available
 if [[ -z "${RALPH_SESSION_ID:-}" ]]; then
     echo "Error: RALPH_SESSION_ID environment variable not found" >&2

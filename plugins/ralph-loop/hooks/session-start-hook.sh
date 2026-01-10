@@ -19,24 +19,29 @@ if [[ ! "$SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
     exit 0
 fi
 
-# Validate CLAUDE_ENV_FILE exists and is writable
-if [[ -z "${CLAUDE_ENV_FILE:-}" ]]; then
-    echo "Warning: CLAUDE_ENV_FILE environment variable not set" >&2
+# Fallback to /tmp if CLAUDE_ENV_FILE is not set
+ENV_FILE="${CLAUDE_ENV_FILE:-}"
+if [[ -z "$ENV_FILE" ]]; then
+    # Use /tmp as fallback when CLAUDE_ENV_FILE is not set
+    mkdir -p ~/.claude/ralph-loop
+    ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
+fi
+
+# Validate ENV_FILE exists and is writable
+if [[ ! -f "$ENV_FILE" ]]; then
+    touch "$ENV_FILE" 2>/dev/null || {
+        echo "Warning: Cannot create ENV_FILE: $ENV_FILE" >&2
+        exit 0
+    }
+fi
+
+if [[ ! -w "$ENV_FILE" ]]; then
+    echo "Warning: ENV_FILE is not writable: $ENV_FILE" >&2
     exit 0
 fi
 
-if [[ ! -f "$CLAUDE_ENV_FILE" ]]; then
-    echo "Warning: CLAUDE_ENV_FILE does not exist: $CLAUDE_ENV_FILE" >&2
-    exit 0
-fi
-
-if [[ ! -w "$CLAUDE_ENV_FILE" ]]; then
-    echo "Warning: CLAUDE_ENV_FILE is not writable: $CLAUDE_ENV_FILE" >&2
-    exit 0
-fi
-
-# Store in CLAUDE_ENV_FILE for use in slash commands
+# Store in ENV_FILE for use in slash commands
 # Safe to use unquoted since we validated SESSION_ID contains only safe characters
-echo "export RALPH_SESSION_ID=$SESSION_ID" >> "$CLAUDE_ENV_FILE"
+echo "export RALPH_SESSION_ID=$SESSION_ID" >> "$ENV_FILE"
 
 exit 0
