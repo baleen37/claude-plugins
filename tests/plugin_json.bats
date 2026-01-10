@@ -3,43 +3,69 @@
 
 load helpers/bats_helper
 
-PLUGIN_JSON="${PROJECT_ROOT}/plugins/example-plugin/.claude-plugin/plugin.json"
-
 setup() {
     ensure_jq
 }
 
 @test "plugin.json exists" {
-    [ -f "$PLUGIN_JSON" ]
+    local found=0
+
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            found=$((found + 1))
+        fi
+    done
+
+    [ "$found" -gt 0 ]
 }
 
 @test "plugin.json is valid JSON" {
-    validate_json "$PLUGIN_JSON"
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            validate_json "$manifest"
+        fi
+    done
 }
 
 @test "plugin.json has required fields" {
-    json_has_field "$PLUGIN_JSON" "name"
-    json_has_field "$PLUGIN_JSON" "description"
-    json_has_field "$PLUGIN_JSON" "author"
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            json_has_field "$manifest" "name"
+            json_has_field "$manifest" "description"
+            json_has_field "$manifest" "author"
+        fi
+    done
 }
 
 @test "plugin.json name follows naming convention" {
-    name=$(json_get "$PLUGIN_JSON" "name")
-    is_valid_plugin_name "$name"
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            name=$(json_get "$manifest" "name")
+            is_valid_plugin_name "$name"
+        fi
+    done
 }
 
 @test "plugin.json fields are not empty" {
-    name=$(json_get "$PLUGIN_JSON" "name")
-    description=$(json_get "$PLUGIN_JSON" "description")
-    author=$(json_get "$PLUGIN_JSON" "author")
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            name=$(json_get "$manifest" "name")
+            description=$(json_get "$manifest" "description")
+            author=$(json_get "$manifest" "author")
 
-    [ -n "$name" ]
-    [ -n "$description" ]
-    [ -n "$author" ]
+            [ -n "$name" ]
+            [ -n "$description" ]
+            [ -n "$author" ]
+        fi
+    done
 }
 
 @test "plugin.json uses only allowed fields" {
-    validate_plugin_manifest_fields "$PLUGIN_JSON"
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            validate_plugin_manifest_fields "$manifest"
+        fi
+    done
 }
 
 # Test all plugin manifests in the repository

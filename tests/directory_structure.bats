@@ -7,13 +7,23 @@ load helpers/bats_helper
     [ -d "${PROJECT_ROOT}/.claude-plugin" ]
     [ -d "${PROJECT_ROOT}/plugins" ]
 
-    # Check example plugin structure
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin" ]
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin/.claude-plugin" ]
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin/commands" ]
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin/agents" ]
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin/skills" ]
-    [ -d "${PROJECT_ROOT}/plugins/example-plugin/hooks" ]
+    # Check each plugin has required .claude-plugin directory
+    for plugin_dir in "${PROJECT_ROOT}/plugins"/*; do
+        if [ -d "$plugin_dir" ]; then
+            plugin_name=$(basename "$plugin_dir")
+            [ -d "${plugin_dir}/.claude-plugin" ]
+        fi
+    done
+}
+
+@test "Each plugin has valid plugin.json" {
+    for plugin_dir in "${PROJECT_ROOT}/plugins"/*; do
+        if [ -d "$plugin_dir" ]; then
+            plugin_json="${plugin_dir}/.claude-plugin/plugin.json"
+            [ -f "$plugin_json" ]
+            [ -s "$plugin_json" ]
+        fi
+    done
 }
 
 @test "Plugin directories follow naming convention" {
