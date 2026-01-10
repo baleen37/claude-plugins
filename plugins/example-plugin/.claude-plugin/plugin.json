@@ -1,8 +1,0 @@
-{
-  "name": "example-plugin",
-  "description": "Example plugin demonstrating all Claude Code plugin component types",
-  "author": {
-    "name": "jito",
-    "email": "git@baleen.me"
-  }
-}
