@@ -1,39 +1,41 @@
 #!/usr/bin/env bash
-# Claude Code Hook: Git Command Validator
+# Git Guard Hook: Git Command Validator
 # Prevents --no-verify usage in git commands
 # Reads JSON input from stdin for PreToolUse hooks
+
+set -euo pipefail
 
 validate_git_command() {
     local command="$1"
 
     # Check for --no-verify in git commit commands
     if echo "$command" | grep -qE "git\s+commit.*--no-verify"; then
-        echo "❌ --no-verify is not allowed in this repository" >&2
-        echo "💡 Please use 'git commit' without --no-verify" >&2
-        echo "🔒 All commits must pass quality checks" >&2
+        echo "[ERROR] --no-verify is not allowed in this repository" >&2
+        echo "[INFO] Please use 'git commit' without --no-verify" >&2
+        echo "[INFO] All commits must pass quality checks" >&2
         return 2  # Exit code 2 blocks the tool execution
     fi
 
     # Check for other common bypass patterns
     if echo "$command" | grep -qE "git\s+.*skip.*hooks"; then
-        echo "❌ Skipping hooks is not allowed" >&2
+        echo "[ERROR] Skipping hooks is not allowed" >&2
         return 2
     fi
 
     if echo "$command" | grep -qE "git\s+.*--no-.*hook"; then
-        echo "❌ Hook bypass is not allowed" >&2
+        echo "[ERROR] Hook bypass is not allowed" >&2
         return 2
     fi
 
     # Check for HUSKY=0 environment variable usage
     if echo "$command" | grep -qE "HUSKY=0.*git"; then
-        echo "❌ HUSKY=0 bypass is not allowed" >&2
+        echo "[ERROR] HUSKY=0 bypass is not allowed" >&2
         return 2
     fi
 
     # Check for SKIP_HOOKS usage
     if echo "$command" | grep -qE "SKIP_HOOKS=.*git"; then
-        echo "❌ SKIP_HOOKS bypass is not allowed" >&2
+        echo "[ERROR] SKIP_HOOKS bypass is not allowed" >&2
         return 2
     fi
 

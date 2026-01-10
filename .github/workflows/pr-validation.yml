@@ -26,12 +26,12 @@ jobs:
       - name: Install bats-assert
         run: |
           git clone https://github.com/bats-core/bats-assert.git
-          sudo bats-assert/install.sh /usr/local/lib/bats
+          sudo bats-assert/install.sh /usr/local
 
       - name: Install bats-support
         run: |
           git clone https://github.com/bats-core/bats-support.git
-          sudo bats-support/install.sh /usr/local/lib/bats
+          sudo bats-support/install.sh /usr/local
 
       - name: Run Bats tests
         run: bats tests/

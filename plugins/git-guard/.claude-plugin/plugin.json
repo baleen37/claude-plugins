@@ -1,0 +1,9 @@
+{
+  "name": "git-guard",
+  "version": "1.0.0",
+  "description": "Git workflow protection hooks - prevents commit and PR bypasses",
+  "author": {
+    "name": "baleen37",
+    "email": "git@baleen.me"
+  }
+}

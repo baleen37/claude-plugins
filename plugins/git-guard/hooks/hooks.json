@@ -1,0 +1,14 @@
+{
+  "$schema": "../../schemas/hooks.json",
+  "hooks": [
+    {
+      "name": "commit-guard",
+      "description": "Blocks git commands that bypass hooks (--no-verify, HUSKY=0, etc.)",
+      "events": ["PreToolUse"],
+      "toolFilter": {
+        "name": "Bash"
+      },
+      "command": "commit-guard.sh"
+    }
+  ]
+}

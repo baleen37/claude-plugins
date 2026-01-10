@@ -12,7 +12,7 @@
       "description": "Example plugin demonstrating all component types",
       "version": "1.0.0",
       "author": {
-        "name": "jito",
+        "name": "baleen37",
         "email": "git@baleen.me"
       },
       "source": "./plugins/example-plugin",
@@ -25,12 +25,25 @@
       "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
       "version": "1.0.0",
       "author": {
-        "name": "Anthropic",
-        "email": "support@anthropic.com"
+        "name": "baleen37",
+        "email": "git@baleen.me"
       },
       "source": "./plugins/ralph-loop",
       "category": "development",
       "tags": ["automation", "iteration", "loop", "ai"],
+      "strict": false
+    },
+    {
+      "name": "git-guard",
+      "description": "Git workflow protection hooks - prevents commit and PR bypasses, enforces pre-commit checks",
+      "version": "1.0.0",
+      "author": {
+        "name": "baleen37",
+        "email": "git@baleen.me"
+      },
+      "source": "./plugins/git-guard",
+      "category": "development",
+      "tags": ["git", "hooks", "pre-commit", "pr", "security"],
       "strict": false
     },
     {
