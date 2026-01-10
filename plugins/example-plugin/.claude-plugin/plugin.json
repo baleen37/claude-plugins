@@ -1,14 +1,8 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "example-plugin",
   "description": "Example plugin demonstrating all Claude Code plugin component types",
-  "version": "1.0.0",
   "author": {
     "name": "jito",
     "email": "git@baleen.me"
-  },
-  "homepage": "https://github.com/jito/claude-plugin-boilerplate",
-  "repository": "https://github.com/jito/claude-plugin-boilerplate",
-  "license": "MIT",
-  "keywords": ["claude-code", "plugin", "boilerplate", "example"]
+  }
 }

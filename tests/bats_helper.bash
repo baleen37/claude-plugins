@@ -77,3 +77,49 @@ count_files() {
     local base_dir="${2:-.}"
     find "$base_dir" -name "$pattern" -type f 2>/dev/null | wc -l | tr -d ' '
 }
+
+# Helper: Check if JSON field is allowed in plugin.json
+# Claude Code only supports: name, description, author, version, license, homepage, repository, keywords
+json_field_is_allowed() {
+    local field="$1"
+    local allowed_fields="name description author version license homepage repository keywords"
+    [[ " $allowed_fields " =~ " $field " ]]
+}
+
+# Helper: Check if author field is allowed (author.name, author.email)
+json_author_field_is_allowed() {
+    local field="$1"
+    local allowed_author_fields="name email"
+    [[ " $allowed_author_fields " =~ " $field " ]]
+}
+
+# Helper: Validate plugin.json has only allowed fields
+validate_plugin_manifest_fields() {
+    local file="$1"
+    local all_fields
+    all_fields=$($JQ_BIN -r 'keys_unsorted[]' "$file" 2>/dev/null)
+
+    while IFS= read -r field; do
+        if ! json_field_is_allowed "$field"; then
+            echo "Error: Invalid field '$field' in $file"
+            echo "Allowed fields: name, description, author, version, license, homepage, repository, keywords"
+            return 1
+        fi
+    done <<< "$all_fields"
+
+    # Check nested author fields
+    if $JQ_BIN -e '.author' "$file" &>/dev/null; then
+        local author_fields
+        author_fields=$($JQ_BIN -r '.author | keys_unsorted[]' "$file" 2>/dev/null)
+
+        while IFS= read -r field; do
+            if ! json_author_field_is_allowed "$field"; then
+                echo "Error: Invalid author field 'author.$field' in $file"
+                echo "Allowed author fields: name, email"
+                return 1
+            fi
+        done <<< "$author_fields"
+    fi
+
+    return 0
+}

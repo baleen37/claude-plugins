@@ -20,7 +20,6 @@ setup() {
 @test "plugin.json has required fields" {
     json_has_field "$PLUGIN_JSON" "name"
     json_has_field "$PLUGIN_JSON" "description"
-    json_has_field "$PLUGIN_JSON" "version"
     json_has_field "$PLUGIN_JSON" "author"
 }
 
@@ -32,11 +31,28 @@ setup() {
 @test "plugin.json fields are not empty" {
     name=$(json_get "$PLUGIN_JSON" "name")
     description=$(json_get "$PLUGIN_JSON" "description")
-    version=$(json_get "$PLUGIN_JSON" "version")
     author=$(json_get "$PLUGIN_JSON" "author")
 
     [ -n "$name" ]
     [ -n "$description" ]
-    [ -n "$version" ]
     [ -n "$author" ]
+}
+
+@test "plugin.json uses only allowed fields" {
+    validate_plugin_manifest_fields "$PLUGIN_JSON"
+}
+
+# Test all plugin manifests in the repository
+@test "all plugin.json files use only allowed fields" {
+    local failed=0
+
+    for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
+        if [ -f "$manifest" ]; then
+            if ! validate_plugin_manifest_fields "$manifest"; then
+                ((failed++))
+            fi
+        fi
+    done
+
+    [ "$failed" -eq 0 ]
 }
