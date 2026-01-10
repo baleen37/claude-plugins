@@ -1,29 +1,66 @@
-# Claude Plugin Boilerplate
+# Baleen Claude Plugins
 
-Standard boilerplate for creating Claude Code plugins with testing, CI/CD, and validation utilities.
+Claude Code plugin collection by baleen, featuring useful tools for AI-assisted development.
 
-## Features
+## Available Plugins
 
-- Standard Structure: Follows anthropics/claude-plugins-official patterns
-- Validation Scripts: JSON, YAML, naming, and path validation
-- Structure Validation: Plugin structure and component verification
-- CI/CD: GitHub Actions workflows for PR validation and releases
-- Pre-commit Hooks: Automated quality checks
-- Example Plugin: Demonstrates all component types
+### Ralph Loop
+Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops in Claude Code.
+
+- **Description**: Continuous self-referential AI loops for interactive iterative development
+- **Commands**: `/ralph-loop`, `/cancel-ralph`, `/help`
+- **Use Case**: Well-defined tasks requiring iteration and refinement
+
+### Example Plugin
+Demonstration plugin showing all component types for creating your own plugins.
 
 ## Quick Start
 
-### Installation
+### Installation from GitHub
 
 ```bash
-# Clone the repository
-git clone https://github.com/jito/claude-plugin-boilerplate.git
-cd claude-plugin-boilerplate
+# Add this repository as a marketplace
+claude plugin marketplace add https://github.com/baleen37/claude-plugins
 
-# Install as a marketplace
-/plugin marketplace add .
-/plugin install example-plugin@claude-plugin-boilerplate
+# Install a plugin
+claude plugin install ralph-loop@baleen-plugins
 ```
+
+### Using Ralph Loop
+
+```bash
+# Start Claude Code with ralph-loop
+claude
+
+# In Claude Code, start a loop
+/ralph-loop "Build a REST API for todos with tests" --max-iterations 20 --completion-promise "COMPLETE"
+
+# Cancel if needed
+/cancel-ralph
+```
+
+## Project Structure
+
+```
+claude-plugins/
+├── .claude-plugin/
+│   └── marketplace.json          # Marketplace configuration (baleen-plugins)
+├── plugins/
+│   ├── ralph-loop/               # Ralph Wiggum iterative development
+│   │   ├── commands/             # Slash commands
+│   │   ├── hooks/                # SessionStart, Stop hooks
+│   │   └── scripts/              # Setup and cancel scripts
+│   └── example-plugin/           # Plugin template
+│       ├── commands/
+│       ├── agents/
+│       ├── skills/
+│       └── hooks/
+├── .github/workflows/            # CI/CD workflows
+├── scripts/                      # Validation scripts
+└── tests/                        # Test scripts
+```
+
+## Development
 
 ### Creating Your Own Plugin
 
@@ -50,47 +87,14 @@ bash scripts/validate-plugin.sh
 pre-commit run --all-files
 ```
 
-## Project Structure
+## Ralph Loop Philosophy
 
-```
-claude-plugin-boilerplate/
-├── .claude-plugin/
-│   └── marketplace.json          # Marketplace configuration
-├── plugins/
-│   └── example-plugin/           # Example plugin
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       ├── commands/
-│       ├── agents/
-│       ├── skills/
-│       └── hooks/
-├── .github/workflows/            # CI/CD workflows
-├── scripts/                      # Validation scripts
-├── tests/                        # Test scripts
-└── schemas/                      # JSON schemas
-```
+Ralph embodies several key principles:
 
-## Component Types
-
-### Commands (`commands/*.md`)
-User-invoked slash commands with argument handling.
-
-### Agents (`agents/*.md`)
-Autonomous specialist agents with specific tools.
-
-### Skills (`skills/*/SKILL.md`)
-Context-aware guidance that auto-activates.
-
-### Hooks (`hooks/hooks.json`)
-Event-driven automation scripts.
-
-## Development
-
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed development guidelines.
-
-## Testing
-
-See [docs/TESTING.md](docs/TESTING.md) for testing documentation.
+1. **Iteration > Perfection**: Don't aim for perfect on first try. Let the loop refine the work.
+2. **Failures Are Data**: "Deterministically bad" means failures are predictable and informative.
+3. **Operator Skill Matters**: Success depends on writing good prompts, not just having a good model.
+4. **Persistence Wins**: Keep trying until success.
 
 ## License
 
