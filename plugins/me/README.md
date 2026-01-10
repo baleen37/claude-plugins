@@ -1,4 +1,4 @@
-# My Workflow
+# Me
 
 Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, and development automation.
 
@@ -37,7 +37,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ```bash
 /plugin marketplace add /path/to/claude-plugins
-/plugin install my-workflow@claude-plugins
+/plugin install me@claude-plugins
 ```
 
 ## Usage

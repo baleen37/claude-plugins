@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# My Workflow plugin-specific tests
+# Me plugin-specific tests
 # Basic validation is handled in tests/ directory
 
 load ../../../tests/helpers/bats_helper
 
-PLUGIN_DIR="${PROJECT_ROOT}/plugins/my-workflow"
+PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
 
-@test "my-workflow: has all workflow commands" {
+@test "me: has all workflow commands" {
     [ -f "${PLUGIN_DIR}/commands/debug.md" ]
     [ -f "${PLUGIN_DIR}/commands/research.md" ]
     [ -f "${PLUGIN_DIR}/commands/pickup.md" ]
@@ -14,16 +14,16 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/my-workflow"
     [ -f "${PLUGIN_DIR}/commands/sdd.md" ]
 }
 
-@test "my-workflow: code-reviewer agent exists with proper model" {
+@test "me: code-reviewer agent exists with proper model" {
     local agent_file="${PLUGIN_DIR}/agents/code-reviewer.md"
     [ -f "$agent_file" ]
     has_frontmatter_field "$agent_file" "model"
 }
 
-@test "my-workflow: git-exclude command exists" {
+@test "me: git-exclude command exists" {
     [ -f "${PLUGIN_DIR}/commands/git-exclude.md" ]
 }
 
-@test "my-workflow: web-browser skill exists" {
+@test "me: web-browser skill exists" {
     [ -f "${PLUGIN_DIR}/skills/web-browser/SKILL.md" ]
 }

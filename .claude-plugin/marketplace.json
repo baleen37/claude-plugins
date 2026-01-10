@@ -47,14 +47,14 @@
       "strict": false
     },
     {
-      "name": "my-workflow",
+      "name": "me",
       "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, and development automation",
       "version": "1.0.0",
       "author": {
         "name": "baleen37",
         "email": "git@baleen.me"
       },
-      "source": "./plugins/my-workflow",
+      "source": "./plugins/me",
       "category": "development",
       "tags": ["workflow", "automation", "tdd", "git", "code-review", "debugging"],
       "strict": false

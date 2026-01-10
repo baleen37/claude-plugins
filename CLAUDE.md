@@ -109,7 +109,7 @@ claude-plugins/
 │   │   ├── commands/                 # Slash commands
 │   │   ├── hooks/                    # Git hooks (pre-commit, pre-push)
 │   │   └── .claude-plugin/plugin.json
-│   └── my-workflow/                  # 개인용 개발 워크플로우 자동화
+│   └── me/                  # 개인용 개발 워크플로우 자동화
 ├── .github/workflows/                # CI/CD workflows
 ├── tests/                            # BATS 테스트
 ├── schemas/                          # JSON 스키마

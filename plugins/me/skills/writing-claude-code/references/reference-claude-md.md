@@ -47,7 +47,7 @@ AI assistant plugins for Claude Code CLI.
 ## Structure
 - `plugins/ralph-loop/` - Ralph Wiggum iterative development
 - `plugins/example-plugin/` - Plugin template
-- `plugins/my-workflow/` - Personal workflow automation
+- `plugins/me/` - Personal workflow automation
 
 ## Commands
 ```bash

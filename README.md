@@ -75,7 +75,7 @@ claude-plugins/
 │   │   ├── commands/             # Slash commands
 │   │   ├── hooks/                # Git hooks (pre-commit, pre-push)
 │   │   └── tests/                # BATS tests
-│   └── my-workflow/              # Personal workflow automation
+│   └── me/              # Personal workflow automation
 ├── .github/workflows/            # CI/CD workflows
 ├── tests/                        # BATS tests
 └── schemas/                      # JSON schemas
