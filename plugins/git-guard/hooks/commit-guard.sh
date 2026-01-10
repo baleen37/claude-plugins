@@ -5,38 +5,80 @@
 
 set -euo pipefail
 
+# Color codes for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly NC='\033[0m' # No Color
+
+# Block a command with error message
+block_command() {
+    local error_msg="$1"
+    local info_msg="${2:-}"
+
+    echo -e "${RED}[ERROR]${NC} $error_msg" >&2
+    if [ -n "$info_msg" ]; then
+        echo -e "${GREEN}[INFO]${NC} $info_msg" >&2
+    fi
+    return 2
+}
+
+# Check if command matches a pattern
+matches_pattern() {
+    local command="$1"
+    local pattern="$2"
+    echo "$command" | grep -qE "$pattern"
+}
+
 validate_git_command() {
     local command="$1"
 
     # Check for --no-verify in git commit commands
-    if echo "$command" | grep -qE "git\s+commit.*--no-verify"; then
-        echo "[ERROR] --no-verify is not allowed in this repository" >&2
-        echo "[INFO] Please use 'git commit' without --no-verify" >&2
-        echo "[INFO] All commits must pass quality checks" >&2
-        return 2  # Exit code 2 blocks the tool execution
+    if matches_pattern "$command" "git\s+commit.*--no-verify"; then
+        block_command "--no-verify is not allowed in this repository" \
+            "Please use 'git commit' without --no-verify. All commits must pass quality checks."
+        return $?
     fi
 
     # Check for other common bypass patterns
-    if echo "$command" | grep -qE "git\s+.*skip.*hooks"; then
-        echo "[ERROR] Skipping hooks is not allowed" >&2
-        return 2
+    if matches_pattern "$command" "git\s+.*skip.*hooks"; then
+        block_command "Skipping hooks is not allowed"
+        return $?
     fi
 
-    if echo "$command" | grep -qE "git\s+.*--no-.*hook"; then
-        echo "[ERROR] Hook bypass is not allowed" >&2
-        return 2
+    if matches_pattern "$command" "git\s+.*--no-.*hook"; then
+        block_command "Hook bypass is not allowed"
+        return $?
     fi
 
-    # Check for HUSKY=0 environment variable usage
-    if echo "$command" | grep -qE "HUSKY=0.*git"; then
-        echo "[ERROR] HUSKY=0 bypass is not allowed" >&2
-        return 2
+    # Check for environment variable bypasses
+    if matches_pattern "$command" "HUSKY=0.*git"; then
+        block_command "HUSKY=0 bypass is not allowed"
+        return $?
     fi
 
-    # Check for SKIP_HOOKS usage
-    if echo "$command" | grep -qE "SKIP_HOOKS=.*git"; then
-        echo "[ERROR] SKIP_HOOKS bypass is not allowed" >&2
-        return 2
+    if matches_pattern "$command" "SKIP_HOOKS=.*git"; then
+        block_command "SKIP_HOOKS bypass is not allowed"
+        return $?
+    fi
+
+    # Check for dangerous git commands that can bypass hooks
+    if matches_pattern "$command" "git\s+update-ref"; then
+        block_command "git update-ref is not allowed in this repository" \
+            "This command can bypass commit hooks."
+        return $?
+    fi
+
+    if matches_pattern "$command" "git\s+filter-branch"; then
+        block_command "git filter-branch is not allowed in this repository" \
+            "This command can rewrite history and bypass hooks."
+        return $?
+    fi
+
+    # Check for hooksPath modification (security risk)
+    if matches_pattern "$command" "git\s+config.*core\.hooksPath"; then
+        block_command "Modifying core.hooksPath is not allowed in this repository" \
+            "This can disable commit hooks."
+        return $?
     fi
 
     return 0

@@ -25,3 +25,75 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/git-guard"
     # Verify hook scripts are referenced
     grep -q "commit-guard.sh" "$hooks_json" || grep -q "pre-commit-guard.sh" "$hooks_json"
 }
+
+# commit-guard.sh functional tests
+@test "git-guard: commit-guard blocks --no-verify" {
+    local json_input='{"command":"git commit --no-verify -m \"test\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not allowed"* ]]
+}
+
+@test "git-guard: commit-guard blocks --no-verify with amend" {
+    local json_input='{"command":"git commit --amend --no-verify"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+}
+
+@test "git-guard: commit-guard blocks HUSKY=0" {
+    local json_input='{"command":"HUSKY=0 git commit -m \"test\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+}
+
+@test "git-guard: commit-guard blocks SKIP_HOOKS" {
+    local json_input='{"command":"SKIP_HOOKS=1 git commit -m \"test\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+}
+
+@test "git-guard: commit-guard allows normal git commit" {
+    local json_input='{"command":"git commit -m \"normal commit\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 0 ]
+}
+
+@test "git-guard: commit-guard blocks skip-hooks pattern" {
+    local json_input='{"command":"git commit --skip-hooks -m \"test\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+}
+
+@test "git-guard: commit-guard blocks --no-commit-hook" {
+    local json_input='{"command":"git commit --no-commit-hook -m \"test\"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+}
+
+# Additional security: dangerous git commands that can bypass hooks
+@test "git-guard: commit-guard blocks git update-ref" {
+    local json_input='{"command":"git update-ref HEAD <old-sha> <new-sha>"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not allowed"* ]]
+}
+
+@test "git-guard: commit-guard blocks git filter-branch" {
+    local json_input='{"command":"git filter-branch --force --index-filter ..."}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not allowed"* ]]
+}
+
+@test "git-guard: commit-guard blocks hooksPath modification" {
+    local json_input='{"command":"git config core.hooksPath /dev/null"}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not allowed"* ]]
+}
+
+@test "git-guard: commit-guard allows git config for non-hooks" {
+    local json_input='{"command":"git config user.name \"Test User\""}'
+    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    [ "$status" -eq 0 ]
+}
