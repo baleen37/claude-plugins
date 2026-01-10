@@ -101,12 +101,11 @@ LAST_OUTPUT=$(echo "$LAST_LINE" | jq -r '
     map(select(.type == "text")) |
     map(.text) |
     join("\n")
-' 2>&1)
+' 2>/dev/null)
 
 # Check if jq succeeded
-if [[ $? -ne 0 ]]; then
+if ! echo "$LAST_LINE" | jq -r '.message.content' >/dev/null 2>&1; then
     echo "⚠️ Ralph loop: Failed to parse assistant message JSON" >&2
-    echo " Error: $LAST_OUTPUT" >&2
     echo " This may indicate a transcript format issue" >&2
     echo " Ralph loop is stopping." >&2
     rm "$STATE_FILE"
