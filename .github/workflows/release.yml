@@ -36,9 +36,10 @@ jobs:
           sudo ./install.sh /usr/local
           cd ..
           git clone https://github.com/bats-core/bats-assert.git
-          sudo bats-assert/install.sh /usr/local
+          sudo mkdir -p /usr/local/lib/bats
+          sudo cp -r bats-assert /usr/local/lib/bats/
           git clone https://github.com/bats-core/bats-support.git
-          sudo bats-support/install.sh /usr/local
+          sudo cp -r bats-support /usr/local/lib/bats/
           bats tests/
 
       - name: Release
