@@ -11,8 +11,18 @@ Implementation of the Ralph Wiggum technique for iterative, self-referential AI 
 - **Commands**: `/ralph-loop`, `/cancel-ralph`, `/help`
 - **Use Case**: Well-defined tasks requiring iteration and refinement
 
-### Example Plugin
-Demonstration plugin showing all component types for creating your own plugins.
+### Git Guard
+Git workflow protection hooks that prevent commit and PR bypasses.
+
+- **Description**: Prevents `--no-verify` commit bypass and enforces pre-commit checks
+- **Commands**: `/install-git-guard`, `/uninstall-git-guard`
+- **Use Case**: Teams requiring strict git workflow compliance
+
+### My Workflow
+Personal Claude Code configuration for development workflow automation.
+
+- **Description**: TDD, systematic debugging, git workflow, code review, and development automation
+- **Use Case**: Personal development environment setup
 
 ## Quick Start
 
@@ -24,6 +34,7 @@ claude plugin marketplace add https://github.com/baleen37/claude-plugins
 
 # Install a plugin
 claude plugin install ralph-loop@baleen-plugins
+claude plugin install git-guard@baleen-plugins
 ```
 
 ### Using Ralph Loop
@@ -39,6 +50,16 @@ claude
 /cancel-ralph
 ```
 
+### Using Git Guard
+
+```bash
+# Install Git Guard in current repository
+/install-git-guard
+
+# Uninstall Git Guard
+/uninstall-git-guard
+```
+
 ## Project Structure
 
 ```
@@ -50,11 +71,11 @@ claude-plugins/
 │   │   ├── commands/             # Slash commands
 │   │   ├── hooks/                # SessionStart, Stop hooks
 │   │   └── scripts/              # Setup and cancel scripts
-│   └── example-plugin/           # Plugin template
-│       ├── commands/
-│       ├── agents/
-│       ├── skills/
-│       └── hooks/
+│   ├── git-guard/                # Git workflow protection
+│   │   ├── commands/             # Slash commands
+│   │   ├── hooks/                # Git hooks (pre-commit, pre-push)
+│   │   └── tests/                # BATS tests
+│   └── my-workflow/              # Personal workflow automation
 ├── .github/workflows/            # CI/CD workflows
 ├── tests/                        # BATS tests
 └── schemas/                      # JSON schemas
@@ -64,15 +85,19 @@ claude-plugins/
 
 ### Creating Your Own Plugin
 
-1. Copy the example plugin:
+1. Reference existing plugins (e.g., `git-guard`) for structure:
+
+2. Create plugin directories:
 ```bash
-cp -r plugins/example-plugin plugins/my-plugin
+mkdir -p plugins/my-plugin/.claude-plugin
+mkdir -p plugins/my-plugin/commands
+mkdir -p plugins/my-plugin/hooks
 ```
 
-2. Update `plugins/my-plugin/.claude-plugin/plugin.json`
-3. Add your commands, agents, skills, or hooks
-4. Update `plugins/my-plugin/README.md`
-5. Add to `.claude-plugin/marketplace.json`
+3. Create `plugins/my-plugin/.claude-plugin/plugin.json`
+4. Add your commands, agents, skills, or hooks
+5. Update `plugins/my-plugin/README.md`
+6. Add to `.claude-plugin/marketplace.json`
 
 ### Running Tests
 

@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 주요 플러그인
 
 - **Ralph Loop**: Ralph Wiggum 기법을 구현한 반복적 자기 참조 AI 개발 루프
-- **Example Plugin**: 모든 컴포넌트 유형을 보여주는 데모 플러그인
+- **Git Guard**: Git 워크플로우 보호 후크 - 커밋 및 PR 우회 방지, pre-commit 검증 강제
 - **My Workflow**: 개인용 개발 워크플로우 자동화 (TDD, debugging, git, code review)
 
 ## Common Commands
@@ -79,6 +79,14 @@ Ralph Loop는 **Stop hook 후킹** 메커니즘을 사용합니다:
    - 세션별 상태 파일
    - `session-env.sh`에 세션 ID 저장
 
+### Git Guard 아키텍처
+
+Git Guard는 **Git hook 체이닝** 메커니즘을 사용합니다:
+
+1. **SessionStart hook**: 기존 hook들 백업 후 Git Guard hook으로 교체
+2. **pre-commit hook**: pre-commit 실패 시 `--no-verify` 우회를 방지
+3. **pre-push hook**: PR 없이 push하는 것을 방지 (선택적)
+
 ### 명명 규칙
 
 - **플러그인 이름**: `lowercase-with-hyphens` (소문자, 숫자, 하이픈만)
@@ -97,7 +105,10 @@ claude-plugins/
 │   │   ├── hooks/                    # SessionStart, Stop hooks
 │   │   ├── scripts/                  # Setup & cancel scripts
 │   │   └── .claude-plugin/plugin.json
-│   ├── example-plugin/               # 플러그인 템플릿
+│   ├── git-guard/                    # Git 워크플로우 보호
+│   │   ├── commands/                 # Slash commands
+│   │   ├── hooks/                    # Git hooks (pre-commit, pre-push)
+│   │   └── .claude-plugin/plugin.json
 │   └── my-workflow/                  # 개인용 개발 워크플로우 자동화
 ├── .github/workflows/                # CI/CD workflows
 ├── tests/                            # BATS 테스트
@@ -109,18 +120,22 @@ claude-plugins/
 
 ### 새 플러그인 추가
 
-1. `example-plugin`을 복사:
+1. `git-guard` 또는 기존 플러그인을 참고하여 구조 파악
+
+2. 새 플러그인 디렉토리 생성:
    ```bash
-   cp -r plugins/example-plugin plugins/my-plugin
+   mkdir -p plugins/my-plugin/.claude-plugin
+   mkdir -p plugins/my-plugin/commands
+   mkdir -p plugins/my-plugin/hooks
    ```
 
-2. `plugins/my-plugin/.claude-plugin/plugin.json` 업데이트
+3. `plugins/my-plugin/.claude-plugin/plugin.json` 작성
 
-3. commands, agents, skills, hooks 추가
+4. commands, agents, skills, hooks 추가
 
-4. `.claude-plugin/marketplace.json`에 플러그인 등록
+5. `.claude-plugin/marketplace.json`에 플러그인 등록
 
-5. 테스트 실행: `bats tests/`
+6. 테스트 실행: `bats tests/`
 
 ### 새 컴포넌트 추가
 
