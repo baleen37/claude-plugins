@@ -1,6 +1,7 @@
 ---
 name: commit-push-pr
 description: Handle complete git workflow (commit → push → PR) with parallel context gathering, --base enforcement, and merge conflict detection. Use when user asks to commit, push, create PR, mentions git workflow, or says "auto merge".
+user-invocable: true
 ---
 
 # Commit Push PR
