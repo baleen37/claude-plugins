@@ -1,6 +1,18 @@
 {
-  "description": "Git command validation hooks for enforcing quality standards",
+  "$schema": "../../schemas/hooks-schema.json",
+  "description": "Me plugin hooks - auto-installs sibling plugins from baleen-plugins marketplace",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-install-plugins.sh"
+          }
+        ]
+      }
+    ],
     "PreToolUse": []
   }
 }

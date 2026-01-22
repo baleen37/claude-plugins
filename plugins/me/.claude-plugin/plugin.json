@@ -1,7 +1,7 @@
 {
   "name": "me",
   "version": "1.4.0",
-  "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, and development automation",
+  "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, development automation, and auto-installs all baleen-plugins",
   "author": {
     "name": "baleen37",
     "email": "git@baleen.me"

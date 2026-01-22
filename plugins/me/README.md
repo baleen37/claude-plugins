@@ -32,6 +32,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 - **writing-claude-commands**: Command creation workflow
 
 ### Hooks
+- **auto-install-plugins**: Automatically installs all plugins from the baleen-plugins marketplace on session start
 - **git-command-validator**: Prevents --no-verify and hook bypasses in git commands
 
 ## Installation

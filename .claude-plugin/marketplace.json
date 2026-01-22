@@ -62,6 +62,18 @@
         "mcp"
       ],
       "version": "1.4.0"
+    },
+    {
+      "name": "strategic-compact",
+      "description": "Strategic context compaction suggestions for long Claude Code sessions",
+      "source": "./plugins/strategic-compact",
+      "category": "development",
+      "tags": [
+        "workflow",
+        "context-management",
+        "hooks"
+      ],
+      "version": "1.4.0"
     }
   ]
 }

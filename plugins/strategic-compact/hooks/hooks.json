@@ -1,0 +1,17 @@
+{
+  "$schema": "../../schemas/hooks-schema.json",
+  "description": "Strategic Compact hooks - suggests manual compaction at logical intervals",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/strategic-compact.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

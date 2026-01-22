@@ -1,0 +1,9 @@
+{
+  "name": "strategic-compact",
+  "version": "1.4.0",
+  "description": "Strategic context compaction suggestions for long Claude Code sessions",
+  "author": {
+    "name": "baleen37",
+    "email": "git@baleen.me"
+  }
+}
