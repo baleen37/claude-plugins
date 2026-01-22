@@ -3,6 +3,10 @@
 # Cancels the active Ralph loop for the current session
 set -euo pipefail
 
+# Source state library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/state.sh"
+
 # Source session env file to get RALPH_SESSION_ID
 SESSION_ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
 if [[ -f "$SESSION_ENV_FILE" ]]; then
@@ -19,7 +23,7 @@ if [[ -z "${RALPH_SESSION_ID:-}" ]]; then
 fi
 
 # Validate session_id format (security: prevent path traversal)
-if [[ ! "$RALPH_SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+if ! validate_session_id "$RALPH_SESSION_ID"; then
     echo "Error: RALPH_SESSION_ID contains invalid characters: $RALPH_SESSION_ID" >&2
     exit 1
 fi
@@ -34,7 +38,8 @@ if [[ ! -f "$STATE_FILE" ]]; then
 fi
 
 # Extract iteration number
-ITERATION=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE" | grep '^iteration:' | sed 's/iteration: *//')
+FRONTMATTER=$(parse_frontmatter "$STATE_FILE")
+ITERATION=$(get_iteration "$FRONTMATTER")
 
 # Remove state file
 rm "$STATE_FILE"

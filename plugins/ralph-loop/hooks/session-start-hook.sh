@@ -3,6 +3,10 @@
 # Stores session_id in CLAUDE_ENV_FILE for use in slash commands
 set -euo pipefail
 
+# Source state library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/lib/state.sh"
+
 # Extract session_id from stdin (remove useless use of cat)
 SESSION_ID=$(jq -r '.session_id')
 
@@ -12,9 +16,8 @@ if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
     exit 0
 fi
 
-# Sanitize session_id: only allow alphanumeric, hyphens, underscores
-# This prevents code injection via special characters
-if [[ ! "$SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+# Validate session_id format
+if ! validate_session_id "$SESSION_ID"; then
     echo "Warning: Ralph loop session_id contains invalid characters: $SESSION_ID" >&2
     exit 0
 fi
@@ -50,10 +53,10 @@ STATE_FILE="$STATE_DIR/ralph-loop-$SESSION_ID.local.md"
 
 if [[ -f "$STATE_FILE" ]]; then
     # Parse the state file to get loop information
-    FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
-    ITERATION=$(echo "$FRONTMATTER" | grep '^iteration:' | sed 's/iteration: *//')
-    MAX_ITERATIONS=$(echo "$FRONTMATTER" | grep '^max_iterations:' | sed 's/max_iterations: *//')
-    COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/')
+    FRONTMATTER=$(parse_frontmatter "$STATE_FILE")
+    ITERATION=$(get_iteration "$FRONTMATTER")
+    MAX_ITERATIONS=$(get_max_iterations "$FRONTMATTER")
+    COMPLETION_PROMISE=$(get_completion_promise "$FRONTMATTER")
 
     # Build status message to show Claude
     echo "🔄 Ralph Loop Active (iteration $ITERATION)"

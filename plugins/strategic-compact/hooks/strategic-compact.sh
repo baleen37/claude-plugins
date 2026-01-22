@@ -17,7 +17,8 @@
 set -euo pipefail
 
 # Track tool call count (increment in a temp file)
-COUNTER_FILE="/tmp/claude-tool-count-$$"
+COUNTER_FILE=$(mktemp "${TMPDIR:-/tmp}/claude-tool-count.XXXXXX") || exit 1
+trap 'rm -f "$COUNTER_FILE"' EXIT
 THRESHOLD=${COMPACT_THRESHOLD:-50}
 
 # Initialize or increment counter

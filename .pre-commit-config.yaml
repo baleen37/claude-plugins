@@ -8,10 +8,13 @@ repos:
       - id: trailing-whitespace
         exclude: ^tests/
 
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0.1
+  - repo: local
     hooks:
       - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
         args: [--severity=warning]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli

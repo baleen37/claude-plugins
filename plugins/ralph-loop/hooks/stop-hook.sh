@@ -4,14 +4,18 @@
 # Feeds Claude's output back as input to continue the loop
 set -euo pipefail
 
+# Source state library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../scripts/lib/state.sh"
+
 # Read hook input from stdin (advanced stop hook API)
 HOOK_INPUT=$(</dev/stdin)
 
 # Extract session_id from hook input
 SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
 
-# Sanitize session_id: only allow alphanumeric characters, dashes, and underscores
-if [[ ! "$SESSION_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+# Validate session_id format
+if ! validate_session_id "$SESSION_ID"; then
     echo "Warning: Ralph loop: Invalid session_id format (must be alphanumeric, dash, or underscore)" >&2
     exit 0
 fi
@@ -25,12 +29,10 @@ if [[ ! -f "$STATE_FILE" ]]; then
 fi
 
 # Parse markdown frontmatter (YAML between ---) and extract values
-FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
-ITERATION=$(echo "$FRONTMATTER" | grep '^iteration:' | sed 's/iteration: *//')
-MAX_ITERATIONS=$(echo "$FRONTMATTER" | grep '^max_iterations:' | sed 's/max_iterations: *//')
-
-# Extract completion_promise and strip surrounding quotes if present
-COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/')
+FRONTMATTER=$(parse_frontmatter "$STATE_FILE")
+ITERATION=$(get_iteration "$FRONTMATTER")
+MAX_ITERATIONS=$(get_max_iterations "$FRONTMATTER")
+COMPLETION_PROMISE=$(get_completion_promise "$FRONTMATTER")
 
 # Validate numeric fields before arithmetic operations
 if [[ ! "$ITERATION" =~ ^[0-9]+$ ]]; then
@@ -158,10 +160,12 @@ if [[ -z "$PROMPT_TEXT" ]]; then
 fi
 
 # Update iteration in frontmatter (portable across macOS and Linux)
-# Create temp file, then atomically replace
-TEMP_FILE="${STATE_FILE}.tmp.$$"
+# Create temp file securely with mktemp, then atomically replace
+TEMP_FILE=$(mktemp "${STATE_FILE}.tmp.XXXXXX") || exit 1
+trap 'rm -f "$TEMP_FILE"' EXIT
 sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$STATE_FILE"
+trap - EXIT  # Disable trap after successful mv
 
 # Build system message with iteration count and completion promise info
 if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
