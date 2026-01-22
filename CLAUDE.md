@@ -79,6 +79,8 @@ pre-commit은 다음을 검증합니다:
 - markdownlint (Markdown 린트)
 - commitlint (커밋 메시지 형식)
 
+> 참고: pre-commit 실패 시 `--no-verify` 옵션으로 우회할 수 없습니다.
+
 ## Architecture
 
 ### 플러그인 컴포넌트 유형
