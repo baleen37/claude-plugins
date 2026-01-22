@@ -94,6 +94,12 @@ if [ ! -f "$MARKETPLACE_FILE" ]; then
   exit 0
 fi
 
+# Update marketplace cache to get latest versions
+if [ "$CHECK_ONLY" = false ]; then
+  log "Updating marketplace cache..."
+  claude plugin marketplace update baleen-plugins 2>/dev/null || log "Failed to update marketplace cache"
+fi
+
 # Get installed plugins
 INSTALLED_PLUGINS_JSON=$(claude plugin list --json 2>/dev/null || echo "[]")
 
@@ -127,7 +133,7 @@ while IFS= read -r plugin_json; do
     # Update available
     log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
     if [ "$CHECK_ONLY" = false ]; then
-      claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
+      claude plugin update "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
     fi
   else
     # No update needed or not allowed by policy
