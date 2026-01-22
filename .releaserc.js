@@ -9,7 +9,7 @@ import { resolve } from 'path';
 function updatePluginJsons() {
   return {
     async prepare(_pluginContext, { nextRelease: { version } }) {
-      const plugins = ['auto-updater', 'git-guard', 'me', 'ralph-loop'];
+      const plugins = ['auto-updater', 'git-guard', 'jira', 'me', 'ralph-loop'];
 
       for (const plugin of plugins) {
         const pluginJsonPath = resolve(
