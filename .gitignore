@@ -50,3 +50,6 @@ htmlcov/
 # Temporary files
 *.tmp
 *.log
+
+# Git worktrees
+.worktrees/
