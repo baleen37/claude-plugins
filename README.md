@@ -129,6 +129,10 @@ Ralph embodies several key principles:
 3. **Operator Skill Matters**: Success depends on writing good prompts, not just having a good model.
 4. **Persistence Wins**: Keep trying until success.
 
+## Testing
+
+This project uses automated releases via semantic-release. All commits to main trigger CI tests and release automation.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file.
