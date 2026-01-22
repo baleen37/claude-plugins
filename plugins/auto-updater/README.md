@@ -6,7 +6,7 @@ Automatic plugin installation and updates from baleen-plugins marketplace based 
 
 Auto Updater는 marketplace.json에 정의된 플러그인들을 자동으로 설치하고, 버전 정책에 따라 업데이트를 관리하는 플러그인입니다.
 
-세션 시작 시 24시간 주기로 자동 실행되며, 사용자 개입 없이 marketplace에서 새로운 플러그인을 설치하거나 기존 플러그인을 업데이트합니다.
+세션 시작 시 6시간 주기로 자동 실행되며, 사용자 개입 없이 marketplace에서 새로운 플러그인을 설치하거나 기존 플러그인을 업데이트합니다.
 
 ## 주요 기능
 
@@ -29,13 +29,13 @@ Auto Updater는 marketplace.json에 정의된 플러그인들을 자동으로 �
 
 ### SessionStart Hook
 - 세션 시작 시 자동 실행 (`hooks/auto-update-hook.sh`)
-- 마지막 체크 시간 확인 후 24시간이 경과했을 때만 실행
+- 마지막 체크 시간 확인 후 6시간이 경과했을 때만 실행
 - 백그라운드에서 조용히 실행 (silent mode)
 
 ### 타임스탬프 관리
 - 마지막 체크 시간: `~/.claude/auto-updater/last-check`
 - Unix timestamp 형식으로 저장
-- 24시간 (86400초) 간격으로 체크 실행
+- 6시간 (21600초) 간격으로 체크 실행
 
 ### 업데이트 프로세스
 1. marketplace.json 파일 읽기
@@ -61,7 +61,7 @@ Auto Updater는 marketplace.json에 정의된 플러그인들을 자동으로 �
 
 ### 기본값
 - **Policy**: `patch` (패치 버전만 자동 업데이트)
-- **Check Interval**: 24시간 (86400초)
+- **Check Interval**: 6시간 (21600초)
 
 ### 정책별 동작 설명
 
@@ -123,9 +123,17 @@ jq '.auto_update_policy = "none"' ~/.claude/auto-updater/config.json > tmp.json 
 
 ## 수동 실행
 
-자동 실행 외에도 스크립트를 직접 실행할 수 있습니다.
+자동 실행 외에도 수동으로 업데이트를 실행할 수 있습니다.
 
-### 일반 실행
+### `/update` 명령어 (권장)
+```
+/update
+```
+- Claude Code에서 `/update` 명령어를 실행하면 즉시 업데이트 체크를 수행합니다
+- 6시간 간격 제한을 무시하고 즉시 실행됩니다
+- 업데이트 결과를 자동으로 보고합니다
+
+### 스크립트 직접 실행
 ```bash
 # 업데이트 체크 및 실행
 "${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/update-checker.sh"
@@ -143,13 +151,14 @@ jq '.auto_update_policy = "none"' ~/.claude/auto-updater/config.json > tmp.json 
 "${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/update-checker.sh" --silent
 ```
 
-### 강제 실행 (타임스탬프 무시)
+### 강제 실행 (6시간 간격 무시)
 ```bash
-# 타임스탬프를 삭제하여 즉시 실행
-rm ~/.claude/auto-updater/last-check
+# 방법 1: /update 명령어 사용 (권장)
+/update
 
-# 다음 세션 시작 시 또는 수동 실행 시 즉시 체크 수행
-"${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/update-checker.sh"
+# 방법 2: 타임스탬프를 삭제
+rm ~/.claude/auto-updater/last-check
+# 다음 세션 시작 시 즉시 체크 수행
 ```
 
 ## 문제 해결
@@ -173,15 +182,20 @@ Auto Updater는 기본적으로 silent 모드로 실행되므로 로그를 보�
 
 ### 업데이트가 실행되지 않는 경우
 
-1. **24시간이 경과했는지 확인**
+1. **6시간이 경과했는지 확인**
    ```bash
    # 마지막 체크 시간 확인
    date -r ~/.claude/auto-updater/last-check
    ```
 
-2. **타임스탬프 초기화**
+2. **즉시 실행 (권장)**
+   ```
+   /update
+   ```
+
+3. **타임스탬프 초기화**
    ```bash
-   # 타임스탬프 삭제하여 즉시 실행되도록 설정
+   # 타임스탬프 삭제하여 다음 세션에서 즉시 실행되도록 설정
    rm ~/.claude/auto-updater/last-check
    ```
 

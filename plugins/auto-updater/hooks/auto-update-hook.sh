@@ -3,7 +3,7 @@ set -euo pipefail
 
 CONFIG_DIR="${HOME}/.claude/auto-updater"
 TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
-CHECK_INTERVAL=86400  # 24 hours in seconds
+CHECK_INTERVAL=21600  # 6 hours in seconds
 
 # Create config dir if needed
 mkdir -p "$CONFIG_DIR"
