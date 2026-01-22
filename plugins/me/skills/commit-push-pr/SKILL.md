@@ -12,7 +12,16 @@ Automates the full git workflow: gather context → check conflicts → commit �
 
 **Announce at start:** "I'm using the commit-push-pr skill to handle the git workflow."
 
-**Auto-merge shortcut:** If user says "auto merge", skip the prompt and automatically run `gh pr merge --auto` after creating PR.
+## Arguments Handling
+
+Parse `$ARGUMENTS` to check for flags:
+
+- `--draft` - Create PR as draft (add `--draft` to `gh pr create`)
+- `--automerge` - Enable auto-merge after PR creation (skip prompt, run `gh pr merge --auto --squash`)
+
+**Auto-merge shortcut:** If user says "auto merge" or `$ARGUMENTS` contains `--automerge`, skip the prompt and automatically run `gh pr merge --auto --squash` after creating PR.
+
+**Draft PR:** If `$ARGUMENTS` contains `--draft`, add `--draft` to `gh pr create` command.
 
 ---
 
@@ -112,13 +121,15 @@ git push -u origin HEAD
 | PR State | Action | Command |
 |----------|--------|---------|
 | `OPEN` | Update existing | `gh pr edit --title "$TITLE" --body "$BODY"` |
-| `NO_PR` | Create new | `gh pr create --base $BASE --title "$TITLE" --body "$BODY"` |
+| `NO_PR` | Create new | `gh pr create --base $BASE [--draft] --title "$TITLE" --body "$BODY"` |
 | `MERGED` | Create new | Same as NO_PR (branch is ahead of merged PR) |
 | `CLOSED` | Ask user first | See below |
 
+**Draft flag:** Add `--draft` to `gh pr create` if `--draft` argument was passed.
+
 **After creating PR (NO_PR/MERGED states):**
 
-If user said "auto merge" initially:
+If user said "auto merge" initially or passed `--automerge` flag:
 ```bash
 gh pr merge --auto --squash
 ```
