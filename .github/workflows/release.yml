@@ -53,13 +53,27 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Run semantic-release to create release branch
-          npx semantic-release --branches release || echo "No release needed"
+          # Create release branch from main
+          git checkout -b release || git checkout release
 
-          # Check if release branch was created
-          if git rev-parse --verify release >/dev/null 2>&1; then
+          # Run semantic-release on release branch
+          npx semantic-release
+
+          # Check if changes were made (version files updated)
+          if ! git diff --quiet; then
+            # Commit the changes
+            git add .
+            git commit -m "chore(release): ${VERSION:-automated} [skip ci]"
+
             # Push release branch
-            git push origin release
-            # Create PR
-            gh pr create --base main --head release --title "chore(release): ${RELEASE_VERSION}" --body "Automated release PR"
+            git push origin release --force
+
+            # Create or update PR
+            if gh pr view release >/dev/null 2>&1; then
+              echo "PR already exists, updating..."
+            else
+              gh pr create --base main --head release --title "chore(release): automated release" --body "Automated release PR created by semantic-release"
+            fi
+          else
+            echo "No release needed"
           fi
