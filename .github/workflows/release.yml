@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   release:
@@ -17,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,49 +48,9 @@ jobs:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
-          # Configure git with authentication
+          # Configure git for semantic-release
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Configure git to use GITHUB_TOKEN for push
-          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-          # Save current state
-          CURRENT_HEAD=$(git rev-parse HEAD)
-          git diff --quiet || CURRENT_DIFF="changed"
-
-          # Run semantic-release to update version files
+          # Run semantic-release (it will handle commits, tags, and releases)
           npx semantic-release
-
-          # Check if files were modified (semantic-release updated version files)
-          if ! git diff --quiet; then
-            echo "Release changes detected, creating PR..."
-
-            # Get the new version from the updated files
-            VERSION=$(node -p "require('./plugins/ralph-loop/.claude-plugin/plugin.json').version")
-
-            # Commit the changes
-            git add .
-            git commit -m "chore(release): ${VERSION} [skip ci]
-
-            This automated release updates version numbers across all plugins.
-            "
-
-            # Create release branch and push
-            git checkout -b release
-            git push origin release --force
-
-            # Create PR
-            if gh pr view release >/dev/null 2>&1; then
-              echo "PR already exists"
-            else
-              gh pr create --base main --head release --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release
-
-            Changes:
-            - Version bump to ${VERSION}
-            - All plugin versions updated
-            "
-            fi
-          else
-            echo "No release needed"
-          fi
