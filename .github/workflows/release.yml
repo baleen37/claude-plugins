@@ -48,4 +48,18 @@ jobs:
           GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
-        run: npx semantic-release
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Run semantic-release to create release branch
+          npx semantic-release --branches release || echo "No release needed"
+
+          # Check if release branch was created
+          if git rev-parse --verify release >/dev/null 2>&1; then
+            # Push release branch
+            git push origin release
+            # Create PR
+            gh pr create --base main --head release --title "chore(release): ${RELEASE_VERSION}" --body "Automated release PR"
+          fi
