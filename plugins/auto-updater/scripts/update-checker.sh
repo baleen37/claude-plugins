@@ -11,6 +11,7 @@ source "${SCRIPT_DIR}/lib/version-compare.sh"
 CONFIG_DIR="${HOME}/.claude/auto-updater"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
+LOG_FILE="${CONFIG_DIR}/update.log"
 DEFAULT_POLICY="patch"
 MARKETPLACE_CACHE="${CONFIG_DIR}/marketplace.json"
 MARKETPLACE_URL="https://raw.githubusercontent.com/baleen37/claude-plugins/main/.claude-plugin/marketplace.json"
@@ -64,10 +65,23 @@ for arg in "$@"; do
   esac
 done
 
-# Helper: log message (respects silent mode)
+# Helper: log message (always to file, optionally to stderr)
 log() {
+  local level="${1:-INFO}"
+  shift
+  local message="$*"
+  local timestamp
+  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+  # Ensure log directory exists
+  mkdir -p "$CONFIG_DIR"
+
+  # Always write to log file
+  echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+
+  # Write to stderr if not silent
   if [ "$SILENT_MODE" = false ]; then
-    echo "[auto-updater] $*" >&2
+    echo "[auto-updater] $message" >&2
   fi
 }
 
@@ -96,8 +110,10 @@ fi
 
 # Update marketplace cache to get latest versions
 if [ "$CHECK_ONLY" = false ]; then
-  log "Updating marketplace cache..."
-  claude plugin marketplace update baleen-plugins 2>/dev/null || log "Failed to update marketplace cache"
+  log INFO "Updating marketplace cache..."
+  if ! claude plugin marketplace update baleen-plugins 2>/dev/null; then
+    log ERROR "Failed to update marketplace cache"
+  fi
 fi
 
 # Get installed plugins
@@ -105,13 +121,13 @@ INSTALLED_PLUGINS_JSON=$(claude plugin list --json 2>/dev/null || echo "[]")
 
 # Get update policy
 UPDATE_POLICY=$(get_update_policy)
-log "Using update policy: $UPDATE_POLICY"
+log INFO "Using update policy: $UPDATE_POLICY"
 
 # Read marketplace plugins
 MARKETPLACE_PLUGINS=$(jq -c '.plugins[] | {name: .name, version: .version}' "$MARKETPLACE_FILE" 2>/dev/null || echo "")
 
 if [ -z "$MARKETPLACE_PLUGINS" ]; then
-  log "No plugins found in marketplace"
+  log WARN "No plugins found in marketplace"
   exit 0
 fi
 
@@ -125,20 +141,28 @@ while IFS= read -r plugin_json; do
 
   if [ -z "$installed_version" ]; then
     # Plugin not installed
-    log "Installing new plugin: $plugin_name@$marketplace_version"
+    log INFO "Installing new plugin: $plugin_name@$marketplace_version"
     if [ "$CHECK_ONLY" = false ]; then
-      claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
+      if ! claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null; then
+        log ERROR "Failed to install $plugin_name"
+      else
+        log INFO "Successfully installed $plugin_name@$marketplace_version"
+      fi
     fi
   elif should_update "$UPDATE_POLICY" "$installed_version" "$marketplace_version"; then
     # Update available
-    log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
+    log INFO "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
     if [ "$CHECK_ONLY" = false ]; then
-      claude plugin update "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
+      if ! claude plugin update "${plugin_name}@baleen-plugins" 2>/dev/null; then
+        log ERROR "Failed to update $plugin_name"
+      else
+        log INFO "Successfully updated $plugin_name to $marketplace_version"
+      fi
     fi
   else
     # No update needed or not allowed by policy
     if version_lt "$installed_version" "$marketplace_version"; then
-      log "Update available for $plugin_name ($installed_version → $marketplace_version) but blocked by $UPDATE_POLICY policy"
+      log INFO "Update available for $plugin_name ($installed_version → $marketplace_version) but blocked by $UPDATE_POLICY policy"
     fi
   fi
 done <<< "$MARKETPLACE_PLUGINS"
