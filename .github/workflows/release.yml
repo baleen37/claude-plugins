@@ -49,9 +49,12 @@ jobs:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
-          # Configure git
+          # Configure git with authentication
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Configure git to use GITHUB_TOKEN for push
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
 
           # Save current state
           CURRENT_HEAD=$(git rev-parse HEAD)
