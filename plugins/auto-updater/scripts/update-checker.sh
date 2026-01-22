@@ -12,14 +12,38 @@ CONFIG_DIR="${HOME}/.claude/auto-updater"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
 DEFAULT_POLICY="patch"
+MARKETPLACE_CACHE="${CONFIG_DIR}/marketplace.json"
+MARKETPLACE_URL="https://raw.githubusercontent.com/baleen37/claude-plugins/main/.claude-plugin/marketplace.json"
 
 # Exit early if CLAUDE_PLUGIN_ROOT is not set
 if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
   exit 0
 fi
 
-# Find marketplace.json (allow override via environment variable for testing)
-MARKETPLACE_FILE="${MARKETPLACE_FILE:-${CLAUDE_PLUGIN_ROOT}/../../.claude-plugin/marketplace.json}"
+# Helper: fetch marketplace.json from GitHub
+fetch_marketplace() {
+  mkdir -p "$CONFIG_DIR"
+
+  # Try to download from GitHub
+  if curl -fsSL --max-time 10 "$MARKETPLACE_URL" -o "${MARKETPLACE_CACHE}.tmp" 2>/dev/null; then
+    mv "${MARKETPLACE_CACHE}.tmp" "$MARKETPLACE_CACHE"
+    return 0
+  else
+    # Download failed, clean up temp file
+    rm -f "${MARKETPLACE_CACHE}.tmp"
+
+    # Check if cached file exists
+    if [ -f "$MARKETPLACE_CACHE" ]; then
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+# Fetch marketplace.json (download or use cached)
+fetch_marketplace || exit 0
+MARKETPLACE_FILE="${MARKETPLACE_FILE:-$MARKETPLACE_CACHE}"
 
 # Parse command line arguments
 SILENT_MODE=false
@@ -71,7 +95,7 @@ if [ ! -f "$MARKETPLACE_FILE" ]; then
 fi
 
 # Get installed plugins
-INSTALLED_PLUGINS_JSON=$(/plugin list 2>/dev/null || echo "[]")
+INSTALLED_PLUGINS_JSON=$(claude plugin list --json 2>/dev/null || echo "[]")
 
 # Get update policy
 UPDATE_POLICY=$(get_update_policy)
@@ -91,19 +115,19 @@ while IFS= read -r plugin_json; do
   marketplace_version=$(echo "$plugin_json" | jq -r '.version')
 
   # Check if plugin is installed
-  installed_version=$(echo "$INSTALLED_PLUGINS_JSON" | jq -r --arg name "$plugin_name" '.[] | select(.name == $name) | .version' 2>/dev/null || echo "")
+  installed_version=$(echo "$INSTALLED_PLUGINS_JSON" | jq -r --arg name "$plugin_name" '.[] | select(.id | startswith($name + "@")) | .version' 2>/dev/null || echo "")
 
   if [ -z "$installed_version" ]; then
     # Plugin not installed
     log "Installing new plugin: $plugin_name@$marketplace_version"
     if [ "$CHECK_ONLY" = false ]; then
-      /plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
+      claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
     fi
   elif should_update "$UPDATE_POLICY" "$installed_version" "$marketplace_version"; then
     # Update available
     log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
     if [ "$CHECK_ONLY" = false ]; then
-      /plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
+      claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
     fi
   else
     # No update needed or not allowed by policy
