@@ -1,5 +1,5 @@
 ---
-name: update
+name: update-all-plugins
 description: Manually check and update all plugins from marketplace
 invocableByUser: true
 ---
