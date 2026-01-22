@@ -39,7 +39,7 @@ Auto Updater는 marketplace.json에 정의된 플러그인들을 자동으로 �
 
 ### 업데이트 프로세스
 1. marketplace.json 파일 읽기
-2. 설치된 플러그인 목록 조회 (`/plugin list`)
+2. 설치된 플러그인 목록 조회 (`claude plugin list`)
 3. 각 플러그인에 대해:
    - 미설치: 자동 설치
    - 설치됨: 버전 비교 후 정책에 따라 업데이트 또는 스킵
@@ -208,7 +208,7 @@ Auto Updater는 기본적으로 silent 모드로 실행되므로 로그를 보�
 jq '.auto_update_policy = "major"' ~/.claude/auto-updater/config.json > tmp.json && mv tmp.json ~/.claude/auto-updater/config.json
 
 # 해결 방법 2: 수동 업데이트
-/plugin install plugin-name@baleen-plugins
+claude plugin install plugin-name@baleen-plugins
 ```
 
 ### 자동 업데이트 완전 비활성화
@@ -248,7 +248,7 @@ rm -rf ~/.claude/auto-updater
 ### 상태 관리
 - 설정: `~/.claude/auto-updater/config.json`
 - 타임스탬프: `~/.claude/auto-updater/last-check`
-- 플러그인 목록: `/plugin list` 명령 사용
+- 플러그인 목록: `claude plugin list` 명령 사용
 
 ## Security Considerations
 
