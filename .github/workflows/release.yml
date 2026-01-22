@@ -53,26 +53,32 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create release branch from main
-          git checkout -b release || git checkout release
+          # Save current HEAD
+          CURRENT_HEAD=$(git rev-parse HEAD)
 
-          # Run semantic-release on release branch
-          npx semantic-release
+          # Run semantic-release (it will commit changes if release is needed)
+          npx semantic-release || echo "Semantic-release completed with errors (may be expected if no release)"
 
-          # Check if changes were made (version files updated)
-          if ! git diff --quiet; then
-            # Commit the changes
-            git add .
-            git commit -m "chore(release): ${VERSION:-automated} [skip ci]"
+          # Check if new commits were made (semantic-release creates commits)
+          NEW_HEAD=$(git rev-parse HEAD)
+
+          if [ "$CURRENT_HEAD" != "$NEW_HEAD" ]; then
+            echo "Release changes detected, creating PR..."
+
+            # Create release branch from current HEAD
+            git checkout -b release
 
             # Push release branch
             git push origin release --force
 
+            # Get version from the commits
+            VERSION=$(git log -1 --pretty=%B | grep -oP 'chore\(release\): \K[0-9.]+' || echo "automated")
+
             # Create or update PR
             if gh pr view release >/dev/null 2>&1; then
-              echo "PR already exists, updating..."
+              echo "PR already exists"
             else
-              gh pr create --base main --head release --title "chore(release): automated release" --body "Automated release PR created by semantic-release"
+              gh pr create --base main --head release --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release"
             fi
           else
             echo "No release needed"

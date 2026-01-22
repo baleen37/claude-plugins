@@ -64,6 +64,6 @@ const plugins = [
 ];
 
 export default {
-  branches: ['release'],
+  branches: ['main'],
   plugins,
 };
