@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Load version comparison functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/version-compare.sh
+source "${SCRIPT_DIR}/lib/version-compare.sh"
+
+# Configuration
+CONFIG_DIR="${HOME}/.claude/auto-updater"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
+DEFAULT_POLICY="patch"
+
+# Exit early if CLAUDE_PLUGIN_ROOT is not set
+if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  exit 0
+fi
+
+# Find marketplace.json
+MARKETPLACE_FILE="${CLAUDE_PLUGIN_ROOT}/../../.claude-plugin/marketplace.json"
+
+# Parse command line arguments
+SILENT_MODE=false
+CHECK_ONLY=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --silent)
+      SILENT_MODE=true
+      ;;
+    --check-only)
+      CHECK_ONLY=true
+      ;;
+    *)
+      echo "Unknown argument: $arg" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# Helper: log message (respects silent mode)
+log() {
+  if [ "$SILENT_MODE" = false ]; then
+    echo "[auto-updater] $*" >&2
+  fi
+}
+
+# Helper: get update policy from config
+get_update_policy() {
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "$DEFAULT_POLICY"
+    return
+  fi
+
+  local policy
+  policy=$(jq -r '.auto_update_policy // "patch"' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_POLICY")
+  echo "$policy"
+}
+
+# Helper: update timestamp
+update_timestamp() {
+  mkdir -p "$CONFIG_DIR"
+  date +%s > "$TIMESTAMP_FILE" 2>/dev/null || true
+}
+
+# Exit silently if marketplace doesn't exist
+if [ ! -f "$MARKETPLACE_FILE" ]; then
+  exit 0
+fi
+
+# Get installed plugins
+INSTALLED_PLUGINS_JSON=$(/plugin list 2>/dev/null || echo "[]")
+
+# Get update policy
+UPDATE_POLICY=$(get_update_policy)
+log "Using update policy: $UPDATE_POLICY"
+
+# Read marketplace plugins
+MARKETPLACE_PLUGINS=$(jq -c '.plugins[] | {name: .name, version: .version}' "$MARKETPLACE_FILE" 2>/dev/null || echo "")
+
+if [ -z "$MARKETPLACE_PLUGINS" ]; then
+  log "No plugins found in marketplace"
+  exit 0
+fi
+
+# Process each marketplace plugin
+while IFS= read -r plugin_json; do
+  plugin_name=$(echo "$plugin_json" | jq -r '.name')
+  marketplace_version=$(echo "$plugin_json" | jq -r '.version')
+
+  # Check if plugin is installed
+  installed_version=$(echo "$INSTALLED_PLUGINS_JSON" | jq -r --arg name "$plugin_name" '.[] | select(.name == $name) | .version' 2>/dev/null || echo "")
+
+  if [ -z "$installed_version" ]; then
+    # Plugin not installed
+    log "Installing new plugin: $plugin_name@$marketplace_version"
+    if [ "$CHECK_ONLY" = false ]; then
+      /plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
+    fi
+  elif should_update "$UPDATE_POLICY" "$installed_version" "$marketplace_version"; then
+    # Update available
+    log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
+    if [ "$CHECK_ONLY" = false ]; then
+      /plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
+    fi
+  else
+    # No update needed or not allowed by policy
+    if version_lt "$installed_version" "$marketplace_version"; then
+      log "Update available for $plugin_name ($installed_version → $marketplace_version) but blocked by $UPDATE_POLICY policy"
+    fi
+  fi
+done <<< "$MARKETPLACE_PLUGINS"
+
+# Update timestamp
+if [ "$CHECK_ONLY" = false ]; then
+  update_timestamp
+fi
+
+exit 0

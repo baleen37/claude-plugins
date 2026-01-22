@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schemas/marketplace-schema.json",
+  "name": "baleen-plugins",
+  "description": "Test marketplace for auto-updater tests",
+  "author": {
+    "name": "baleen",
+    "email": "git@baleen.me"
+  },
+  "plugins": [
+    {
+      "name": "test-plugin-1",
+      "description": "Test plugin 1",
+      "source": "./plugins/test-plugin-1",
+      "category": "development",
+      "tags": ["test"],
+      "version": "1.2.4"
+    },
+    {
+      "name": "test-plugin-2",
+      "description": "Test plugin 2",
+      "source": "./plugins/test-plugin-2",
+      "category": "development",
+      "tags": ["test"],
+      "version": "2.0.0"
+    }
+  ]
+}
