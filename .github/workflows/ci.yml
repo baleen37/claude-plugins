@@ -1,10 +1,8 @@
-name: Plugin Tests
+name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main]
+    branches: ['**']
 
 jobs:
   test:
