@@ -18,7 +18,7 @@
         "loop",
         "ai"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     },
     {
       "name": "git-guard",
@@ -32,7 +32,7 @@
         "pr",
         "security"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     },
     {
       "name": "me",
@@ -47,7 +47,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     },
     {
       "name": "jira",
@@ -61,7 +61,7 @@
         "atlassian",
         "mcp"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     },
     {
       "name": "strategic-compact",
@@ -73,7 +73,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     },
     {
       "name": "auto-updater",
@@ -85,7 +85,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "2.4.93"
+      "version": "2.4.94"
     }
   ]
 }
