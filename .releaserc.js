@@ -60,9 +60,17 @@ const plugins = [
   [
     '@semantic-release/commit-analyzer',
     {
-      // Fallback to patch release for any commits that don't match feat/fix
-      // This ensures refactor, chore, docs, etc. all trigger a patch release
-      fallback: 'patch',
+      preset: 'angular',
+      releaseRules: [
+        { type: 'refactor', release: 'patch' },
+        { type: 'chore', release: 'patch' },
+        { type: 'docs', release: 'patch' },
+        { type: 'style', release: 'patch' },
+        { type: 'test', release: 'patch' },
+        { type: 'build', release: 'patch' },
+        { type: 'ci', release: 'patch' },
+        { type: 'perf', release: 'patch' },
+      ],
     },
   ],
   '@semantic-release/release-notes-generator',
