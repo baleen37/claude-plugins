@@ -32,11 +32,8 @@ job_has_if_condition() {
     yaml_get "$workflow_file" ".jobs.${job_name}.if" &>/dev/null
 }
 
-setup() {
-    # Run parent setup
-    setup
-
-    # Check if yq is available
+# Helper: Ensure yq is available (call in tests that need yq)
+ensure_yq() {
     if ! command -v yq &> /dev/null; then
         skip "yq not available"
     fi
@@ -57,27 +54,33 @@ setup() {
 }
 
 @test "Release workflow has valid YAML syntax" {
+    ensure_yq
     # yq will fail if YAML is invalid
     yaml_get "$RELEASE_WORKFLOW" "." >/dev/null
 }
 
 @test "CI workflow has valid YAML syntax" {
+    ensure_yq
     yaml_get "$CI_WORKFLOW" "." >/dev/null
 }
 
 @test "Release workflow triggers on push to main" {
+    ensure_yq
     workflow_has_trigger "$RELEASE_WORKFLOW" "push"
 }
 
 @test "Release workflow triggers on pull_request closed" {
+    ensure_yq
     workflow_has_trigger "$RELEASE_WORKFLOW" "pull_request"
 }
 
 @test "Release workflow has release job" {
+    ensure_yq
     yaml_get "$RELEASE_WORKFLOW" ".jobs.release" >/dev/null
 }
 
 @test "Release workflow job has bot detection condition" {
+    ensure_yq
     # The job should have 'if: github.actor != 'github-actions[bot]''
     local if_condition
     if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
@@ -90,6 +93,7 @@ setup() {
 }
 
 @test "Release workflow job condition prevents bot loop" {
+    ensure_yq
     # The job should NOT run when github-actions[bot] is the actor
     local if_condition
     if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
@@ -109,6 +113,7 @@ setup() {
 }
 
 @test "Release workflow has required permissions" {
+    ensure_yq
     local permissions
     permissions=$(yaml_get "$RELEASE_WORKFLOW" ".permissions.contents")
 
