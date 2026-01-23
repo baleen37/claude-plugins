@@ -6,7 +6,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ### Commands (8)
 - **brainstorm**: Brainstorming and planning
-- **commit-push-pr**: Commit, push, and create/update pull requests
+- **create-pr**: Commit, push, and create/update pull requests
 - **debug**: Systematic debugging process
 - **orchestrate**: Execute sequential agent workflows
 - **refactor-clean**: Code refactoring and cleanup
@@ -19,7 +19,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ### Skills (6)
 - **ci-troubleshooting**: Systematic CI debugging approach
-- **commit-push-pull-request**: Complete git workflow (commit → push → PR)
+- **create-pr**: Complete git workflow (commit → push → PR)
 - **nix-direnv-setup**: Direnv integration for Nix flakes
 - **setup-precommit-and-ci**: Pre-commit hooks and CI setup
 - **using-git-worktrees**: Isolated feature work with worktrees

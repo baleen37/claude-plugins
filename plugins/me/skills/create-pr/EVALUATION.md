@@ -1,6 +1,6 @@
 # Evaluation Scenarios
 
-This document defines test cases to verify the `committing-and-pushing-pr` skill works correctly. Run these scenarios before and after changes to measure effectiveness.
+This document defines test cases to verify the `create-pr` skill works correctly. Run these scenarios before and after changes to measure effectiveness.
 
 ## Scenario 1: Simple Single-Commit PR
 

@@ -8,7 +8,7 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
 
 @test "me: has all workflow commands" {
     [ -f "${PLUGIN_DIR}/commands/brainstorm.md" ]
-    [ -f "${PLUGIN_DIR}/commands/commit-push-pr.md" ]
+    [ -f "${PLUGIN_DIR}/commands/create-pr.md" ]
     [ -f "${PLUGIN_DIR}/commands/debug.md" ]
     [ -f "${PLUGIN_DIR}/commands/orchestrate.md" ]
     [ -f "${PLUGIN_DIR}/commands/refactor-clean.md" ]

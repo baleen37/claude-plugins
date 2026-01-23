@@ -1,16 +1,16 @@
 ---
-name: commit-push-pr
+name: create-pr
 description: Handle complete git workflow (commit → push → PR) with parallel context gathering, --base enforcement, and merge conflict detection. Use when user asks to commit, push, create PR, mentions git workflow, or says "auto merge".
 user-invocable: true
 ---
 
-# Commit Push PR
+# Create PR
 
 ## Overview
 
 Automates the full git workflow: gather context → check conflicts → commit → push → create/update PR. **Core principles: parallel context gathering, --base flag mandatory, conflict check before push.**
 
-**Announce at start:** "I'm using the commit-push-pr skill to handle the git workflow."
+**Announce at start:** "I'm using the create-pr skill to handle the git workflow."
 
 ## Arguments Handling
 

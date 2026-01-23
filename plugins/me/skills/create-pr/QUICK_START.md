@@ -1,6 +1,6 @@
 # Quick Start Checklist
 
-Use this checklist for fast reference when running the committing-and-pushing-pr skill.
+Use this checklist for fast reference when running the create-pr skill.
 
 ---
 
