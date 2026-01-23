@@ -22,9 +22,11 @@ function discoverPlugins() {
 }
 
 /**
- * Custom plugin to update version in plugin.json files
- * These files don't have a "version" field in standard JSON array format,
- * so we need to manually parse and update them.
+ * Custom plugin to update version in plugin.json files.
+ *
+ * Ensures all plugin.json versions are synchronized with marketplace.json
+ * during the release process. Each plugin has its own plugin.json that needs
+ * to be updated to the same version.
  */
 function updatePluginJsons() {
   return {
