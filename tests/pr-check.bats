@@ -71,7 +71,7 @@ EOF
 
     [ "$status" -eq 0 ]
     [[ "$output" =~ "# Conflict Check" ]]
-    [[ "$output" =~ "✓ No conflicts" ]]
+    [[ "$output" =~ "✓ No merge conflicts detected" ]]
     [[ ! "$output" =~ "⚠️  Merge conflicts detected" ]]
 }
 
@@ -135,6 +135,6 @@ EOF
     echo "Output: $output"
 
     [ "$status" -eq 0 ]
-    [[ "$output" =~ "✓ No conflicts" ]]
+    [[ "$output" =~ "✓ No merge conflicts detected" ]]
     [[ ! "$output" =~ "⚠️  Merge conflicts detected" ]]
 }
