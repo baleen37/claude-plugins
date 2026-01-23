@@ -1,9 +1,10 @@
 #!/usr/bin/env bats
 # Tests for Git Guard hooks - JSON parsing and validation
 
+load helpers/bats_helper
+
 setup() {
-    PLUGIN_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
-    COMMIT_GUARD="$PLUGIN_ROOT/plugins/git-guard/hooks/commit-guard.sh"
+    COMMIT_GUARD="$PROJECT_ROOT/plugins/git-guard/hooks/commit-guard.sh"
 }
 
 @test "commit-guard.sh exists and is executable" {
