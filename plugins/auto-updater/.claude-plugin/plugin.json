@@ -1,6 +1,6 @@
 {
   "name": "auto-updater",
-  "version": "2.4.15",
+  "version": "2.4.16",
   "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
   "author": {
     "name": "baleen",
