@@ -77,15 +77,16 @@ jobs:
           This automated release updates version numbers across all plugins.
           "
 
-            # Create release branch and push
-            git checkout -b release
-            git push origin release --force
+            # Create release branch and push (version-specific branch to avoid force-push issues)
+            RELEASE_BRANCH="release-v${VERSION}"
+            git checkout -b "${RELEASE_BRANCH}"
+            git push origin "${RELEASE_BRANCH}"
 
             # Create PR
-            if gh pr view release --state open >/dev/null 2>&1; then
-              echo "PR already exists"
+            if gh pr view "${RELEASE_BRANCH}" --state open >/dev/null 2>&1; then
+              echo "PR already exists for ${VERSION}"
             else
-              gh pr create --base main --head release --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release
+              gh pr create --base main --head "${RELEASE_BRANCH}" --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release
 
           Changes:
           - Version bump to ${VERSION}
