@@ -1,6 +1,7 @@
 ---
 name: verify
 description: Run comprehensive verification on current codebase state
+argument-hint: [quick|full|pre-commit|pre-pr]
 ---
 
 # Verify - Comprehensive Codebase Verification

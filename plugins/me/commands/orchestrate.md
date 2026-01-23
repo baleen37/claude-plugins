@@ -1,6 +1,7 @@
 ---
 name: orchestrate
 description: Execute sequential agent workflows for complex development tasks
+argument-hint: <feature|bugfix|refactor|security|custom> <task>
 ---
 
 # Orchestrate - Sequential Agent Workflows
