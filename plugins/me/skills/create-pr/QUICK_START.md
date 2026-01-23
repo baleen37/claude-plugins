@@ -1,12 +1,12 @@
 # Quick Start Checklist
 
-Use this checklist for fast reference when running the create-pr skill.
+Fast reference for create-pr skill workflow.
 
 ---
 
-## Pre-Flight Check
+## Pre-Flight
 
-- [ ] `gh auth status` - GitHub CLI authenticated?
+- [ ] `gh auth status` - Authenticated?
 - [ ] `git remote -v` - Remote configured?
 - [ ] `git branch --show-current` - On correct branch?
 
@@ -18,56 +18,57 @@ Use this checklist for fast reference when running the create-pr skill.
 ```bash
 bash {baseDir}/scripts/pr-check.sh
 ```
-- [ ] Review BASE branch
-- [ ] Review PR state (OPEN/NO_PR/MERGED/CLOSED)
-- [ ] Review changed files
+- [ ] Note BASE branch
+- [ ] Note PR state (OPEN/NO_PR/MERGED/CLOSED)
 
-### 1.5. Check Conflicts
+### 2. Check Conflicts
 ```bash
-git fetch origin $BASE
-git merge-tree $(git merge-base HEAD origin/$BASE) HEAD origin/$BASE
+bash {baseDir}/scripts/conflict-check.sh $BASE
 ```
-- [ ] No conflicts? → Proceed to Step 5
-- [ ] Conflicts? → Resolve first (see CONFLICT_RESOLUTION.md)
+- [ ] Exit 0? → Proceed to step 3
+- [ ] Exit 1? → Resolve conflicts (see references/conflict_resolution.md)
 
-### 2. Create WIP Branch (if on main/master)
+### 3. Create WIP Branch (if on main/master)
 ```bash
 git checkout -b wip/<description>
 ```
-- [ ] Only if on main or master
+- [ ] Only if currently on main or master
 
-### 3. Commit
+### 4. Commit
 ```bash
 git status
-git add <files>
+git add <specific-files>
 git commit -m "feat: description"
 ```
 - [ ] Used specific files (not `git add -A` unless verified)
 - [ ] Conventional Commits format
 
 ### 5. Push & PR
+
 ```bash
 git push -u origin HEAD
 ```
 
-| PR State | Command |
-|----------|---------|
+**By PR state:**
+
+| State | Command |
+|-------|---------|
 | OPEN | `gh pr edit --title "$TITLE" --body "$BODY"` |
-| NO_PR/MERGED | `gh pr create --base $BASE --title "$TITLE" --body "$BODY"` |
+| NO_PR/MERGED | `gh pr create --base $BASE [--draft] --title "$TITLE" --body "$BODY"` |
 | CLOSED | Ask user first |
 
 - [ ] Used `--base $BASE`
-- [ ] PR body includes Summary + Test plan
+- [ ] PR body has Summary + Test plan
 
 ---
 
-## Red Flags (Never Do These)
+## Red Flags
 
 - ❌ Omit `--base` flag
-- ❌ Use `git add -A` without `git status`
-- ❌ Skip conflict check before push
+- ❌ `git add -A` without `git status` first
+- ❌ Skip conflict check
 - ❌ Assume no existing PR
-- ❌ Gather context sequentially
+- ❌ Commit directly to main/master
 
 ---
 
@@ -75,14 +76,10 @@ git push -u origin HEAD
 
 ```markdown
 ## Summary
-- Change 1
-- Change 2
+- Change 1 (from commits)
+- Change 2 (from commits)
 
 ## Test plan
-- [x] Test 1
-- [x] Test 2
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+- [x] Tests pass
+- [x] Manual verification
 ```
