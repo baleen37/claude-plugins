@@ -154,4 +154,7 @@ if [ "$CHECK_ONLY" = false ]; then
   update_timestamp
 fi
 
+# Test comment to verify releaseRules triggers patch release for refactor commits
+# This should trigger a patch release (v2.2.3) when merged
+
 exit 0
