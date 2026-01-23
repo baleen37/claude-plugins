@@ -1,5 +1,6 @@
 ---
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores requirements and design before implementation."
+argument-hint: [<task>]
 disable-model-invocation: true
 ---
 
