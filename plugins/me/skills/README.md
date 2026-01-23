@@ -33,7 +33,6 @@ skills/
 | `nix-direnv-setup` | Direnv for Nix flakes | Nix flake projects |
 | `using-git-worktrees` | Isolated branch work | Feature development |
 | `video-debugging` | Video playback issues | Media debugging |
-| `web-browser` | Browser automation | Web interaction |
 | `writing-claude-commands` | Creating Claude Code commands | Adding /commands |
 
 ## Skill Anatomy

@@ -4,31 +4,25 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ## Components
 
-### Commands (13)
-- **clean-worktree**: Clean up git worktrees
+### Commands (8)
+- **brainstorm**: Brainstorming and planning
 - **commit-push-pr**: Commit, push, and create/update pull requests
-- **create-command**: Create new Claude Code commands
-- **create-hook**: Create new hook commands
-- **create-skill**: Create new skills with TDD workflow
 - **debug**: Systematic debugging process
-- **fix-ci**: CI troubleshooting workflow
-- **git-exclude**: Manage .git/info/exclude
-- **handoff**: Create detailed handoff plans
-- **make-local-issues**: Review code and create GitHub issues
-- **pickup**: Resume work from handoff sessions
+- **orchestrate**: Execute sequential agent workflows
+- **refactor-clean**: Code refactoring and cleanup
 - **research**: Web research with citations
 - **sdd**: Subagent-driven development approach
+- **verify**: Comprehensive codebase verification
 
 ### Agents
 - **code-reviewer**: Review code against plans and standards
 
-### Skills (7)
+### Skills (6)
 - **ci-troubleshooting**: Systematic CI debugging approach
 - **commit-push-pull-request**: Complete git workflow (commit → push → PR)
 - **nix-direnv-setup**: Direnv integration for Nix flakes
 - **setup-precommit-and-ci**: Pre-commit hooks and CI setup
 - **using-git-worktrees**: Isolated feature work with worktrees
-- **web-browser**: Browser automation via Playwright/CDP
 - **writing-claude-commands**: Command creation workflow
 
 ### Hooks
