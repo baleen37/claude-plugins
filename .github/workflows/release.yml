@@ -16,7 +16,9 @@ permissions:
 
 jobs:
   release:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Generate bot app token
         id: generate_token
@@ -37,11 +39,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install jq
+        uses: sergeysova/jq-action@v2
+
+      - name: Install yq
         run: |
-          npm ci
-          sudo apt-get update
-          sudo apt-get install -y jq python3
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
 
       - name: Setup Bats and bats libs
         id: setup-bats
