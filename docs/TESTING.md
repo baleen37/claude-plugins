@@ -124,7 +124,7 @@ load bats_helper.bash
 @test "example test" {
     # Arrange
     result="$(some_function)"
-    
+
     # Assert
     [ "$result" == "expected" ]
 }

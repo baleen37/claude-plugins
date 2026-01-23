@@ -1,0 +1,119 @@
+# Release workflow with GitHub App Token
+# 이 파일은 GitHub App을 사용하는 release.yml의 예시입니다.
+# 실제 사용하려면 .github/workflows/release.yml의 내용을 이 예시로 교체하세요.
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y jq python3
+
+      - name: Setup Bats and bats libs
+        id: setup-bats
+        uses: bats-core/bats-action@3.0.1
+
+      - name: Run tests
+        shell: bash
+        env:
+          BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
+          TERM: xterm
+        run: bats tests/
+
+      # ============================================
+      # GitHub App Token 생성 (변경 사항)
+      # ============================================
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          # (선택사항) owner와 repo를 지정하여 token scope 제한
+          # owner: ${{ github.repository_owner }}
+          # repositories: claude-plugins
+
+      # ============================================
+      # Release 단계 - GitHub App Token 사용
+      # ============================================
+      - name: Release
+        env:
+          # GITHUB_TOKEN 대신 GitHub App Token 사용
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          # Configure git with authentication
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Configure git to use GITHUB_TOKEN for push
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+          # Save current state
+          CURRENT_HEAD=$(git rev-parse HEAD)
+          git diff --quiet || CURRENT_DIFF="changed"
+
+          # Run semantic-release to update version files
+          npx semantic-release
+
+          # Check if files were modified (semantic-release updated version files)
+          if ! git diff --quiet; then
+            echo "Release changes detected, creating PR..."
+
+            # Get the new version from marketplace.json (all plugins have the same version)
+            VERSION=$(node -p "require('./.claude-plugin/marketplace.json').plugins[0].version")
+
+            # Commit the changes
+            git add .
+            git commit -m "chore(release): ${VERSION}
+
+          This automated release updates version numbers across all plugins.
+          "
+
+            # Create release branch and push (version-specific branch to avoid force-push issues)
+            RELEASE_BRANCH="release-v${VERSION}"
+            git checkout -b "${RELEASE_BRANCH}"
+            git push origin "${RELEASE_BRANCH}"
+
+            # Create PR (GitHub App token으로 생성하면 CI가 trigger됨)
+            if gh pr view "${RELEASE_BRANCH}" --state open >/dev/null 2>&1; then
+              echo "PR already exists for ${VERSION}"
+            else
+              gh pr create --base main --head "${RELEASE_BRANCH}" --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release
+
+          Changes:
+          - Version bump to ${VERSION}
+          - All plugin versions updated
+          "
+            fi
+          else
+            echo "No release needed"
+          fi
