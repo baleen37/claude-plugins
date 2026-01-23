@@ -22,9 +22,11 @@ function discoverPlugins() {
 }
 
 /**
- * Custom plugin to update version in plugin.json files
- * These files don't have a "version" field in standard JSON array format,
- * so we need to manually parse and update them.
+ * Custom plugin to update version in plugin.json files.
+ *
+ * Ensures all plugin.json versions are synchronized with marketplace.json
+ * during the release process. Each plugin has its own plugin.json that needs
+ * to be updated to the same version.
  */
 function updatePluginJsons() {
   return {
@@ -57,7 +59,22 @@ function updatePluginJsons() {
 }
 
 const plugins = [
-  '@semantic-release/commit-analyzer',
+  [
+    '@semantic-release/commit-analyzer',
+    {
+      preset: 'angular',
+      releaseRules: [
+        { type: 'refactor', release: 'patch' },
+        { type: 'chore', release: 'patch' },
+        { type: 'docs', release: 'patch' },
+        { type: 'style', release: 'patch' },
+        { type: 'test', release: 'patch' },
+        { type: 'build', release: 'patch' },
+        { type: 'ci', release: 'patch' },
+        { type: 'perf', release: 'patch' },
+      ],
+    },
+  ],
   '@semantic-release/release-notes-generator',
   updatePluginJsons(),
   [

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# update-checker.sh
+# Checks for plugin updates from marketplace and installs/updates them automatically
+#
 
 set -euo pipefail
 
@@ -149,5 +153,8 @@ done <<< "$MARKETPLACE_PLUGINS"
 if [ "$CHECK_ONLY" = false ]; then
   update_timestamp
 fi
+
+# Test comment to verify releaseRules triggers patch release for refactor commits
+# This should trigger a patch release (v2.2.3) when merged
 
 exit 0

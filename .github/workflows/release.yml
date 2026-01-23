@@ -82,7 +82,7 @@ jobs:
             git push origin release --force
 
             # Create PR
-            if gh pr view release >/dev/null 2>&1; then
+            if gh pr view release --state open >/dev/null 2>&1; then
               echo "PR already exists"
             else
               gh pr create --base main --head release --title "chore(release): ${VERSION}" --body "Automated release PR created by semantic-release
