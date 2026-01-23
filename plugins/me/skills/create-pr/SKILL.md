@@ -33,10 +33,14 @@ bash {baseDir}/scripts/pr-check.sh
 
 **Outputs:**
 - `BASE` - Default branch
+- **Branch status** - Behind/ahead of base
+- **Conflict preview** - Quick conflict check
 - Current branch, git status
 - PR state: `OPEN`, `NO_PR`, `MERGED`, or `CLOSED`
 - Changed lines count
 - PR template (if exists)
+
+**If branch is behind base:** Consider merging origin/$BASE first to avoid conflicts.
 
 ### 2. Check Conflicts
 
