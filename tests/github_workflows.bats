@@ -81,35 +81,19 @@ ensure_yq() {
 
 @test "Release workflow job has bot detection condition" {
     ensure_yq
-    # The job should have 'if: github.actor != 'github-actions[bot]''
+    # The job should have an 'if' condition that filters bot accounts
     local if_condition
     if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
 
     echo "Actual if condition: $if_condition"
 
-    # Check if the condition excludes github-actions[bot]
-    [[ "$if_condition" == *"github-actions[bot]"* ]]
-    [[ "$if_condition" == *"!="* ]] || [[ "$if_condition" == *"not"* ]]
-}
-
-@test "Release workflow job condition prevents bot loop" {
-    ensure_yq
-    # The job should NOT run when github-actions[bot] is the actor
-    local if_condition
-    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
-
-    echo "Checking if condition prevents bot loop: $if_condition"
-
-    # The condition should explicitly exclude github-actions[bot]
-    # Valid patterns:
-    # - github.actor != 'github-actions[bot]'
-    # - github.actor != "github-actions[bot]"
-    # - github.actor != 'github-actions[bot]' && ...
-    # - !contains(github.actor, 'github-actions[bot]')
-
-    # Check that it contains the actor check
+    # The condition should check github.actor
     [[ "$if_condition" == *"github.actor"* ]]
-    [[ "$if_condition" == *"!="* ]]
+
+    # The condition should use either:
+    # 1. contains() function for universal bot filtering (recommended)
+    # 2. or != operator for specific bot filtering (brittle)
+    [[ "$if_condition" == *"contains"* ]] || [[ "$if_condition" == *"!="* ]]
 }
 
 @test "Release workflow has required permissions" {
@@ -130,4 +114,68 @@ ensure_yq() {
     # When the bot creates a release commit, it should use chore(release): format
     # This ensures the commit follows Conventional Commits
     grep -q "chore(release):" "$RELEASE_WORKFLOW"
+}
+
+@test "Release workflow filters all bot accounts to prevent infinite loop" {
+    ensure_yq
+    # The job should NOT run when ANY bot account is the actor
+    # This prevents infinite loops when auto-update-bot-baleen[bot] merges PRs
+    local if_condition
+    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
+
+    echo "Actual if condition: $if_condition"
+
+    # The condition should use contains() to filter ANY bot with [bot] suffix
+    # Valid patterns:
+    # - !contains(github.actor, '[bot]')
+    # - contains(github.actor, '[bot]') == false
+
+    # Check that it uses contains() function for universal bot filtering
+    [[ "$if_condition" == *"contains"* ]]
+    [[ "$if_condition" == *"[bot]"* ]]
+
+    # Verify it doesn't hardcode specific bot names (like github-actions[bot])
+    # Hardcoding specific bot names will miss other bots like auto-update-bot-baleen[bot]
+    if [[ "$if_condition" == *"github-actions[bot]"* ]]; then
+        # If it mentions github-actions[bot], it must be a general pattern
+        # that would also catch other bots
+        if [[ "$if_condition" != *"contains"* ]]; then
+            echo "ERROR: Condition hardcodes github-actions[bot] without using contains()"
+            echo "This will miss other bots like auto-update-bot-baleen[bot]"
+            return 1
+        fi
+    fi
+}
+
+@test "Release workflow blocks auto-update-bot-baleen" {
+    ensure_yq
+    # Specifically verify that auto-update-bot-baleen[bot] would be filtered
+    # This is the actual bot causing the infinite loop
+    local if_condition
+    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
+
+    echo "Checking if condition blocks auto-update-bot-baleen[bot]: $if_condition"
+
+    # The condition must block any actor with [bot] suffix
+    # Valid approaches:
+    # 1. !contains(github.actor, '[bot]')
+    # 2. github.actor != 'github-actions[bot]' && github.actor != 'auto-update-bot-baleen[bot]' (brittle)
+
+    # Check for the robust solution (contains)
+    if [[ "$if_condition" == *"contains"* ]] && [[ "$if_condition" == *"[bot]"* ]]; then
+        # This is the good approach - catches all bots
+        return 0
+    fi
+
+    # If using specific bot names, check if auto-update-bot-baleen[bot] is included
+    if [[ "$if_condition" == *"github-actions[bot]"* ]] && [[ "$if_condition" != *"contains"* ]]; then
+        # Hardcoded approach - must explicitly list auto-update-bot-baleen[bot]
+        if [[ "$if_condition" != *"auto-update-bot-baleen"* ]]; then
+            echo "ERROR: Condition filters github-actions[bot] but not auto-update-bot-baleen[bot]"
+            echo "This will cause infinite loops when auto-update-bot merges PRs"
+            return 1
+        fi
+    fi
+
+    return 0
 }
