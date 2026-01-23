@@ -102,7 +102,7 @@ jobs:
               git checkout -b "${RELEASE_BRANCH}"
               git push origin "${RELEASE_BRANCH}"
 
-              # Create PR
+              # Create PR with auto-merge
               if gh pr view "${RELEASE_BRANCH}" --state open >/dev/null 2>&1; then
                 echo "PR already exists for ${VERSION}"
               else
@@ -111,7 +111,7 @@ jobs:
             Changes:
             - Version bump to ${VERSION}
             - All plugin versions updated
-            "
+            " && gh pr merge "${RELEASE_BRANCH}" --auto --squash
               fi
             else
               echo "No release needed"
