@@ -57,7 +57,14 @@ function updatePluginJsons() {
 }
 
 const plugins = [
-  '@semantic-release/commit-analyzer',
+  [
+    '@semantic-release/commit-analyzer',
+    {
+      // Fallback to patch release for any commits that don't match feat/fix
+      // This ensures refactor, chore, docs, etc. all trigger a patch release
+      fallback: 'patch',
+    },
+  ],
   '@semantic-release/release-notes-generator',
   updatePluginJsons(),
   [
