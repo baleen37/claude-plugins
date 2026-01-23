@@ -42,7 +42,11 @@ ensure_jq() {
 # Helper: Validate JSON file
 validate_json() {
     local file="$1"
-    $JQ_BIN empty "$file" 2>/dev/null
+    if ! $JQ_BIN empty "$file" 2>/dev/null; then
+        echo "Error: Invalid JSON in $file" >&2
+        $JQ_BIN empty "$file" >&2
+        return 1
+    fi
 }
 
 # Helper: Check if JSON field exists
@@ -131,4 +135,34 @@ validate_plugin_manifest_fields() {
     fi
 
     return 0
+}
+
+# Helper: Iterate over all plugin manifest files
+# Usage: for_each_plugin_manifest callback_function
+for_each_plugin_manifest() {
+    local callback="$1"
+    local manifest_files
+    manifest_files=$(find "$PROJECT_ROOT/plugins" -name "plugin.json" -type f 2>/dev/null)
+
+    [ -n "$manifest_files" ] || return 1
+
+    while IFS= read -r manifest_file; do
+        $callback "$manifest_file"
+    done <<< "$manifest_files"
+}
+
+# Helper: Check if JSON field has specific type
+json_field_has_type() {
+    local file="$1"
+    local field="$2"
+    local expected_type="$3"
+    local actual_type
+    actual_type=$($JQ_BIN -r ".$field | type" "$file" 2>/dev/null)
+    [ "$actual_type" = "$expected_type" ]
+}
+
+# Helper: Validate semver format (major.minor.patch)
+is_valid_semver() {
+    local version="$1"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }

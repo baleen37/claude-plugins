@@ -7,9 +7,9 @@ load helpers/bats_helper
 setup() {
     # Create temp directory for test-specific files
     export TEST_TEMP_DIR=$(mktemp -d -t claude-plugins-test.XXXXXX)
-
     export TEST_DIR="${TEST_TEMP_DIR}/manifest_tests"
     mkdir -p "$TEST_DIR"
+    ensure_jq
 }
 
 teardown() {
@@ -20,8 +20,6 @@ teardown() {
 }
 
 @test "plugin.json has only allowed top-level fields" {
-    ensure_jq
-
     # Create a valid plugin.json
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -45,8 +43,6 @@ EOF
 }
 
 @test "plugin.json rejects disallowed top-level fields" {
-    ensure_jq
-
     # Create plugin.json with disallowed fields
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -64,8 +60,6 @@ EOF
 }
 
 @test "plugin.json allows only name and email in author object" {
-    ensure_jq
-
     # Create plugin.json with valid author fields
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -83,8 +77,6 @@ EOF
 }
 
 @test "plugin.json rejects disallowed author fields" {
-    ensure_jq
-
     # Create plugin.json with invalid author field
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -104,8 +96,6 @@ EOF
 }
 
 @test "plugin.json requires name field" {
-    ensure_jq
-
     # Create plugin.json without name
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -119,8 +109,6 @@ EOF
 }
 
 @test "plugin.json name is valid JSON string" {
-    ensure_jq
-
     # Create plugin.json with valid name
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -133,14 +121,10 @@ EOF
     [ "$status" -eq 0 ]
 
     # Name should be a string
-    local name_type
-    name_type=$(jq -r '.name | type' "$TEST_DIR/plugin.json")
-    [ "$name_type" = "string" ]
+    json_field_has_type "$TEST_DIR/plugin.json" "name" "string"
 }
 
 @test "plugin.json author can be string or object" {
-    ensure_jq
-
     # Test with string author
     cat > "$TEST_DIR/plugin-string.json" <<EOF
 {
@@ -167,8 +151,6 @@ EOF
 }
 
 @test "plugin.json keywords is array of strings" {
-    ensure_jq
-
     # Create plugin.json with keywords array
     cat > "$TEST_DIR/plugin.json" <<EOF
 {
@@ -182,14 +164,10 @@ EOF
     [ "$status" -eq 0 ]
 
     # Keywords should be an array
-    local keywords_type
-    keywords_type=$(jq -r '.keywords | type' "$TEST_DIR/plugin.json")
-    [ "$keywords_type" = "array" ]
+    json_field_has_type "$TEST_DIR/plugin.json" "keywords" "array"
 }
 
 @test "all real plugin manifests are valid" {
-    ensure_jq
-
     # Find all plugin.json files in the project
     local manifest_files
     manifest_files=$(find "$PROJECT_ROOT/plugins" -name "plugin.json" -type f 2>/dev/null)
