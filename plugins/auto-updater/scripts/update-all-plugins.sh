@@ -203,6 +203,18 @@ main() {
     echo "  Summary"
     echo "=========================================="
     echo ""
+
+    # Update timestamp only if at least one plugin succeeded
+    if [[ $success_count -gt 0 ]]; then
+        CONFIG_DIR="${HOME}/.claude/auto-updater"
+        TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
+        mkdir -p "$CONFIG_DIR"
+        date +%s > "$TIMESTAMP_FILE"
+        log_info "Updated last-check timestamp"
+    else
+        log_warning "Skipping timestamp update (no successful updates)"
+    fi
+
     log_success "Successfully installed/updated: $success_count plugins"
 
     if [[ $failed_count -gt 0 ]]; then
