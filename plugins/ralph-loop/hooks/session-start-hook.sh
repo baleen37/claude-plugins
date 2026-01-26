@@ -12,64 +12,54 @@ SESSION_ID=$(jq -r '.session_id')
 
 # Validate session_id exists
 if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
-    echo "Warning: Ralph loop failed to extract session_id from hook input" >&2
     exit 0
 fi
 
 # Validate session_id format
 if ! validate_session_id "$SESSION_ID"; then
-    echo "Warning: Ralph loop session_id contains invalid characters: $SESSION_ID" >&2
     exit 0
 fi
 
-# Fallback to /tmp if CLAUDE_ENV_FILE is not set
+# Quick check: if no Ralph Loop state file exists, exit silently
+STATE_DIR="$HOME/.claude/ralph-loop"
+STATE_FILE="$STATE_DIR/ralph-loop-$SESSION_ID.local.md"
+if [[ ! -f "$STATE_FILE" ]]; then
+    # No active Ralph Loop - exit silently without any output or side effects
+    exit 0
+fi
+
+# At this point, STATE_FILE exists, so Ralph Loop is active
+# Proceed with normal initialization
+
+# Parse the state file to get loop information
+FRONTMATTER=$(parse_frontmatter "$STATE_FILE")
+ITERATION=$(get_iteration "$FRONTMATTER")
+MAX_ITERATIONS=$(get_max_iterations "$FRONTMATTER")
+COMPLETION_PROMISE=$(get_completion_promise "$FRONTMATTER")
+
+# Build status message to show Claude
+echo "🔄 Ralph Loop Active (iteration $ITERATION)"
+if [[ "$MAX_ITERATIONS" != "0" ]]; then
+    echo "   Max iterations: $MAX_ITERATIONS"
+else
+    echo "   Max iterations: unlimited"
+fi
+if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
+    echo "   Completion promise: <promise>$COMPLETION_PROMISE</promise>"
+fi
+echo "   State file: $STATE_FILE"
+echo ""
+
+# Store session_id in ENV_FILE for use in slash commands (optional, for /cancel-ralph)
 ENV_FILE="${CLAUDE_ENV_FILE:-}"
 if [[ -z "$ENV_FILE" ]]; then
-    # Use /tmp as fallback when CLAUDE_ENV_FILE is not set
     mkdir -p ~/.claude/ralph-loop
     ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
 fi
 
-# Validate ENV_FILE exists and is writable
-if [[ ! -f "$ENV_FILE" ]]; then
-    touch "$ENV_FILE" 2>/dev/null || {
-        echo "Warning: Cannot create ENV_FILE: $ENV_FILE" >&2
-        exit 0
-    }
-fi
-
-if [[ ! -w "$ENV_FILE" ]]; then
-    echo "Warning: ENV_FILE is not writable: $ENV_FILE" >&2
-    exit 0
-fi
-
-# Store in ENV_FILE for use in slash commands
-# Safe to use unquoted since we validated SESSION_ID contains only safe characters
-echo "export RALPH_SESSION_ID=$SESSION_ID" >> "$ENV_FILE"
-
-# Check if there's an existing active Ralph Loop for this session
-STATE_DIR="$HOME/.claude/ralph-loop"
-STATE_FILE="$STATE_DIR/ralph-loop-$SESSION_ID.local.md"
-
-if [[ -f "$STATE_FILE" ]]; then
-    # Parse the state file to get loop information
-    FRONTMATTER=$(parse_frontmatter "$STATE_FILE")
-    ITERATION=$(get_iteration "$FRONTMATTER")
-    MAX_ITERATIONS=$(get_max_iterations "$FRONTMATTER")
-    COMPLETION_PROMISE=$(get_completion_promise "$FRONTMATTER")
-
-    # Build status message to show Claude
-    echo "🔄 Ralph Loop Active (iteration $ITERATION)"
-    if [[ "$MAX_ITERATIONS" != "0" ]]; then
-        echo "   Max iterations: $MAX_ITERATIONS"
-    else
-        echo "   Max iterations: unlimited"
-    fi
-    if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
-        echo "   Completion promise: <promise>$COMPLETION_PROMISE</promise>"
-    fi
-    echo "   State file: $STATE_FILE"
-    echo ""
+if [[ -f "$ENV_FILE" ]] && [[ -w "$ENV_FILE" ]]; then
+    # Safe to use unquoted since we validated SESSION_ID contains only safe characters
+    echo "export RALPH_SESSION_ID=$SESSION_ID" >> "$ENV_FILE"
 fi
 
 exit 0

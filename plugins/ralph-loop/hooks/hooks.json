@@ -1,9 +1,10 @@
 {
+  "$schema": "../../schemas/hooks-schema.json",
   "description": "Ralph Loop plugin hooks for multi-session support",
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "*",
+        "matcher": "ralph-loop-active",
         "hooks": [
           {
             "type": "command",
@@ -14,7 +15,7 @@
     ],
     "Stop": [
       {
-        "matcher": "*",
+        "matcher": "ralph-loop-active",
         "hooks": [
           {
             "type": "command",
