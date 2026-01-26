@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/hooks-schema.json",
   "description": "Ralph Loop plugin hooks for multi-session support",
   "hooks": {
     "SessionStart": [
