@@ -4,7 +4,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "*",
+        "matcher": "ralph-loop-active",
         "hooks": [
           {
             "type": "command",
@@ -15,7 +15,7 @@
     ],
     "Stop": [
       {
-        "matcher": "*",
+        "matcher": "ralph-loop-active",
         "hooks": [
           {
             "type": "command",
