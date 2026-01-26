@@ -32,6 +32,11 @@ matches_pattern() {
 validate_git_command() {
     local command="$1"
 
+    # Quick exit: if not a git command, allow immediately
+    if ! matches_pattern "$command" "^\s*(\S*=\S*\s+)*git\s+"; then
+        return 0
+    fi
+
     # Check for --no-verify in git commit commands
     if matches_pattern "$command" "git\s+commit.*--no-verify"; then
         block_command "--no-verify is not allowed in this repository" \
