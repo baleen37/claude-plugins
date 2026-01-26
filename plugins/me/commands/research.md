@@ -1,5 +1,5 @@
 ---
-description: Web research with citations and evidence-based analysis
+description: Research mode - exploration, investigation, learning with evidence-based analysis
 argument-hint: [<query>]
 ---
 
