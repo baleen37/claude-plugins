@@ -1,3 +1,8 @@
+---
+name: research
+description: Research mode - exploration, investigation, learning with evidence-based analysis
+---
+
 # Research Context
 
 Mode: Exploration, investigation, learning
