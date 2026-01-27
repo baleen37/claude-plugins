@@ -1,4 +1,5 @@
 ---
+name: debug
 description: Use and follow the systematic-debugging skill exactly as written
 argument-hint: [<issue>]
 ---
