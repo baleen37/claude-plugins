@@ -1,15 +1,13 @@
 ---
 name: create-pr
-description: Use when user requests commit, push, PR creation, merge, or git workflow. Enforces base branch verification and conflict detection before pushing.
-version: 1.0.0
-user-invocable: true
+description: Use when user asks to commit and push, create PR, or says "ready to merge"
 ---
 
 # Create PR
 
-Automates git workflow: commit → conflict check → push → PR creation.
+Complete git workflow from commit to merge-ready PR.
 
-**Core principle**: Always verify base branch and conflicts before pushing.
+**Core principle**: Verify before every transition—commit→push, push→PR, PR→merge-ready.
 
 ## When to Use
 
@@ -22,6 +20,40 @@ Use when user says:
 Do NOT use when:
 - User only wants to commit (not push)
 - Changes not ready (tests failing, WIP)
+
+## Workflow Overview
+
+```dot
+digraph create_pr {
+    rankdir=TB;
+    node [shape=box];
+
+    start [label="Start" shape=ellipse];
+    status [label="1. git status\n+ git log"];
+    add [label="2. git add (specific files)"];
+    commit [label="3. git commit"];
+    base [label="4. Determine base branch"];
+    conflict_check [label="5. Check conflicts\n(merge-tree)"];
+    has_conflict [label="Conflicts?" shape=diamond];
+    resolve [label="Resolve or ask user"];
+    push [label="6. git push -u origin HEAD"];
+    create_pr [label="7. gh pr create --base"];
+    check_status [label="8. gh pr view\n(mergeable, mergeStateStatus)"];
+    pr_status [label="Status?" shape=diamond];
+    update [label="9. Merge base + push"];
+    done [label="Merge-ready" shape=ellipse];
+
+    start -> status -> add -> commit -> base -> conflict_check -> has_conflict;
+    has_conflict -> push [label="clean"];
+    has_conflict -> resolve [label="conflicts"];
+    resolve -> conflict_check;
+    push -> create_pr -> check_status -> pr_status;
+    pr_status -> done [label="CLEAN"];
+    pr_status -> update [label="BEHIND"];
+    pr_status -> resolve [label="DIRTY"];
+    update -> check_status;
+}
+```
 
 ## Red Flags - STOP
 
@@ -38,154 +70,33 @@ Stop if:
 
 ## Quick Reference
 
-```bash
-# 1. Check status
-git status
-git log --oneline -5
+| Step | Command | Notes |
+|------|---------|-------|
+| Status | `git status && git log --oneline -5` | Always first |
+| Add | `git add path/to/file` | Specific files only |
+| Commit | `git commit -m "type: description"` | Conventional commits |
+| Base branch | `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` | Never assume |
+| Conflict check | `git fetch origin <base> && git merge-tree $(git merge-base HEAD origin/<base>) HEAD origin/<base>` | Exit 0 = clean |
+| Push | `git push -u origin HEAD` | After conflict check |
+| Create PR | `gh pr create --base <base> --title "..." --body "..."` | Always `--base` |
+| PR status | `gh pr view --json mergeable,mergeStateStatus` | CLEAN/BEHIND/DIRTY |
+| Update branch | `git merge origin/<base> --no-edit && git push` | When BEHIND |
 
-# 2. Add specific files
-git add path/to/file1 path/to/file2
+## Key Decision Points
 
-# 3. Commit
-git commit -m "type: description"
+### Base Branch Detection
+1. `gh repo view --json defaultBranchRef` (primary)
+2. `gh pr list --limit 1 --json baseRefName` (existing PRs)
+3. Ask user if unclear
 
-# 4. Verify base branch
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name
-# OR ask user if unclear
+### Conflict Resolution
+**Auto-resolve**: Whitespace, non-overlapping imports, independent additions
+**Ask user**: Logic conflicts, 3+ files, unclear which version
 
-# 5. Check conflicts BEFORE push
-git fetch origin <base-branch>
-git merge-tree $(git merge-base HEAD origin/<base-branch>) HEAD origin/<base-branch>
-
-# 6. Push
-git push -u origin HEAD
-
-# 7. Create PR with explicit base
-gh pr create --base <base-branch> --title "..." --body "..."
-
-# 8. Check PR status
-gh pr view --json mergeable,mergeStateStatus
-
-# 9. Update if behind
-git fetch origin <base-branch>
-git merge origin/<base-branch> --no-edit
-git push
-```
-
-## Workflow
-
-### 1. Commit Changes
-
-```bash
-# Always check what will be added
-git status
-
-# Add SPECIFIC files (not -A)
-git add src/file1.ts src/file2.ts
-
-# Commit
-git commit -m "feat: add new feature"
-```
-
-**Never**: `git add -A` without reviewing `git status` first
-
-### 2. Determine Base Branch
-
-**Option A - Check repository default:**
-```bash
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name
-```
-
-**Option B - Check existing PR:**
-```bash
-gh pr list --limit 1 --json baseRefName -q '.[0].baseRefName'
-```
-
-**Option C - Ask user:**
-If both fail or unclear, ask: "Which branch should this PR target? (main/develop/other)"
-
-**Never**: Assume without verification
-
-### 3. Check Conflicts Before Push
-
-```bash
-git fetch origin <base-branch>
-git merge-tree $(git merge-base HEAD origin/<base-branch>) HEAD origin/<base-branch>
-```
-
-**Exit code 0**: No conflicts, proceed
-**Exit code 1**: Conflicts detected, show user and ask how to proceed
-
-### 4. Push
-
-```bash
-git push -u origin HEAD
-```
-
-### 5. Create PR
-
-```bash
-gh pr create \
-  --base <base-branch> \
-  --title "Title from commit" \
-  --body "$(cat <<'EOF'
-## Summary
-- Change 1
-- Change 2
-
-## Test plan
-- [ ] Tests pass
-- [ ] Manual verification completed
-EOF
-)"
-```
-
-**Always use `--base` flag explicitly**
-
-### 6. Verify PR Status (Post-Creation)
-
-```bash
-# Get current PR
-gh pr view --json mergeable,mergeStateStatus,mergeabilityStatus
-
-# Check status
-# CLEAN = ready to merge
-# BEHIND = update branch needed
-# DIRTY/CONFLICTING = conflicts exist
-```
-
-### 7. Update Branch When Behind
-
-```bash
-git fetch origin <base-branch>
-git merge origin/<base-branch> --no-edit
-git push
-```
-
-**Always update** when status is BEHIND, even if mergeable shows true
-
-### 8. Resolve Conflicts
-
-**Auto-resolve when possible:**
-- Whitespace/formatting conflicts
-- Non-overlapping import changes
-- Independent additions
-
-```bash
-git merge origin/<base-branch>
-# If conflicts, check files
-git status | grep "both modified"
-
-# Try resolution, commit if successful
-git add <resolved-files>
-git commit --no-edit
-git push
-```
-
-**Ask user when:**
-- Logic conflicts (overlapping changes)
-- More than 3 conflicted files
-- Unclear which version to keep
+### PR Status Actions
+- **CLEAN**: Merge-ready
+- **BEHIND**: `git merge origin/<base> --no-edit && git push`, then re-check
+- **DIRTY**: Resolve conflicts, then re-check
 
 ## PR Body Template
 
@@ -194,9 +105,8 @@ git push
 - Bullet list of changes (from commits)
 
 ## Test plan
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing done
+- [ ] Tests pass
+- [ ] Manual verification done
 ```
 
 ## Common Mistakes
@@ -222,7 +132,7 @@ git push
 
 ## Arguments
 
-Parse `$ARGUMENTS`:
+Supported flags (passed after `/create-pr`):
 - `--base <branch>`: Override base branch detection
 - `--draft`: Create draft PR
 - `--automerge`: Enable auto-merge after creation
