@@ -1,131 +1,159 @@
 ---
 name: create-pr
-description: Handle complete git workflow (commit → push → PR) with parallel context gathering, --base enforcement, and merge conflict detection. Use when user asks to commit, push, create PR, mentions git workflow, or says "auto merge".
+description: Use when user requests commit, push, PR creation, merge, or git workflow. Enforces base branch verification and conflict detection before pushing.
+version: 1.0.0
 user-invocable: true
 ---
 
-# Create PR Skill
+# Create PR
 
-Automates: context gathering → update branch (if needed) → conflict check → commit → push → PR creation/update.
+Automates git workflow: commit → conflict check → push → PR creation.
 
-**Announce at start:** "I'm using the create-pr skill to handle the git workflow."
+**Core principle**: Always verify base branch and conflicts before pushing.
 
-## Arguments
+## When to Use
 
-Parse `$ARGUMENTS` for flags:
-- `--draft` - Create draft PR
-- `--automerge` - Auto-enable merge after PR creation
-- `--base <branch>` - Explicitly specify base branch (overrides auto-detection)
+Use when user says:
+- "Create PR" / "Make PR" / "Open PR"
+- "Commit and push"
+- "Push this"
+- "Ready to merge"
+
+Do NOT use when:
+- User only wants to commit (not push)
+- Changes not ready (tests failing, WIP)
+
+## Red Flags - STOP
+
+Stop if:
+- You don't know which base branch to use
+- You skipped conflict check
+- You used `git add` without first running `git status`
+
+## Quick Reference
+
+```bash
+# 1. Check status
+git status
+git log --oneline -5
+
+# 2. Add specific files
+git add path/to/file1 path/to/file2
+
+# 3. Commit
+git commit -m "type: description"
+
+# 4. Verify base branch
+gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+# OR ask user if unclear
+
+# 5. Check conflicts BEFORE push
+git fetch origin <base-branch>
+git merge-tree $(git merge-base HEAD origin/<base-branch>) HEAD origin/<base-branch>
+
+# 6. Push
+git push -u origin HEAD
+
+# 7. Create PR with explicit base
+gh pr create --base <base-branch> --title "..." --body "..."
+```
 
 ## Workflow
 
-### 1. Gather Context
+### 1. Commit Changes
 
 ```bash
-bash {baseDir}/scripts/pr-check.sh
-```
-
-**Outputs:** BASE, branch status (behind/ahead), conflict preview, PR state, changed lines, PR template
-
-### 2. Update Branch (if needed)
-
-**If pr-check.sh shows "behind origin/$BASE":**
-
-```bash
-git merge origin/$BASE
-# Resolve conflicts if any, then:
-git push
-```
-
-### 3. Check Conflicts
-
-```bash
-bash {baseDir}/scripts/conflict-check.sh $BASE
-```
-
-Exit 0 = proceed, Exit 1 = resolve conflicts first
-
-### 4. Create WIP Branch (if on main/master)
-
-```bash
-git checkout -b wip/<description>
-```
-
-### 5. Commit
-
-```bash
+# Always check what will be added
 git status
-git add <specific-files>
-git commit -m "feat: description"
+
+# Add SPECIFIC files (not -A)
+git add src/file1.ts src/file2.ts
+
+# Commit
+git commit -m "feat: add new feature"
 ```
 
-### 6. Push & Create/Update PR
+**Never**: `git add -A` without reviewing `git status` first
+
+### 2. Determine Base Branch
+
+**Option A - Check repository default:**
+```bash
+gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+```
+
+**Option B - Check existing PR:**
+```bash
+gh pr list --limit 1 --json baseRefName -q '.[0].baseRefName'
+```
+
+**Option C - Ask user:**
+If both fail or unclear, ask: "Which branch should this PR target? (main/develop/other)"
+
+**Never**: Assume without verification
+
+### 3. Check Conflicts Before Push
+
+```bash
+git fetch origin <base-branch>
+git merge-tree $(git merge-base HEAD origin/<base-branch>) HEAD origin/<base-branch>
+```
+
+**Exit code 0**: No conflicts, proceed
+**Exit code 1**: Conflicts detected, show user and ask how to proceed
+
+### 4. Push
 
 ```bash
 git push -u origin HEAD
 ```
 
-**Action by PR state:**
+### 5. Create PR
 
-| State | Action | Command |
-|-------|--------|---------|
-| `OPEN` | Update | `gh pr edit --title "$TITLE" --body "$BODY"` |
-| `NO_PR` | Create | `gh pr create --base $BASE [--draft] --title "$TITLE" --body "$BODY"` |
-| `MERGED` | Create | Same as NO_PR |
-| `CLOSED` | Ask user | "Create new or reopen?" |
-
-**PR Title:** Single commit = use message, Multiple commits = combine top 2-3
-
-**PR Body Template:**
-```markdown
+```bash
+gh pr create \
+  --base <base-branch> \
+  --title "Title from commit" \
+  --body "$(cat <<'EOF'
 ## Summary
 - Change 1
 - Change 2
 
 ## Test plan
-- [x] Tests pass
-- [x] Manual verification
+- [ ] Tests pass
+- [ ] Manual verification completed
+EOF
+)"
 ```
 
-**After PR creation (if --automerge):**
-```bash
-gh pr merge --auto --squash
+**Always use `--base` flag explicitly**
+
+## PR Body Template
+
+```markdown
+## Summary
+- Bullet list of changes (from commits)
+
+## Test plan
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual testing done
 ```
-
-## Auto-Merge (Optional)
-
-Default: Don't auto-merge. Ask user: "Wait for CI and merge automatically? (yes/no)"
-
-If yes:
-```bash
-gh run watch
-gh run view --json conclusion,state
-# If passed, ask: "CI passed. Merge with squash? (y/n)"
-gh pr merge --squash --delete-branch
-```
-
-**Only auto-merge when:** User requests + CI passes + User confirms + (<50 lines or reviewed)
-
-**Never auto-merge if:** Tests flaky, critical paths, >50 lines without review, CI failed
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Omit `--base` | Always use `--base $BASE` |
-| `git add -A` blindly | Check status first |
-| Skip conflict check | Always run conflict-check.sh |
-| Skip update branch | Merge when pr-check shows "behind" |
+| Omit `--base` flag | Always specify explicitly |
+| `git add -A` blindly | Run `git status` first |
+| Skip conflict check | Always check before push |
+| Assume base branch | Verify via `gh repo view` |
 
-## Error Handling
+## Arguments
 
-| Error | Check | Fix |
-|-------|-------|-----|
-| `gh` fails | `gh auth status` | `gh auth login` |
-| Push fails | `git remote -v` | `git remote add origin <url>` |
+Parse `$ARGUMENTS`:
+- `--base <branch>`: Override base branch detection
+- `--draft`: Create draft PR
+- `--automerge`: Enable auto-merge after creation
 
-## References
-
-- [Conflict Resolution Guide](references/conflict_resolution.md)
-- [Evaluation Scenarios](references/evaluation.md)
-- [Quick Start Checklist](QUICK_START.md)
+Example: `/create-pr --base develop --draft`
