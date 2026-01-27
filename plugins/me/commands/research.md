@@ -1,4 +1,5 @@
 ---
+name: research
 description: Research mode - exploration, investigation, learning with evidence-based analysis
 argument-hint: [<query>]
 ---

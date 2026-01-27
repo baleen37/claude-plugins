@@ -6,12 +6,12 @@ Claude Code plugin collection by baleen, featuring useful tools for AI-assisted 
 
 Plugins are automatically discovered from the `plugins/` directory. For detailed information about each plugin, see the respective plugin's README.md file.
 
-- **Ralph Loop**: Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops
-- **Git Guard**: Git workflow protection hooks that prevent commit and PR bypasses
-- **My Workflow**: Personal development workflow automation (TDD, debugging, git, code review)
-- **Jira**: Jira integration for issue tracking and project management
-- **Auto Updater**: Automatic plugin updates from marketplace
-- **Strategic Compact**: Strategic content compaction and organization tools
+- **ralph-loop**: Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops
+- **git-guard**: Git workflow protection hooks that prevent commit and PR bypasses (automatic, no commands needed)
+- **me**: Personal development workflow automation with 8 commands, 1 agent, and 7 skills (TDD, debugging, git, code review, research, orchestration)
+- **jira**: Jira integration for issue tracking and project management (requires MCP server setup)
+- **auto-updater**: Automatic plugin updates from marketplace (includes `/update-all-plugins` command)
+- **strategic-compact**: Strategic content compaction and organization tools (automatic PreToolUse hook)
 
 ## Quick Start
 
@@ -41,12 +41,45 @@ claude
 
 ### Using Git Guard
 
-```bash
-# Install Git Guard in current repository
-/install-git-guard
+Git Guard operates automatically via PreToolUse hooks - no commands needed:
 
-# Uninstall Git Guard
-/uninstall-git-guard
+- `git commit --no-verify` is automatically blocked
+- Pre-commit validation is enforced
+- Works transparently in the background
+
+### Using "me" Plugin (Personal Workflow)
+
+The "me" plugin provides comprehensive development workflow automation:
+
+**Commands (8):**
+- `/brainstorm` - Brainstorming and feature planning
+- `/create-pr` - Full git workflow (commit → push → PR)
+- `/debug` - Systematic debugging process
+- `/orchestrate` - Sequential agent workflow execution
+- `/refactor-clean` - Code refactoring and cleanup
+- `/research` - Web research with citations
+- `/sdd` - Subagent-driven development approach
+- `/verify` - Comprehensive codebase verification
+
+**Agents (1):**
+- `code-reviewer` - Code review against plans and standards
+
+**Skills (7):**
+- `ci-troubleshooting` - Systematic CI debugging
+- `test-driven-development` - TDD methodology
+- `systematic-debugging` - Root cause analysis
+- `using-git-worktrees` - Isolated feature work
+- `setup-precommit-and-ci` - Pre-commit and CI setup
+- `nix-direnv-setup` - Nix flake direnv integration
+- `writing-claude-code` - Creating Claude Code components
+
+### Using Auto Updater
+
+Auto-update runs automatically:
+- Checks for updates every 6 hours on SessionStart
+- Manual update available:
+```bash
+/update-all-plugins
 ```
 
 ## Project Structure
@@ -56,13 +89,27 @@ claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json          # Marketplace configuration (baleen-plugins)
 ├── plugins/                      # Plugins (auto-discovered)
-│   └── example-plugin/           # Example plugin structure
-│       ├── commands/             # Slash commands
-│       ├── agents/               # Autonomous agents
-│       ├── skills/               # Context-aware skills
-│       ├── hooks/                # Git hooks, SessionStart/Stop hooks
-│       ├── scripts/              # Utility scripts
-│       └── tests/                # BATS tests
+│   ├── ralph-loop/              # Ralph Wiggum technique implementation
+│   │   ├── commands/             # Slash commands (/ralph-loop, /cancel-ralph)
+│   │   ├── hooks/                # SessionStart/Stop hooks
+│   │   ├── scripts/              # Setup and utility scripts
+│   │   └── tests/                # BATS tests
+│   ├── git-guard/               # Git workflow protection
+│   │   ├── hooks/                # PreToolUse hook
+│   │   └── tests/                # BATS tests
+│   ├── me/                      # Personal workflow automation
+│   │   ├── commands/             # 8 commands (brainstorm, create-pr, debug, etc.)
+│   │   ├── agents/               # Code reviewer agent
+│   │   ├── skills/               # 7 skills (ci-troubleshooting, tdd, etc.)
+│   │   └── tests/                # BATS tests
+│   ├── jira/                    # Jira integration
+│   │   └── agents/               # Jira MCP agents
+│   ├── auto-updater/            # Plugin update automation
+│   │   ├── commands/             # /update-all-plugins command
+│   │   ├── hooks/                # SessionStart hook (6hr auto-update check)
+│   │   └── scripts/              # Update checker scripts
+│   └── strategic-compact/       # Content compaction
+│       └── hooks/                # PreToolUse hook (suggests compaction)
 ├── .github/workflows/            # CI/CD workflows
 ├── docs/                         # Development and testing documentation
 ├── tests/                        # BATS tests
@@ -101,6 +148,59 @@ bats tests/directory_structure.bats
 pre-commit run --all-files
 ```
 
+### Version Management & Release
+
+This project uses **semantic-release** with **Conventional Commits** for automated version management.
+
+#### Commit Message Format (Conventional Commits)
+
+```bash
+# Interactive commit (recommended)
+npm run commit
+
+# Or write manually
+git commit -m "type(scope): description"
+```
+
+**Types:**
+- `feat`: New feature (minor version bump)
+- `fix`: Bug fix (patch version bump)
+- `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`: No version bump
+
+**Scope:** Plugin name (`ralph-loop`, `git-guard`, etc.)
+
+**Examples:**
+```
+feat(ralph-loop): add iteration progress tracking
+fix(git-guard): prevent --no-verify bypass
+docs(me): update skill documentation
+```
+
+#### Release Process
+
+1. Push commits to main branch
+2. GitHub Actions runs tests then semantic-release
+3. Version is determined (feat → minor, fix → patch)
+4. Each `plugin.json` and `marketplace.json` is updated
+5. Git tag is created and GitHub release is published
+
+### Jira MCP Server Setup
+
+The Jira plugin requires MCP server configuration:
+
+1. Install the Atlassian MCP server
+2. Configure OAuth 2.1 authentication
+3. Add MCP server configuration to Claude Code settings
+
+See `plugins/jira/README.md` for detailed setup instructions.
+
+### Component Types
+
+- **Commands** (`commands/*.md`): Slash commands invoked by users (e.g., `/brainstorm`)
+- **Agents** (`agents/*.md`): Autonomous experts that execute specific tasks
+- **Skills** (`skills/*/SKILL.md`): Context-aware guides that activate automatically
+- **Hooks** (`hooks/hooks.json` + `hooks/*.sh`): Event-driven automation (SessionStart, PreToolUse, etc.)
+
 ## Ralph Loop Philosophy
 
 Ralph embodies several key principles:
@@ -110,16 +210,23 @@ Ralph embodies several key principles:
 3. **Operator Skill Matters**: Success depends on writing good prompts, not just having a good model.
 4. **Persistence Wins**: Keep trying until success.
 
-## Testing
+## Pre-commit Hooks
 
-This project uses automated releases via semantic-release. All commits to main trigger CI tests and release automation.
+This project uses pre-commit hooks for code quality:
 
-### Release Process
+```bash
+# Run pre-commit manually
+pre-commit run --all-files
+```
 
-1. Commits to main trigger the Release workflow
-2. semantic-release analyzes commits and determines version bump
-3. Version files are updated and a release PR is created
-4. Merging the release PR creates a GitHub release
+**Validations:**
+- YAML syntax validation
+- JSON schema validation
+- ShellCheck (shell script linting)
+- markdownlint (Markdown linting)
+- commitlint (commit message format)
+
+> Note: Pre-commit failures cannot be bypassed with `--no-verify` (enforced by git-guard).
 
 ## License
 

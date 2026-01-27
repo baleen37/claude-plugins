@@ -1,4 +1,5 @@
 ---
+name: refactor-clean
 description: "Safely identify and remove dead code with test verification. Detects unused code, dependencies, and files regardless of programming language or framework."
 argument-hint: [<path>]
 disable-model-invocation: true
