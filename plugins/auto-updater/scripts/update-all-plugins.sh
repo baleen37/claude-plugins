@@ -4,7 +4,7 @@
 # Update all plugins from marketplace using claude plugin install
 #
 
-set -o pipefail
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -54,44 +54,21 @@ get_marketplace_plugins() {
         sed 's/.*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo ""
 }
 
-# Get marketplace for a plugin (parse and find matching entry)
-get_marketplace_for_plugin() {
-    local plugin_name="$1"
-    local json_file="$TMP_DIR/marketplace.json"
-
-    # Read the file and find the marketplace for the given plugin name
-    # This handles JSON by looking for name/marketplace pairs in plugin objects
-    while IFS= read -r line; do
-        # Look for "name": "plugin-name" pattern
-        if echo "$line" | grep -q '"name"[[:space:]]*:[[:space:]]*"'"$plugin_name"'"'; then
-            # Found the name, now look ahead for marketplace in the next few lines
-            local remaining=$(tail -n +$((current_line + 1)) "$json_file" | head -n 5)
-            local marketplace=$(echo "$remaining" | grep -o '"marketplace"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | head -n 1)
-            if [[ -n "$marketplace" ]]; then
-                echo "$marketplace"
-                return 0
-            fi
-        fi
-    done < "$json_file"
-
-    echo ""
-    return 1
-}
-
-# Alternative: Parse all plugins at once into a simpler format
+# Parse all plugins at once into a simpler format
 parse_plugins_to_cache() {
     local json_file="$TMP_DIR/marketplace.json"
     local cache_file="$TMP_DIR/plugins.cache"
 
     # Get marketplace name from the JSON (look for the top-level name)
-    local marketplace=$(grep -E '^\s*"name"' "$json_file" | head -n 1 | sed 's/.*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+    local marketplace
+    marketplace=$(grep -E '^\s*"name"' "$json_file" | head -n 1 | sed 's/.*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
     if [[ -z "$marketplace" ]]; then
         marketplace="baleen-plugins"
     fi
 
     # Create a simple "name|marketplace" format cache
-    > "$cache_file"
+    : > "$cache_file"
 
     # Use sed to extract plugin names only within "plugins": [ ... ] section
     # Strategy: Extract content between plugins array brackets, then find plugin names
@@ -121,7 +98,8 @@ get_marketplace_from_cache() {
     local plugin_name="$1"
     local cache_file="$TMP_DIR/plugins.cache"
 
-    local result=$(grep "^${plugin_name}|" "$cache_file" 2>/dev/null | cut -d'|' -f2 | head -n 1)
+    local result
+    result=$(grep "^${plugin_name}|" "$cache_file" 2>/dev/null | cut -d'|' -f2 | head -n 1)
     echo "${result:-}"
 }
 
