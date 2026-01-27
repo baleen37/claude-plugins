@@ -6,7 +6,7 @@ user-invocable: true
 
 # Create PR Skill
 
-Automates: context gathering → conflict check → commit → push → PR creation/update.
+Automates: context gathering → update branch (if needed) → conflict check → commit → push → PR creation/update.
 
 **Announce at start:** "I'm using the create-pr skill to handle the git workflow."
 
@@ -15,15 +15,9 @@ Automates: context gathering → conflict check → commit → push → PR creat
 Parse `$ARGUMENTS` for flags:
 - `--draft` - Create draft PR
 - `--automerge` - Auto-enable merge after PR creation
+- `--base <branch>` - Explicitly specify base branch (overrides auto-detection)
 
-## Core Principles
-
-1. **Parallel context gathering** - Run all checks simultaneously
-2. **Mandatory --base flag** - Never omit when creating PRs
-3. **Conflict check first** - Before any push
-4. **Specific file staging** - Avoid `git add -A` without verification
-
-## Workflow (5 Steps)
+## Workflow
 
 ### 1. Gather Context
 
@@ -31,48 +25,41 @@ Parse `$ARGUMENTS` for flags:
 bash {baseDir}/scripts/pr-check.sh
 ```
 
-**Outputs:**
-- `BASE` - Default branch
-- **Branch status** - Behind/ahead of base
-- **Conflict preview** - Quick conflict check
-- Current branch, git status
-- PR state: `OPEN`, `NO_PR`, `MERGED`, or `CLOSED`
-- Changed lines count
-- PR template (if exists)
+**Outputs:** BASE, branch status (behind/ahead), conflict preview, PR state, changed lines, PR template
 
-**If branch is behind base:** Consider merging origin/$BASE first to avoid conflicts.
+### 2. Update Branch (if needed)
 
-### 2. Check Conflicts
+**If pr-check.sh shows "behind origin/$BASE":**
+
+```bash
+git merge origin/$BASE
+# Resolve conflicts if any, then:
+git push
+```
+
+### 3. Check Conflicts
 
 ```bash
 bash {baseDir}/scripts/conflict-check.sh $BASE
 ```
 
-Pass `$BASE` from step 1. **Exit 0** = No conflicts → proceed. **Exit 1** = Conflicts → resolve first (see [references/conflict_resolution.md](references/conflict_resolution.md))
+Exit 0 = proceed, Exit 1 = resolve conflicts first
 
-### 3. Create WIP Branch (if on main/master)
-
-**Never commit to main/master directly.**
+### 4. Create WIP Branch (if on main/master)
 
 ```bash
 git checkout -b wip/<description>
 ```
 
-Use 2-4 words: `wip/fix-auth`, `wip/add-api`
-
-### 4. Commit
+### 5. Commit
 
 ```bash
-git status                          # Review first
-git add path/to/file1 file2         # Specific files
-git commit -m "feat: description"   # Conventional Commits
+git status
+git add <specific-files>
+git commit -m "feat: description"
 ```
 
-**Only use `git add -A` if:**
-- Just ran `git status` AND
-- Verified all changes are intentional
-
-### 5. Push & Create/Update PR
+### 6. Push & Create/Update PR
 
 ```bash
 git push -u origin HEAD
@@ -87,52 +74,39 @@ git push -u origin HEAD
 | `MERGED` | Create | Same as NO_PR |
 | `CLOSED` | Ask user | "Create new or reopen?" |
 
-**PR Title:**
-- Single commit: Use commit message
-- Multiple commits: Combine top 2-3 into summary
+**PR Title:** Single commit = use message, Multiple commits = combine top 2-3
 
 **PR Body Template:**
 ```markdown
 ## Summary
-- Change 1 (from commits)
-- Change 2 (from commits)
+- Change 1
+- Change 2
 
 ## Test plan
 - [x] Tests pass
 - [x] Manual verification
 ```
 
-**After PR creation (NO_PR/MERGED):**
-If `--automerge` flag passed:
+**After PR creation (if --automerge):**
 ```bash
 gh pr merge --auto --squash
 ```
 
 ## Auto-Merge (Optional)
 
-**Default:** Don't auto-merge. Let CI run first.
+Default: Don't auto-merge. Ask user: "Wait for CI and merge automatically? (yes/no)"
 
-Ask user after PR creation: "Wait for CI and merge automatically? (yes/no)"
-
-If **yes**:
+If yes:
 ```bash
-gh run watch                              # Wait for CI
-gh run view --json conclusion,state       # Confirm passed
+gh run watch
+gh run view --json conclusion,state
 # If passed, ask: "CI passed. Merge with squash? (y/n)"
-gh pr merge --squash --delete-branch      # Only if confirmed
+gh pr merge --squash --delete-branch
 ```
 
-**Only auto-merge when ALL true:**
-- User explicitly requests
-- CI passes
-- User confirms after seeing CI results
-- Changes are trivial (<50 lines) OR user reviewed this session
+**Only auto-merge when:** User requests + CI passes + User confirms + (<50 lines or reviewed)
 
-**Never auto-merge if:**
-- Tests flaky/skipped
-- Critical paths (auth, payments, security)
-- PR >50 lines without review
-- CI failed
+**Never auto-merge if:** Tests flaky, critical paths, >50 lines without review, CI failed
 
 ## Common Mistakes
 
@@ -140,8 +114,8 @@ gh pr merge --squash --delete-branch      # Only if confirmed
 |---------|-----|
 | Omit `--base` | Always use `--base $BASE` |
 | `git add -A` blindly | Check status first |
-| Sequential gathering | Use pr-check.sh (parallel) |
 | Skip conflict check | Always run conflict-check.sh |
+| Skip update branch | Merge when pr-check shows "behind" |
 
 ## Error Handling
 

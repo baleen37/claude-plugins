@@ -23,7 +23,7 @@ AHEAD=$(git rev-list --count origin/"$BASE"..HEAD 2>/dev/null || echo "0")
 
 if [ "$BEHIND" -gt 0 ]; then
     echo "⚠️  Branch is $BEHIND commits behind origin/$BASE"
-    echo "   Consider: git merge origin/$BASE"
+    echo "   → Run: git merge origin/$BASE"
 else
     echo "✓ Branch is up to date with origin/$BASE"
 fi
