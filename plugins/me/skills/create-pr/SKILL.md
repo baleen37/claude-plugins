@@ -27,8 +27,14 @@ Do NOT use when:
 
 Stop if:
 - You don't know which base branch to use
-- You skipped conflict check
+- You skipped conflict check before push
 - You used `git add` without first running `git status`
+- You created PR but didn't check status afterward
+- You stopped at PR creation without verifying merge-ready
+- You said "GitHub will notify" or "CI will catch it"
+- You said "just pushed so base hasn't changed"
+
+**All of these mean: Follow complete workflow.**
 
 ## Quick Reference
 
@@ -56,6 +62,14 @@ git push -u origin HEAD
 
 # 7. Create PR with explicit base
 gh pr create --base <base-branch> --title "..." --body "..."
+
+# 8. Check PR status
+gh pr view --json mergeable,mergeStateStatus
+
+# 9. Update if behind
+git fetch origin <base-branch>
+git merge origin/<base-branch> --no-edit
+git push
 ```
 
 ## Workflow
@@ -128,6 +142,51 @@ EOF
 
 **Always use `--base` flag explicitly**
 
+### 6. Verify PR Status (Post-Creation)
+
+```bash
+# Get current PR
+gh pr view --json mergeable,mergeStateStatus,mergeabilityStatus
+
+# Check status
+# CLEAN = ready to merge
+# BEHIND = update branch needed
+# DIRTY/CONFLICTING = conflicts exist
+```
+
+### 7. Update Branch When Behind
+
+```bash
+git fetch origin <base-branch>
+git merge origin/<base-branch> --no-edit
+git push
+```
+
+**Always update** when status is BEHIND, even if mergeable shows true
+
+### 8. Resolve Conflicts
+
+**Auto-resolve when possible:**
+- Whitespace/formatting conflicts
+- Non-overlapping import changes
+- Independent additions
+
+```bash
+git merge origin/<base-branch>
+# If conflicts, check files
+git status | grep "both modified"
+
+# Try resolution, commit if successful
+git add <resolved-files>
+git commit --no-edit
+git push
+```
+
+**Ask user when:**
+- Logic conflicts (overlapping changes)
+- More than 3 conflicted files
+- Unclear which version to keep
+
 ## PR Body Template
 
 ```markdown
@@ -146,8 +205,20 @@ EOF
 |---------|-----|
 | Omit `--base` flag | Always specify explicitly |
 | `git add -A` blindly | Run `git status` first |
-| Skip conflict check | Always check before push |
+| Skip conflict check before push | Always check before push |
 | Assume base branch | Verify via `gh repo view` |
+| Stop after PR creation | Check status and update branch |
+| Assume merge-ready | Verify mergeStateStatus |
+
+## Rationalization Table
+
+| Excuse | Reality |
+|--------|---------|
+| "PR created, done" | Created ≠ merge-ready. Check status. |
+| "GitHub will notify" | Be proactive. Check now. |
+| "Just pushed, base unchanged" | Base can update anytime. Always check. |
+| "CI will catch it" | CI runs after merge-ready. Verify first. |
+| "Too complex to auto-resolve" | Try auto-resolution first. Ask if fails. |
 
 ## Arguments
 
