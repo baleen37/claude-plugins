@@ -1,6 +1,6 @@
 {
   "name": "me",
-  "version": "2.8.3",
+  "version": "2.8.4",
   "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, development automation, and auto-installs all baleen-plugins",
   "author": {
     "name": "baleen37",
