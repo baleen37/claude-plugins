@@ -169,9 +169,9 @@ main() {
         fi
 
         if install_plugin "$plugin_name" "$marketplace"; then
-            ((success_count++))
+            ((success_count++)) || true
         else
-            ((failed_count++))
+            ((failed_count++)) || true
             failed_plugins+=("$plugin_name")
         fi
     done <<< "$marketplace_plugins"
