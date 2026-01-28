@@ -1,6 +1,6 @@
 {
   "name": "strategic-compact",
-  "version": "2.8.4",
+  "version": "2.9.0",
   "description": "Strategic context compaction suggestions for long Claude Code sessions",
   "author": {
     "name": "baleen37",
