@@ -1,0 +1,9 @@
+{
+  "name": "databricks",
+  "version": "2.8.4",
+  "description": "Databricks integration via MCP server - execute SQL, manage clusters, query Unity Catalog",
+  "author": {
+    "name": "baleen",
+    "email": "git@baleen.me"
+  }
+}

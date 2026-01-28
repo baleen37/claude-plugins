@@ -64,6 +64,20 @@
       "version": "2.8.4"
     },
     {
+      "name": "databricks",
+      "description": "Databricks integration via MCP server - execute SQL, manage clusters, query Unity Catalog",
+      "source": "./plugins/databricks",
+      "category": "productivity",
+      "tags": [
+        "databricks",
+        "data",
+        "sql",
+        "mcp",
+        "analytics"
+      ],
+      "version": "2.8.4"
+    },
+    {
       "name": "strategic-compact",
       "description": "Strategic context compaction suggestions for long Claude Code sessions",
       "source": "./plugins/strategic-compact",

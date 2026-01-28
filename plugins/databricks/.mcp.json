@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "databricks-sql": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://<workspace-hostname>/api/2.0/mcp/sql"],
+      "allowedTools": [
+        "mcp__databricks__execute_sql",
+        "mcp__databricks__list_warehouses",
+        "mcp__databricks__get_warehouse_info"
+      ]
+    },
+    "databricks-vector": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://<workspace-hostname>/api/2.0/mcp/vector-search/{catalog}/{schema}"],
+      "allowedTools": [
+        "mcp__databricks__vector_search",
+        "mcp__databricks__list_indexes"
+      ]
+    },
+    "databricks-uc": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://<workspace-hostname>/api/2.0/mcp/uc-functions"],
+      "allowedTools": [
+        "mcp__databricks__list_functions",
+        "mcp__databricks__execute_function"
+      ]
+    }
+  }
+}
