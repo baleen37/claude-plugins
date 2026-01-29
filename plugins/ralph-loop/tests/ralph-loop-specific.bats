@@ -46,22 +46,22 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/ralph-loop"
 @test "ralph-loop: session-start-hook.sh sanitizes session_id" {
     local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
     [ -f "$hook" ]
-    # Verify regex check for session_id sanitization
-    grep -q 'SESSION_ID.*a-zA-Z0-9_-' "$hook"
+    # Verify validate_session_id function is called
+    grep -q 'validate_session_id.*SESSION_ID' "$hook"
 }
 
 @test "ralph-loop: stop-hook.sh sanitizes session_id" {
     local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
     [ -f "$hook" ]
-    # Verify regex check for session_id sanitization
-    grep -q 'SESSION_ID.*a-zA-Z0-9_-' "$hook"
+    # Verify validate_session_id function is called
+    grep -q 'validate_session_id.*SESSION_ID' "$hook"
 }
 
 @test "ralph-loop: cancel-ralph.sh sanitizes session_id" {
     local script="${PLUGIN_DIR}/scripts/cancel-ralph.sh"
     [ -f "$script" ]
-    # Verify regex check for session_id sanitization
-    grep -q 'RALPH_SESSION_ID.*a-zA-Z0-9_-' "$script"
+    # Verify validate_session_id function is called
+    grep -q 'validate_session_id.*RALPH_SESSION_ID' "$script"
 }
 
 @test "ralph-loop: setup-ralph-loop.sh validates --max-iterations is numeric" {
@@ -187,4 +187,337 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/ralph-loop"
     [ -f "$script" ]
     # Verify graceful handling when no loop is active
     grep -q 'if \[\[ ! -f "\$STATE_FILE" \]\]' "$script"
+}
+
+# ============================================================================
+# Unit Tests for state.sh Library Functions
+# ============================================================================
+
+@test "ralph-loop: state.sh validate_session_id accepts valid session IDs" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    # Valid session IDs should pass
+    validate_session_id "abc123"
+    validate_session_id "ABC-123_def"
+    validate_session_id "test_session_123"
+}
+
+@test "ralph-loop: state.sh validate_session_id rejects invalid session IDs" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    # Invalid session IDs should fail
+    ! validate_session_id "invalid/with/slashes"
+    ! validate_session_id "invalid..with..dots"
+    ! validate_session_id "invalid with spaces"
+    ! validate_session_id "invalid;with;semicolons"
+    ! validate_session_id "../../../etc/passwd"
+}
+
+@test "ralph-loop: state.sh parse_frontmatter extracts YAML correctly" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Create a test state file
+    local test_state_file
+    test_state_file=$(mktemp)
+    cat > "$test_state_file" <<'EOF'
+---
+iteration: 5
+max_iterations: 50
+completion_promise: "DONE"
+session_id: test-session-123
+---
+This is the prompt text
+EOF
+
+    # Source the library
+    source "$state_lib"
+
+    # Parse frontmatter
+    local frontmatter
+    frontmatter=$(parse_frontmatter "$test_state_file")
+
+    # Verify frontmatter was extracted
+    echo "$frontmatter" | grep -q '^iteration: 5'
+    echo "$frontmatter" | grep -q '^max_iterations: 50'
+    echo "$frontmatter" | grep -q '^completion_promise: "DONE"'
+    echo "$frontmatter" | grep -q '^session_id: test-session-123'
+
+    # Verify prompt text is NOT in frontmatter
+    ! echo "$frontmatter" | grep -q 'This is the prompt text'
+
+    rm -f "$test_state_file"
+}
+
+@test "ralph-loop: state.sh get_iteration extracts iteration number" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter="iteration: 42"
+    local result
+    result=$(get_iteration "$frontmatter")
+
+    [ "$result" = "42" ]
+}
+
+@test "ralph-loop: state.sh get_max_iterations extracts max_iterations" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter="max_iterations: 100"
+    local result
+    result=$(get_max_iterations "$frontmatter")
+
+    [ "$result" = "100" ]
+}
+
+@test "ralph-loop: state.sh get_max_iterations handles unlimited (0)" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter="max_iterations: 0"
+    local result
+    result=$(get_max_iterations "$frontmatter")
+
+    [ "$result" = "0" ]
+}
+
+@test "ralph-loop: state.sh get_completion_promise extracts quoted promise" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter='completion_promise: "TASK COMPLETE"'
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    [ "$result" = "TASK COMPLETE" ]
+}
+
+@test "ralph-loop: state.sh get_completion_promise handles null promise" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter='completion_promise: null'
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    [ "$result" = "null" ]
+}
+
+# ============================================================================
+# Completion Promise Tag Extraction Tests
+# ============================================================================
+
+@test "ralph-loop: stop-hook.sh promise extraction handles basic tags" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify the Perl regex for promise extraction exists
+    grep -q 'perl.*promise' "$hook"
+
+    # The regex should be non-greedy (.*?)
+    grep -q '.*?' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles multiline content" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify -0777 flag for slurping entire input
+    grep -q 'perl.*-0777' "$hook"
+
+    # Verify -pe flag is used for multiline editing
+    grep -q 'perl -0777 -pe' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction normalizes whitespace" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify whitespace normalization in Perl regex (s/\s+/ /g)
+    grep -q 's.*\\s.*+.* /g' "$hook"
+}
+
+# ============================================================================
+# Multibyte Character Handling Tests
+# ============================================================================
+
+@test "ralph-loop: state.sh handles UTF-8 in completion promise" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Create a test state file with UTF-8 content
+    local test_state_file
+    test_state_file=$(mktemp)
+    cat > "$test_state_file" <<'EOF'
+---
+iteration: 0
+max_iterations: 10
+completion_promise: "완료"
+session_id: test-session-123
+---
+테스트 프롬프트
+EOF
+
+    # Source the library
+    source "$state_lib"
+
+    # Parse and extract - should handle UTF-8 correctly
+    local frontmatter
+    frontmatter=$(parse_frontmatter "$test_state_file")
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    [ "$result" = "완료" ]
+
+    rm -f "$test_state_file"
+}
+
+@test "ralph-loop: state.sh handles emoji in prompt text" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Create a test state file with emoji
+    local test_state_file
+    test_state_file=$(mktemp)
+    cat > "$test_state_file" <<'EOF'
+---
+iteration: 0
+max_iterations: 10
+completion_promise: "✅ DONE"
+session_id: test-session-123
+---
+Fix the bug 🐛 and add tests 🧪
+EOF
+
+    # Source the library
+    source "$state_lib"
+
+    # Parse frontmatter
+    local frontmatter
+    frontmatter=$(parse_frontmatter "$test_state_file")
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    [ "$result" = "✅ DONE" ]
+
+    rm -f "$test_state_file"
+}
+
+# ============================================================================
+# Edge Case Tests
+# ============================================================================
+
+@test "ralph-loop: state.sh handles empty iteration value" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    # Empty value should return empty string (validation happens elsewhere)
+    local frontmatter="iteration: "
+    local result
+    result=$(get_iteration "$frontmatter")
+
+    [ "$result" = "" ]
+}
+
+@test "ralph-loop: state.sh handles completion promise with special chars" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Create a test state file with special characters
+    local test_state_file
+    test_state_file=$(mktemp)
+    cat > "$test_state_file" <<'EOF'
+---
+iteration: 0
+max_iterations: 10
+completion_promise: "All tests passing: 100% coverage!"
+session_id: test-session-123
+---
+Run the tests
+EOF
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter
+    frontmatter=$(parse_frontmatter "$test_state_file")
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    [ "$result" = "All tests passing: 100% coverage!" ]
+
+    rm -f "$test_state_file"
+}
+
+@test "ralph-loop: state.sh handles prompt with dashes at start" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Create a test state file with dashes in prompt
+    local test_state_file
+    test_state_file=$(mktemp)
+    cat > "$test_state_file" <<'EOF'
+---
+iteration: 0
+max_iterations: 10
+completion_promise: "DONE"
+session_id: test-session-123
+---
+--- This is a dash
+Another line
+EOF
+
+    # Source the library
+    source "$state_lib"
+
+    # Parse frontmatter - should only get YAML part
+    local frontmatter
+    frontmatter=$(parse_frontmatter "$test_state_file")
+
+    # Verify frontmatter doesn't include prompt content
+    ! echo "$frontmatter" | grep -q 'This is a dash'
+
+    # Verify YAML fields are present
+    echo "$frontmatter" | grep -q '^iteration: 0'
+    echo "$frontmatter" | grep -q '^session_id: test-session-123'
+
+    rm -f "$test_state_file"
+}
+
+@test "ralph-loop: setup-ralph-loop.sh handles prompt with newlines" {
+    local script="${PLUGIN_DIR}/scripts/setup-ralph-loop.sh"
+    [ -f "$script" ]
+
+    # Verify the script handles multi-word prompts correctly
+    grep -q 'PROMPT_PARTS' "$script"
+
+    # Verify array joining
+    grep -q 'PROMPT=.*PROMPT_PARTS' "$script"
 }
