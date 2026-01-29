@@ -521,3 +521,12 @@ EOF
     # Verify array joining
     grep -q 'PROMPT=.*PROMPT_PARTS' "$script"
 }
+
+@test "ralph-loop: setup-ralph-loop.sh handles empty PROMPT_PARTS array with set -u" {
+    local script="${PLUGIN_DIR}/scripts/setup-ralph-loop.sh"
+    [ -f "$script" ]
+
+    # Verify the script uses default parameter expansion for empty arrays
+    # This prevents "unbound variable" errors when set -u is enabled
+    grep -q 'PROMPT_PARTS\[\*\]:-' "$script"
+}
