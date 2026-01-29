@@ -21,6 +21,7 @@ lib64/
 
 # Exception: Include plugin script libraries
 !plugins/*/scripts/lib/
+!plugins/*/hooks/lib/
 parts/
 sdist/
 var/
