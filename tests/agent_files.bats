@@ -4,6 +4,7 @@
 load helpers/bats_helper
 
 @test "Agent files exist in plugins" {
+    local agent_count
     agent_count=$(find "${PROJECT_ROOT}/plugins" -path "*/agents/*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
     [ "$agent_count" -gt 0 ]
 }

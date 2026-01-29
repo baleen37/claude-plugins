@@ -10,6 +10,7 @@ load helpers/bats_helper
     # Check each plugin has required .claude-plugin directory
     for plugin_dir in "${PROJECT_ROOT}/plugins"/*; do
         if [ -d "$plugin_dir" ]; then
+            local plugin_name
             plugin_name=$(basename "$plugin_dir")
             [ -d "${plugin_dir}/.claude-plugin" ]
         fi
@@ -19,6 +20,7 @@ load helpers/bats_helper
 @test "Each plugin has valid plugin.json" {
     for plugin_dir in "${PROJECT_ROOT}/plugins"/*; do
         if [ -d "$plugin_dir" ]; then
+            local plugin_json
             plugin_json="${plugin_dir}/.claude-plugin/plugin.json"
             [ -f "$plugin_json" ]
             [ -s "$plugin_json" ]
@@ -30,6 +32,7 @@ load helpers/bats_helper
     # Plugin directories should be lowercase with hyphens
     for plugin_dir in "${PROJECT_ROOT}/plugins"/*; do
         if [ -d "$plugin_dir" ]; then
+            local plugin_name
             plugin_name=$(basename "$plugin_dir")
             is_valid_plugin_name "$plugin_name"
         fi

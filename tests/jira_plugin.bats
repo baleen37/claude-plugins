@@ -39,22 +39,26 @@ setup() {
 }
 
 @test "jira plugin.json has required name field" {
+  local name
   name=$(json_get plugins/jira/.claude-plugin/plugin.json "name")
   [ "$name" = "jira" ]
 }
 
 @test "jira plugin.json has required version field" {
+  local version
   version=$(json_get plugins/jira/.claude-plugin/plugin.json "version")
   [ -n "$version" ]
   is_valid_semver "$version"
 }
 
 @test "jira plugin.json has required description field" {
+  local description
   description=$(json_get plugins/jira/.claude-plugin/plugin.json "description")
   [ -n "$description" ]
 }
 
 @test "jira plugin.json has required author field" {
+  local author
   author=$($JQ_BIN -r '.author.name' plugins/jira/.claude-plugin/plugin.json)
   [ -n "$author" ]
 }
@@ -64,22 +68,26 @@ setup() {
 }
 
 @test "jira marketplace entry has matching version" {
+  local plugin_version marketplace_version
   plugin_version=$($JQ_BIN -r '.version' plugins/jira/.claude-plugin/plugin.json)
   marketplace_version=$($JQ_BIN -r '.plugins[] | select(.name == "jira") | .version' .claude-plugin/marketplace.json)
   [ "$plugin_version" = "$marketplace_version" ]
 }
 
 @test "jira marketplace entry has correct source path" {
+  local source
   source=$($JQ_BIN -r '.plugins[] | select(.name == "jira") | .source' .claude-plugin/marketplace.json)
   [ "$source" = "./plugins/jira" ]
 }
 
 @test "jira marketplace entry has category" {
+  local category
   category=$($JQ_BIN -r '.plugins[] | select(.name == "jira") | .category' .claude-plugin/marketplace.json)
   [ -n "$category" ]
 }
 
 @test "jira marketplace entry has tags" {
+  local tags
   tags=$($JQ_BIN -r '.plugins[] | select(.name == "jira") | .tags | length' .claude-plugin/marketplace.json)
   [ "$tags" -gt 0 ]
 }
@@ -93,16 +101,19 @@ setup() {
 }
 
 @test "jira .mcp.json atlassian config has command field" {
+  local command
   command=$($JQ_BIN -r '.mcpServers.atlassian.command' plugins/jira/.mcp.json)
   [ "$command" = "npx" ]
 }
 
 @test "jira .mcp.json atlassian config has args array" {
+  local args
   args=$($JQ_BIN -r '.mcpServers.atlassian.args | length' plugins/jira/.mcp.json)
   [ "$args" -gt 0 ]
 }
 
 @test "jira .mcp.json uses mcp-remote proxy" {
+  local args
   args=$($JQ_BIN -r '.mcpServers.atlassian.args | join(" ")' plugins/jira/.mcp.json)
   [[ "$args" =~ mcp-remote ]]
 }

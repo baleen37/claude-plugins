@@ -40,6 +40,7 @@ setup() {
 @test "plugin.json name follows naming convention" {
     for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
         if [ -f "$manifest" ]; then
+            local name
             name=$(json_get "$manifest" "name")
             is_valid_plugin_name "$name"
         fi
@@ -49,6 +50,7 @@ setup() {
 @test "plugin.json fields are not empty" {
     for manifest in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
         if [ -f "$manifest" ]; then
+            local name description author
             name=$(json_get "$manifest" "name")
             description=$(json_get "$manifest" "description")
             author=$(json_get "$manifest" "author")
