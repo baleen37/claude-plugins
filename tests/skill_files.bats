@@ -4,6 +4,7 @@
 load helpers/bats_helper
 
 @test "SKILL.md files exist" {
+    local skill_count
     skill_count=$(count_files "SKILL.md" "${PROJECT_ROOT}")
     [ "$skill_count" -gt 0 ]
 }

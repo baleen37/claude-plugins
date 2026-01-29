@@ -10,7 +10,7 @@ setup() {
 }
 
 @test "marketplace.json exists" {
-    [ -f "$MARKETPLACE_JSON" ]
+    assert_file_exists "$MARKETPLACE_JSON" "marketplace.json should exist"
 }
 
 @test "marketplace.json is valid JSON" {
@@ -24,24 +24,28 @@ setup() {
 }
 
 @test "marketplace.json owner.name is not empty" {
+    local owner_name
     owner_name=$(json_get "$MARKETPLACE_JSON" "owner.name")
-    [ -n "$owner_name" ]
+    assert_not_empty "$owner_name" "marketplace.json owner.name field should not be empty"
 }
 
 @test "marketplace.json plugins array exists" {
+    local plugins
     plugins=$($JQ_BIN -r '.plugins | type' "$MARKETPLACE_JSON")
-    [ "$plugins" == "array" ]
+    assert_eq "$plugins" "array" "marketplace.json plugins field should be an array"
 }
 
 @test "marketplace.json includes all plugins in plugins/ directory" {
     # Get all plugin directories
+    local plugin_dirs=()
     plugin_dirs=($(find "${PROJECT_ROOT}/plugins" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;))
 
     # Get all plugins listed in marketplace.json (extract just the plugin name)
+    local marketplace_plugins=()
     marketplace_plugins=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON" | sed 's|^\./plugins/||'))
 
     # Track missing plugins
-    missing_plugins=()
+    local missing_plugins=()
 
     # Check each plugin directory is listed
     for plugin in "${plugin_dirs[@]}"; do
@@ -49,7 +53,7 @@ setup() {
         [ -f "${PROJECT_ROOT}/plugins/${plugin}/.claude-plugin/plugin.json" ] || continue
 
         # Check if plugin is in marketplace.json
-        found=0
+        local found=0
         for mp_plugin in "${marketplace_plugins[@]}"; do
             if [ "$mp_plugin" == "$plugin" ]; then
                 found=1
@@ -71,16 +75,17 @@ setup() {
 
 @test "marketplace.json plugin sources point to existing directories" {
     # Get all plugin sources from marketplace.json
+    local sources=()
     sources=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON"))
 
     for source in "${sources[@]}"; do
         # Remove leading ./
-        full_path="${PROJECT_ROOT}/${source}"
+        local full_path="${PROJECT_ROOT}/${source}"
 
         # Check if directory exists
-        [ -d "$full_path" ] || echo "Plugin source '$source' in marketplace.json does not exist"
+        assert_dir_exists "$full_path" "Plugin source '$source' should exist"
 
         # Check if plugin.json exists
-        [ -f "${full_path}/.claude-plugin/plugin.json" ] || echo "Plugin source '$source' does not have .claude-plugin/plugin.json"
+        assert_file_exists "${full_path}/.claude-plugin/plugin.json" "Plugin source '$source' should have plugin.json"
     done
 }

@@ -166,3 +166,72 @@ is_valid_semver() {
     local version="$1"
     [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }
+
+# Helper: Assert with custom error message
+# Usage: assert_eq <actual> <expected> <message>
+assert_eq() {
+    local actual="$1"
+    local expected="$2"
+    local message="${3:-Values should be equal}"
+
+    if [ "$actual" != "$expected" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Expected: $expected" >&2
+        echo "  Actual:   $actual" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert not empty with custom error message
+# Usage: assert_not_empty <value> <message>
+assert_not_empty() {
+    local value="$1"
+    local message="${2:-Value should not be empty}"
+
+    if [ -z "$value" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Value is empty" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert file exists with custom error message
+# Usage: assert_file_exists <path> <message>
+assert_file_exists() {
+    local path="$1"
+    local message="${2:-File should exist}"
+
+    if [ ! -f "$path" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  File not found: $path" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert directory exists with custom error message
+# Usage: assert_dir_exists <path> <message>
+assert_dir_exists() {
+    local path="$1"
+    local message="${2:-Directory should exist}"
+
+    if [ ! -d "$path" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Directory not found: $path" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert matches regex with custom error message
+# Usage: assert_matches <value> <regex> <message>
+assert_matches() {
+    local value="$1"
+    local regex="$2"
+    local message="${3:-Value should match pattern}"
+
+    if [[ ! "$value" =~ $regex ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Value:    $value" >&2
+        echo "  Pattern:  $regex" >&2
+        return 1
+    fi
+}

@@ -13,11 +13,11 @@ load helpers/fixture_factory
     plugin_path=$(create_minimal_plugin "$FIXTURE_ROOT" "$plugin_name")
 
     # Verify directory exists
-    [ -d "$plugin_path" ]
+    assert_dir_exists "$plugin_path" "create_minimal_plugin should create plugin directory"
 
     # Verify plugin.json exists and is valid JSON
     local manifest="$plugin_path/.claude-plugin/plugin.json"
-    [ -f "$manifest" ]
+    assert_file_exists "$manifest" "create_minimal_plugin should create plugin.json"
     validate_json "$manifest"
 
     # Verify required fields
@@ -29,11 +29,11 @@ load helpers/fixture_factory
     # Verify values
     local name
     name=$(json_get "$manifest" "name")
-    [ "$name" = "$plugin_name" ]
+    assert_eq "$name" "$plugin_name" "plugin name should match requested name"
 
     local version
     version=$(json_get "$manifest" "version")
-    [ "$version" = "1.0.0" ]
+    assert_eq "$version" "1.0.0" "default version should be 1.0.0"
 }
 
 @test "create_minimal_plugin validates plugin name format" {
@@ -55,14 +55,14 @@ load helpers/fixture_factory
     plugin_path=$(create_full_plugin "$FIXTURE_ROOT" "$plugin_name")
 
     # Verify directory structure
-    [ -d "$plugin_path/commands" ]
-    [ -d "$plugin_path/agents" ]
-    [ -d "$plugin_path/skills" ]
-    [ -d "$plugin_path/hooks" ]
+    assert_dir_exists "$plugin_path/commands" "create_full_plugin should create commands directory"
+    assert_dir_exists "$plugin_path/agents" "create_full_plugin should create agents directory"
+    assert_dir_exists "$plugin_path/skills" "create_full_plugin should create skills directory"
+    assert_dir_exists "$plugin_path/hooks" "create_full_plugin should create hooks directory"
 
     # Verify plugin.json
     local manifest="$plugin_path/.claude-plugin/plugin.json"
-    [ -f "$manifest" ]
+    assert_file_exists "$manifest" "create_full_plugin should create plugin.json"
     validate_json "$manifest"
 
     # Verify all required fields
@@ -74,10 +74,10 @@ load helpers/fixture_factory
     json_has_field "$manifest" "keywords"
 
     # Verify sample files exist
-    [ -f "$plugin_path/commands/example-command.md" ]
-    [ -f "$plugin_path/agents/example-agent.md" ]
-    [ -f "$plugin_path/skills/example-skill/SKILL.md" ]
-    [ -f "$plugin_path/hooks/hooks.json" ]
+    assert_file_exists "$plugin_path/commands/example-command.md" "create_full_plugin should create example command"
+    assert_file_exists "$plugin_path/agents/example-agent.md" "create_full_plugin should create example agent"
+    assert_file_exists "$plugin_path/skills/example-skill/SKILL.md" "create_full_plugin should create example skill"
+    assert_file_exists "$plugin_path/hooks/hooks.json" "create_full_plugin should create hooks.json"
 }
 
 @test "create_command_file creates valid command file" {
@@ -89,7 +89,7 @@ load helpers/fixture_factory
     create_command_file "$plugin_path/commands" "test-command" "Test command description"
 
     local command_file="$plugin_path/commands/test-command.md"
-    [ -f "$command_file" ]
+    assert_file_exists "$command_file" "create_command_file should create command file"
 
     # Verify frontmatter delimiter
     has_frontmatter_delimiter "$command_file"
@@ -110,7 +110,7 @@ load helpers/fixture_factory
     create_agent_file "$plugin_path/agents" "test-agent" "Test agent description" "sonnet"
 
     local agent_file="$plugin_path/agents/test-agent.md"
-    [ -f "$agent_file" ]
+    assert_file_exists "$agent_file" "create_agent_file should create agent file"
 
     # Verify frontmatter delimiter
     has_frontmatter_delimiter "$agent_file"
@@ -135,8 +135,8 @@ load helpers/fixture_factory
     local skill_dir="$plugin_path/skills/test-skill"
     local skill_file="$skill_dir/SKILL.md"
 
-    [ -d "$skill_dir" ]
-    [ -f "$skill_file" ]
+    assert_dir_exists "$skill_dir" "create_skill_file should create skill directory"
+    assert_file_exists "$skill_file" "create_skill_file should create SKILL.md"
 
     # Verify frontmatter delimiter
     has_frontmatter_delimiter "$skill_file"
@@ -181,8 +181,8 @@ Use this skill for testing."
     plugin2=$(create_full_plugin "$FIXTURE_ROOT" "cleanup-test-2")
 
     # Verify they exist
-    [ -d "$plugin1" ]
-    [ -d "$plugin2" ]
+    assert_dir_exists "$plugin1" "first plugin should be created"
+    assert_dir_exists "$plugin2" "second plugin should be created"
 
     # Clean up
     cleanup_fixtures "$FIXTURE_ROOT"
@@ -215,11 +215,11 @@ Use this skill for testing."
 
     local version
     version=$(json_get "$manifest" "version")
-    [ "$version" = "2.5.0" ]
+    assert_eq "$version" "2.5.0" "custom version should be set"
 
     local author
     author=$(json_get "$manifest" "author")
-    [[ "$author" =~ "Custom Author" ]]
+    assert_matches "$author" "Custom Author" "custom author should be set"
 }
 
 @test "create_full_plugin includes hooks.json with valid structure" {
@@ -230,7 +230,7 @@ Use this skill for testing."
     plugin_path=$(create_full_plugin "$FIXTURE_ROOT" "$plugin_name")
 
     local hooks_file="$plugin_path/hooks/hooks.json"
-    [ -f "$hooks_file" ]
+    assert_file_exists "$hooks_file" "create_full_plugin should create hooks.json"
 
     # Verify valid JSON
     validate_json "$hooks_file"
