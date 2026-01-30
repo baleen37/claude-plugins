@@ -1,0 +1,10 @@
+name: "SessionStart Hook Test"
+test_target:
+  type: hook
+  name: SessionStart
+input:
+  prompt: "Check that SessionStart hook created session environment file"
+expected_output:
+  contains:
+    - "STRATEGIC_COMPACT_SESSION_ID"
+timeout: 30

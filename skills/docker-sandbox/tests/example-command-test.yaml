@@ -1,0 +1,11 @@
+name: "Basic Command Execution Test"
+test_target:
+  type: command
+  name: help
+input:
+  prompt: "/help"
+expected_output:
+  contains:
+    - "Claude Code"
+    - "command"
+timeout: 30
