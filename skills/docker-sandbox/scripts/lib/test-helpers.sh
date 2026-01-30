@@ -9,7 +9,6 @@ TEST_TARGET_NAME=""
 TEST_PROMPT=""
 TEST_TIMEOUT=60
 TEST_EXPECTED_CONTAINS=()
-TEST_EXPECTED_NOT_CONTAINS=()
 
 # Load YAML test definition
 load_test_definition() {
@@ -24,6 +23,7 @@ load_test_definition() {
     TEST_NAME=$(grep '^name:' "$test_file" | sed 's/name: *//; s/"//g; s/\r//')
     TEST_TARGET_TYPE=$(grep -A1 '^test_target:' "$test_file" | grep 'type:' | sed 's/.*type: *//; s/\r//')
     TEST_TARGET_NAME=$(grep -A1 '^test_target:' "$test_file" | grep 'name:' | sed 's/.*name: *//; s/\r//')
+    # shellcheck disable=SC2034  # Used by run-docker-test.sh
     TEST_PROMPT=$(grep -A1 '^input:' "$test_file" | grep 'prompt:' | sed 's/.*prompt: *//; s/"//g; s/\r//')
     TEST_TIMEOUT=$(grep '^timeout:' "$test_file" | awk '{print $2}')
     TEST_TIMEOUT=${TEST_TIMEOUT:-60}
@@ -40,7 +40,8 @@ load_test_definition() {
                 continue
             fi
             if echo "$line" | grep -qE '^\s+-\s+(.*)'; then
-                local value=$(echo "$line" | sed 's/^\s*-\s*//; s/"//g; s/\r//')
+                local value
+                value=$(echo "$line" | sed 's/^\s*-\s*//; s/"//g; s/\r//')
                 if [ -n "$value" ]; then
                     TEST_EXPECTED_CONTAINS+=("$value")
                 fi
@@ -89,15 +90,18 @@ verify_file_contains() {
     local file_path="$2"
     local expected_content="$3"
 
-    local output=$(docker exec "$container_name" cat "$file_path" 2>/dev/null || echo "")
+    local output
+    output=$(docker exec "$container_name" cat "$file_path" 2>/dev/null || echo "")
     echo "$output" | grep -qF "$expected_content"
 }
 
 # Measure execution time
 measure_time() {
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     "$@"
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     echo $((end_time - start_time))
 }
 
