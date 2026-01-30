@@ -4,6 +4,7 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": ".*",
         "hooks": [
           {
             "type": "command",
