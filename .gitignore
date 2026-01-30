@@ -19,9 +19,10 @@ eggs/
 lib/
 lib64/
 
-# Exception: Include plugin script libraries
+# Exception: Include plugin and skill script libraries
 !plugins/*/scripts/lib/
 !plugins/*/hooks/lib/
+!skills/*/scripts/lib/
 parts/
 sdist/
 var/
