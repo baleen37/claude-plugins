@@ -82,6 +82,9 @@ jobs:
             # Get the new version from marketplace.json (all plugins have the same version)
             VERSION=$(node -p "require('./.claude-plugin/marketplace.json').plugins[0].version")
 
+            # Pull latest changes from main to ensure release branch includes all recent commits
+            git pull origin main --ff-only
+
             # Commit the changes
             git add .
             git commit -m "chore(release): ${VERSION}
