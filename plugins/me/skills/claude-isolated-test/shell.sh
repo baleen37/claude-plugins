@@ -4,6 +4,7 @@ set -euo pipefail
 # ===== CONFIGURATION =====
 IMAGE_NAME="${CLAUDE_TEST_IMAGE:-claude-test:latest}"
 CONTAINER_NAME="${CLAUDE_CONTAINER_NAME:-claude-dev}"
+SESSION_NAME="${CLAUDE_SESSION_NAME:-claude}"
 WORKSPACE="${WORKSPACE:-$(pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -67,6 +68,7 @@ create_interactive_container() {
 
 attach_container_claude() {
     local container_name="$1"
+    local session_name="${2:-claude}"
 
     if ! container_running "$container_name"; then
         echo "Error: Container $container_name is not running" >&2
@@ -74,7 +76,7 @@ attach_container_claude() {
     fi
 
     # tmux 세션 attach 또는 생성 (-A 플래그)
-    docker exec -it "$container_name" tmux new-session -A -s claude
+    docker exec -it "$container_name" tmux new-session -A -s "$session_name"
 }
 
 list_sessions() {
@@ -98,12 +100,13 @@ usage() {
     echo "Attach to a Claude Code Docker container with tmux for interactive development." >&2
     echo "" >&2
     echo "Options:" >&2
-    echo "  -n, --name NAME      Container name (default: claude-dev)" >&2
-    echo "  -i, --image IMAGE    Docker image name (default: claude-test:latest)" >&2
-    echo "  -w, --workspace DIR  Workspace directory to mount (default: current dir)" >&2
-    echo "  -l, --list-sessions  List active tmux sessions in the container" >&2
-    echo "  -s, --stop-only      Stop and remove the container without attaching" >&2
-    echo "  -h, --help           Show this help" >&2
+    echo "  -n, --name NAME          Container name (default: claude-dev)" >&2
+    echo "  -i, --image IMAGE        Docker image name (default: claude-test:latest)" >&2
+    echo "  -w, --workspace DIR      Workspace directory to mount (default: current dir)" >&2
+    echo "  -S, --session-name NAME  Tmux session name (default: claude)" >&2
+    echo "  -l, --list-sessions      List active tmux sessions in the container" >&2
+    echo "  -s, --stop-only          Stop and remove the container without attaching" >&2
+    echo "  -h, --help               Show this help" >&2
     exit 1
 }
 
@@ -115,6 +118,7 @@ while [[ $# -gt 0 ]]; do
         -n|--name) CONTAINER_NAME="$2"; shift 2 ;;
         -i|--image) IMAGE_NAME="$2"; shift 2 ;;
         -w|--workspace) WORKSPACE="$2"; shift 2 ;;
+        -S|--session-name) SESSION_NAME="$2"; shift 2 ;;
         -l|--list-sessions) LIST_SESSIONS=true; shift ;;
         -s|--stop-only) STOP_ONLY=true; shift ;;
         -h|--help) usage ;;
@@ -190,4 +194,4 @@ echo "Press Ctrl+B then D to detach without stopping the container" >&2
 echo "Run '$0 --stop-only' to stop and remove the container" >&2
 echo "" >&2
 
-attach_container_claude "$CONTAINER_NAME"
+attach_container_claude "$CONTAINER_NAME" "$SESSION_NAME"
