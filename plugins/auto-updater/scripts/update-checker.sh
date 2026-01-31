@@ -7,11 +7,11 @@ TIMESTAMP_FILE="$CONFIG_DIR/last-check"
 CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
 MARKETPLACE_FILE="${MARKETPLACE_FILE:-}"
 
-# Debug: log paths (remove after fix)
+# Debug: log paths only if DEBUG_AUTO_UPDATER is set
 if [[ "${DEBUG_AUTO_UPDATER:-false}" = "true" ]]; then
-  echo "CONFIG_DIR=$CONFIG_DIR" >&2
-  echo "TIMESTAMP_FILE=$TIMESTAMP_FILE" >&2
-  echo "HOME=$HOME" >&2
+  echo "DEBUG_AUTO_UPDATER: CONFIG_DIR=$CONFIG_DIR" >&2
+  echo "DEBUG_AUTO_UPDATER: TIMESTAMP_FILE=$TIMESTAMP_FILE" >&2
+  echo "DEBUG_AUTO_UPDATER: HOME=$HOME" >&2
 fi
 
 # Use default marketplace path if not set
