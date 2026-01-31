@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   release:
-    if: ${{ !contains(github.actor, '[bot]') }}
+    if: ${{ !(contains(github.actor, '[bot]') && startsWith(github.event.head_commit.message, 'chore(release):')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
