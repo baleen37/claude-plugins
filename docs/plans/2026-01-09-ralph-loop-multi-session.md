@@ -570,6 +570,6 @@ Create a summary of what was implemented and any known limitations.
 ## References
 
 - @superpowers:executing-plans - Use this skill to implement the plan
-- @superpowers:subagent-driven-development - For iterative implementation approach
+- @superpowers:dispatching-parallel-agents - Use for executing independent tasks in parallel
 - Claude Code Hooks Documentation: https://code.claude.com/docs/en/hooks
 - Issue #11649: CLAUDE_ENV_FILE availability in plugin SessionStart hooks
