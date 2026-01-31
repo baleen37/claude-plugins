@@ -87,7 +87,8 @@ EOF
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  # Use env to explicitly pass environment variables
+  run env -i HOME="$HOME" CONFIG_DIR="$CONFIG_DIR" CLAUDE_PLUGIN_ROOT="$CLAUDE_PLUGIN_ROOT" MARKETPLACE_FILE="$MARKETPLACE_FILE" PATH="$PATH" "$SCRIPT_DIR/update-checker.sh" --silent
   [ "$status" -eq 0 ]
 
   # Timestamp file should now exist
