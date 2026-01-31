@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Strategic Compact Suggester
+# Auto Compact Suggester
 # Runs on PreToolUse or periodically to suggest manual compaction at logical intervals
 #
-# Why manual over auto-compact:
-# - Auto-compact happens at arbitrary points, often mid-task
+# Why manual over automatic compaction:
+# - Auto-compaction happens at arbitrary points, often mid-task
 # - Strategic compacting preserves context through logical phases
 # - Compact after exploration, before execution
 # - Compact after completing a milestone, before starting next
@@ -27,13 +27,13 @@ validate_session_id() {
 }
 
 # Determine session_id: use environment variable or fall back to PID
-SESSION_ID="${STRATEGIC_COMPACT_SESSION_ID:-$$}"
+SESSION_ID="${AUTO_COMPACT_SESSION_ID:-$$}"
 if ! validate_session_id "$SESSION_ID" 2>/dev/null; then
   SESSION_ID="$$"
 fi
 
 # Create state directory if it doesn't exist
-STATE_DIR="$HOME/.claude/strategic-compact"
+STATE_DIR="$HOME/.claude/auto-compact"
 if [ ! -d "$STATE_DIR" ]; then
   mkdir -p "$STATE_DIR" || {
     echo "Warning: Could not create state directory $STATE_DIR" >&2
@@ -57,10 +57,10 @@ fi
 
 # Suggest compact after threshold tool calls
 if [ "$count" -eq "$THRESHOLD" ]; then
-  echo "[StrategicCompact] $THRESHOLD tool calls reached - consider /compact if transitioning phases" >&2
+  echo "[AutoCompact] $THRESHOLD tool calls reached - consider /compact if transitioning phases" >&2
 fi
 
 # Suggest at regular intervals after threshold
 if [ "$count" -gt "$THRESHOLD" ] && [ $((count % 25)) -eq 0 ]; then
-  echo "[StrategicCompact] $count tool calls - good checkpoint for /compact if context is stale" >&2
+  echo "[AutoCompact] $count tool calls - good checkpoint for /compact if context is stale" >&2
 fi

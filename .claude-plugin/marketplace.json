@@ -78,9 +78,9 @@
       "version": "2.14.1"
     },
     {
-      "name": "strategic-compact",
-      "description": "Strategic context compaction suggestions for long Claude Code sessions",
-      "source": "./plugins/strategic-compact",
+      "name": "auto-compact",
+      "description": "Automatically suggests when to manually compact context during long sessions",
+      "source": "./plugins/auto-compact",
       "category": "development",
       "tags": [
         "workflow",

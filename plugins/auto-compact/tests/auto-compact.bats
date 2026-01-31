@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# Test: Strategic Compact functionality
+# Test: Auto Compact functionality
 
 load helpers/bats_helper
 
-PLUGIN_ROOT="${PROJECT_ROOT}/plugins/strategic-compact"
+PLUGIN_ROOT="${PROJECT_ROOT}/plugins/auto-compact"
 HOOKS_DIR="${PLUGIN_ROOT}/hooks"
 LIB_DIR="${HOOKS_DIR}/lib"
-STATE_DIR="$HOME/.claude/strategic-compact"
+STATE_DIR="$HOME/.claude/auto-compact"
 
 setup() {
     # Call parent setup
@@ -45,9 +45,9 @@ teardown() {
 # Test Suite 1: Hook scripts exist and are executable
 # ========================================
 
-@test "strategic-compact.sh exists and is executable" {
-    assert_file_exists "${HOOKS_DIR}/strategic-compact.sh" "strategic-compact.sh should exist"
-    [ -x "${HOOKS_DIR}/strategic-compact.sh" ]
+@test "auto-compact.sh exists and is executable" {
+    assert_file_exists "${HOOKS_DIR}/auto-compact.sh" "auto-compact.sh should exist"
+    [ -x "${HOOKS_DIR}/auto-compact.sh" ]
 }
 
 @test "session-start-hook.sh exists and is executable" {
@@ -60,7 +60,7 @@ teardown() {
 }
 
 @test "all required hook files are present" {
-    assert_file_exists "${HOOKS_DIR}/strategic-compact.sh"
+    assert_file_exists "${HOOKS_DIR}/auto-compact.sh"
     assert_file_exists "${HOOKS_DIR}/session-start-hook.sh"
     assert_file_exists "${HOOKS_DIR}/lib/state.sh"
     assert_file_exists "${HOOKS_DIR}/hooks.json"
@@ -70,19 +70,19 @@ teardown() {
 # Test Suite 2: Session-based counter file usage
 # ========================================
 
-@test "creates state directory in ~/.claude/strategic-compact/" {
+@test "creates state directory in ~/.claude/auto-compact/" {
     # Run the hook script with a test session
-    export STRATEGIC_COMPACT_SESSION_ID="test-session-123"
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    export AUTO_COMPACT_SESSION_ID="test-session-123"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     [ -d "$STATE_DIR" ]
 }
 
 @test "counter filename includes session_id" {
     local test_session="test-session-abc456"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     local expected_file="$STATE_DIR/tool-count-$test_session.txt"
     assert_file_exists "$expected_file" "counter file should include session_id"
@@ -90,10 +90,10 @@ teardown() {
 
 @test "counter persists across hook runs" {
     local test_session="test-session-persist"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # First run
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
 
     # Check counter file exists
@@ -104,7 +104,7 @@ teardown() {
     initial_count=$(cat "$counter_file")
 
     # Second run
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     # Get new counter value
     local new_count
@@ -120,9 +120,9 @@ teardown() {
 
 @test "counter starts at 1 on first run" {
     local test_session="test-session-first"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     local count
@@ -133,21 +133,21 @@ teardown() {
 
 @test "counter increments on each call" {
     local test_session="test-session-increment"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # First run
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     local count1
     count1=$(cat "$counter_file")
 
     # Second run
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     local count2
     count2=$(cat "$counter_file")
 
     # Third run
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     local count3
     count3=$(cat "$counter_file")
 
@@ -158,11 +158,11 @@ teardown() {
 
 @test "counter value persists across multiple invocations" {
     local test_session="test-session-persist-value"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # Run 5 times
     for i in {1..5}; do
-        run bash "${HOOKS_DIR}/strategic-compact.sh"
+        run bash "${HOOKS_DIR}/auto-compact.sh"
     done
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
@@ -178,7 +178,7 @@ teardown() {
 
 @test "shows message at default threshold of 50" {
     local test_session="test-session-threshold-50"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # Create counter file at 49
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
@@ -186,7 +186,7 @@ teardown() {
     echo "49" > "$counter_file"
 
     # Run hook - should trigger threshold message
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     echo "$output" >&2
     [[ "$output" =~ "50 tool calls reached" ]] || [[ "$output" =~ "consider /compact" ]]
@@ -194,27 +194,27 @@ teardown() {
 
 @test "shows message every 25 calls after threshold" {
     local test_session="test-session-interval"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     mkdir -p "$STATE_DIR"
 
     # Test at 75 (50 + 25)
     echo "74" > "$counter_file"
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     echo "Output at 75: $output" >&2
     [[ "$output" =~ "75 tool calls" ]] || [[ "$output" =~ "checkpoint" ]]
 
     # Test at 100 (50 + 50)
     echo "99" > "$counter_file"
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     echo "Output at 100: $output" >&2
     [[ "$output" =~ "100 tool calls" ]] || [[ "$output" =~ "checkpoint" ]]
 }
 
 @test "respects custom COMPACT_THRESHOLD" {
     local test_session="test-session-custom-threshold"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
     export COMPACT_THRESHOLD="5"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
@@ -222,7 +222,7 @@ teardown() {
 
     # Set counter to 4, next run should trigger at threshold 5
     echo "4" > "$counter_file"
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     echo "$output" >&2
     [[ "$output" =~ "5 tool calls reached" ]] || [[ "$output" =~ "consider /compact" ]]
@@ -230,11 +230,11 @@ teardown() {
 
 @test "no message before threshold" {
     local test_session="test-session-before-threshold"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
     export COMPACT_THRESHOLD="100"
 
     # Run once, counter will be 1
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     # Should not contain suggestion messages
     ! [[ "$output" =~ "tool calls reached" ]]
@@ -243,14 +243,14 @@ teardown() {
 
 @test "no message when count exceeds threshold but not at interval" {
     local test_session="test-session-between-interval"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     mkdir -p "$STATE_DIR"
 
     # Set to 76 (between 75 and 100 intervals)
     echo "75" > "$counter_file"
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     # Should not show interval message at 76
     ! [[ "$output" =~ "76 tool calls" ]]
@@ -290,10 +290,10 @@ teardown() {
 
 @test "falls back to PID when no session_id environment variable" {
     # Unset session_id to force fallback
-    unset STRATEGIC_COMPACT_SESSION_ID
+    unset AUTO_COMPACT_SESSION_ID
 
     # Run the hook
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     # Counter file should use PID pattern (just checking it exists)
     local counter_files
@@ -304,10 +304,10 @@ teardown() {
 
 @test "uses PID-based counter when session_id is invalid" {
     # Set invalid session_id
-    export STRATEGIC_COMPACT_SESSION_ID="invalid session with spaces"
+    export AUTO_COMPACT_SESSION_ID="invalid session with spaces"
 
     # Run the hook
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     # Should complete successfully (fallback to PID)
     [ "$status" -eq 0 ]
@@ -382,7 +382,7 @@ teardown() {
 
     [ "$status" -eq 0 ]
     [ -f "$test_env_file" ]
-    grep -q "STRATEGIC_COMPACT_SESSION_ID=test-session-write" "$test_env_file"
+    grep -q "AUTO_COMPACT_SESSION_ID=test-session-write" "$test_env_file"
 }
 
 @test "session-start-hook.sh appends to existing ENV_FILE" {
@@ -394,30 +394,30 @@ teardown() {
 
     [ "$status" -eq 0 ]
     grep -q "# Existing content" "$test_env_file"
-    grep -q "STRATEGIC_COMPACT_SESSION_ID=test-session-append" "$test_env_file"
+    grep -q "AUTO_COMPACT_SESSION_ID=test-session-append" "$test_env_file"
 }
 
 # ========================================
 # Test Suite 7: Error handling
 # ========================================
 
-@test "strategic-compact.sh handles missing state directory gracefully" {
+@test "auto-compact.sh handles missing state directory gracefully" {
     local test_session="test-session-missing-dir"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # Remove state directory
     rm -rf "$STATE_DIR"
 
     # Run should create directory and succeed
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
 
     [ "$status" -eq 0 ]
     [ -d "$STATE_DIR" ]
 }
 
-@test "strategic-compact.sh fails with error when cannot create state directory" {
+@test "auto-compact.sh fails with error when cannot create state directory" {
     local test_session="test-session-no-permission"
-    export STRATEGIC_COMPACT_SESSION_ID="$test_session"
+    export AUTO_COMPACT_SESSION_ID="$test_session"
 
     # This is difficult to test without root privileges
     # Skip if we can't simulate permission error
@@ -443,13 +443,13 @@ teardown() {
     source "$test_env_file"
 
     # Now make tool calls
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     [ "$status" -eq 0 ]
 
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     [ "$status" -eq 0 ]
 
-    run bash "${HOOKS_DIR}/strategic-compact.sh"
+    run bash "${HOOKS_DIR}/auto-compact.sh"
     [ "$status" -eq 0 ]
 
     # Verify counter

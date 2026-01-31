@@ -1,0 +1,9 @@
+{
+  "name": "auto-compact",
+  "version": "2.14.1",
+  "description": "Automatically suggests when to manually compact context during long sessions",
+  "author": {
+    "name": "baleen37",
+    "email": "git@baleen.me"
+  }
+}
