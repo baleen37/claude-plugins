@@ -230,4 +230,3 @@ PLUGIN_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
 - Main test file: `{plugin-name}.bats`
 - Helper tests: `{feature}-helper.bats`
 - Component tests: `{component}-test.bats`
-

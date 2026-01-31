@@ -1,0 +1,9 @@
+{
+  "name": "memory-persistence",
+  "version": "1.0.0",
+  "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
+  "author": {
+    "name": "baleen",
+    "email": "git@baleen.me"
+  }
+}
