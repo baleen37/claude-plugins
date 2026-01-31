@@ -26,7 +26,13 @@ validate_session_id() {
   return 0
 }
 
-# Determine session_id: use environment variable or fall back to PID
+# Load session_id from environment file (saved by SessionStart hook)
+ENV_FILE="${CLAUDE_ENV_FILE:-$HOME/.claude/auto-compact/session-env.sh}"
+if [[ -f "$ENV_FILE" ]]; then
+  source "$ENV_FILE"
+fi
+
+# Determine session_id: use loaded environment variable or fall back to PID
 SESSION_ID="${AUTO_COMPACT_SESSION_ID:-$$}"
 if ! validate_session_id "$SESSION_ID" 2>/dev/null; then
   SESSION_ID="$$"
