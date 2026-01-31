@@ -81,14 +81,12 @@ EOF
   # Set up environment for the script
   export CLAUDE_PLUGIN_ROOT="$FIXTURES_DIR/../../.."
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
-  export DEBUG_AUTO_UPDATER=true
 
   # Timestamp should not exist initially
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
-  run "$SCRIPT_DIR/update-checker.sh" --silent
-  [ "$status" -eq 0 ]
+  "$SCRIPT_DIR/update-checker.sh" --silent
 
   # Timestamp file should now exist
   [ -f "$CONFIG_DIR/last-check" ]
