@@ -5,8 +5,8 @@ setup() {
   export TEST_DIR="${BATS_TEST_DIRNAME}"
   export SCRIPT_DIR="${TEST_DIR}/../scripts"
   export FIXTURES_DIR="${TEST_DIR}/fixtures"
-  # Use BATS_TEST_NAME to ensure unique temp directory per test
-  export TEMP_DIR="${BATS_TMPDIR}/auto-updater-test-${BATS_TEST_NAME}"
+  # Use mktemp for guaranteed unique temp directory per test
+  export TEMP_DIR="$(mktemp -d "${BATS_TMPDIR}/auto-updater-test-XXXXXX")"
 
   mkdir -p "$TEMP_DIR"
   export HOME="$TEMP_DIR"
@@ -86,8 +86,7 @@ EOF
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
-  run "$SCRIPT_DIR/update-checker.sh" --silent
-  [ "$status" -eq 0 ]
+  "$SCRIPT_DIR/update-checker.sh" --silent
 
   # Timestamp file should now exist
   [ -f "$CONFIG_DIR/last-check" ]

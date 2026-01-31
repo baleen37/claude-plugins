@@ -1,6 +1,6 @@
 {
   "$schema": "../../schemas/hooks-schema.json",
-  "description": "Strategic Compact hooks - suggests manual compaction at logical intervals",
+  "description": "Auto Compact hooks - suggests manual compaction at logical intervals",
   "hooks": {
     "SessionStart": [
       {
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/strategic-compact.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-compact.sh"
           }
         ]
       }

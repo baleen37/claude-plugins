@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(me:create-pr)",
+      "Skill(create-pr)"
+    ]
+  }
+}
