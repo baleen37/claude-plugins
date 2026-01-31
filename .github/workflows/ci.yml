@@ -15,9 +15,13 @@ jobs:
         uses: sergeysova/jq-action@v2
 
       - name: Install yq
-        run: |
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
-          chmod +x /usr/local/bin/yq
+        uses: mikefarah/yq@v4.40.1
+
+      - name: Install ShellCheck
+        run: apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: find . -name "*.sh" -exec shellcheck {} +
 
       - name: Setup Bats and bats libs
         id: setup-bats
