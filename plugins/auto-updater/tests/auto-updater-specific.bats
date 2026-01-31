@@ -5,8 +5,9 @@ setup() {
   export TEST_DIR="${BATS_TEST_DIRNAME}"
   export SCRIPT_DIR="${TEST_DIR}/../scripts"
   export FIXTURES_DIR="${TEST_DIR}/fixtures"
-  # Use BATS_TEST_NAME to ensure unique temp directory per test
-  export TEMP_DIR="${BATS_TMPDIR}/auto-updater-test-${BATS_TEST_NAME}"
+  # Use BATS_TEST_FILENAME and random number for unique temp directory per test
+  # This ensures isolation even when tests run in parallel or share PIDs
+  export TEMP_DIR="${BATS_TMPDIR}/auto-updater-test-${BASHPID}-${RANDOM}"
 
   mkdir -p "$TEMP_DIR"
   export HOME="$TEMP_DIR"
