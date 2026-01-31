@@ -18,7 +18,7 @@
         "loop",
         "ai"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "git-guard",
@@ -32,7 +32,7 @@
         "pr",
         "security"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "me",
@@ -47,7 +47,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "jira",
@@ -61,7 +61,7 @@
         "atlassian",
         "mcp"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "databricks",
@@ -75,7 +75,7 @@
         "mcp",
         "analytics"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "strategic-compact",
@@ -87,7 +87,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "auto-updater",
@@ -99,7 +99,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     },
     {
       "name": "lsp-support",
@@ -116,7 +116,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "2.14.0"
+      "version": "2.14.1"
     }
   ]
 }
