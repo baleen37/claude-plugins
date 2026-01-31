@@ -1,0 +1,9 @@
+{
+  "marketplaces": [
+    {
+      "name": "baleen-plugins",
+      "source": "baleen37/claude-plugins",
+      "plugins": ["git-guard", "ralph-loop"]
+    }
+  ]
+}

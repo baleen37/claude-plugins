@@ -1,0 +1,17 @@
+{
+  "marketplaces": [
+    {
+      "name": "marketplace-a",
+      "source": "example/marketplace-a"
+    },
+    {
+      "name": "marketplace-b",
+      "source": "anthropics/claude-plugins-official",
+      "plugins": ["plugin-1", "plugin-2"]
+    },
+    {
+      "name": "marketplace-c",
+      "source": "example/marketplace-c"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Auto-Updater Configuration",
+  "type": "object",
+  "required": ["marketplaces"],
+  "properties": {
+    "marketplaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "source"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Unique identifier for the marketplace"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+/[a-z0-9-]+$",
+            "description": "GitHub owner/repo format (e.g., 'anthropics/claude-plugins-official')"
+          },
+          "plugins": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["all"],
+                "description": "Install all plugins from this marketplace (default when omitted)"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                },
+                "description": "List of specific plugin names to install"
+              }
+            ],
+            "description": "Plugins to include from this marketplace. Omit to install all plugins."
+          }
+        }
+      }
+    }
+  }
+}
