@@ -1,6 +1,6 @@
 {
   "name": "auto-compact",
-  "version": "2.24.8",
+  "version": "2.24.9",
   "description": "Automatically suggests when to manually compact context during long sessions",
   "author": {
     "name": "baleen37",
