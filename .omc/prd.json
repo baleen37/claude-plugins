@@ -1,0 +1,44 @@
+{
+  "project": "Fix CI Release Workflow Auto-Merge Issue",
+  "branchName": "ralph/fix-release-workflow-automerge",
+  "description": "release.yml workflow에서 PR 생성 후 auto-merge가 작동하지 않는 문제 해결. 현재 bot이 생성한 PR에 대해 workflow가 skip되어 merge가 진행되지 않음.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Analyze current release workflow issue",
+      "description": "As a developer, I want to understand why release PRs are not auto-merging so that I can fix the root cause.",
+      "acceptanceCriteria": [
+        "Root cause identified: `if: ${{ !contains(github.actor, '[bot]') }}` prevents bot-triggered workflows",
+        "Understand the skip behavior in release workflow logs",
+        "Document why the condition exists and what needs to change"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "US-002",
+      "title": "Fix workflow trigger condition for release PRs",
+      "description": "As a developer, I want to modify the release.yml workflow so that release PRs created by the bot can still trigger the workflow and merge.",
+      "acceptanceCriteria": [
+        "Update the bot exclusion condition to allow release PR workflows",
+        "Ensure release commits still trigger the workflow",
+        "Prevent infinite loops (release creating another release)"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "US-003",
+      "title": "Test the fixed release workflow",
+      "description": "As a developer, I want to verify the release workflow works correctly after the fix.",
+      "acceptanceCriteria": [
+        "Create a test commit that triggers release",
+        "Verify release PR is created",
+        "Verify PR is auto-merged",
+        "Verify workflow completes successfully"
+      ],
+      "priority": 3,
+      "passes": false
+    }
+  ]
+}
