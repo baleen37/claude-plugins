@@ -38,7 +38,14 @@ done
 
 # Update timestamp before early exit if not check-only
 if [[ "$CHECK_ONLY" = false ]]; then
-  date +%s > "$TIMESTAMP_FILE"
+  # Debug: log timestamp creation (remove after CI fix)
+  if [[ ! -d "$CONFIG_DIR" ]]; then
+    mkdir -p "$CONFIG_DIR" || { echo "Failed to create CONFIG_DIR: $CONFIG_DIR" >&2; exit 1; }
+  fi
+  if ! date +%s > "$TIMESTAMP_FILE" 2>/dev/null; then
+    echo "Failed to create timestamp file: $TIMESTAMP_FILE" >&2
+    exit 1
+  fi
 fi
 
 # Exit silently if marketplace doesn't exist (timestamp already updated)
