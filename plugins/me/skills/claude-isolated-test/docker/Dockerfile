@@ -18,6 +18,11 @@ WORKDIR /workspace
 RUN useradd -m -s /bin/bash claude && \
     chown -R claude:claude /workspace
 
+# tmux 소켓 영속성을 위한 디렉토리 추가
+ENV TMUX_TMPDIR=/tmux
+RUN mkdir -p /tmux && \
+    chown -R claude:claude /tmux
+
 # Switch to non-root user
 USER claude
 
