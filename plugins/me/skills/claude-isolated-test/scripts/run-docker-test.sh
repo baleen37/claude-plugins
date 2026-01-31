@@ -107,18 +107,21 @@ echo "$OUTPUT"
 echo "========================================"
 
 # 7. Verify results
+failed=0
 if [ ${#TEST_EXPECTED_CONTAINS[@]} -gt 0 ]; then
     echo "" >&2
     echo "Verifying expected outputs..." >&2
-    if verify_contains "$OUTPUT" "${TEST_EXPECTED_CONTAINS[@]}"; then
-        report_result "$TEST_NAME" "pass" "$DURATION"
-        exit 0
-    else
-        report_result "$TEST_NAME" "fail" "$DURATION"
-        exit 1
-    fi
-else
-    echo "No verification criteria defined. Test completed." >&2
+    verify_contains "$OUTPUT" "${TEST_EXPECTED_CONTAINS[@]}" || failed=1
+fi
+if [ ${#TEST_EXPECTED_NOT_CONTAINS[@]} -gt 0 ]; then
+    echo "" >&2
+    echo "Verifying unwanted strings are absent..." >&2
+    verify_not_contains "$OUTPUT" "${TEST_EXPECTED_NOT_CONTAINS[@]}" || failed=1
+fi
+if [ $failed -eq 0 ]; then
     report_result "$TEST_NAME" "pass" "$DURATION"
     exit 0
+else
+    report_result "$TEST_NAME" "fail" "$DURATION"
+    exit 1
 fi
