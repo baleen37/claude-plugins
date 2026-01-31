@@ -42,9 +42,7 @@ jobs:
         uses: sergeysova/jq-action@v2
 
       - name: Install yq
-        run: |
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
-          chmod +x /usr/local/bin/yq
+        uses: mikefarah/yq@v4.40.1
 
       - name: Setup Bats and bats libs
         id: setup-bats
@@ -55,7 +53,7 @@ jobs:
         env:
           BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
           TERM: xterm
-        run: bats tests/
+        run: bash tests/run-all-tests.sh
 
       - name: Release
         env:

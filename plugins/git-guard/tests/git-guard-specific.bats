@@ -28,45 +28,38 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/git-guard"
 
 # commit-guard.sh functional tests
 @test "git-guard: commit-guard blocks --no-verify" {
-    local json_input='{"command":"git commit --no-verify -m \"test\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"git commit --no-verify -m \\\"test\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
     [[ "$output" == *"not allowed"* ]]
 }
 
 @test "git-guard: commit-guard blocks --no-verify with amend" {
-    local json_input='{"command":"git commit --amend --no-verify"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"git commit --amend --no-verify\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
 }
 
 @test "git-guard: commit-guard blocks HUSKY=0" {
-    local json_input='{"command":"HUSKY=0 git commit -m \"test\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"HUSKY=0 git commit -m \\\"test\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
 }
 
 @test "git-guard: commit-guard blocks SKIP_HOOKS" {
-    local json_input='{"command":"SKIP_HOOKS=1 git commit -m \"test\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"SKIP_HOOKS=1 git commit -m \\\"test\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
 }
 
 @test "git-guard: commit-guard allows normal git commit" {
-    local json_input='{"command":"git commit -m \"normal commit\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"git commit -m \\\"normal commit\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 0 ]
 }
 
 @test "git-guard: commit-guard blocks skip-hooks pattern" {
-    local json_input='{"command":"git commit --skip-hooks -m \"test\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"git commit --skip-hooks -m \\\"test\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
 }
 
 @test "git-guard: commit-guard blocks --no-commit-hook" {
-    local json_input='{"command":"git commit --no-commit-hook -m \"test\"}'
-    run bash -c "echo '$json_input' | ${PLUGIN_DIR}/hooks/commit-guard.sh"
+    run bash -c "set -o pipefail; echo '{\"command\":\"git commit --no-commit-hook -m \\\"test\\\"\"}' | '${PLUGIN_DIR}/hooks/commit-guard.sh'"
     [ "$status" -eq 2 ]
 }
 

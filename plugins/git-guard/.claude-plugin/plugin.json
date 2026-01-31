@@ -1,6 +1,6 @@
 {
   "name": "git-guard",
-  "version": "2.14.0",
+  "version": "2.14.1",
   "description": "Git workflow protection hooks - prevents commit and PR bypasses",
   "author": {
     "name": "baleen37",

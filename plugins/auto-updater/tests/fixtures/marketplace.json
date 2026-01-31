@@ -8,6 +8,14 @@
   },
   "plugins": [
     {
+      "name": "git-guard",
+      "description": "Git workflow protection hooks",
+      "source": "./plugins/git-guard",
+      "category": "development",
+      "tags": ["git", "hooks"],
+      "version": "2.0.0"
+    },
+    {
       "name": "test-plugin-1",
       "description": "Test plugin 1",
       "source": "./plugins/test-plugin-1",
