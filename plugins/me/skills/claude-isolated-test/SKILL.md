@@ -10,7 +10,7 @@ description: Docker 컨테이너에서 Claude Code를 대화형으로 테스트
 ## 실행
 
 ```bash
-./plugins/me/skills/claude-isolated-test/shell.sh
+"${CLAUDE_PLUGIN_ROOT}/plugins/me/skills/claude-isolated-test/shell.sh"
 ```
 
 ## 옵션
