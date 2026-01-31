@@ -5,8 +5,8 @@ setup() {
   export TEST_DIR="${BATS_TEST_DIRNAME}"
   export SCRIPT_DIR="${TEST_DIR}/../scripts"
   export FIXTURES_DIR="${TEST_DIR}/fixtures"
-  # Use BATS_TEST_NAME to ensure unique temp directory per test
-  export TEMP_DIR="${BATS_TMPDIR}/auto-updater-test-${BATS_TEST_NAME}"
+  # Use mktemp for guaranteed unique temp directory per test
+  export TEMP_DIR="$(mktemp -d "${BATS_TMPDIR}/auto-updater-test-XXXXXX")"
 
   mkdir -p "$TEMP_DIR"
   export HOME="$TEMP_DIR"
@@ -81,6 +81,7 @@ EOF
   # Set up environment for the script
   export CLAUDE_PLUGIN_ROOT="$FIXTURES_DIR/../../.."
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
+  export DEBUG_AUTO_UPDATER=true
 
   # Timestamp should not exist initially
   [ ! -f "$CONFIG_DIR/last-check" ]
