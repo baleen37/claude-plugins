@@ -1,9 +1,9 @@
 ---
-name: docker-sandbox
+name: claude-isolated-test
 description: Use when testing Claude Code components (SKILLs, Commands, Hooks) in isolated Docker environments, needing reproducible test conditions, or testing without polluting local environment
 ---
 
-# Docker Sandbox Testing
+# Claude Isolated Testing
 
 ## Overview
 
@@ -418,7 +418,7 @@ ENTRYPOINT ["/usr/bin/env", "bash"]
 
 ## Comparison with tmux-testing
 
-| Feature | docker-sandbox | tmux-testing |
+| Feature | claude-isolated-test | tmux-testing |
 |---------|----------------|--------------|
 | **Isolation** | Full OS isolation | Process isolation |
 | **TTY** | No (unless combined) | Yes |

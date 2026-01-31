@@ -16,7 +16,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/ is ignored but allow specific paths (exceptions below)
+*/lib/
 lib64/
 
 # Exception: Include plugin and skill script libraries

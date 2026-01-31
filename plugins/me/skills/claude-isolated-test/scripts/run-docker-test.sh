@@ -61,7 +61,7 @@ fi
 # 2. Check if image exists, build if needed
 if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
     echo "Image not found. Building $IMAGE_NAME..." >&2
-    build_claude_image "$IMAGE_NAME" "$PROJECT_ROOT/skills/docker-sandbox/docker"
+    build_claude_image "$IMAGE_NAME" "$SCRIPT_DIR/../docker"
 fi
 
 # 3. Get OAuth token from Keychain (macOS) or environment

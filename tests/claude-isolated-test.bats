@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# docker-sandbox.bats: Tests for docker-sandbox skill
+# claude-isolated-test.bats: Tests for claude-isolated-test skill
 
 load 'helpers/bats_helper.bash'
 
 setup() {
     # Source the helper libraries
-    DOCKER_SANDBOX_DIR="${BATS_TEST_DIRNAME}/../skills/docker-sandbox"
-    export DOCKER_SANDBOX_DIR
+    CLAUDE_ISOLATED_TEST_DIR="${BATS_TEST_DIRNAME}/../plugins/me/skills/claude-isolated-test"
+    export CLAUDE_ISOLATED_TEST_DIR
 }
 
 teardown() {
@@ -20,7 +20,7 @@ teardown() {
         skip "Docker not available"
     fi
 
-    source "$DOCKER_SANDBOX_DIR/scripts/lib/docker-helpers.sh"
+    source "$CLAUDE_ISOLATED_TEST_DIR/scripts/lib/docker-helpers.sh"
 
     run check_docker_available
     [ "$status" -eq 0 ]
@@ -34,7 +34,7 @@ teardown() {
     }
     export -f docker
 
-    source "$DOCKER_SANDBOX_DIR/scripts/lib/docker-helpers.sh"
+    source "$CLAUDE_ISOLATED_TEST_DIR/scripts/lib/docker-helpers.sh"
 
     run check_docker_available
     [ "$status" -ne 0 ]
@@ -48,7 +48,7 @@ teardown() {
         skip "Docker not available"
     fi
 
-    source "$DOCKER_SANDBOX_DIR/scripts/lib/docker-helpers.sh"
+    source "$CLAUDE_ISOLATED_TEST_DIR/scripts/lib/docker-helpers.sh"
 
     local container_name="claude-test-bats-$$-$RANDOM"
     local test_token="test-token-12345"
@@ -72,7 +72,7 @@ teardown() {
 }
 
 @test "test-helpers.sh: verify_contains checks all expected strings" {
-    source "$DOCKER_SANDBOX_DIR/scripts/lib/test-helpers.sh"
+    source "$CLAUDE_ISOLATED_TEST_DIR/scripts/lib/test-helpers.sh"
 
     local output="This is a test output with multiple lines"
 
@@ -84,7 +84,7 @@ teardown() {
 }
 
 @test "run-docker-test.sh: script exists and is executable" {
-    local script="$DOCKER_SANDBOX_DIR/scripts/run-docker-test.sh"
+    local script="$CLAUDE_ISOLATED_TEST_DIR/scripts/run-docker-test.sh"
 
     [ -f "$script" ]
     [ -x "$script" ]
@@ -95,7 +95,7 @@ teardown() {
         skip "Docker not available"
     fi
 
-    local script="$DOCKER_SANDBOX_DIR/scripts/run-docker-test.sh"
+    local script="$CLAUDE_ISOLATED_TEST_DIR/scripts/run-docker-test.sh"
 
     run "$script"
     [ "$status" -ne 0 ]
@@ -107,7 +107,7 @@ teardown() {
         skip "Docker not available"
     fi
 
-    local script="$DOCKER_SANDBOX_DIR/scripts/run-docker-test.sh"
+    local script="$CLAUDE_ISOLATED_TEST_DIR/scripts/run-docker-test.sh"
 
     run "$script" "/nonexistent/test.yaml"
     [ "$status" -ne 0 ]
