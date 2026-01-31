@@ -4,6 +4,9 @@
 # Tests for timestamp update conditional logic
 #
 
+# Store original update-checker.sh to restore after tests
+ORIGINAL_UPDATE_CHECKER=""
+
 setup() {
     export TEST_DIR="${BATS_TEST_DIRNAME}"
     export SCRIPT_DIR="${TEST_DIR}/../scripts"
@@ -14,9 +17,19 @@ setup() {
     export HOME="$TEMP_DIR"
     export CONFIG_DIR="$HOME/.claude/auto-updater"
     mkdir -p "$CONFIG_DIR"
+
+    # Backup original update-checker.sh
+    ORIGINAL_UPDATE_CHECKER="${SCRIPT_DIR}/update-checker.sh"
+    if [ -f "$ORIGINAL_UPDATE_CHECKER" ]; then
+        cp "$ORIGINAL_UPDATE_CHECKER" "${TEMP_DIR}/update-checker.sh.backup"
+    fi
 }
 
 teardown() {
+    # Restore original update-checker.sh
+    if [ -f "${TEMP_DIR}/update-checker.sh.backup" ]; then
+        cp "${TEMP_DIR}/update-checker.sh.backup" "$ORIGINAL_UPDATE_CHECKER"
+    fi
     rm -rf "$TEMP_DIR"
 }
 
