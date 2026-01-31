@@ -117,6 +117,20 @@
         "diagnostics"
       ],
       "version": "2.14.1"
+    },
+    {
+      "name": "memory-persistence",
+      "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
+      "source": "./plugins/memory-persistence",
+      "category": "productivity",
+      "tags": [
+        "memory",
+        "persistence",
+        "sessions",
+        "context",
+        "hooks"
+      ],
+      "version": "1.0.0"
     }
   ]
 }
