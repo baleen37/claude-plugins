@@ -1,0 +1,19 @@
+{
+  "created_at": "2026-01-31T09:11:52.555Z",
+  "trigger": "auto",
+  "active_modes": {
+    "ralph": {
+      "iteration": 6,
+      "prompt": ""
+    },
+    "ultrawork": {
+      "original_prompt": "/oh-my-claudecode:ralph 검증까지 해야지?"
+    }
+  },
+  "todo_summary": {
+    "pending": 0,
+    "in_progress": 0,
+    "completed": 0
+  },
+  "wisdom_exported": true
+}

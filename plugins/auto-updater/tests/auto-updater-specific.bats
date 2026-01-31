@@ -81,12 +81,22 @@ EOF
   export CLAUDE_PLUGIN_ROOT="$FIXTURES_DIR/../../.."
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
+  # Debug: Log environment variables (remove after fix)
+  echo "TEST: CONFIG_DIR=$CONFIG_DIR" >&3
+  echo "TEST: TIMESTAMP_FILE=$TIMESTAMP_FILE" >&3
+  echo "TEST: HOME=$HOME" >&3
+  ls -la "$CONFIG_DIR" >&3 || true
+
   # Timestamp should not exist initially
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
   run "$SCRIPT_DIR/update-checker.sh" --silent
   [ "$status" -eq 0 ]
+
+  # Debug: Check if file exists after run
+  echo "TEST: After run - CONFIG_DIR=$CONFIG_DIR" >&3
+  ls -la "$CONFIG_DIR" >&3 || true
 
   # Timestamp file should now exist
   [ -f "$CONFIG_DIR/last-check" ]
