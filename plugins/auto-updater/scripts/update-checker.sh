@@ -36,7 +36,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Exit silently if marketplace doesn't exist
+# Update timestamp before early exit if not check-only
+if [[ "$CHECK_ONLY" = false ]]; then
+  date +%s > "$TIMESTAMP_FILE"
+fi
+
+# Exit silently if marketplace doesn't exist (timestamp already updated)
 if [[ -z "$MARKETPLACE_FILE" || ! -f "$MARKETPLACE_FILE" ]]; then
   exit 0
 fi
@@ -74,11 +79,6 @@ if [[ "$INSTALLED_PLUGINS" != "[]" ]]; then
       fi
     fi
   done < <(echo "$INSTALLED_PLUGINS" | jq -c '.[]' 2>/dev/null || echo "")
-fi
-
-# Update timestamp if not check-only
-if [[ "$CHECK_ONLY" = false ]]; then
-  date +%s > "$TIMESTAMP_FILE"
 fi
 
 # Summary output
