@@ -82,13 +82,13 @@ EOF
   # Set up environment for the script
   export CLAUDE_PLUGIN_ROOT="$FIXTURES_DIR/../../.."
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
+  export DEBUG_AUTO_UPDATER=true
 
   # Timestamp should not exist initially
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
-  # Use env to explicitly pass environment variables
-  run env -i HOME="$HOME" CONFIG_DIR="$CONFIG_DIR" CLAUDE_PLUGIN_ROOT="$CLAUDE_PLUGIN_ROOT" MARKETPLACE_FILE="$MARKETPLACE_FILE" PATH="$PATH" "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/update-checker.sh" --silent
   [ "$status" -eq 0 ]
 
   # Timestamp file should now exist
