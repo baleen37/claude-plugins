@@ -58,6 +58,8 @@ create_interactive_container() {
         --name "$container_name" \
         -e CLAUDE_CODE_OAUTH_TOKEN="$oauth_token" \
         -v "$workspace:/workspace" \
+        -v "${container_name}-tmux:/tmux" \
+        -e TMUX_TMPDIR=/tmux \
         -w /workspace \
         "$image_name" \
         sleep infinity
