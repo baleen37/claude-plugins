@@ -72,6 +72,10 @@ jobs:
 
           echo "Push to main, preparing release PR..."
 
+          # Pull latest changes from main to ensure we have the most recent commits
+          # This must be done BEFORE semantic-release to include all recent code changes
+          git pull origin main --ff-only
+
           # Run semantic-release to update version files only
           npx semantic-release
 
@@ -81,9 +85,6 @@ jobs:
 
             # Get the new version from marketplace.json (all plugins have the same version)
             VERSION=$(node -p "require('./.claude-plugin/marketplace.json').plugins[0].version")
-
-            # Pull latest changes from main to ensure release branch includes all recent commits
-            git pull origin main --ff-only
 
             # Commit the changes
             git add .
