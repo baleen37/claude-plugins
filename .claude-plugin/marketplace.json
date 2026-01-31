@@ -36,7 +36,7 @@
     },
     {
       "name": "me",
-      "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, and development automation",
+      "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, development automation",
       "source": "./plugins/me",
       "category": "development",
       "tags": [
@@ -98,6 +98,23 @@
         "automation",
         "updates",
         "marketplace"
+      ],
+      "version": "2.13.1"
+    },
+    {
+      "name": "lsp-support",
+      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, and Go",
+      "source": "./plugins/lsp-support",
+      "category": "development",
+      "tags": [
+        "lsp",
+        "bash",
+        "typescript",
+        "javascript",
+        "python",
+        "go",
+        "autocomplete",
+        "diagnostics"
       ],
       "version": "2.13.1"
     }
