@@ -8,58 +8,14 @@
   },
   "plugins": [
     {
-      "name": "ralph-loop",
-      "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
-      "source": "./plugins/ralph-loop",
+      "name": "auto-updater",
+      "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
+      "source": "./plugins/auto-updater",
       "category": "development",
       "tags": [
         "automation",
-        "iteration",
-        "loop",
-        "ai"
-      ],
-      "version": "2.14.1"
-    },
-    {
-      "name": "git-guard",
-      "description": "Git workflow protection hooks - prevents commit and PR bypasses, enforces pre-commit checks",
-      "source": "./plugins/git-guard",
-      "category": "development",
-      "tags": [
-        "git",
-        "hooks",
-        "pre-commit",
-        "pr",
-        "security"
-      ],
-      "version": "2.14.1"
-    },
-    {
-      "name": "me",
-      "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, development automation",
-      "source": "./plugins/me",
-      "category": "development",
-      "tags": [
-        "workflow",
-        "automation",
-        "tdd",
-        "git",
-        "code-review",
-        "debugging"
-      ],
-      "version": "2.14.1"
-    },
-    {
-      "name": "jira",
-      "description": "Jira integration via Atlassian MCP server - create, search, and manage issues",
-      "source": "./plugins/jira",
-      "category": "productivity",
-      "tags": [
-        "jira",
-        "project-management",
-        "issue-tracking",
-        "atlassian",
-        "mcp"
+        "updates",
+        "marketplace"
       ],
       "version": "2.14.1"
     },
@@ -78,26 +34,30 @@
       "version": "2.14.1"
     },
     {
-      "name": "auto-compact",
-      "description": "Automatically suggests when to manually compact context during long sessions",
-      "source": "./plugins/auto-compact",
+      "name": "git-guard",
+      "description": "Git workflow protection hooks - prevents commit and PR bypasses, enforces pre-commit checks",
+      "source": "./plugins/git-guard",
       "category": "development",
       "tags": [
-        "workflow",
-        "context-management",
-        "hooks"
+        "git",
+        "hooks",
+        "pre-commit",
+        "pr",
+        "security"
       ],
       "version": "2.14.1"
     },
     {
-      "name": "auto-updater",
-      "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
-      "source": "./plugins/auto-updater",
-      "category": "development",
+      "name": "jira",
+      "description": "Jira integration via Atlassian MCP server - create, search, and manage issues",
+      "source": "./plugins/jira",
+      "category": "productivity",
       "tags": [
-        "automation",
-        "updates",
-        "marketplace"
+        "jira",
+        "project-management",
+        "issue-tracking",
+        "atlassian",
+        "mcp"
       ],
       "version": "2.14.1"
     },
@@ -119,6 +79,21 @@
       "version": "2.14.1"
     },
     {
+      "name": "me",
+      "description": "Personal Claude Code configuration - TDD, systematic debugging, git workflow, code review, development automation",
+      "source": "./plugins/me",
+      "category": "development",
+      "tags": [
+        "workflow",
+        "automation",
+        "tdd",
+        "git",
+        "code-review",
+        "debugging"
+      ],
+      "version": "2.14.1"
+    },
+    {
       "name": "memory-persistence",
       "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
       "source": "./plugins/memory-persistence",
@@ -126,11 +101,35 @@
       "tags": [
         "memory",
         "persistence",
-        "sessions",
         "context",
-        "hooks"
+        "session"
       ],
       "version": "1.0.0"
+    },
+    {
+      "name": "ralph-loop",
+      "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
+      "source": "./plugins/ralph-loop",
+      "category": "development",
+      "tags": [
+        "automation",
+        "iteration",
+        "loop",
+        "ai"
+      ],
+      "version": "2.14.1"
+    },
+    {
+      "name": "strategic-compact",
+      "description": "Strategic context compaction suggestions for long Claude Code sessions",
+      "source": "./plugins/strategic-compact",
+      "category": "development",
+      "tags": [
+        "workflow",
+        "context-management",
+        "hooks"
+      ],
+      "version": "2.14.1"
     }
   ]
 }
