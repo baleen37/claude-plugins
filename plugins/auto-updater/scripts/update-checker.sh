@@ -1,117 +1,149 @@
 #!/usr/bin/env bash
-set -eo pipefail
 
-# Default configuration
-CONFIG_DIR="${CONFIG_DIR:-$HOME/.claude/auto-updater}"
-TIMESTAMP_FILE="$CONFIG_DIR/last-check"
-CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
-MARKETPLACE_FILE="${MARKETPLACE_FILE:-}"
+set -euo pipefail
 
-# Debug: log paths only if DEBUG_AUTO_UPDATER is set
-if [[ "${DEBUG_AUTO_UPDATER:-false}" = "true" ]]; then
-  echo "DEBUG_AUTO_UPDATER: CONFIG_DIR=$CONFIG_DIR" >&2
-  echo "DEBUG_AUTO_UPDATER: TIMESTAMP_FILE=$TIMESTAMP_FILE" >&2
-  echo "DEBUG_AUTO_UPDATER: HOME=$HOME" >&2
+# Load version comparison functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/version-compare.sh
+source "${SCRIPT_DIR}/lib/version-compare.sh"
+
+# Configuration
+CONFIG_DIR="${HOME}/.claude/auto-updater"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
+DEFAULT_POLICY="patch"
+MARKETPLACE_CACHE="${CONFIG_DIR}/marketplace.json"
+MARKETPLACE_URL="https://raw.githubusercontent.com/baleen37/claude-plugins/main/.claude-plugin/marketplace.json"
+
+# Exit early if CLAUDE_PLUGIN_ROOT is not set
+if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  exit 0
 fi
 
-# Use default marketplace path if not set
-if [[ -z "$MARKETPLACE_FILE" && -n "$CLAUDE_PLUGIN_ROOT" ]]; then
-  MARKETPLACE_FILE="$CLAUDE_PLUGIN_ROOT/.claude-plugin/marketplace.json"
-fi
+# Helper: fetch marketplace.json from GitHub
+fetch_marketplace() {
+  mkdir -p "$CONFIG_DIR"
 
-# Ensure config directory exists
-mkdir -p "$CONFIG_DIR"
+  # Try to download from GitHub
+  if curl -fsSL --max-time 10 "$MARKETPLACE_URL" -o "${MARKETPLACE_CACHE}.tmp" 2>/dev/null; then
+    mv "${MARKETPLACE_CACHE}.tmp" "$MARKETPLACE_CACHE"
+    return 0
+  else
+    # Download failed, clean up temp file
+    rm -f "${MARKETPLACE_CACHE}.tmp"
 
-# Parse arguments
+    # Check if cached file exists
+    if [ -f "$MARKETPLACE_CACHE" ]; then
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+# Fetch marketplace.json (download or use cached)
+fetch_marketplace || exit 0
+MARKETPLACE_FILE="${MARKETPLACE_FILE:-$MARKETPLACE_CACHE}"
+
+# Parse command line arguments
+SILENT_MODE=false
 CHECK_ONLY=false
-SILENT=false
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
+for arg in "$@"; do
+  case "$arg" in
+    --silent)
+      SILENT_MODE=true
+      ;;
     --check-only)
       CHECK_ONLY=true
-      shift
-      ;;
-    --silent)
-      SILENT=true
-      shift
       ;;
     *)
-      echo "Unknown option: $1" >&2
+      echo "Unknown argument: $arg" >&2
       exit 1
       ;;
   esac
 done
 
-# Update timestamp before early exit if not check-only
-if [[ "$CHECK_ONLY" = false ]]; then
-  # Debug: log timestamp creation (remove after CI fix)
-  if [[ ! -d "$CONFIG_DIR" ]]; then
-    mkdir -p "$CONFIG_DIR" || { echo "Failed to create CONFIG_DIR: $CONFIG_DIR" >&2; exit 1; }
+# Helper: log message (respects silent mode)
+log() {
+  if [ "$SILENT_MODE" = false ]; then
+    echo "[auto-updater] $*" >&2
   fi
-  # Create timestamp file
-  if date +%s > "$TIMESTAMP_FILE" 2>/dev/null; then
-    # Success - verify file exists
-    if [[ ! -f "$TIMESTAMP_FILE" ]]; then
-      echo "Error: Timestamp file creation reported success but file not found: $TIMESTAMP_FILE" >&2
-      echo "CONFIG_DIR=$CONFIG_DIR" >&2
-      ls -la "$CONFIG_DIR" >&2 || true
-      exit 1
-    fi
-  else
-    echo "Failed to create timestamp file: $TIMESTAMP_FILE" >&2
-    echo "CONFIG_DIR=$CONFIG_DIR" >&2
-    echo "TIMESTAMP_FILE=$TIMESTAMP_FILE" >&2
-    ls -la "$CONFIG_DIR" >&2 || true
-    exit 1
-  fi
-fi
+}
 
-# Exit silently if marketplace doesn't exist (timestamp already updated)
-if [[ -z "$MARKETPLACE_FILE" || ! -f "$MARKETPLACE_FILE" ]]; then
+# Helper: get update policy from config
+get_update_policy() {
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "$DEFAULT_POLICY"
+    return
+  fi
+
+  local policy
+  policy=$(jq -r '.auto_update_policy // "patch"' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_POLICY")
+  echo "$policy"
+}
+
+# Helper: update timestamp
+update_timestamp() {
+  mkdir -p "$CONFIG_DIR"
+  date +%s > "$TIMESTAMP_FILE" 2>/dev/null || true
+}
+
+# Exit silently if marketplace doesn't exist
+if [ ! -f "$MARKETPLACE_FILE" ]; then
   exit 0
 fi
 
+# Update marketplace cache to get latest versions
+if [ "$CHECK_ONLY" = false ]; then
+  log "Updating marketplace cache..."
+  claude plugin marketplace update baleen-plugins 2>/dev/null || log "Failed to update marketplace cache"
+fi
+
 # Get installed plugins
-if command -v claude &> /dev/null; then
-  INSTALLED_PLUGINS=$(claude plugin list --json 2>/dev/null || echo "[]")
-else
-  INSTALLED_PLUGINS="[]"
+INSTALLED_PLUGINS_JSON=$(claude plugin list --json 2>/dev/null || echo "[]")
+
+# Get update policy
+UPDATE_POLICY=$(get_update_policy)
+log "Using update policy: $UPDATE_POLICY"
+
+# Read marketplace plugins
+MARKETPLACE_PLUGINS=$(jq -c '.plugins[] | {name: .name, version: .version}' "$MARKETPLACE_FILE" 2>/dev/null || echo "")
+
+if [ -z "$MARKETPLACE_PLUGINS" ]; then
+  log "No plugins found in marketplace"
+  exit 0
 fi
 
-# Check for outdated plugins
-OUTDATED_COUNT=0
+# Process each marketplace plugin
+while IFS= read -r plugin_json; do
+  plugin_name=$(echo "$plugin_json" | jq -r '.name')
+  marketplace_version=$(echo "$plugin_json" | jq -r '.version')
 
-if [[ "$INSTALLED_PLUGINS" != "[]" ]]; then
-  # Parse installed plugins and check against marketplace
-  while IFS= read -r plugin; do
-    PLUGIN_ID=$(echo "$plugin" | jq -r '.id // empty' 2>/dev/null || echo "")
-    PLUGIN_VERSION=$(echo "$plugin" | jq -r '.version // empty' 2>/dev/null || echo "")
+  # Check if plugin is installed
+  installed_version=$(echo "$INSTALLED_PLUGINS_JSON" | jq -r --arg name "$plugin_name" '.[] | select(.id | startswith($name + "@")) | .version' 2>/dev/null || echo "")
 
-    if [[ -n "$PLUGIN_ID" && -n "$PLUGIN_VERSION" ]]; then
-      # Extract plugin name from ID (format: name@source)
-      PLUGIN_NAME="${PLUGIN_ID%%@*}"
-
-      # Check marketplace for newer version
-      MARKETPLACE_VERSION=$(jq -r --arg name "$PLUGIN_NAME" \
-        '.plugins[] | select(.name == $name) | .version' \
-        "$MARKETPLACE_FILE" 2>/dev/null || echo "")
-
-      if [[ -n "$MARKETPLACE_VERSION" && "$MARKETPLACE_VERSION" != "$PLUGIN_VERSION" ]]; then
-        if [[ "$SILENT" = false ]]; then
-          echo "Plugin $PLUGIN_NAME: installed $PLUGIN_VERSION, available $MARKETPLACE_VERSION"
-        fi
-        OUTDATED_COUNT=$((OUTDATED_COUNT + 1))
-      fi
+  if [ -z "$installed_version" ]; then
+    # Plugin not installed
+    log "Installing new plugin: $plugin_name@$marketplace_version"
+    if [ "$CHECK_ONLY" = false ]; then
+      claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
     fi
-  done < <(echo "$INSTALLED_PLUGINS" | jq -c '.[]' 2>/dev/null || echo "")
-fi
+  elif should_update "$UPDATE_POLICY" "$installed_version" "$marketplace_version"; then
+    # Update available
+    log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
+    if [ "$CHECK_ONLY" = false ]; then
+      claude plugin update "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
+    fi
+  else
+    # No update needed or not allowed by policy
+    if version_lt "$installed_version" "$marketplace_version"; then
+      log "Update available for $plugin_name ($installed_version → $marketplace_version) but blocked by $UPDATE_POLICY policy"
+    fi
+  fi
+done <<< "$MARKETPLACE_PLUGINS"
 
-# Summary output
-if [[ "$SILENT" = false && "$OUTDATED_COUNT" -gt 0 ]]; then
-  echo "Found $OUTDATED_COUNT outdated plugin(s)"
-elif [[ "$SILENT" = false ]]; then
-  echo "All plugins up to date"
+# Update timestamp
+if [ "$CHECK_ONLY" = false ]; then
+  update_timestamp
 fi
-
-exit 0
