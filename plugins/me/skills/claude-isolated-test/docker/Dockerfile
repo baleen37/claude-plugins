@@ -1,31 +1,15 @@
-FROM ubuntu:24.04
+FROM node:20-slim
 
-# Prevent interactive prompts during package installation
+# Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Install system dependencies, Claude Code CLI, and verify in one layer
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    jq \
-    bash \
-    tmux \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js 20.x from NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
-# Verify Node.js installation
-RUN node --version && npm --version
-
-# Install Claude Code CLI
-RUN npm install -g @anthropic-ai/claude-code
-
-# Verify Claude Code installation
-RUN claude --version
+    curl git jq bash tmux ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g @anthropic-ai/claude-code \
+    && npm cache clean --force \
+    && claude --version
 
 # Create workspace directory
 WORKDIR /workspace
