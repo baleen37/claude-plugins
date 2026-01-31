@@ -4,7 +4,17 @@ This project uses BATS (Bash Automated Testing System) for testing plugin struct
 
 ## Running Tests
 
-### All Tests
+### All Tests (Root + Plugins)
+
+```bash
+bash tests/run-all-tests.sh
+```
+
+This script runs:
+1. Root tests in `tests/`
+2. All plugin tests in `plugins/*/tests/`
+
+### Root Tests Only
 
 ```bash
 bats tests/
@@ -19,6 +29,16 @@ bats tests/plugin_json.bats
 bats tests/command_files.bats
 bats tests/agent_files.bats
 bats tests/skill_files.bats
+```
+
+### Individual Plugin Tests
+
+```bash
+bats plugins/git-guard/tests/
+bats plugins/me/tests/
+bats plugins/ralph-loop/tests/
+bats plugins/strategic-compact/tests/
+bats plugins/auto-updater/tests/
 ```
 
 ### Verbose Output
@@ -152,3 +172,62 @@ load bats_helper.bash
 - Use absolute paths in tests
 - Use `${CLAUDE_PLUGIN_ROOT}` for portability
 - Don't hardcode repository paths
+
+## Plugin Testing
+
+### Directory Structure
+
+All plugins should follow this test structure:
+
+```
+plugins/{plugin-name}/
+├── tests/                    # Required: Test files directory
+│   ├── {plugin-name}.bats   # Main plugin test file
+│   ├── fixtures/            # Optional: Test fixtures
+│   └── helpers/             # Optional: Plugin-specific helpers
+└── .claude-plugin/
+    └── plugin.json
+```
+
+### Using Shared Helpers
+
+Plugin tests can load the root bats_helper:
+
+```bash
+#!/usr/bin/env bats
+# From plugins/{name}/tests/{name}.bats
+load ../../../../tests/helpers/bats_helper
+
+@test "example plugin test" {
+    [ -d "${PLUGIN_ROOT}" ]
+}
+```
+
+### Plugin Test Example
+
+```bash
+#!/usr/bin/env bats
+
+load ../../../../tests/helpers/bats_helper
+
+PLUGIN_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+
+@test "plugin directory exists" {
+    [ -d "${PLUGIN_ROOT}" ]
+}
+
+@test "plugin.json exists" {
+    [ -f "${PLUGIN_ROOT}/.claude-plugin/plugin.json" ]
+}
+
+@test "plugin.json is valid JSON" {
+    cat "${PLUGIN_ROOT}/.claude-plugin/plugin.json" | jq . >/dev/null
+}
+```
+
+### Test Naming Conventions
+
+- Main test file: `{plugin-name}.bats`
+- Helper tests: `{feature}-helper.bats`
+- Component tests: `{component}-test.bats`
+

@@ -23,9 +23,9 @@ jobs:
         id: setup-bats
         uses: bats-core/bats-action@3.0.1
 
-      - name: Run Bats tests
+      - name: Run all tests
         shell: bash
         env:
           BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
           TERM: xterm
-        run: bats tests/
+        run: bash tests/run-all-tests.sh

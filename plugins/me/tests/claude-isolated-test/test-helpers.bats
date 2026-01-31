@@ -1,10 +1,11 @@
 #!/usr/bin/env bats
 # test-helpers.bats: Tests for test-helpers.sh library
 
-load /Users/baleen/dev/claude-plugins/tests/helpers/bats_helper.bash
+load ../../../../tests/helpers/bats_helper
 
-# Path to test-helpers.sh
-TEST_HELPERS_DIR="$(cd "${BATS_TEST_DIRNAME}/../scripts/lib" && pwd)"
+# Path to test-helpers.sh (now relative to new location)
+# From plugins/me/tests/claude-isolated-test/ to plugins/me/skills/claude-isolated-test/scripts/lib/
+TEST_HELPERS_DIR="$(cd "${BATS_TEST_DIRNAME}/../../skills/claude-isolated-test/scripts/lib" && pwd)"
 
 # Source test-helpers.sh before each test
 setup() {
