@@ -98,5 +98,8 @@ MARKETPLACE_JSON="${PROJECT_ROOT}/.claude-plugin/marketplace.json"
 
   local version
   version=$(echo "$plugin" | jq -r '.version')
-  [ "$version" = "1.0.0" ]
+  # Check version matches plugin.json
+  local expected_version
+  expected_version=$(jq -r ".version" "$PROJECT_ROOT/plugins/memory-persistence/.claude-plugin/plugin.json")
+  [ "$version" = "$expected_version" ]
 }
