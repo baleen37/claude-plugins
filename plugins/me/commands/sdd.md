@@ -4,4 +4,4 @@ description: Execute commands using subagent-driven development approach
 argument-hint: [<command>]
 ---
 
-Load the subagent-driven-development skill first, then use the skill to execute any task or command.
+For executing implementation plans with independent tasks, use @oh-my-claudecode:executor or dispatch parallel agents with @superpowers:dispatching-parallel-agents.
