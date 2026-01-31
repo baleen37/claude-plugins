@@ -63,7 +63,7 @@ create_interactive_container() {
         sleep infinity
 }
 
-attach_container_tmux() {
+attach_container_claude() {
     local container_name="$1"
 
     if ! container_running "$container_name"; then
@@ -71,6 +71,7 @@ attach_container_tmux() {
         return 1
     fi
 
+    # tmux 세션 attach 또는 생성 (-A 플래그)
     docker exec -it "$container_name" tmux new-session -A -s claude
 }
 
@@ -160,4 +161,4 @@ echo "Press Ctrl+B then D to detach without stopping the container" >&2
 echo "Run '$0 --stop-only' to stop and remove the container" >&2
 echo "" >&2
 
-attach_container_tmux "$CONTAINER_NAME"
+attach_container_claude "$CONTAINER_NAME"
