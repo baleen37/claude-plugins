@@ -1,9 +1,9 @@
 ---
-name: docker-sandbox
+name: claude-isolated-test
 description: Use when testing Claude Code components (SKILLs, Commands, Hooks) in isolated Docker environments, needing reproducible test conditions, or testing without polluting local environment
 ---
 
-# Docker Sandbox Testing
+# Claude Isolated Testing
 
 ## Overview
 
