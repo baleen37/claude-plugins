@@ -42,8 +42,20 @@ if [[ "$CHECK_ONLY" = false ]]; then
   if [[ ! -d "$CONFIG_DIR" ]]; then
     mkdir -p "$CONFIG_DIR" || { echo "Failed to create CONFIG_DIR: $CONFIG_DIR" >&2; exit 1; }
   fi
-  if ! date +%s > "$TIMESTAMP_FILE" 2>/dev/null; then
+  # Create timestamp file
+  if date +%s > "$TIMESTAMP_FILE" 2>/dev/null; then
+    # Success - verify file exists
+    if [[ ! -f "$TIMESTAMP_FILE" ]]; then
+      echo "Error: Timestamp file creation reported success but file not found: $TIMESTAMP_FILE" >&2
+      echo "CONFIG_DIR=$CONFIG_DIR" >&2
+      ls -la "$CONFIG_DIR" >&2 || true
+      exit 1
+    fi
+  else
     echo "Failed to create timestamp file: $TIMESTAMP_FILE" >&2
+    echo "CONFIG_DIR=$CONFIG_DIR" >&2
+    echo "TIMESTAMP_FILE=$TIMESTAMP_FILE" >&2
+    ls -la "$CONFIG_DIR" >&2 || true
     exit 1
   fi
 fi
