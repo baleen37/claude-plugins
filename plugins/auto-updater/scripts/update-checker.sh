@@ -9,9 +9,7 @@ source "${SCRIPT_DIR}/lib/version-compare.sh"
 
 # Configuration
 CONFIG_DIR="${HOME}/.claude/auto-updater"
-CONFIG_FILE="${CONFIG_DIR}/config.json"
 TIMESTAMP_FILE="${CONFIG_DIR}/last-check"
-DEFAULT_POLICY="patch"
 MARKETPLACE_CACHE="${CONFIG_DIR}/marketplace.json"
 MARKETPLACE_URL="https://raw.githubusercontent.com/baleen37/claude-plugins/main/.claude-plugin/marketplace.json"
 
@@ -71,18 +69,6 @@ log() {
   fi
 }
 
-# Helper: get update policy from config
-get_update_policy() {
-  if [ ! -f "$CONFIG_FILE" ]; then
-    echo "$DEFAULT_POLICY"
-    return
-  fi
-
-  local policy
-  policy=$(jq -r '.auto_update_policy // "patch"' "$CONFIG_FILE" 2>/dev/null || echo "$DEFAULT_POLICY")
-  echo "$policy"
-}
-
 # Helper: update timestamp
 update_timestamp() {
   mkdir -p "$CONFIG_DIR"
@@ -102,10 +88,6 @@ fi
 
 # Get installed plugins
 INSTALLED_PLUGINS_JSON=$(claude plugin list --json 2>/dev/null || echo "[]")
-
-# Get update policy
-UPDATE_POLICY=$(get_update_policy)
-log "Using update policy: $UPDATE_POLICY"
 
 # Read marketplace plugins
 MARKETPLACE_PLUGINS=$(jq -c '.plugins[] | {name: .name, version: .version}' "$MARKETPLACE_FILE" 2>/dev/null || echo "")
@@ -129,16 +111,11 @@ while IFS= read -r plugin_json; do
     if [ "$CHECK_ONLY" = false ]; then
       claude plugin install "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to install $plugin_name"
     fi
-  elif should_update "$UPDATE_POLICY" "$installed_version" "$marketplace_version"; then
+  elif version_lt "$installed_version" "$marketplace_version"; then
     # Update available
     log "Updating plugin: $plugin_name ($installed_version → $marketplace_version)"
     if [ "$CHECK_ONLY" = false ]; then
       claude plugin update "${plugin_name}@baleen-plugins" 2>/dev/null || log "Failed to update $plugin_name"
-    fi
-  else
-    # No update needed or not allowed by policy
-    if version_lt "$installed_version" "$marketplace_version"; then
-      log "Update available for $plugin_name ($installed_version → $marketplace_version) but blocked by $UPDATE_POLICY policy"
     fi
   fi
 done <<< "$MARKETPLACE_PLUGINS"
