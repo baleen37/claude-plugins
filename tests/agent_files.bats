@@ -11,6 +11,8 @@ load helpers/bats_helper
 
 @test "Agent files have frontmatter delimiter" {
     while IFS= read -r -d '' file; do
+        # Skip CLAUDE.md files (documentation, not agents)
+        [[ "$(basename "$file")" == "CLAUDE.md" ]] && continue
         has_frontmatter_delimiter "$file"
     done < <(find "${PROJECT_ROOT}/plugins" -path "*/agents/*.md" -type f -print0 2>/dev/null)
 }
