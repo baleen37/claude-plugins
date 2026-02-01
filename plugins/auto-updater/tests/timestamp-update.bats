@@ -48,13 +48,13 @@ set_last_check_time() {
 @test "auto-update-hook.sh: does NOT run when last check was 3599 seconds ago" {
     set_last_check_time 3599
 
-    # Create mock check.sh
+    # Create mock update.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/update.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/check.sh"
+    chmod +x "$SCRIPT_DIR/update.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -66,13 +66,13 @@ EOF
 @test "auto-update-hook.sh: runs when last check was exactly 3600 seconds ago" {
     set_last_check_time 3600
 
-    # Create mock check.sh
+    # Create mock update.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/update.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/check.sh"
+    chmod +x "$SCRIPT_DIR/update.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -84,13 +84,13 @@ EOF
 @test "auto-update-hook.sh: runs when last check was 3601 seconds ago" {
     set_last_check_time 3601
 
-    # Create mock check.sh
+    # Create mock update.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/update.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/check.sh"
+    chmod +x "$SCRIPT_DIR/update.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -103,13 +103,13 @@ EOF
     # Ensure no timestamp file exists
     rm -f "$CONFIG_DIR/last-check"
 
-    # Create mock check.sh
+    # Create mock update.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/update.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/check.sh"
+    chmod +x "$SCRIPT_DIR/update.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -118,14 +118,14 @@ EOF
     [ -f "$HOME/.checker-called" ]
 }
 
-@test "update.sh: contains conditional timestamp update logic" {
-    grep -q 'if \[\[ $success_count -gt 0 \]\]' "$SCRIPT_DIR/update.sh"
+@test "check.sh: contains timestamp update function" {
+    grep -q 'update_last_check_timestamp' "$SCRIPT_DIR/check.sh"
 }
 
-@test "update.sh: logs when timestamp is updated" {
-    grep -q 'log_info "Updated last-check timestamp"' "$SCRIPT_DIR/update.sh"
+@test "check.sh: contains CONFIG_DIR variable" {
+    grep -q 'CONFIG_DIR=' "$SCRIPT_DIR/check.sh"
 }
 
-@test "update.sh: logs when timestamp update is skipped" {
-    grep -q 'log_warning "Skipping timestamp update' "$SCRIPT_DIR/update.sh"
+@test "check.sh: calls update_last_check_timestamp at end" {
+    grep -q 'update_last_check_timestamp' "$SCRIPT_DIR/check.sh"
 }

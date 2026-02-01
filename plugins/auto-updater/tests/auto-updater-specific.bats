@@ -29,6 +29,19 @@ teardown() {
 }
 
 @test "check.sh exits silently when marketplace.json doesn't exist" {
+  # Create a fake claude executable in PATH
+  mkdir -p "$TEMP_DIR/bin"
+  cat > "$TEMP_DIR/bin/claude" << 'EOF'
+#!/usr/bin/env bash
+# Mock claude command that returns no plugins
+if [ "$1" = "plugin" ] && [ "$2" = "list" ] && [ "$3" = "--json" ]; then
+  echo "[]"
+fi
+EOF
+  chmod +x "$TEMP_DIR/bin/claude"
+  export PATH="$TEMP_DIR/bin:$PATH"
+
+  # Run with --silent - should exit 0 when no plugins
   run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
   [ -z "$output" ]

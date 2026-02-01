@@ -23,6 +23,15 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Config directory
+CONFIG_DIR="${HOME}/.claude/auto-updater"
+
+# Update last-check timestamp
+update_last_check_timestamp() {
+    mkdir -p "${CONFIG_DIR}"
+    date +%s > "${CONFIG_DIR}/last-check"
+}
+
 # Log functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $*"
@@ -253,6 +262,9 @@ main() {
         echo ""
         echo -e "Run ${BOLD}update-all-plugins${NC} to install updates"
     fi
+
+    # Update last-check timestamp
+    update_last_check_timestamp
 }
 
 main "$@"
