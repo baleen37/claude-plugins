@@ -18,9 +18,9 @@ teardown() {
   rm -rf "$TEMP_DIR"
 }
 
-@test "update-checker.sh exists and is executable" {
-  [ -f "$SCRIPT_DIR/update-checker.sh" ]
-  [ -x "$SCRIPT_DIR/update-checker.sh" ]
+@test "check.sh exists and is executable" {
+  [ -f "$SCRIPT_DIR/check.sh" ]
+  [ -x "$SCRIPT_DIR/check.sh" ]
 }
 
 @test "auto-update-hook.sh exists and is executable" {
@@ -28,13 +28,13 @@ teardown() {
   [ -x "${TEST_DIR}/../hooks/auto-update-hook.sh" ]
 }
 
-@test "update-checker.sh exits silently when marketplace.json doesn't exist" {
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+@test "check.sh exits silently when marketplace.json doesn't exist" {
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
 
-@test "update-checker.sh can read test marketplace.json" {
+@test "check.sh can read test marketplace.json" {
   # Create a fake claude executable in PATH
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -51,7 +51,7 @@ EOF
   export CLAUDE_PLUGIN_ROOT="$FIXTURES_DIR/../../.."
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
-  run "$SCRIPT_DIR/update-checker.sh" --check-only
+  run "$SCRIPT_DIR/check.sh" --check-only
   [ "$status" -eq 0 ]
 }
 
@@ -59,7 +59,7 @@ EOF
   [ ! -f "$CONFIG_DIR/config.json" ]
 
   # Source the script functions to test config loading
-  # This is a placeholder - actual implementation will be in update-checker.sh
+  # This is a placeholder - actual implementation will be in check.sh
 }
 
 @test "last-check timestamp file is created after check" {
@@ -86,7 +86,7 @@ EOF
   [ ! -f "$CONFIG_DIR/last-check" ]
 
   # Run without --check-only to trigger timestamp creation
-  "$SCRIPT_DIR/update-checker.sh" --silent
+  "$SCRIPT_DIR/check.sh" --silent
 
   # Timestamp file should now exist
   [ -f "$CONFIG_DIR/last-check" ]
@@ -97,7 +97,7 @@ EOF
   [[ "$timestamp" =~ ^[0-9]+$ ]]
 }
 
-@test "update-checker.sh detects outdated plugins using real format" {
+@test "check.sh detects outdated plugins using real format" {
   # Create a fake claude executable that returns realistic plugin data
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -131,7 +131,7 @@ EOF
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
   # Run the update checker
-  run "$SCRIPT_DIR/update-checker.sh" --check-only
+  run "$SCRIPT_DIR/check.sh" --check-only
   [ "$status" -eq 0 ]
 
   # The output should indicate an outdated plugin was found
@@ -139,7 +139,7 @@ EOF
   [[ "$output" =~ "git-guard" ]] || [[ "$output" =~ "update" ]] || [ -z "$output" ]
 }
 
-@test "update-checker.sh handles plugins with correct ID format" {
+@test "check.sh handles plugins with correct ID format" {
   # Create a fake claude executable that returns multiple plugins
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -180,6 +180,6 @@ EOF
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
   # Run the update checker - should succeed with proper ID parsing
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 }

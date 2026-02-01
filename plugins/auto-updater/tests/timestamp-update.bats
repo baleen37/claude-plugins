@@ -4,8 +4,8 @@
 # Tests for timestamp update conditional logic
 #
 
-# Store original update-checker.sh to restore after tests
-ORIGINAL_UPDATE_CHECKER=""
+# Store original check.sh to restore after tests
+ORIGINAL_CHECK=""
 
 setup() {
     export TEST_DIR="${BATS_TEST_DIRNAME}"
@@ -18,17 +18,17 @@ setup() {
     export CONFIG_DIR="$HOME/.claude/auto-updater"
     mkdir -p "$CONFIG_DIR"
 
-    # Backup original update-checker.sh
-    ORIGINAL_UPDATE_CHECKER="${SCRIPT_DIR}/update-checker.sh"
-    if [ -f "$ORIGINAL_UPDATE_CHECKER" ]; then
-        cp "$ORIGINAL_UPDATE_CHECKER" "${TEMP_DIR}/update-checker.sh.backup"
+    # Backup original check.sh
+    ORIGINAL_CHECK="${SCRIPT_DIR}/check.sh"
+    if [ -f "$ORIGINAL_CHECK" ]; then
+        cp "$ORIGINAL_CHECK" "${TEMP_DIR}/check.sh.backup"
     fi
 }
 
 teardown() {
-    # Restore original update-checker.sh
-    if [ -f "${TEMP_DIR}/update-checker.sh.backup" ]; then
-        cp "${TEMP_DIR}/update-checker.sh.backup" "$ORIGINAL_UPDATE_CHECKER"
+    # Restore original check.sh
+    if [ -f "${TEMP_DIR}/check.sh.backup" ]; then
+        cp "${TEMP_DIR}/check.sh.backup" "$ORIGINAL_CHECK"
     fi
     rm -rf "$TEMP_DIR"
 }
@@ -48,13 +48,13 @@ set_last_check_time() {
 @test "auto-update-hook.sh: does NOT run when last check was 3599 seconds ago" {
     set_last_check_time 3599
 
-    # Create mock update-checker.sh
+    # Create mock check.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/update-checker.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/update-checker.sh"
+    chmod +x "$SCRIPT_DIR/check.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -66,13 +66,13 @@ EOF
 @test "auto-update-hook.sh: runs when last check was exactly 3600 seconds ago" {
     set_last_check_time 3600
 
-    # Create mock update-checker.sh
+    # Create mock check.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/update-checker.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/update-checker.sh"
+    chmod +x "$SCRIPT_DIR/check.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -84,13 +84,13 @@ EOF
 @test "auto-update-hook.sh: runs when last check was 3601 seconds ago" {
     set_last_check_time 3601
 
-    # Create mock update-checker.sh
+    # Create mock check.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/update-checker.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/update-checker.sh"
+    chmod +x "$SCRIPT_DIR/check.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -103,13 +103,13 @@ EOF
     # Ensure no timestamp file exists
     rm -f "$CONFIG_DIR/last-check"
 
-    # Create mock update-checker.sh
+    # Create mock check.sh
     mkdir -p "$SCRIPT_DIR"
-    cat > "$SCRIPT_DIR/update-checker.sh" << 'EOF'
+    cat > "$SCRIPT_DIR/check.sh" << 'EOF'
 #!/usr/bin/env bash
 touch "$HOME/.checker-called"
 EOF
-    chmod +x "$SCRIPT_DIR/update-checker.sh"
+    chmod +x "$SCRIPT_DIR/check.sh"
 
     # Run hook
     bash "$HOOK_DIR/auto-update-hook.sh"
@@ -118,14 +118,14 @@ EOF
     [ -f "$HOME/.checker-called" ]
 }
 
-@test "update-all-plugins.sh: contains conditional timestamp update logic" {
-    grep -q 'if \[\[ $success_count -gt 0 \]\]' "$SCRIPT_DIR/update-all-plugins.sh"
+@test "update.sh: contains conditional timestamp update logic" {
+    grep -q 'if \[\[ $success_count -gt 0 \]\]' "$SCRIPT_DIR/update.sh"
 }
 
-@test "update-all-plugins.sh: logs when timestamp is updated" {
-    grep -q 'log_info "Updated last-check timestamp"' "$SCRIPT_DIR/update-all-plugins.sh"
+@test "update.sh: logs when timestamp is updated" {
+    grep -q 'log_info "Updated last-check timestamp"' "$SCRIPT_DIR/update.sh"
 }
 
-@test "update-all-plugins.sh: logs when timestamp update is skipped" {
-    grep -q 'log_warning "Skipping timestamp update' "$SCRIPT_DIR/update-all-plugins.sh"
+@test "update.sh: logs when timestamp update is skipped" {
+    grep -q 'log_warning "Skipping timestamp update' "$SCRIPT_DIR/update.sh"
 }

@@ -25,7 +25,7 @@ teardown() {
   export MARKETPLACE_URL="https://raw.githubusercontent.com/baleen37/claude-plugins/main/.claude-plugin/marketplace.json"
 
   # Execute the script which calls fetch_marketplace
-  source "$SCRIPT_DIR/update-checker.sh" 2>/dev/null || true
+  source "$SCRIPT_DIR/check.sh" 2>/dev/null || true
 
   # Verify marketplace.json was downloaded
   [ -f "$MARKETPLACE_CACHE" ]
@@ -67,7 +67,7 @@ EOF
   export MARKETPLACE_URL="https://invalid-url-that-will-fail.example.com/marketplace.json"
 
   # Run the script - should use cached file
-  run "$SCRIPT_DIR/update-checker.sh" --check-only --silent
+  run "$SCRIPT_DIR/check.sh" --check-only --silent
   [ "$status" -eq 0 ]
 
   # Verify cached file still exists and is unchanged
@@ -76,7 +76,7 @@ EOF
   [ "$output" = "test" ]
 }
 
-@test "update-checker.sh calls 'claude plugin marketplace update'" {
+@test "check.sh calls 'claude plugin marketplace update'" {
   # Create a mock claude command that logs calls
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -103,7 +103,7 @@ EOF
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
   # Run update-checker (not --check-only, so it should call marketplace update)
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 
   # Verify claude plugin marketplace update was called
@@ -112,7 +112,7 @@ EOF
   [ "$status" -eq 0 ]
 }
 
-@test "update-checker.sh skips marketplace update when --check-only is used" {
+@test "check.sh skips marketplace update when --check-only is used" {
   # Create a mock claude command that logs calls
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -133,7 +133,7 @@ EOF
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
   # Run with --check-only
-  run "$SCRIPT_DIR/update-checker.sh" --check-only --silent
+  run "$SCRIPT_DIR/check.sh" --check-only --silent
   [ "$status" -eq 0 ]
 
   # Verify marketplace update was NOT called
@@ -143,7 +143,7 @@ EOF
   fi
 }
 
-@test "update-checker.sh detects and handles duplicate plugin installations" {
+@test "check.sh detects and handles duplicate plugin installations" {
   # Create a mock claude that returns duplicate plugins
   mkdir -p "$TEMP_DIR/bin"
   cat > "$TEMP_DIR/bin/claude" << 'EOF'
@@ -181,7 +181,7 @@ EOF
   export MARKETPLACE_FILE="$FIXTURES_DIR/marketplace.json"
 
   # Run update-checker - should not crash despite duplicate
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 }
 
@@ -239,7 +239,7 @@ EOF
   export MARKETPLACE_FILE="$CONFIG_DIR/marketplace.json"
 
   # Run full update (not --check-only)
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 
   # Verify workflow steps occurred
@@ -302,7 +302,7 @@ EOF
   export MARKETPLACE_FILE="$CONFIG_DIR/marketplace.json"
 
   # Run update-checker - should update even for major version bump
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 
   # Should update (all version bumps are allowed)
@@ -352,7 +352,7 @@ EOF
   export MARKETPLACE_FILE="$CONFIG_DIR/marketplace.json"
 
   # Run update-checker
-  run "$SCRIPT_DIR/update-checker.sh" --silent
+  run "$SCRIPT_DIR/check.sh" --silent
   [ "$status" -eq 0 ]
 
   # Should have installed the new plugin
