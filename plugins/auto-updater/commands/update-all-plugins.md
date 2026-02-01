@@ -12,7 +12,7 @@ Execute the update-all-plugins script and report the results to the user.
 
 1. Run the update script:
    ```bash
-   "${CLAUDE_PLUGIN_ROOT}/scripts/update-all-plugins.sh"
+   "${CLAUDE_PLUGIN_ROOT}/scripts/update.sh"
    ```
 
 2. The script will:

@@ -25,7 +25,7 @@ fi
 
 if [ "$SHOULD_RUN" = true ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  "${SCRIPT_DIR}/../scripts/update-checker.sh" --silent || true
+  "${SCRIPT_DIR}/../scripts/update.sh" >/dev/null 2>&1 || true
 fi
 
 exit 0

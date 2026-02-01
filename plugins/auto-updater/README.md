@@ -11,13 +11,19 @@ marketplace.json에 정의된 플러그인들을 자동으로 설치하고 업�
 ## 수동 실행
 
 ```bash
-/update
+/update-all-plugins
 ```
 
 또는:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/update-checker.sh"
+"${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/update.sh"
+```
+
+업데이트 가능한 플러그인만 확인하려면:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/check.sh"
 ```
 
 ## 로그 확인
