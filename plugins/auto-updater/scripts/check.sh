@@ -26,6 +26,9 @@ NC='\033[0m' # No Color
 # Config directory
 CONFIG_DIR="${HOME}/.claude/auto-updater"
 
+# Silent mode (suppress output)
+SILENT_MODE=false
+
 # Update last-check timestamp
 update_last_check_timestamp() {
     mkdir -p "${CONFIG_DIR}"
@@ -34,15 +37,21 @@ update_last_check_timestamp() {
 
 # Log functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
+    if [ "$SILENT_MODE" = false ]; then
+        echo -e "${BLUE}[INFO]${NC} $*"
+    fi
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $*"
+    if [ "$SILENT_MODE" = false ]; then
+        echo -e "${YELLOW}[WARNING]${NC} $*"
+    fi
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $*" >&2
+    if [ "$SILENT_MODE" = false ]; then
+        echo -e "${RED}[ERROR]${NC} $*" >&2
+    fi
 }
 
 # Download marketplace.json from GitHub
@@ -75,6 +84,9 @@ get_installed_plugins() {
 
 # Display update available with color coding
 show_update_available() {
+    if [ "$SILENT_MODE" = true ]; then
+        return
+    fi
     local plugin_name="$1"
     local local_version="$2"
     local remote_version="$3"
@@ -84,10 +96,20 @@ show_update_available() {
 
 # Display plugin up to date
 show_up_to_date() {
+    if [ "$SILENT_MODE" = true ]; then
+        return
+    fi
     local plugin_name="$1"
     local version="$2"
 
     echo -e "  ${plugin_name}: ${GREEN}${version}${NC} (up to date)"
+}
+
+# Helper function for conditional output
+print_output() {
+    if [ "$SILENT_MODE" = false ]; then
+        echo "$@"
+    fi
 }
 
 # Main check function
@@ -97,6 +119,23 @@ main() {
     local installed_plugins
     local updateable_count=0
     local up_to_date_count=0
+
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --silent)
+                SILENT_MODE=true
+                shift
+                ;;
+            --check-only)
+                # Check-only mode - don't update timestamp
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
 
     # Load config
     config=$(load_config)
@@ -122,7 +161,7 @@ main() {
         exit 0
     fi
 
-    echo ""
+    print_output ""
 
     # Iterate through marketplaces
     while IFS= read -r mp; do
@@ -168,7 +207,7 @@ main() {
         plugins_to_check=$(get_plugins_for_marketplace "${config}" "${name}")
         marketplace_plugins=$(echo "${remote_mp}" | jq -r '.plugins // []')
 
-        echo -e "${BOLD}${marketplace_name}${NC}:"
+        print_output -e "${BOLD}${marketplace_name}${NC}:"
 
         # If plugins field is specified, filter by those plugins
         if [[ "${plugins_to_check}" == "[]" ]]; then
@@ -245,22 +284,22 @@ main() {
 
         # Summary for this marketplace
         if [[ ${marketplace_updateable} -eq 0 ]]; then
-            echo -e "  ${GREEN}✓${NC} All plugins up to date"
+            print_output -e "  ${GREEN}✓${NC} All plugins up to date"
         else
-            echo -e "  ${YELLOW}${marketplace_updateable} update(s) available${NC}"
+            print_output -e "  ${YELLOW}${marketplace_updateable} update(s) available${NC}"
         fi
 
-        echo ""
+        print_output ""
     done < <(echo "${marketplaces}" | jq -c '.[]')
 
     # Final summary
-    echo -e "${BOLD}Summary:${NC}"
-    echo -e "  ${GREEN}${up_to_date_count} up to date${NC}"
-    echo -e "  ${YELLOW}${updateable_count} update(s) available${NC}"
+    print_output -e "${BOLD}Summary:${NC}"
+    print_output -e "  ${GREEN}${up_to_date_count} up to date${NC}"
+    print_output -e "  ${YELLOW}${updateable_count} update(s) available${NC}"
 
     if [[ ${updateable_count} -gt 0 ]]; then
-        echo ""
-        echo -e "Run ${BOLD}update-all-plugins${NC} to install updates"
+        print_output ""
+        print_output -e "Run ${BOLD}update-all-plugins${NC} to install updates"
     fi
 
     # Update last-check timestamp

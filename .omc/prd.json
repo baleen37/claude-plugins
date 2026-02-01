@@ -1,44 +1,86 @@
 {
-  "project": "Fix CI Release Workflow Auto-Merge Issue",
-  "branchName": "ralph/fix-release-workflow-automerge",
-  "description": "release.yml workflow에서 PR 생성 후 auto-merge가 작동하지 않는 문제 해결. 현재 bot이 생성한 PR에 대해 workflow가 skip되어 merge가 진행되지 않음.",
+  "project": "Auto-Updater Config System",
+  "branchName": "ralph/auto-updater-config",
+  "description": "auto-updater에 config.json 개념을 도입하여 여러 마켓플레이스와 특정 플러그인 업데이트 지원",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Analyze current release workflow issue",
-      "description": "As a developer, I want to understand why release PRs are not auto-merging so that I can fix the root cause.",
+      "title": "Config 파싱 라이브러리 구현",
+      "description": "개발자가 config.json을 로드하고 파싱할 수 있도록 config.sh 라이브러리를 구현한다.",
       "acceptanceCriteria": [
-        "Root cause identified: `if: ${{ !contains(github.actor, '[bot]') }}` prevents bot-triggered workflows",
-        "Understand the skip behavior in release workflow logs",
-        "Document why the condition exists and what needs to change"
+        "load_config() 함수 구현 - config.json 없으면 기본값 반환",
+        "get_plugins_for_marketplace() 함수 구현 - plugins 필드 필터링",
+        "config.json 파싱 실패 시 기본값 사용 및 경고 메시지",
+        "ShellCheck 통과"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-002",
-      "title": "Fix workflow trigger condition for release PRs",
-      "description": "As a developer, I want to modify the release.yml workflow so that release PRs created by the bot can still trigger the workflow and merge.",
+      "title": "메인 업데이트 스크립트 구현",
+      "description": "사용자가 /update-all-plugins 명령으로 여러 마켓플레이스의 플러그인을 업데이트할 수 있다.",
       "acceptanceCriteria": [
-        "Update the bot exclusion condition to allow release PR workflows",
-        "Ensure release commits still trigger the workflow",
-        "Prevent infinite loops (release creating another release)"
+        "update.sh 스크립트 구현",
+        "다중 마켓플레이스 지원",
+        "marketplace.json 다운로드 실패 시 해당 마켓플레이스 건너뜀",
+        "설치된 플러그인 확인 (claude plugin list --json)",
+        "버전 비교 및 업데이트 로직",
+        "ShellCheck 통과"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-003",
-      "title": "Test the fixed release workflow",
-      "description": "As a developer, I want to verify the release workflow works correctly after the fix.",
+      "title": "체크 전용 스크립트 구현",
+      "description": "사용자가 업데이트 가능한 플러그인을 확인만 할 수 있다.",
       "acceptanceCriteria": [
-        "Create a test commit that triggers release",
-        "Verify release PR is created",
-        "Verify PR is auto-merged",
-        "Verify workflow completes successfully"
+        "check.sh 스크립트 구현",
+        "실제 업데이트 없이 버전 비교만 수행",
+        "업데이트 가능한 플러그인 목록 출력",
+        "ShellCheck 통과"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
+    },
+    {
+      "id": "US-004",
+      "title": "Skill 업데이트",
+      "description": "사용자가 /update-all-plugins 명령으로 새 update.sh 스크립트를 실행할 수 있다.",
+      "acceptanceCriteria": [
+        "skills/update-all-plugins/SKILL.md가 update.sh 호출하도록 수정",
+        "기존 update-all-plugins.sh 스크립트 삭제",
+        "Skill 테스트 통과"
+      ],
+      "priority": 4,
+      "passes": true
+    },
+    {
+      "id": "US-005",
+      "title": "레거시 스크립트 정리",
+      "description": "사용되지 않는 레거시 스크립트를 삭제한다.",
+      "acceptanceCriteria": [
+        "update-checker.sh 삭제",
+        "check-and-update.sh 삭제",
+        "파일 구조가 문서와 일치"
+      ],
+      "priority": 5,
+      "passes": true
+    },
+    {
+      "id": "US-006",
+      "title": "통합 테스트",
+      "description": "모든 기능이 함께 올바르게 동작하는지 확인한다.",
+      "acceptanceCriteria": [
+        "config.json 없이 실행 시 기본값으로 동작",
+        "다중 마켓플레이스 config 테스트",
+        "특정 플러그인만 업데이트하는 config 테스트",
+        "에러 핸들링 시나리오 테스트",
+        "수동 테스트 통과"
+      ],
+      "priority": 6,
+      "passes": true
     }
   ]
 }
