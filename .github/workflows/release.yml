@@ -48,23 +48,23 @@ jobs:
         run: |
           # Install Bats without caching to avoid permission issues
           git clone --depth 1 --branch v1.11.0 https://github.com/bats-core/bats.git /tmp/bats
-          ./bats/install.sh $HOME/.local
+          cd /tmp/bats && ./install.sh $HOME/.local
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
           # Install bats-support
           git clone --depth 1 --branch v0.3.0 https://github.com/bats-core/bats-support.git /tmp/bats-support
-          sudo mkdir -p /usr/lib/bats-support
-          sudo ./bats-support/install.sh /usr/lib/bats-support
+          cd /tmp/bats-support && sudo mkdir -p /usr/lib/bats-support
+          sudo ./install.sh /usr/lib/bats-support
 
           # Install bats-assert
           git clone --depth 1 --branch v2.1.0 https://github.com/bats-core/bats-assert.git /tmp/bats-assert
-          sudo mkdir -p /usr/lib/bats-assert
-          sudo ./bats-assert/install.sh /usr/lib/bats-assert
+          cd /tmp/bats-assert && sudo mkdir -p /usr/lib/bats-assert
+          sudo ./install.sh /usr/lib/bats-assert
 
           # Install bats-file
           git clone --depth 1 --branch v0.4.0 https://github.com/bats-core/bats-file.git /tmp/bats-file
-          sudo mkdir -p /usr/lib/bats-file
-          sudo ./bats-file/install.sh /usr/lib/bats-file
+          cd /tmp/bats-file && sudo mkdir -p /usr/lib/bats-file
+          sudo ./install.sh /usr/lib/bats-file
 
       - name: Run tests
         shell: bash
