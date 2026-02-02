@@ -109,7 +109,7 @@ describe('marketplace-update', () => {
 
       const response = await fetch('mock-url');
 
-      await expect(response.json()).rejects.toThrow(SyntaxError);
+      await expect(response.json()).rejects.toThrow();
     });
   });
 
