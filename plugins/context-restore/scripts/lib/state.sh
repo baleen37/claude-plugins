@@ -301,6 +301,15 @@ find_recent_sessions_after_compact() {
             continue
         fi
 
+        # Skip /compact session itself by checking if it has /compact command
+        local transcript_path_from_session
+        transcript_path_from_session=$(extract_transcript_path_from_session "$session_file")
+
+        if [[ -n "$transcript_path_from_session" ]] && has_compact_command "$transcript_path_from_session" 2>/dev/null; then
+            # This session contains /compact, skip it
+            continue
+        fi
+
         # Timestamp comparison: Simple string comparison works for ISO format
         # "YYYY-MM-DD HH:MM:SS" format allows lexicographic comparison
         if [[ "$session_timestamp" > "$compact_timestamp" ]]; then
