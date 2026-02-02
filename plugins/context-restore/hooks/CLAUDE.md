@@ -4,7 +4,7 @@
 # hooks
 
 ## Purpose
-Session hooks for automatic memory persistence - save on stop, restore on start.
+Session hooks for automatic context restore - save on stop, restore on start.
 
 ## Key Files
 
@@ -45,6 +45,6 @@ None
 
 ### Internal
 - `../scripts/` - Related scripts
-- `../../tests/memory-persistence.bats` - Tests
+- `../../tests/context-restore.bats` - Tests
 
 <!-- MANUAL: -->

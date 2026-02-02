@@ -106,9 +106,9 @@
       "version": "2.28.0"
     },
     {
-      "name": "memory-persistence",
-      "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
-      "source": "./plugins/memory-persistence",
+      "name": "context-restore",
+      "description": "Automatic session context restore - saves context at session end and restores relevant context at session start",
+      "source": "./plugins/context-restore",
       "category": "productivity",
       "tags": [
         "memory",
