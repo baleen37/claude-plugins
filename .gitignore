@@ -24,6 +24,9 @@ lib64/
 !plugins/*/scripts/lib/
 !plugins/*/hooks/lib/
 !skills/*/scripts/lib/
+
+# Exception: Include compiled TypeScript output for suggest-compacting
+!plugins/suggest-compacting/dist/
 parts/
 sdist/
 var/
