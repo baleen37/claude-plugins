@@ -21,53 +21,50 @@ teardown() {
 }
 
 @test "suggest-compacting: hooks.json exists" {
-  [ -f "$CLAUDE_PLUGIN_ROOT/.claude-plugin/hooks.json" ]
+  [ -f "$CLAUDE_PLUGIN_ROOT/hooks/hooks.json" ]
 }
 
 @test "suggest-compacting: hooks.json has SessionStart hook" {
-  run jq -e '.hooks.SessionStart' "$CLAUDE_PLUGIN_ROOT/.claude-plugin/hooks.json"
+  run jq -e '.hooks.SessionStart' "$CLAUDE_PLUGIN_ROOT/hooks/hooks.json"
   [ "$status" -eq 0 ]
 }
 
 @test "suggest-compacting: hooks.json has PreToolUse hook" {
-  run jq -e '.hooks.PreToolUse' "$CLAUDE_PLUGIN_ROOT/.claude-plugin/hooks.json"
+  run jq -e '.hooks.PreToolUse' "$CLAUDE_PLUGIN_ROOT/hooks/hooks.json"
   [ "$status" -eq 0 ]
 }
 
 @test "suggest-compacting: SessionStart hook uses tsx" {
-  run jq -r '.hooks.SessionStart[0].hooks[0].command' "$CLAUDE_PLUGIN_ROOT/.claude-plugin/hooks.json"
-  echo "$output" | grep -q "npx tsx"
+  run jq -r '.hooks.SessionStart[0].hooks[0].command' "$CLAUDE_PLUGIN_ROOT/hooks/hooks.json"
   echo "$output" | grep -q "session-start.ts"
 }
 
 @test "suggest-compacting: PreToolUse hook uses tsx" {
-  run jq -r '.hooks.PreToolUse[0].hooks[0].command' "$CLAUDE_PLUGIN_ROOT/.claude-plugin/hooks.json"
-  echo "$output" | grep -q "npx tsx"
+  run jq -r '.hooks.PreToolUse[0].hooks[0].command' "$CLAUDE_PLUGIN_ROOT/hooks/hooks.json"
   echo "$output" | grep -q "auto-compact.ts"
 }
 
 @test "suggest-compacting: TypeScript source files exist" {
-  [ -f "$CLAUDE_PLUGIN_ROOT/src/types/index.ts" ]
-  [ -f "$CLAUDE_PLUGIN_ROOT/src/hooks/lib/state.ts" ]
-  [ -f "$CLAUDE_PLUGIN_ROOT/src/hooks/session-start.ts" ]
-  [ -f "$CLAUDE_PLUGIN_ROOT/src/hooks/auto-compact.ts" ]
+  [ -f "$CLAUDE_PLUGIN_ROOT/src/lib/state.ts" ]
+  [ -f "$CLAUDE_PLUGIN_ROOT/src/session-start.ts" ]
+  [ -f "$CLAUDE_PLUGIN_ROOT/src/auto-compact.ts" ]
 }
 
 @test "suggest-compacting: hooks are executable" {
-  [ -x "$CLAUDE_PLUGIN_ROOT/src/hooks/session-start.ts" ]
-  [ -x "$CLAUDE_PLUGIN_ROOT/src/hooks/auto-compact.ts" ]
+  [ -x "$CLAUDE_PLUGIN_ROOT/src/session-start.ts" ]
+  [ -x "$CLAUDE_PLUGIN_ROOT/src/auto-compact.ts" ]
 }
 
 @test "suggest-compacting: TypeScript config exists" {
   [ -f "$CLAUDE_PLUGIN_ROOT/tsconfig.json" ]
 }
 
-@test "suggest-compacting: Jest config exists" {
-  [ -f "$CLAUDE_PLUGIN_ROOT/jest.config.cjs" ]
+@test "suggest-compacting: Jest config removed (no longer needed)" {
+  [ ! -f "$CLAUDE_PLUGIN_ROOT/jest.config.cjs" ]
 }
 
-@test "suggest-compacting: unit tests exist" {
-  [ -f "$CLAUDE_PLUGIN_ROOT/tests/unit/state.test.ts" ]
+@test "suggest-compacting: unit tests removed (no longer needed)" {
+  [ ! -d "$CLAUDE_PLUGIN_ROOT/tests/unit" ]
 }
 
 @test "suggest-compacting: old Bash hooks are removed" {
@@ -83,7 +80,7 @@ teardown() {
   echo "{\"tool_name\":\"Read\",\"session_id\":\"$TEST_SESSION_ID\"}" > "$tmpinput"
 
   # Run the hook
-  cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/hooks/auto-compact.ts" > /dev/null 2>&1
+  cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/auto-compact.ts" > /dev/null 2>&1
   rm -f "$tmpinput"
 
   # Check that state file was created
@@ -110,13 +107,13 @@ teardown() {
   # Run the hook 2 times (count becomes 2)
   local i=1
   while [ $i -le 2 ]; do
-    cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/hooks/auto-compact.ts" > /dev/null 2>&1
+    cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/auto-compact.ts" > /dev/null 2>&1
     i=$((i + 1))
   done
 
   # Third call should trigger suggestion (count == 3 == threshold)
   local output
-  output=$(cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/hooks/auto-compact.ts" 2>&1)
+  output=$(cat "$tmpinput" | npx tsx "$CLAUDE_PLUGIN_ROOT/src/auto-compact.ts" 2>&1)
   rm -f "$tmpinput"
 
   echo "$output" | grep -q "Suggestion"
@@ -134,22 +131,27 @@ teardown() {
   echo "{\"session_id\":\"../../../etc/passwd\",\"transcript_path\":\"/tmp/test.json\"}" > "$tmpinvalid"
 
   # Test with valid session ID (no env file, should succeed silently)
-  run bash -c "cat '$tmpinput' | npx tsx $CLAUDE_PLUGIN_ROOT/src/hooks/session-start.ts"
+  run bash -c "cat '$tmpinput' | npx tsx $CLAUDE_PLUGIN_ROOT/src/session-start.ts"
   [ "$status" -eq 0 ]
 
   # Test with invalid session ID (should fail)
-  run bash -c "cat '$tmpinvalid' | npx tsx $CLAUDE_PLUGIN_ROOT/src/hooks/session-start.ts"
+  run bash -c "cat '$tmpinvalid' | npx tsx $CLAUDE_PLUGIN_ROOT/src/session-start.ts"
   [ "$status" -ne 0 ]
 
   rm -f "$tmpinput" "$tmpinvalid"
 }
 
-@test "suggest-compacting: package.json exists with correct scripts" {
+@test "suggest-compacting: package.json exists without Jest scripts" {
   [ -f "$CLAUDE_PLUGIN_ROOT/package.json" ]
 
-  run jq -r '.scripts.test' "$CLAUDE_PLUGIN_ROOT/package.json"
-  [ "$output" = "jest" ]
+  # Verify Jest is not in dependencies
+  run jq -r '.devDependencies.jest' "$CLAUDE_PLUGIN_ROOT/package.json"
+  [ "$output" = "null" ]
 
-  run jq -r '.scripts["test:watch"]' "$CLAUDE_PLUGIN_ROOT/package.json"
-  [ "$output" = "jest --watch" ]
+  # Verify TypeScript and tsx are present
+  run jq -r '.devDependencies.typescript' "$CLAUDE_PLUGIN_ROOT/package.json"
+  [ "$output" != "null" ]
+
+  run jq -r '.devDependencies.tsx' "$CLAUDE_PLUGIN_ROOT/package.json"
+  [ "$output" != "null" ]
 }

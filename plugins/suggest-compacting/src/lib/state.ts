@@ -1,6 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { ToolCountState } from '../../types';
+
+interface ToolCountState {
+  count: number;
+  sessionId: string;
+}
 
 const STATE_DIR = path.join(process.env.HOME || '', '.claude', 'suggest-compacting');
 const STATE_FILE = (sessionId: string) => path.join(STATE_DIR, `tool-count-${sessionId}.txt`);
