@@ -130,6 +130,20 @@
         "ai"
       ],
       "version": "2.27.8"
+    },
+    {
+      "name": "ast-tools",
+      "description": "AST-based code search and transformation tools using ast-grep",
+      "source": "./plugins/ast-tools",
+      "category": "development",
+      "tags": [
+        "ast",
+        "refactoring",
+        "code-analysis",
+        "mcp",
+        "ast-grep"
+      ],
+      "version": "1.0.0"
     }
   ]
 }
