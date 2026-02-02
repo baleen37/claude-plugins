@@ -1,0 +1,24 @@
+{
+  "name": "@baleen/ast-tools-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AST-based code search and transformation tools",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ast-grep/napi": "^0.31.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.0"
+  }
+}
