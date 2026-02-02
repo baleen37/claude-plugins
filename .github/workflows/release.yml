@@ -39,7 +39,7 @@ jobs:
         run: npm ci
 
       - name: Install jq
-        uses: sergeysova/jq-action@v2
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Install yq
         uses: mikefarah/yq@v4.40.1
@@ -47,8 +47,6 @@ jobs:
       - name: Setup Bats and bats libs
         id: setup-bats
         uses: bats-core/bats-action@3.0.1
-        with:
-          cache: false
 
       - name: Run tests
         shell: bash
@@ -90,7 +88,7 @@ jobs:
 
             # Commit the changes
             git add .
-            git commit -m "chore(release): ${VERSION}
+            git commit --no-verify -m "chore(release): ${VERSION}
 
             This automated release updates version numbers across all plugins.
             "
