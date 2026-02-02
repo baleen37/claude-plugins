@@ -12,7 +12,6 @@ Context-aware skills that automatically activate based on conversation context a
 |-------|---------|
 | `ci-troubleshooting/SKILL.md` | GitHub Actions CI debugging |
 | `claude-isolated-test/SKILL.md` | Docker containerized testing |
-| `create-pr/SKILL.md` | PR creation workflow |
 | `research/SKILL.md` | Exploration and investigation |
 | `using-git-worktrees/SKILL.md` | Git worktree management |
 | `README.md` | Skills overview |
@@ -23,7 +22,6 @@ Context-aware skills that automatically activate based on conversation context a
 |-----------|---------|
 | `ci-troubleshooting/` | CI/CD troubleshooting guidance |
 | `claude-isolated-test/` | Isolated testing in containers |
-| `create-pr/` | PR workflow automation |
 | `research/` | Research methodology |
 | `using-git-worktrees/` | Git worktree usage |
 
