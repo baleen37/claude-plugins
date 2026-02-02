@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 
 import fs from 'fs/promises';
-import { isValidSessionId } from './lib/state';
+import { isValidSessionId } from './lib/state.js';
 
 interface SessionStartInput {
   session_id: string;
