@@ -1,6 +1,6 @@
 {
   "name": "memory-persistence",
-  "version": "2.27.5",
+  "version": "2.27.6",
   "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
   "author": {
     "name": "baleen",
