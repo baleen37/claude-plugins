@@ -27,7 +27,7 @@ repos:
     hooks:
       - id: bats-tests
         name: BATS test runner
-        entry: bats tests/
+        entry: bash tests/run-all-tests.sh
         language: system
-        pass_types: [bash, sh]
+        pass_filenames: false
         always_run: true
