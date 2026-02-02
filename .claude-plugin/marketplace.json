@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "databricks",
@@ -43,7 +43,7 @@
         "mcp",
         "analytics"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "git-guard",
@@ -57,7 +57,7 @@
         "pr",
         "security"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "jira",
@@ -71,7 +71,7 @@
         "atlassian",
         "mcp"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "lsp-support",
@@ -88,7 +88,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "me",
@@ -103,12 +103,12 @@
         "code-review",
         "debugging"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
-      "name": "memory-persistence",
-      "description": "Automatic session memory persistence - saves context at session end and restores relevant context at session start",
-      "source": "./plugins/memory-persistence",
+      "name": "context-restore",
+      "description": "Automatic session context restore - saves context at session end and restores relevant context at session start",
+      "source": "./plugins/context-restore",
       "category": "productivity",
       "tags": [
         "memory",
@@ -116,7 +116,7 @@
         "context",
         "session"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "ralph-loop",
@@ -129,7 +129,7 @@
         "loop",
         "ai"
       ],
-      "version": "2.27.8"
+      "version": "3.0.0"
     },
     {
       "name": "ast-tools",
@@ -143,7 +143,7 @@
         "mcp",
         "ast-grep"
       ],
-      "version": "1.0.0"
+      "version": "3.0.0"
     }
   ]
 }

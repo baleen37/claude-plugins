@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Memory Persistence Stop Hook
+# Context Restore Stop Hook
 # Captures and saves session state when Claude session ends
 # This hook does NOT block session exit - it exits silently
 
@@ -18,14 +18,14 @@ SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
 # Validate session_id exists
 if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
     # Only write to stderr on WARNING/ERROR conditions
-    echo "Warning: Memory persistence: No session_id found in Stop hook" >&2
+    echo "Warning: Context restore: No session_id found in Stop hook" >&2
     exit 0  # Always exit 0 to avoid blocking session exit
 fi
 
 # Validate session_id format
 if ! validate_session_id "$SESSION_ID"; then
     # Only write to stderr on WARNING/ERROR conditions
-    echo "Warning: Memory persistence: Invalid session_id format: '$SESSION_ID'" >&2
+    echo "Warning: Context restore: Invalid session_id format: '$SESSION_ID'" >&2
     exit 0  # Always exit 0 to avoid blocking session exit
 fi
 
@@ -34,7 +34,7 @@ TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path')
 
 if [[ ! -f "$TRANSCRIPT_PATH" ]]; then
     # Only write to stderr on WARNING/ERROR conditions
-    echo "Warning: Memory persistence: Transcript file not found: $TRANSCRIPT_PATH" >&2
+    echo "Warning: Context restore: Transcript file not found: $TRANSCRIPT_PATH" >&2
     exit 0  # Always exit 0 to avoid blocking session exit
 fi
 
@@ -43,7 +43,7 @@ CONVERSATION=$(extract_assistant_message_from_transcript "$TRANSCRIPT_PATH")
 
 if [[ -z "$CONVERSATION" ]]; then
     # Only write to stderr on WARNING/ERROR conditions
-    echo "Warning: Memory persistence: No conversation content extracted" >&2
+    echo "Warning: Context restore: No conversation content extracted" >&2
     exit 0  # Always exit 0 to avoid blocking session exit
 fi
 
@@ -69,7 +69,7 @@ SESSION_FILE=$(save_session_file "$SESSION_ID" "$SESSION_CONTENT" "$TRANSCRIPT_P
 
 if [[ -z "$SESSION_FILE" ]]; then
     # Only write to stderr on ERROR conditions
-    echo "Warning: Memory persistence: Failed to save session" >&2
+    echo "Warning: Context restore: Failed to save session" >&2
 fi
 
 # CRITICAL: Exit 0 WITHOUT any output on success

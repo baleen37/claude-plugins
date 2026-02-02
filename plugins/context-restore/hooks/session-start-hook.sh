@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Memory Persistence SessionStart Hook
+# Context Restore SessionStart Hook
 # Restores relevant context from recent sessions
 
 set -euo pipefail
@@ -23,8 +23,8 @@ if ! validate_session_id "$SESSION_ID"; then
     exit 0
 fi
 
-# Find recent session files for this project
-RECENT_SESSIONS=$(find_recent_sessions 5 "$TRANSCRIPT_PATH")
+# Find recent session files for this project (only after /compact if it exists)
+RECENT_SESSIONS=$(find_recent_sessions_after_compact 5 "$TRANSCRIPT_PATH")
 
 if [[ -z "$RECENT_SESSIONS" ]]; then
     # No previous sessions found
