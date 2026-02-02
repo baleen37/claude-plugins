@@ -1,12 +1,12 @@
-# Auto Compact
+# Suggest Compacting
 
-Automatic suggestions for manual context compaction during long Claude Code sessions.
+Suggests when to manually compact context during long Claude Code sessions.
 
 ## Overview
 
-Auto Compact automatically suggests when to manually run `/compact` based on your editing activity. Unlike forced auto-compaction that interrupts at arbitrary moments, Auto Compact preserves your workflow by providing non-intrusive suggestions at logical intervals.
+Suggest Compacting monitors your editing activity and suggests when to manually run `/compact`. Unlike forced auto-compaction that interrupts at arbitrary moments, this plugin preserves your workflow by providing non-intrusive suggestions at logical intervals.
 
-**Key distinction**: Auto Compact suggests; you decide when to compact.
+**Key distinction**: The plugin suggests; you decide when to compact.
 
 ## How It Works
 
@@ -20,7 +20,7 @@ The hook tracks Edit/Write tool calls per session and suggests when to compact:
 Install via the baleen-plugins marketplace:
 
 ```bash
-/plugin install auto-compact@baleen-plugins
+/plugin install suggest-compacting@baleen-plugins
 ```
 
 ## Configuration
@@ -38,8 +38,8 @@ Default: 50 tool calls
 When thresholds are reached, you'll see non-intrusive suggestions:
 
 ```
-[AutoCompact] 50 tool calls reached - consider /compact if transitioning phases
-[AutoCompact] 75 tool calls - good checkpoint for /compact if context is stale
+[SuggestCompacting] 50 tool calls reached - consider /compact if transitioning phases
+[SuggestCompacting] 75 tool calls - good checkpoint for /compact if context is stale
 ```
 
 ## Use Cases
@@ -58,7 +58,7 @@ Ideal for:
 - Interrupts thought processes
 - Difficult to resume after compaction
 
-**Auto Compact benefits:**
+**Suggest Compacting benefits:**
 - You control when compaction occurs
 - Preserve context through logical phases
 - Choose natural breakpoints in your workflow

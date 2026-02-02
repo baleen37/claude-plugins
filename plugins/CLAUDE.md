@@ -10,7 +10,7 @@ Plugin collection - each subdirectory contains a self-contained plugin with its 
 
 | Plugin | Description |
 |--------|-------------|
-| `auto-compact/` | Automatic context compaction suggestions for long sessions |
+| `suggest-compacting/` | Suggests when to manually compact context during long sessions |
 | `auto-updater/` | Automatic plugin installation and updates from marketplace |
 | `databricks/` | Databricks integration via MCP server |
 | `git-guard/` | Git workflow protection hooks |
