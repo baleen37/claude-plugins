@@ -17,7 +17,7 @@ Plugin collection - each subdirectory contains a self-contained plugin with its 
 | `jira/` | Jira integration via Atlassian MCP server |
 | `lsp-support/` | Language Server Protocol support for multiple languages |
 | `me/` | Personal Claude Code configuration (TDD, debugging, git, code review) |
-| `memory-persistence/` | Automatic session memory persistence |
+| `context-restore/` | Automatic session context restore |
 | `ralph-loop/` | Continuous self-referential AI loops |
 
 ## Subdirectories
