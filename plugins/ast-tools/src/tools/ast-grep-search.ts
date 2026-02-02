@@ -4,10 +4,7 @@
 
 import { z } from "zod";
 import { readFileSync } from "fs";
-import {
-  SUPPORTED_LANGUAGES,
-  toLangEnum,
-} from "../lib/language-map.js";
+import { SUPPORTED_LANGUAGES, toLangEnum } from "../lib/language-map.js";
 import { getFilesForLanguage } from "../lib/file-finder.js";
 import {
   getSgModule,
@@ -50,7 +47,7 @@ export type AstGrepSearchInput = z.infer<typeof astGrepSearchSchema>;
  * Format a single match with context lines
  *
  * @param filePath - Path to the file containing the match
- * @param matchText - The matched text (unused but kept for future use)
+ * @param _matchText - The matched text (unused, prefixed with _ to indicate intentionally unused)
  * @param startLine - Starting line number (1-based)
  * @param endLine - Ending line number (1-based)
  * @param context - Number of context lines before and after
@@ -59,7 +56,7 @@ export type AstGrepSearchInput = z.infer<typeof astGrepSearchSchema>;
  */
 function formatMatch(
   filePath: string,
-  matchText: string,
+  _matchText: string,
   startLine: number,
   endLine: number,
   context: number,
