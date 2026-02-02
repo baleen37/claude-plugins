@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "databricks",
@@ -43,7 +43,7 @@
         "mcp",
         "analytics"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "git-guard",
@@ -57,7 +57,7 @@
         "pr",
         "security"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "jira",
@@ -71,7 +71,7 @@
         "atlassian",
         "mcp"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "lsp-support",
@@ -88,7 +88,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "me",
@@ -103,7 +103,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "memory-persistence",
@@ -116,7 +116,7 @@
         "context",
         "session"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     },
     {
       "name": "ralph-loop",
@@ -129,7 +129,7 @@
         "loop",
         "ai"
       ],
-      "version": "2.27.6"
+      "version": "2.27.7"
     }
   ]
 }
