@@ -78,23 +78,8 @@ jobs:
           # This must be done BEFORE semantic-release to include all recent code changes
           git pull origin main --ff-only
 
-          # Save the original update-checker.sh before semantic-release
-          UPDATE_CHECKER_BACKUP=$(mktemp)
-          cp "plugins/auto-updater/scripts/update-checker.sh" "$UPDATE_CHECKER_BACKUP" 2>/dev/null || true
-
           # Run semantic-release to update version files only
           npx semantic-release
-
-          # Restore update-checker.sh if it was corrupted
-          if [ -f "$UPDATE_CHECKER_BACKUP" ]; then
-            # Check if the file has fewer than 50 lines (corrupted)
-            if [ $(wc -l < "plugins/auto-updater/scripts/update-checker.sh") -lt 50 ]; then
-              echo "Restoring corrupted update-checker.sh from backup"
-              cp "$UPDATE_CHECKER_BACKUP" "plugins/auto-updater/scripts/update-checker.sh"
-              git add "plugins/auto-updater/scripts/update-checker.sh"
-            fi
-            rm -f "$UPDATE_CHECKER_BACKUP"
-          fi
 
           # Check if files were modified (semantic-release updated version files)
           if ! git diff --quiet; then
