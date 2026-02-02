@@ -1,12 +1,12 @@
 #!/usr/bin/env bats
-# Test: Auto Compact functionality
+# Test: Suggest Compacting functionality
 
 load helpers/bats_helper
 
-PLUGIN_ROOT="${PROJECT_ROOT}/plugins/auto-compact"
+PLUGIN_ROOT="${PROJECT_ROOT}/plugins/suggest-compacting"
 HOOKS_DIR="${PLUGIN_ROOT}/hooks"
 LIB_DIR="${HOOKS_DIR}/lib"
-STATE_DIR="$HOME/.claude/auto-compact"
+STATE_DIR="$HOME/.claude/suggest-compacting"
 
 setup() {
     # Call parent setup
@@ -45,8 +45,8 @@ teardown() {
 # Test Suite 1: Hook scripts exist and are executable
 # ========================================
 
-@test "auto-compact.sh exists and is executable" {
-    assert_file_exists "${HOOKS_DIR}/auto-compact.sh" "auto-compact.sh should exist"
+@test "suggest-compacting.sh exists and is executable" {
+    assert_file_exists "${HOOKS_DIR}/auto-compact.sh" "suggest-compacting hook should exist"
     [ -x "${HOOKS_DIR}/auto-compact.sh" ]
 }
 
@@ -70,9 +70,9 @@ teardown() {
 # Test Suite 2: Session-based counter file usage
 # ========================================
 
-@test "creates state directory in ~/.claude/auto-compact/" {
+@test "creates state directory in ~/.claude/suggest-compacting/" {
     # Run the hook script with a test session
-    export AUTO_COMPACT_SESSION_ID="test-session-123"
+    export SUGGEST_COMPACTING_SESSION_ID="test-session-123"
     run bash "${HOOKS_DIR}/auto-compact.sh"
 
     [ -d "$STATE_DIR" ]
@@ -80,7 +80,7 @@ teardown() {
 
 @test "counter filename includes session_id" {
     local test_session="test-session-abc456"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     run bash "${HOOKS_DIR}/auto-compact.sh"
 
@@ -90,7 +90,7 @@ teardown() {
 
 @test "counter persists across hook runs" {
     local test_session="test-session-persist"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # First run
     run bash "${HOOKS_DIR}/auto-compact.sh"
@@ -120,7 +120,7 @@ teardown() {
 
 @test "counter starts at 1 on first run" {
     local test_session="test-session-first"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     run bash "${HOOKS_DIR}/auto-compact.sh"
 
@@ -133,7 +133,7 @@ teardown() {
 
 @test "counter increments on each call" {
     local test_session="test-session-increment"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # First run
     run bash "${HOOKS_DIR}/auto-compact.sh"
@@ -158,7 +158,7 @@ teardown() {
 
 @test "counter value persists across multiple invocations" {
     local test_session="test-session-persist-value"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # Run 5 times
     for i in {1..5}; do
@@ -178,7 +178,7 @@ teardown() {
 
 @test "shows message at default threshold of 50" {
     local test_session="test-session-threshold-50"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # Create counter file at 49
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
@@ -194,7 +194,7 @@ teardown() {
 
 @test "shows message every 25 calls after threshold" {
     local test_session="test-session-interval"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     mkdir -p "$STATE_DIR"
@@ -214,7 +214,7 @@ teardown() {
 
 @test "respects custom COMPACT_THRESHOLD" {
     local test_session="test-session-custom-threshold"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
     export COMPACT_THRESHOLD="5"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
@@ -230,7 +230,7 @@ teardown() {
 
 @test "no message before threshold" {
     local test_session="test-session-before-threshold"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
     export COMPACT_THRESHOLD="100"
 
     # Run once, counter will be 1
@@ -243,7 +243,7 @@ teardown() {
 
 @test "no message when count exceeds threshold but not at interval" {
     local test_session="test-session-between-interval"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     local counter_file="$STATE_DIR/tool-count-$test_session.txt"
     mkdir -p "$STATE_DIR"
@@ -290,7 +290,7 @@ teardown() {
 
 @test "falls back to PID when no session_id environment variable" {
     # Unset session_id to force fallback
-    unset AUTO_COMPACT_SESSION_ID
+    unset SUGGEST_COMPACTING_SESSION_ID
 
     # Run the hook
     run bash "${HOOKS_DIR}/auto-compact.sh"
@@ -382,7 +382,7 @@ teardown() {
 
     [ "$status" -eq 0 ]
     [ -f "$test_env_file" ]
-    grep -q "AUTO_COMPACT_SESSION_ID=test-session-write" "$test_env_file"
+    grep -q "SUGGEST_COMPACTING_SESSION_ID=test-session-write" "$test_env_file"
 }
 
 @test "session-start-hook.sh appends to existing ENV_FILE" {
@@ -394,16 +394,16 @@ teardown() {
 
     [ "$status" -eq 0 ]
     grep -q "# Existing content" "$test_env_file"
-    grep -q "AUTO_COMPACT_SESSION_ID=test-session-append" "$test_env_file"
+    grep -q "SUGGEST_COMPACTING_SESSION_ID=test-session-append" "$test_env_file"
 }
 
 # ========================================
 # Test Suite 7: Error handling
 # ========================================
 
-@test "auto-compact.sh handles missing state directory gracefully" {
+@test "suggest-compacting hook handles missing state directory gracefully" {
     local test_session="test-session-missing-dir"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # Remove state directory
     rm -rf "$STATE_DIR"
@@ -415,9 +415,9 @@ teardown() {
     [ -d "$STATE_DIR" ]
 }
 
-@test "auto-compact.sh fails with error when cannot create state directory" {
+@test "suggest-compacting hook fails with error when cannot create state directory" {
     local test_session="test-session-no-permission"
-    export AUTO_COMPACT_SESSION_ID="$test_session"
+    export SUGGEST_COMPACTING_SESSION_ID="$test_session"
 
     # This is difficult to test without root privileges
     # Skip if we can't simulate permission error

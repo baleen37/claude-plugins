@@ -8,9 +8,9 @@
   },
   "plugins": [
     {
-      "name": "auto-compact",
+      "name": "suggest-compacting",
       "description": "Automatically suggests when to manually compact context during long sessions",
-      "source": "./plugins/auto-compact",
+      "source": "./plugins/suggest-compacting",
       "category": "development",
       "tags": [
         "workflow",

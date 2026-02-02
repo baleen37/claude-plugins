@@ -1,17 +1,17 @@
 ---
-name: auto-compact
+name: suggest-compacting
 description: Suggests manual /compact at logical intervals during long sessions
 ---
 
-# Auto Compact
+# Suggest Compacting
 
-Automatically suggests when to manually compact context during long Claude Code sessions.
+Suggests when to manually compact context during long Claude Code sessions.
 
-**Core principle**: Auto Compact suggests; you decide when to compact.
+**Core principle**: The plugin suggests; you decide when to compact.
 
 ## When to Use
 
-Auto Compact is automatically active during long sessions with significant file editing activity.
+Suggest Compacting is automatically active during long sessions with significant file editing activity.
 
 **Automatic activation criteria:**
 - After 50 Edit/Write tool calls (default threshold)
@@ -25,10 +25,10 @@ Auto Compact is automatically active during long sessions with significant file 
 
 ## How It Works
 
-The Auto Compact hook tracks file editing activity:
+The Suggest Compacting hook tracks file editing activity:
 
 1. **Session-based tracking**: Counts Edit/Write tool calls per session
-2. **Persistent state**: Counter persists via `~/.claude/auto-compact/tool-count-{session_id}.txt`
+2. **Persistent state**: Counter persists via `~/.claude/suggest-compacting/tool-count-{session_id}.txt`
 3. **Non-blocking suggestions**: Shows stderr messages that don't interrupt workflow
 4. **Session isolation**: Each Claude Code session has its own counter
 
@@ -36,12 +36,12 @@ The Auto Compact hook tracks file editing activity:
 
 At threshold (default: 50):
 ```
-[AutoCompact] 50 tool calls reached - consider /compact if transitioning phases
+[SuggestCompacting] 50 tool calls reached - consider /compact if transitioning phases
 ```
 
 Every 25 calls after threshold:
 ```
-[AutoCompact] 75 tool calls - good checkpoint for /compact if context is stale
+[SuggestCompacting] 75 tool calls - good checkpoint for /compact if context is stale
 ```
 
 ## Best Practices
@@ -100,12 +100,12 @@ Default: 50 tool calls
 
 Session counters stored in:
 ```
-~/.claude/auto-compact/tool-count-{session_id}.txt
+~/.claude/suggest-compacting/tool-count-{session_id}.txt
 ```
 
 Session ID extracted from SessionStart hook and stored in:
 ```
-~/.claude/auto-compact/session-env.sh
+~/.claude/suggest-compacting/session-env.sh
 ```
 
 ## Why Suggestions Over Forced Auto-Compaction?
@@ -116,7 +116,7 @@ Session ID extracted from SessionStart hook and stored in:
 - Interrupts thought processes
 - Difficult to resume after compaction
 
-**Auto Compact benefits:**
+**Suggest Compacting benefits:**
 - You control when compaction occurs
 - Preserve context through logical phases
 - Choose natural breakpoints
@@ -169,7 +169,7 @@ Session ID extracted from SessionStart hook and stored in:
 
 ## Integration with Other Tools
 
-Auto Compact works well with:
+Suggest Compacting works well with:
 - **Git workflows**: Compact before committing
 - **TDD**: Compact after red-green-refactor cycle
 - **Code review**: Compact after implementing feedback

@@ -4,7 +4,7 @@
 # hooks
 
 ## Purpose
-Session hooks for automatic context compaction suggestions.
+Session hooks for context compaction suggestions.
 
 ## Key Files
 

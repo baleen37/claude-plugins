@@ -1,10 +1,10 @@
 <!-- Parent: ../AGENTS.md -->
 <!-- Generated: 2026-02-01 | Updated: 2026-02-01 -->
 
-# auto-compact
+# suggest-compacting
 
 ## Purpose
-Automatically suggests when to manually compact context during long sessions to prevent token bloat and maintain performance.
+Suggests when to manually compact context during long sessions to prevent token bloat and maintain performance.
 
 ## Key Files
 

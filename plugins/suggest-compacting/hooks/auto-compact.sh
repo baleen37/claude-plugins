@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Auto Compact Suggester
+# Suggest Compacting Hook
 # Runs on PreToolUse or periodically to suggest manual compaction at logical intervals
 #
 # Why manual over automatic compaction:
@@ -27,19 +27,19 @@ validate_session_id() {
 }
 
 # Load session_id from environment file (saved by SessionStart hook)
-ENV_FILE="${CLAUDE_ENV_FILE:-$HOME/.claude/auto-compact/session-env.sh}"
+ENV_FILE="${CLAUDE_ENV_FILE:-$HOME/.claude/suggest-compacting/session-env.sh}"
 if [[ -f "$ENV_FILE" ]]; then
   source "$ENV_FILE"
 fi
 
 # Determine session_id: use loaded environment variable or fall back to PID
-SESSION_ID="${AUTO_COMPACT_SESSION_ID:-$$}"
+SESSION_ID="${SUGGEST_COMPACTING_SESSION_ID:-$$}"
 if ! validate_session_id "$SESSION_ID" 2>/dev/null; then
   SESSION_ID="$$"
 fi
 
 # Create state directory if it doesn't exist
-STATE_DIR="$HOME/.claude/auto-compact"
+STATE_DIR="$HOME/.claude/suggest-compacting"
 if [ ! -d "$STATE_DIR" ]; then
   mkdir -p "$STATE_DIR" || {
     echo "Warning: Could not create state directory $STATE_DIR" >&2
@@ -63,10 +63,10 @@ fi
 
 # Suggest compact after threshold tool calls
 if [ "$count" -eq "$THRESHOLD" ]; then
-  echo "[AutoCompact] $THRESHOLD tool calls reached - consider /compact if transitioning phases" >&2
+  echo "[SuggestCompacting] $THRESHOLD tool calls reached - consider /compact if transitioning phases" >&2
 fi
 
 # Suggest at regular intervals after threshold
 if [ "$count" -gt "$THRESHOLD" ] && [ $((count % 25)) -eq 0 ]; then
-  echo "[AutoCompact] $count tool calls - good checkpoint for /compact if context is stale" >&2
+  echo "[SuggestCompacting] $count tool calls - good checkpoint for /compact if context is stale" >&2
 fi
