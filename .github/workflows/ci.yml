@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install jq
-        uses: sergeysova/jq-action@v2
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Install yq
         uses: mikefarah/yq@v4.40.1
@@ -23,8 +23,6 @@ jobs:
       - name: Setup Bats and bats libs
         id: setup-bats
         uses: bats-core/bats-action@3.0.1
-        with:
-          cache: false
 
       - name: Run all tests
         shell: bash

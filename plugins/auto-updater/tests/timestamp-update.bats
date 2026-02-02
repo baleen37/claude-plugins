@@ -4,8 +4,9 @@
 # Tests for timestamp update conditional logic
 #
 
-# Store original check.sh to restore after tests
+# Store original files to restore after tests
 ORIGINAL_CHECK=""
+ORIGINAL_UPDATE=""
 
 setup() {
     export TEST_DIR="${BATS_TEST_DIRNAME}"
@@ -18,17 +19,24 @@ setup() {
     export CONFIG_DIR="$HOME/.claude/auto-updater"
     mkdir -p "$CONFIG_DIR"
 
-    # Backup original check.sh
+    # Backup original check.sh and update.sh
     ORIGINAL_CHECK="${SCRIPT_DIR}/check.sh"
+    ORIGINAL_UPDATE="${SCRIPT_DIR}/update.sh"
     if [ -f "$ORIGINAL_CHECK" ]; then
         cp "$ORIGINAL_CHECK" "${TEMP_DIR}/check.sh.backup"
+    fi
+    if [ -f "$ORIGINAL_UPDATE" ]; then
+        cp "$ORIGINAL_UPDATE" "${TEMP_DIR}/update.sh.backup"
     fi
 }
 
 teardown() {
-    # Restore original check.sh
+    # Restore original check.sh and update.sh
     if [ -f "${TEMP_DIR}/check.sh.backup" ]; then
         cp "${TEMP_DIR}/check.sh.backup" "$ORIGINAL_CHECK"
+    fi
+    if [ -f "${TEMP_DIR}/update.sh.backup" ]; then
+        cp "${TEMP_DIR}/update.sh.backup" "$ORIGINAL_UPDATE"
     fi
     rm -rf "$TEMP_DIR"
 }
@@ -36,7 +44,8 @@ teardown() {
 # Helper: Set last-check timestamp to N seconds ago
 set_last_check_time() {
     local seconds_ago="$1"
-    local current_time=$(date +%s)
+    local current_time
+    current_time=$(date +%s)
     local timestamp=$((current_time - seconds_ago))
     echo "$timestamp" > "$CONFIG_DIR/last-check"
 }
