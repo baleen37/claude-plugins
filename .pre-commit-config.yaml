@@ -27,7 +27,16 @@ repos:
     hooks:
       - id: bats-tests
         name: BATS test runner
-        entry: bash tests/run-all-tests.sh
+        entry: bash tests/run-bats-tests.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  - repo: local
+    hooks:
+      - id: typescript-tests
+        name: TypeScript test runner
+        entry: bash tests/run-typescript-tests.sh
         language: system
         pass_filenames: false
         always_run: true

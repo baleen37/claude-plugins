@@ -9,9 +9,9 @@ PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
     [ -f "${PROJECT_ROOT}/.github/workflows/ci.yml" ]
 }
 
-@test "ci.yml runs run-all-tests.sh" {
+@test "ci.yml runs run-bats-tests.sh" {
     local workflow="${PROJECT_ROOT}/.github/workflows/ci.yml"
-    grep -q "bash tests/run-all-tests.sh" "$workflow"
+    grep -q "bash tests/run-bats-tests.sh" "$workflow"
 }
 
 @test "release.yml runs run-all-tests.sh" {

@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/commit-guard.sh"
+            "command": "npx tsx ${CLAUDE_PLUGIN_ROOT}/src/hooks/commit-guard.ts"
           }
         ]
       }

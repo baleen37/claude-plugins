@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/auto-update-hook.sh"
+            "command": "npx tsx ${CLAUDE_PLUGIN_ROOT}/src/hooks/auto-update-hook.ts"
           }
         ]
       }

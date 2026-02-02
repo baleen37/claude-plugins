@@ -8,7 +8,7 @@ on:
       - main
 
 jobs:
-  test:
+  bats-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -24,9 +24,42 @@ jobs:
         id: setup-bats
         uses: bats-core/bats-action@3.0.1
 
-      - name: Run all tests
+      - name: Run BATS tests
         shell: bash
         env:
           BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
           TERM: xterm
-        run: bash tests/run-all-tests.sh
+        run: bash tests/run-bats-tests.sh
+
+  typescript-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        plugin:
+          - auto-updater
+          - git-guard
+          - memory-persistence
+          - ralph-loop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd plugins/${{ matrix.plugin }}
+          npm ci
+
+      - name: Run tests
+        run: |
+          cd plugins/${{ matrix.plugin }}
+          npm test
+
+      - name: TypeScript type check
+        run: |
+          cd plugins/${{ matrix.plugin }}
+          npx tsc --noEmit

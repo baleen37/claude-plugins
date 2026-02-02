@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start-hook.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/src/hooks/session-start.ts"
           }
         ]
       }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/stop-hook.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/src/hooks/stop.ts"
           }
         ]
       }
