@@ -39,7 +39,6 @@ Personal Claude Code configuration - TDD enforcement, systematic debugging, git 
 |-------|---------|
 | `ci-troubleshooting/` | GitHub Actions CI debugging |
 | `claude-isolated-test/` | Docker containerized testing |
-| `create-pr/` | PR creation workflow |
 | `research/` | Exploration and investigation |
 | `using-git-worktrees/` | Git worktree management |
 

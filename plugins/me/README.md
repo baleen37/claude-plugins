@@ -17,9 +17,8 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 ### Agents
 - **code-reviewer**: Review code against plans and standards
 
-### Skills (6)
+### Skills (5)
 - **ci-troubleshooting**: Systematic CI debugging approach
-- **create-pr**: Complete git workflow (commit → push → PR)
 - **nix-direnv-setup**: Direnv integration for Nix flakes
 - **setup-precommit-and-ci**: Pre-commit hooks and CI setup
 - **using-git-worktrees**: Isolated feature work with worktrees
