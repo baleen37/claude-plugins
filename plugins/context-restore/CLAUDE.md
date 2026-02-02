@@ -1,10 +1,10 @@
 <!-- Parent: ../AGENTS.md -->
 <!-- Generated: 2026-02-01 | Updated: 2026-02-01 -->
 
-# memory-persistence
+# context-restore
 
 ## Purpose
-Automatic session memory persistence - saves context at session end and restores relevant context at session start.
+Automatic session context restore - saves context at session end and restores relevant context at session start.
 
 ## Key Files
 
@@ -49,6 +49,6 @@ Automatic session memory persistence - saves context at session end and restores
 - **mcp__plugin_episodic-memory** - Memory persistence MCP server
 
 ### Internal
-- `tests/memory-persistence.bats` - Plugin tests
+- `tests/context-restore.bats` - Plugin tests
 
 <!-- MANUAL: -->

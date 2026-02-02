@@ -1,6 +1,6 @@
-# Memory Persistence Plugin
+# Context Restore Plugin
 
-Automatic session memory persistence for Claude Code.
+Automatic session context restore for Claude Code.
 
 ## What It Does
 
@@ -60,7 +60,7 @@ When you start a new Claude Code session, the plugin:
 - Session ID: abc123def456
 - End Time: 2026-01-31 12:34:56
 - Transcript: /path/to/transcript.jsonl
-- Saved by: memory-persistence plugin
+- Saved by: context-restore plugin
 ```
 
 ## Configuration
@@ -68,13 +68,13 @@ When you start a new Claude Code session, the plugin:
 No configuration required. The plugin works out of the box.
 
 Environment variables (optional):
-- `MEMORY_PERSISTENCE_SESSIONS_DIR`: Override sessions directory (default: `~/.claude/sessions/`)
+- `CONTEXT_RESTORE_SESSIONS_DIR`: Override sessions directory (default: `~/.claude/sessions/`)
 
 ## Troubleshooting
 
 **Sessions not being saved?**
-- Check that hooks are properly installed: `ls ~/.claude/plugins/baleen-plugins/plugins/memory-persistence/hooks/`
-- Verify scripts are executable: `chmod +x ~/.claude/plugins/baleen-plugins/plugins/memory-persistence/hooks/*.sh`
+- Check that hooks are properly installed: `ls ~/.claude/plugins/baleen-plugins/plugins/context-restore/hooks/`
+- Verify scripts are executable: `chmod +x ~/.claude/plugins/baleen-plugins/plugins/context-restore/hooks/*.sh`
 
 **Context not being restored?**
 - Check that session files exist: `ls ~/.claude/sessions/`
