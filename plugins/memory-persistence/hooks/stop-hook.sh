@@ -64,8 +64,8 @@ $CONVERSATION
 - Saved by: memory-persistence plugin
 "
 
-# Save session file
-SESSION_FILE=$(save_session_file "$SESSION_ID" "$SESSION_CONTENT")
+# Save session file with transcript_path for project-specific directory
+SESSION_FILE=$(save_session_file "$SESSION_ID" "$SESSION_CONTENT" "$TRANSCRIPT_PATH")
 
 if [[ -z "$SESSION_FILE" ]]; then
     # Only write to stderr on ERROR conditions

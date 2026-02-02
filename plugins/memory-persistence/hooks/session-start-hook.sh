@@ -8,8 +8,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../scripts/lib/state.sh"
 
-# Extract session_id from stdin (SessionStart hook JSON)
-SESSION_ID=$(jq -r '.session_id')
+# Read hook input from stdin and extract session_id and transcript_path
+HOOK_INPUT=$(</dev/stdin)
+SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
+TRANSCRIPT_PATH=$(echo "$HOOK_INPUT" | jq -r '.transcript_path')
 
 # Validate session_id exists
 if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
@@ -21,8 +23,8 @@ if ! validate_session_id "$SESSION_ID"; then
     exit 0
 fi
 
-# Find recent session files
-RECENT_SESSIONS=$(find_recent_sessions 5)
+# Find recent session files for this project
+RECENT_SESSIONS=$(find_recent_sessions 5 "$TRANSCRIPT_PATH")
 
 if [[ -z "$RECENT_SESSIONS" ]]; then
     # No previous sessions found

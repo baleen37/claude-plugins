@@ -18,6 +18,54 @@ get_sessions_dir() {
     echo "${MEMORY_PERSISTENCE_SESSIONS_DIR:-$HOME/.claude/sessions}"
 }
 
+# Extract project folder from transcript_path
+# Returns: project folder name (e.g., "-Users-test-dev-project-a") or empty string
+extract_project_folder_from_transcript() {
+    local transcript_path="$1"
+
+    if [[ -z "$transcript_path" ]] || [[ "$transcript_path" == "null" ]]; then
+        return 0
+    fi
+
+    # Use a local variable to safely check BASH_REMATCH under set -u
+    # Pattern: .claude/projects/{folder-name}/...
+    if [[ "$transcript_path" =~ \.claude/projects/([^/]+)/ ]]; then
+        local project_folder="${BASH_REMATCH[1]:-}"
+        if [[ -n "$project_folder" ]]; then
+            echo "$project_folder"
+        fi
+    fi
+}
+
+# Get project-specific sessions directory
+# Priority order:
+#   1. Environment variable (MEMORY_PERSISTENCE_SESSIONS_DIR)
+#   2. Project-specific directory (~/.claude/projects/{project-folder})
+#   3. Legacy fallback (~/.claude/sessions)
+get_sessions_dir_for_project() {
+    local transcript_path="${1:-}"
+
+    # Priority 1: Environment variable (for testing)
+    if [[ -n "${MEMORY_PERSISTENCE_SESSIONS_DIR:-}" ]]; then
+        echo "$MEMORY_PERSISTENCE_SESSIONS_DIR"
+        return 0
+    fi
+
+    # Priority 2: Project-specific directory
+    if [[ -n "$transcript_path" ]]; then
+        local project_folder
+        project_folder=$(extract_project_folder_from_transcript "$transcript_path")
+
+        if [[ -n "$project_folder" ]]; then
+            echo "$HOME/.claude/projects/$project_folder"
+            return 0
+        fi
+    fi
+
+    # Priority 3: Legacy fallback
+    echo "$HOME/.claude/sessions"
+}
+
 ensure_directory_exists() {
     local dir="$1"
     if [[ ! -d "$dir" ]]; then
@@ -31,8 +79,9 @@ ensure_directory_exists() {
 save_session_file() {
     local session_id="$1"
     local content="$2"
+    local transcript_path="${3:-}"
     local sessions_dir
-    sessions_dir=$(get_sessions_dir)
+    sessions_dir=$(get_sessions_dir_for_project "$transcript_path")
 
     ensure_directory_exists "$sessions_dir" || return 1
 
@@ -50,8 +99,9 @@ save_session_file() {
 
 find_recent_sessions() {
     local count="${1:-5}"
+    local transcript_path="${2:-}"
     local sessions_dir
-    sessions_dir=$(get_sessions_dir)
+    sessions_dir=$(get_sessions_dir_for_project "$transcript_path")
 
     if [[ ! -d "$sessions_dir" ]]; then
         return 0
