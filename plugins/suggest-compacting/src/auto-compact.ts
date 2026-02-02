@@ -1,3 +1,5 @@
+#!/usr/bin/env npx tsx
+
 import { incrementState, isValidSessionId } from './lib/state.js';
 
 interface PreToolUseInput {

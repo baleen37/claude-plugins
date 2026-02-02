@@ -2,7 +2,7 @@
 node_modules/
 
 # Build output
-dist/
+# dist/  # Commented out - we commit dist/mcp-server.cjs for users
 *.tsbuildinfo
 
 # Tests
