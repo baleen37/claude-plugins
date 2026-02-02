@@ -48,12 +48,20 @@ describe("ast_grep_search", () => {
       pattern: "const $NAME = $VALUE",
       language: "javascript",
       path: testFile,
+      context: 0, // No context to avoid "baz" appearing
     });
 
     expect(result.content).toHaveLength(1);
     expect(result.content[0].text).toContain("foo");
     expect(result.content[0].text).toContain("bar");
-    expect(result.content[0].text).not.toContain("baz");
+    // baz should not be matched (it's let, not const)
+    const text = result.content[0].text;
+    const fooMatches = (text.match(/const foo/g) || []).length;
+    const barMatches = (text.match(/const bar/g) || []).length;
+    const bazMatches = (text.match(/let baz/g) || []).length;
+    expect(fooMatches).toBeGreaterThan(0);
+    expect(barMatches).toBeGreaterThan(0);
+    expect(bazMatches).toBe(0); // Should not match let
   });
 
   it("respects maxResults limit", async () => {
@@ -69,12 +77,15 @@ describe("ast_grep_search", () => {
       language: "javascript",
       path: testFile,
       maxResults: 5,
+      context: 0, // No context to avoid showing non-matched lines
     });
 
     expect(result.content).toHaveLength(1);
     const text = result.content[0].text;
-    // Should limit results
-    expect(text).toContain("result");
+    // Should show exactly 5 matches
+    expect(text).toContain("Found 5 match(es)");
+    expect(text).toContain("func0");
+    expect(text).toContain("func4");
   });
 
   it("handles module not available gracefully", async () => {
