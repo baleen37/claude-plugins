@@ -23,7 +23,7 @@ BATS (Bash Automated Testing System) test suite for validating plugin structure,
 | `git-guard-hooks.bats` | Tests git-guard hook functionality |
 | `databricks_plugin.bats` | Databricks plugin specific tests |
 | `jira_plugin.bats` | Jira plugin specific tests |
-| `memory-persistence.bats` | Memory-persistence plugin tests |
+| `context-restore.bats` | Context-restore plugin tests |
 
 ## Subdirectories
 

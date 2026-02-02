@@ -1,0 +1,9 @@
+{
+  "name": "context-restore",
+  "version": "3.0.0",
+  "description": "Automatic session context restore - saves context at session end and restores relevant context at session start",
+  "author": {
+    "name": "baleen",
+    "email": "git@baleen.me"
+  }
+}
