@@ -1,6 +1,6 @@
 {
   "name": "suggest-compacting",
-  "version": "2.27.7",
+  "version": "2.27.8",
   "description": "Suggests when to manually compact context during long sessions",
   "author": {
     "name": "baleen37",
