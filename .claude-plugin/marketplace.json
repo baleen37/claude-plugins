@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "databricks",
@@ -43,7 +43,7 @@
         "mcp",
         "analytics"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "git-guard",
@@ -57,7 +57,7 @@
         "pr",
         "security"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "jira",
@@ -71,7 +71,7 @@
         "atlassian",
         "mcp"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "lsp-support",
@@ -88,7 +88,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "me",
@@ -103,7 +103,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "context-restore",
@@ -116,7 +116,7 @@
         "context",
         "session"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "ralph-loop",
@@ -129,7 +129,7 @@
         "loop",
         "ai"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     },
     {
       "name": "ast-tools",
@@ -143,7 +143,7 @@
         "mcp",
         "ast-grep"
       ],
-      "version": "3.1.2"
+      "version": "3.1.3"
     }
   ]
 }

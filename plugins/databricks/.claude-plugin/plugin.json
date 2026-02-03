@@ -1,6 +1,6 @@
 {
   "name": "databricks",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "description": "Databricks integration via MCP server - execute SQL, manage clusters, query Unity Catalog",
   "author": {
     "name": "baleen",
