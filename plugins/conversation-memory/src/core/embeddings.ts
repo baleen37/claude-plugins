@@ -1,14 +1,21 @@
-import { pipeline, Pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
+import { pipeline, FeatureExtractionPipeline, env } from '@huggingface/transformers';
 
 let embeddingPipeline: FeatureExtractionPipeline | null = null;
 
 export async function initEmbeddings(): Promise<void> {
   if (!embeddingPipeline) {
     console.log('Loading embedding model (first run may take time)...');
+
+    // Set cache directory
+    env.cacheDir = './.cache';
+
+    // Load EmbeddingGemma with Q4 quantization
     embeddingPipeline = await pipeline(
       'feature-extraction',
-      'Xenova/all-MiniLM-L6-v2'
+      'onnx-community/embeddinggemma-300m-ONNX',
+      { dtype: 'q4' } as any
     );
+
     console.log('Embedding model loaded');
   }
 }
@@ -18,9 +25,14 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     await initEmbeddings();
   }
 
-  // Truncate text to avoid token limits (512 tokens max for this model)
-  const truncated = text.substring(0, 2000);
+  // CRITICAL: Task prefix is MANDATORY for EmbeddingGemma
+  // For documents/text, use "title: none | text: ..."
+  const prefixedText = `title: none | text: ${text}`;
 
+  // Truncate to avoid token limits (EmbeddingGemma supports up to 2K tokens)
+  const truncated = prefixedText.substring(0, 8000);
+
+  // Generate embeddings with mean pooling and normalization
   const output = await embeddingPipeline!(truncated, {
     pooling: 'mean',
     normalize: true
