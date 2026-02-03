@@ -6,7 +6,7 @@ try {
   var _Module = require('module');
   var _globalRoot = _cp.execSync('npm root -g', { encoding: 'utf8', timeout: 5000 }).trim();
   if (_globalRoot) {
-    process.env.NODE_PATH = _globalRoot + (process.platform === 'win32' ? ';' : ':"') + (process.env.NODE_PATH || '"');
+    process.env.NODE_PATH = _globalRoot + (process.platform === 'win32' ? ';' : ':') + (process.env.NODE_PATH || '');
     _Module._initPaths();
   }
 } catch (_e) { /* npm not available - native modules will gracefully degrade */ }
@@ -17771,10 +17771,60 @@ var StdioServerTransport = class {
   }
 };
 
-// src/tools/ast-grep-search.ts
-var import_fs2 = require("fs");
-
-// src/lib/language-map.ts
+// src/tools/ast-tools.ts
+var import_fs = require("fs");
+var import_path = require("path");
+var import_module = require("module");
+var import_meta = {};
+var sgModule = null;
+var sgLoadFailed = false;
+var sgLoadError = "";
+async function getSgModule() {
+  if (sgLoadFailed) {
+    return null;
+  }
+  if (!sgModule) {
+    try {
+      const require2 = (0, import_module.createRequire)(import_meta.url || __filename || process.cwd() + "/");
+      sgModule = require2("@ast-grep/napi");
+    } catch {
+      try {
+        sgModule = await import("@ast-grep/napi");
+      } catch (error2) {
+        sgLoadFailed = true;
+        sgLoadError = error2 instanceof Error ? error2.message : String(error2);
+        return null;
+      }
+    }
+  }
+  return sgModule;
+}
+function toLangEnum(sg, language) {
+  const langMap = {
+    javascript: sg.Lang.JavaScript,
+    typescript: sg.Lang.TypeScript,
+    tsx: sg.Lang.Tsx,
+    python: sg.Lang.Python,
+    ruby: sg.Lang.Ruby,
+    go: sg.Lang.Go,
+    rust: sg.Lang.Rust,
+    java: sg.Lang.Java,
+    kotlin: sg.Lang.Kotlin,
+    swift: sg.Lang.Swift,
+    c: sg.Lang.C,
+    cpp: sg.Lang.Cpp,
+    csharp: sg.Lang.CSharp,
+    html: sg.Lang.Html,
+    css: sg.Lang.Css,
+    json: sg.Lang.Json,
+    yaml: sg.Lang.Yaml
+  };
+  const lang = langMap[language];
+  if (!lang) {
+    throw new Error(`Unsupported language: ${language}`);
+  }
+  return lang;
+}
 var SUPPORTED_LANGUAGES = [
   "javascript",
   "typescript",
@@ -17825,36 +17875,6 @@ var EXT_TO_LANG = {
   ".yaml": "yaml",
   ".yml": "yaml"
 };
-function toLangEnum(sg, language) {
-  const langMap = {
-    javascript: sg.Lang.JavaScript,
-    typescript: sg.Lang.TypeScript,
-    tsx: sg.Lang.Tsx,
-    python: sg.Lang.Python,
-    ruby: sg.Lang.Ruby,
-    go: sg.Lang.Go,
-    rust: sg.Lang.Rust,
-    java: sg.Lang.Java,
-    kotlin: sg.Lang.Kotlin,
-    swift: sg.Lang.Swift,
-    c: sg.Lang.C,
-    cpp: sg.Lang.Cpp,
-    csharp: sg.Lang.CSharp,
-    html: sg.Lang.Html,
-    css: sg.Lang.Css,
-    json: sg.Lang.Json,
-    yaml: sg.Lang.Yaml
-  };
-  const lang = langMap[language];
-  if (!lang) {
-    throw new Error(`Unsupported language: ${language}`);
-  }
-  return lang;
-}
-
-// src/lib/file-finder.ts
-var import_fs = require("fs");
-var import_path = require("path");
 function getFilesForLanguage(dirPath, language, maxFiles = 1e3) {
   const files = [];
   const extensions = Object.entries(EXT_TO_LANG).filter(([_, lang]) => lang === language).map(([ext]) => ext);
@@ -17897,49 +17917,7 @@ function getFilesForLanguage(dirPath, language, maxFiles = 1e3) {
   walk(resolvedPath);
   return files;
 }
-
-// src/lib/module-loader.ts
-var import_module = require("module");
-var import_meta = {};
-var sgModule = null;
-var sgLoadFailed = false;
-var sgLoadError = "";
-async function getSgModule() {
-  if (sgLoadFailed) {
-    return null;
-  }
-  if (!sgModule) {
-    try {
-      const require2 = (0, import_module.createRequire)(
-        import_meta.url || __filename || process.cwd() + "/"
-      );
-      sgModule = require2("@ast-grep/napi");
-    } catch {
-      try {
-        sgModule = await import("@ast-grep/napi");
-      } catch (error2) {
-        sgLoadFailed = true;
-        sgLoadError = error2 instanceof Error ? error2.message : String(error2);
-        return null;
-      }
-    }
-  }
-  return sgModule;
-}
-function getModuleNotAvailableMessage() {
-  return `@ast-grep/napi is not available. Install it with: npm install -g @ast-grep/napi
-Error: ${sgLoadError}`;
-}
-
-// src/tools/ast-grep-search.ts
-var astGrepSearchSchema = external_exports.object({
-  pattern: external_exports.string().describe("AST pattern with meta-variables ($VAR, $$$VARS)"),
-  language: external_exports.enum(SUPPORTED_LANGUAGES).describe("Programming language to search"),
-  path: external_exports.string().optional().describe("Directory or file to search (default: current directory)"),
-  context: external_exports.number().int().min(0).max(10).optional().describe("Lines of context around matches (default: 2)"),
-  maxResults: external_exports.number().int().min(1).max(100).optional().describe("Maximum results to return (default: 20)")
-});
-function formatMatch(filePath, _matchText, startLine, endLine, context, fileContent) {
+function formatMatch(filePath, matchText, startLine, endLine, context, fileContent) {
   const lines = fileContent.split("\n");
   const contextStart = Math.max(0, startLine - context - 1);
   const contextEnd = Math.min(lines.length, endLine + context);
@@ -17953,264 +17931,295 @@ function formatMatch(filePath, _matchText, startLine, endLine, context, fileCont
   return `${filePath}:${startLine}
 ${numberedLines.join("\n")}`;
 }
-async function astGrepSearch(args) {
-  const {
-    pattern,
-    language,
-    path = ".",
-    context = 2,
-    maxResults = 20
-  } = args;
-  try {
-    const sg = await getSgModule();
-    if (!sg) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: getModuleNotAvailableMessage()
-          }
-        ]
-      };
-    }
-    const files = getFilesForLanguage(path, language);
-    if (files.length === 0) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `No ${language} files found in ${path}`
-          }
-        ]
-      };
-    }
-    const results = [];
-    let totalMatches = 0;
-    for (const filePath of files) {
-      if (totalMatches >= maxResults)
-        break;
-      try {
-        const content = (0, import_fs2.readFileSync)(filePath, "utf-8");
-        const root = sg.parse(toLangEnum(sg, language), content).root();
-        const matches = root.findAll(pattern);
-        for (const match of matches) {
-          if (totalMatches >= maxResults)
-            break;
-          const range = match.range();
-          const startLine = range.start.line + 1;
-          const endLine = range.end.line + 1;
-          results.push(
-            formatMatch(
-              filePath,
-              match.text(),
-              startLine,
-              endLine,
-              context,
-              content
-            )
-          );
-          totalMatches++;
-        }
-      } catch {
+var astGrepSearchTool = {
+  name: "ast_grep_search",
+  description: `Search for code patterns using AST matching. More precise than text search.
+
+Use meta-variables in patterns:
+- $NAME - matches any single AST node (identifier, expression, etc.)
+- $$$ARGS - matches multiple nodes (for function arguments, list items, etc.)
+
+Examples:
+- "function $NAME($$$ARGS)" - find all function declarations
+- "console.log($MSG)" - find all console.log calls
+- "if ($COND) { $$$BODY }" - find all if statements
+- "$X === null" - find null equality checks
+- "import $$$IMPORTS from '$MODULE'" - find imports
+
+Note: Patterns must be valid AST nodes for the language.`,
+  schema: external_exports.object({
+    pattern: external_exports.string().describe("AST pattern with meta-variables ($VAR, $$$VARS)"),
+    language: external_exports.enum(SUPPORTED_LANGUAGES).describe("Programming language"),
+    path: external_exports.string().optional().describe("Directory or file to search (default: current directory)"),
+    context: external_exports.number().int().min(0).max(10).optional().describe("Lines of context around matches (default: 2)"),
+    maxResults: external_exports.number().int().min(1).max(100).optional().describe("Maximum results to return (default: 20)")
+  }),
+  handler: async (args) => {
+    const {
+      pattern,
+      language,
+      path = ".",
+      context = 2,
+      maxResults = 20
+    } = args;
+    try {
+      const sg = await getSgModule();
+      if (!sg) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `@ast-grep/napi is not available. Install it with: npm install -g @ast-grep/napi
+Error: ${sgLoadError}`
+            }
+          ]
+        };
       }
-    }
-    if (results.length === 0) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `No matches found for pattern: ${pattern}
+      const files = getFilesForLanguage(path, language);
+      if (files.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No ${language} files found in ${path}`
+            }
+          ]
+        };
+      }
+      const results = [];
+      let totalMatches = 0;
+      for (const filePath of files) {
+        if (totalMatches >= maxResults)
+          break;
+        try {
+          const content = (0, import_fs.readFileSync)(filePath, "utf-8");
+          const root = sg.parse(toLangEnum(sg, language), content).root();
+          const matches = root.findAll(pattern);
+          for (const match of matches) {
+            if (totalMatches >= maxResults)
+              break;
+            const range = match.range();
+            const startLine = range.start.line + 1;
+            const endLine = range.end.line + 1;
+            results.push(
+              formatMatch(
+                filePath,
+                match.text(),
+                startLine,
+                endLine,
+                context,
+                content
+              )
+            );
+            totalMatches++;
+          }
+        } catch {
+        }
+      }
+      if (results.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No matches found for pattern: ${pattern}
 
 Searched ${files.length} ${language} file(s) in ${path}
 
 Tip: Ensure the pattern is a valid AST node. For example:
 - Use "function $NAME" not just "$NAME"
 - Use "console.log($X)" not "console.log"`
-          }
-        ]
-      };
-    }
-    const header = `Found ${totalMatches} match(es) in ${files.length} file(s)
+            }
+          ]
+        };
+      }
+      const header = `Found ${totalMatches} match(es) in ${files.length} file(s)
 Pattern: ${pattern}
 
 `;
-    return {
-      content: [
-        {
-          type: "text",
-          text: header + results.join("\n\n---\n\n")
-        }
-      ]
-    };
-  } catch (error2) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error in AST search: ${error2 instanceof Error ? error2.message : String(error2)}
+      return {
+        content: [
+          {
+            type: "text",
+            text: header + results.join("\n\n---\n\n")
+          }
+        ]
+      };
+    } catch (error2) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error in AST search: ${error2 instanceof Error ? error2.message : String(error2)}
 
 Common issues:
 - Pattern must be a complete AST node
 - Language must match file type
 - Check that @ast-grep/napi is installed`
-        }
-      ]
-    };
+          }
+        ]
+      };
+    }
   }
-}
+};
+var astGrepReplaceTool = {
+  name: "ast_grep_replace",
+  description: `Replace code patterns using AST matching. Preserves matched content via meta-variables.
 
-// src/tools/ast-grep-replace.ts
-var import_fs3 = require("fs");
-var astGrepReplaceSchema = external_exports.object({
-  pattern: external_exports.string().describe("Pattern to match"),
-  replacement: external_exports.string().describe("Replacement pattern (use same meta-variables)"),
-  language: external_exports.enum(SUPPORTED_LANGUAGES).describe("Programming language to transform"),
-  path: external_exports.string().optional().describe("Directory or file to search (default: current directory)"),
-  dryRun: external_exports.boolean().optional().describe("Preview only, don't apply changes (default: true)")
-});
-async function astGrepReplace(args) {
-  const { pattern, replacement, language, path = ".", dryRun = true } = args;
-  try {
-    const sg = await getSgModule();
-    if (!sg) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: getModuleNotAvailableMessage()
-          }
-        ]
-      };
-    }
-    const files = getFilesForLanguage(path, language);
-    if (files.length === 0) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `No ${language} files found in ${path}`
-          }
-        ]
-      };
-    }
-    const changes = [];
-    let totalReplacements = 0;
-    for (const filePath of files) {
-      try {
-        const content = (0, import_fs3.readFileSync)(filePath, "utf-8");
-        const root = sg.parse(toLangEnum(sg, language), content).root();
-        const matches = root.findAll(pattern);
-        if (matches.length === 0)
-          continue;
-        const edits = [];
-        for (const match of matches) {
-          const range = match.range();
-          const startOffset = range.start.index;
-          const endOffset = range.end.index;
-          let finalReplacement = replacement;
-          const matchedText = match.text();
-          try {
-            const metaVars = replacement.match(/\$\$?\$?[A-Z_][A-Z0-9_]*/g) || [];
-            for (const metaVar of metaVars) {
-              const varName = metaVar.replace(/^\$+/, "");
-              const captured = match.getMatch(varName);
-              if (captured) {
-                finalReplacement = finalReplacement.replace(
-                  metaVar,
-                  captured.text()
-                );
-              }
+Use meta-variables in both pattern and replacement:
+- $NAME in pattern captures a node, use $NAME in replacement to insert it
+- $$$ARGS captures multiple nodes
+
+Examples:
+- Pattern: "console.log($MSG)" \u2192 Replacement: "logger.info($MSG)"
+- Pattern: "var $NAME = $VALUE" \u2192 Replacement: "const $NAME = $VALUE"
+- Pattern: "$OBJ.forEach(($ITEM) => { $$$BODY })" \u2192 Replacement: "for (const $ITEM of $OBJ) { $$$BODY }"
+
+IMPORTANT: dryRun=true (default) only previews changes. Set dryRun=false to apply.`,
+  schema: external_exports.object({
+    pattern: external_exports.string().describe("Pattern to match"),
+    replacement: external_exports.string().describe("Replacement pattern (use same meta-variables)"),
+    language: external_exports.enum(SUPPORTED_LANGUAGES).describe("Programming language"),
+    path: external_exports.string().optional().describe("Directory or file to search (default: current directory)"),
+    dryRun: external_exports.boolean().optional().describe("Preview only, don't apply changes (default: true)")
+  }),
+  handler: async (args) => {
+    const { pattern, replacement, language, path = ".", dryRun = true } = args;
+    try {
+      const sg = await getSgModule();
+      if (!sg) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `@ast-grep/napi is not available. Install it with: npm install -g @ast-grep/napi
+Error: ${sgLoadError}`
             }
-          } catch {
-          }
-          edits.push({
-            start: startOffset,
-            end: endOffset,
-            replacement: finalReplacement,
-            line: range.start.line + 1,
-            before: matchedText
-          });
-        }
-        edits.sort((a, b) => b.start - a.start);
-        let newContent = content;
-        for (const edit of edits) {
-          const before = newContent.slice(edit.start, edit.end);
-          newContent = newContent.slice(0, edit.start) + edit.replacement + newContent.slice(edit.end);
-          changes.push({
-            file: filePath,
-            before,
-            after: edit.replacement,
-            line: edit.line
-          });
-          totalReplacements++;
-        }
-        if (!dryRun && edits.length > 0) {
-          (0, import_fs3.writeFileSync)(filePath, newContent, "utf-8");
-        }
-      } catch {
+          ]
+        };
       }
-    }
-    if (changes.length === 0) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `No matches found for pattern: ${pattern}
+      const files = getFilesForLanguage(path, language);
+      if (files.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No ${language} files found in ${path}`
+            }
+          ]
+        };
+      }
+      const changes = [];
+      let totalReplacements = 0;
+      for (const filePath of files) {
+        try {
+          const content = (0, import_fs.readFileSync)(filePath, "utf-8");
+          const root = sg.parse(toLangEnum(sg, language), content).root();
+          const matches = root.findAll(pattern);
+          if (matches.length === 0)
+            continue;
+          const edits = [];
+          for (const match of matches) {
+            const range = match.range();
+            const startOffset = range.start.index;
+            const endOffset = range.end.index;
+            let finalReplacement = replacement;
+            const matchedText = match.text();
+            try {
+              const metaVars = replacement.match(/\$\$?\$?[A-Z_][A-Z0-9_]*/g) || [];
+              for (const metaVar of metaVars) {
+                const varName = metaVar.replace(/^\$+/, "");
+                const captured = match.getMatch(varName);
+                if (captured) {
+                  finalReplacement = finalReplacement.replace(
+                    metaVar,
+                    captured.text()
+                  );
+                }
+              }
+            } catch {
+            }
+            edits.push({
+              start: startOffset,
+              end: endOffset,
+              replacement: finalReplacement,
+              line: range.start.line + 1,
+              before: matchedText
+            });
+          }
+          edits.sort((a, b) => b.start - a.start);
+          let newContent = content;
+          for (const edit of edits) {
+            const before = newContent.slice(edit.start, edit.end);
+            newContent = newContent.slice(0, edit.start) + edit.replacement + newContent.slice(edit.end);
+            changes.push({
+              file: filePath,
+              before,
+              after: edit.replacement,
+              line: edit.line
+            });
+            totalReplacements++;
+          }
+          if (!dryRun && edits.length > 0) {
+            (0, import_fs.writeFileSync)(filePath, newContent, "utf-8");
+          }
+        } catch {
+        }
+      }
+      if (changes.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No matches found for pattern: ${pattern}
 
 Searched ${files.length} ${language} file(s) in ${path}`
-          }
-        ]
-      };
-    }
-    const mode = dryRun ? "DRY RUN (no changes applied)" : "CHANGES APPLIED";
-    const header = `${mode}
+            }
+          ]
+        };
+      }
+      const mode = dryRun ? "DRY RUN (no changes applied)" : "CHANGES APPLIED";
+      const header = `${mode}
 
 Found ${totalReplacements} replacement(s) in ${files.length} file(s)
 Pattern: ${pattern}
 Replacement: ${replacement}
 
 `;
-    const changeList = changes.slice(0, 50).map((c) => `${c.file}:${c.line}
-  - ${c.before}
-  + ${c.after}`).join("\n\n");
-    const footer = changes.length > 50 ? `
+      const changeList = changes.slice(0, 50).map((c) => `${c.file}:${c.line}
+ - ${c.before}
+ + ${c.after}`).join("\n\n");
+      const footer = changes.length > 50 ? `
 
 ... and ${changes.length - 50} more changes` : "";
-    return {
-      content: [
-        {
-          type: "text",
-          text: header + changeList + footer + (dryRun ? "\n\nTo apply changes, run with dryRun: false" : "")
-        }
-      ]
-    };
-  } catch (error2) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error in AST replace: ${error2 instanceof Error ? error2.message : String(error2)}`
-        }
-      ]
-    };
+      return {
+        content: [
+          {
+            type: "text",
+            text: header + changeList + footer + (dryRun ? "\n\nTo apply changes, run with dryRun: false" : "")
+          }
+        ]
+      };
+    } catch (error2) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error in AST replace: ${error2 instanceof Error ? error2.message : String(error2)}`
+          }
+        ]
+      };
+    }
   }
-}
+};
+var astTools = [astGrepSearchTool, astGrepReplaceTool];
 
 // src/tools/index.ts
-var tools = [
-  {
-    name: "ast_grep_search",
-    description: "Search for code patterns using AST matching with meta-variables",
-    schema: astGrepSearchSchema,
-    handler: astGrepSearch
-  },
-  {
-    name: "ast_grep_replace",
-    description: "Replace code patterns using AST matching, preserving structure with meta-variables",
-    schema: astGrepReplaceSchema,
-    handler: astGrepReplace
-  }
-];
+var tools = astTools.map((tool) => ({
+  name: tool.name,
+  description: tool.description,
+  schema: tool.schema,
+  handler: tool.handler
+}));
 
 // src/mcp/server.ts
 function zodToJsonSchema2(schema) {
