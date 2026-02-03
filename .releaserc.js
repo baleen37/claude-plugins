@@ -85,7 +85,6 @@ const plugins = [
         '.claude-plugin/marketplace.json',
       ],
       message: 'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}',
-      noVerify: true,
     },
   ],
   [
