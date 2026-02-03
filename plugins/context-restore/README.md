@@ -5,6 +5,7 @@ Automatic session context restore for Claude Code.
 ## What It Does
 
 This plugin automatically:
+
 1. **Saves session context** when a Claude Code session ends
 2. **Restores relevant context** when a new session starts
 
@@ -16,7 +17,7 @@ The plugin is included in the baleen-plugins marketplace. To install:
 
 ```bash
 # Via auto-updater plugin (recommended)
-/oh-my-claudecode:update-all-plugins
+/update-all-plugins
 
 # Or manually update
 cd ~/.claude/plugins/baleen-plugins
@@ -28,6 +29,7 @@ git pull
 ### Stop Hook (Session End)
 
 When you close a Claude Code session, the plugin:
+
 - Receives Stop hook input with `session_id` and `transcript_path`
 - Extracts the last assistant message from the transcript (JSONL format)
 - Saves it to `~/.claude/sessions/session-{session_id}-{timestamp}.md`
@@ -36,6 +38,7 @@ When you close a Claude Code session, the plugin:
 ### SessionStart Hook (Session Start)
 
 When you start a new Claude Code session, the plugin:
+
 - Finds up to 5 recent session files (sorted by modification time)
 - Displays their context to Claude
 - Helps Claude maintain continuity across sessions
@@ -68,15 +71,18 @@ When you start a new Claude Code session, the plugin:
 No configuration required. The plugin works out of the box.
 
 Environment variables (optional):
+
 - `CONTEXT_RESTORE_SESSIONS_DIR`: Override sessions directory (default: `~/.claude/sessions/`)
 
 ## Troubleshooting
 
 **Sessions not being saved?**
+
 - Check that hooks are properly installed: `ls ~/.claude/plugins/baleen-plugins/plugins/context-restore/hooks/`
 - Verify scripts are executable: `chmod +x ~/.claude/plugins/baleen-plugins/plugins/context-restore/hooks/*.sh`
 
 **Context not being restored?**
+
 - Check that session files exist: `ls ~/.claude/sessions/`
 - Verify SessionStart hook is running (should see "Restored Context" message)
 
