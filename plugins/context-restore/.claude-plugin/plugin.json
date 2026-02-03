@@ -1,6 +1,6 @@
 {
   "name": "context-restore",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Automatic session context restore - saves context at session end and restores relevant context at session start",
   "author": {
     "name": "baleen",
