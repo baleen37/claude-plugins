@@ -1,6 +1,6 @@
 {
   "name": "lsp-support",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "description": "Language Server Protocol support for multiple languages - bash, TypeScript, JavaScript, Python, Go",
   "author": {
     "name": "baleen37",
