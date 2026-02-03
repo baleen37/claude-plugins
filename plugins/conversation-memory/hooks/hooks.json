@@ -1,13 +1,17 @@
 {
-  "description": "Auto-sync conversations to conversation-memory database on session end",
+  "description": "Auto-install dependencies on first use",
   "hooks": {
-    "SessionEnd": [{
-      "matcher": "*",
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/SessionEnd.sh",
-        "timeout": 60
-      }]
-    }]
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/install-deps.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
   }
 }
