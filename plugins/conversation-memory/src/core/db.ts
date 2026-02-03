@@ -96,7 +96,7 @@ export function initDatabase(): Database.Database {
   db.exec(`
     CREATE VIRTUAL TABLE IF NOT EXISTS vec_exchanges USING vec0(
       id TEXT PRIMARY KEY,
-      embedding FLOAT[384]
+      embedding FLOAT[768]
     )
   `);
 
