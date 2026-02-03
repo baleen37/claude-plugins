@@ -33,24 +33,32 @@ npm install -g @ast-grep/napi
 
 Find all function declarations:
 ```
-Use ast_grep_search to find all function declarations in JavaScript files
+Use ast_grep_search to find all function declarations in TypeScript files
+Pattern: "function $NAME($$$ARGS) { $$$BODY }"
 ```
 
-Search with meta-variables:
+Find all console.log calls:
 ```
-Find all const declarations: pattern "const $NAME = $VALUE"
+Search for console.log calls in JavaScript
+Pattern: "console.log($$$ARGS)"
+```
+
+Find React useEffect hooks:
+```
+Find all useEffect hooks in React components
+Pattern: "useEffect($$$CALLBACK, $$$DEPS)"
 ```
 
 ### Transform Code
 
-Remove console.log statements (dry-run):
+**Remove console.log statements (dry-run):**
 ```
 Use ast_grep_replace to remove console.log statements
 Pattern: console.log($$$ARGS)
-Replacement: (empty)
+Replacement: (leave empty)
 ```
 
-Convert var to const:
+**Convert var to const/let:**
 ```
 Replace all var with const in JavaScript files
 Pattern: var $NAME = $VALUE
@@ -58,9 +66,40 @@ Replacement: const $NAME = $VALUE
 Set dryRun: false to apply changes
 ```
 
+**Rename function:**
+```
+Rename fetchData to fetchUserData
+Pattern: function fetchData($$$ARGS) { $$$BODY }
+Replacement: function fetchUserData($$$ARGS) { $$$BODY }
+```
+
+**Convert forEach to for-of:**
+```
+Convert array.forEach to for...of loop
+Pattern: $ARRAY.forEach(($ITEM) => { $$$BODY })
+Replacement: for (const $ITEM of $ARRAY) { $$$BODY }
+```
+
 ## Supported Languages
 
-JavaScript, TypeScript, TSX, Python, Ruby, Go, Rust, Java, Kotlin, Swift, C, C++, C#, HTML, CSS, JSON, YAML
+| Language | Extensions |
+|----------|------------|
+| JavaScript | `.js`, `.mjs`, `.cjs`, `.jsx` |
+| TypeScript | `.ts`, `.mts`, `.cts`, `.tsx` |
+| Python | `.py` |
+| Ruby | `.rb` |
+| Go | `.go` |
+| Rust | `.rs` |
+| Java | `.java` |
+| Kotlin | `.kt`, `.kts` |
+| Swift | `.swift` |
+| C | `.c`, `.h` |
+| C++ | `.cpp`, `.cc`, `.cxx`, `.hpp` |
+| C# | `.cs` |
+| HTML | `.html`, `.htm` |
+| CSS | `.css` |
+| JSON | `.json` |
+| YAML | `.yaml`, `.yml` |
 
 ## Meta-variables
 
@@ -75,10 +114,22 @@ Pattern: $FUNC($$$ARGS)
 Matches: foo(), bar(1, 2), baz(x, y, z)
 ```
 
-**Rename functions:**
+**Find destructuring:**
 ```
-Pattern: function oldName($$$PARAMS) { $$$BODY }
-Replacement: function newName($$$PARAMS) { $$$BODY }
+Pattern: const { $$$PROPS } = $OBJ
+Matches: const { name, age } = user
+```
+
+**Find template literals:**
+```
+Pattern: `$CONTENT`
+Matches: any template literal string
+```
+
+**Find arrow functions:**
+```
+Pattern: ($$$ARGS) => { $$$BODY }
+Matches: (x, y) => { return x + y }
 ```
 
 ## Tool Schemas
@@ -132,8 +183,48 @@ npm run typecheck
 
 - **Plugin Type**: Hybrid (Plugin + MCP Server)
 - **MCP Server**: Bundled in `dist/mcp-server.cjs`
-- **Tools**: Implemented in `src/tools/`
+- **Tools**: Single-file implementation in `src/tools/ast-tools.ts`
 - **Transport**: stdio (Standard I/O)
+
+## Common Use Cases
+
+### Code Audit
+
+Find all TODO comments:
+```
+Pattern: TODO($$$MSG)
+```
+
+Find all any types:
+```
+Pattern: $VAR: any
+```
+
+Find all debugger statements:
+```
+Pattern: debugger
+```
+
+### Refactoring
+
+Convert promise chains to async/await:
+```
+Pattern: $PROMISE.then($$$CB1).catch($$$CB2)
+Replacement: async () => { try { $$$CB1 } catch { $$$CB2 } }
+```
+
+Remove unused imports:
+```
+Pattern: import $$$IMPORTS from '$MODULE'
+```
+
+### Migration
+
+Migrate to new API:
+```
+Pattern: oldApi.method($$$ARGS)
+Replacement: newApi.method($$$ARGS)
+```
 
 ## License
 
