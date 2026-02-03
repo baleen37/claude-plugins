@@ -92,7 +92,7 @@ npm run build
 
 The plugin automatically:
 
-1. Creates `~/.claude/conversation-memory/` directory
+1. Creates `~/.config/baleen37/conversation-memory/` directory
 2. Begins indexing conversations via SessionEnd hook
 3. Provides MCP tools for semantic search
 
@@ -110,13 +110,13 @@ This:
 
 1. Scans `~/.claude/sessions/` for new/modified conversations
 2. Generates embeddings using Transformers.js
-3. Stores in SQLite database (`~/.claude/conversation-memory/conversations.db`)
+3. Stores in SQLite database (`~/.config/baleen37/conversation-memory/conversations.db`)
 4. Runs in background (non-blocking, silent on errors)
 
 ### Storage Structure
 
 ```text
-~/.claude/conversation-memory/
+~/.config/baleen37/conversation-memory/
 ├── conversations.db          # SQLite database with embeddings
 └── config.json              # User settings (optional)
 ```
@@ -207,11 +207,11 @@ The database must be recreated as vector dimensions are incompatible.
 
 ```bash
 # 1. Backup existing database (optional)
-cp ~/.claude/conversation-memory/conversations.db \
-   ~/.claude/conversation-memory/conversations.db.backup
+cp ~/.config/baleen37/conversation-memory/conversations.db \
+   ~/.config/baleen37/conversation-memory/conversations.db.backup
 
 # 2. Remove old database
-rm ~/.claude/conversation-memory/conversations.db
+rm ~/.config/baleen37/conversation-memory/conversations.db
 
 # 3. Reinstall plugin dependencies
 cd plugins/conversation-memory
@@ -242,7 +242,7 @@ node dist/cli.mjs index-all
 
 - **Standalone Plugin**: Complete implementation (not a wrapper)
 - **Based on @obra/episodic-memory**: Forked and integrated into Claude Code plugin ecosystem
-- **Storage Location**: `~/.claude/conversation-memory/` (not `.config/superpowers`)
+- **Storage Location**: `~/.config/baleen37/conversation-memory/` (not `.claude/`)
 - **Naming**: All public interfaces use `conversation-memory` for clarity
 - **Embedding Model**: Google EmbeddingGemma-300M (ONNX, Q4 quantized)
   - 768 dimensions (Matryoshka-enabled: 128-768)

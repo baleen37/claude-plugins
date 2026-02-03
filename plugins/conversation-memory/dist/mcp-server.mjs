@@ -17779,7 +17779,7 @@ function getSuperpowersDir() {
   if (process.env.CONVERSATION_MEMORY_CONFIG_DIR) {
     dir = process.env.CONVERSATION_MEMORY_CONFIG_DIR;
   } else {
-    dir = path.join(os.homedir(), ".claude", "conversation-memory");
+    dir = path.join(os.homedir(), ".config", "baleen37", "conversation-memory");
   }
   return ensureDir(dir);
 }

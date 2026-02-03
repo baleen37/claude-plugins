@@ -179,7 +179,7 @@ function getSuperpowersDir() {
   if (process.env.CONVERSATION_MEMORY_CONFIG_DIR) {
     dir = process.env.CONVERSATION_MEMORY_CONFIG_DIR;
   } else {
-    dir = path.join(os.homedir(), ".claude", "conversation-memory");
+    dir = path.join(os.homedir(), ".config", "baleen37", "conversation-memory");
   }
   return ensureDir(dir);
 }
@@ -38464,13 +38464,25 @@ var init_constants = __esm({
 var summarizer_exports = {};
 __export(summarizer_exports, {
   formatConversationText: () => formatConversationText,
-  summarizeConversation: () => summarizeConversation
+  getCurrentRunTokenUsage: () => getCurrentRunTokenUsage,
+  startTokenTracking: () => startTokenTracking,
+  summarizeConversation: () => summarizeConversation,
+  trackTokenUsage: () => trackTokenUsage
 });
 import { query } from "@anthropic-ai/claude-agent-sdk";
+function startTokenTracking() {
+  currentRunTokenUsages = [];
+}
+function getCurrentRunTokenUsage() {
+  return sumTokenUsage(currentRunTokenUsages);
+}
+function trackTokenUsage(usage) {
+  currentRunTokenUsages.push(usage);
+}
 function getApiEnv() {
-  const baseUrl = process.env.EPISODIC_MEMORY_API_BASE_URL;
-  const token = process.env.EPISODIC_MEMORY_API_TOKEN;
-  const timeoutMs = process.env.EPISODIC_MEMORY_API_TIMEOUT_MS;
+  const baseUrl = process.env.CONVERSATION_MEMORY_API_BASE_URL;
+  const token = process.env.CONVERSATION_MEMORY_API_TOKEN;
+  const timeoutMs = process.env.CONVERSATION_MEMORY_API_TIMEOUT_MS;
   if (!baseUrl && !token && !timeoutMs) {
     return void 0;
   }
@@ -38495,10 +38507,37 @@ function extractSummary(text) {
   }
   return text.trim();
 }
+function extractSummaryFromResult(result) {
+  return extractSummary(result.summary);
+}
+function sumTokenUsage(usages) {
+  return usages.reduce((acc, usage) => ({
+    input_tokens: acc.input_tokens + (usage.input_tokens || 0),
+    output_tokens: acc.output_tokens + (usage.output_tokens || 0),
+    cache_read_input_tokens: (acc.cache_read_input_tokens || 0) + (usage.cache_read_input_tokens || 0),
+    cache_creation_input_tokens: (acc.cache_creation_input_tokens || 0) + (usage.cache_creation_input_tokens || 0)
+  }), { input_tokens: 0, output_tokens: 0 });
+}
+function formatTokenUsage(usage) {
+  const parts = [];
+  parts.push(`in: ${usage.input_tokens.toLocaleString()}`);
+  parts.push(`out: ${usage.output_tokens.toLocaleString()}`);
+  if (usage.cache_read_input_tokens) {
+    parts.push(`cache read: ${usage.cache_read_input_tokens.toLocaleString()}`);
+  }
+  if (usage.cache_creation_input_tokens) {
+    parts.push(`cache create: ${usage.cache_creation_input_tokens.toLocaleString()}`);
+  }
+  return parts.join(" | ");
+}
 async function callClaude(prompt, sessionId, useFallback = false) {
-  const primaryModel = process.env.EPISODIC_MEMORY_API_MODEL || "haiku";
-  const fallbackModel = process.env.EPISODIC_MEMORY_API_MODEL_FALLBACK || "sonnet";
+  const primaryModel = process.env.CONVERSATION_MEMORY_API_MODEL || "haiku";
+  const fallbackModel = process.env.CONVERSATION_MEMORY_API_MODEL_FALLBACK || "sonnet";
   const model = useFallback ? fallbackModel : primaryModel;
+  const apiEnv = getApiEnv();
+  const apiUrl = apiEnv?.ANTHROPIC_BASE_URL || "default";
+  const hasToken = !!apiEnv?.ANTHROPIC_AUTH_TOKEN;
+  console.log(`[CONVERSATION_MEMORY] API: ${model} @ ${apiUrl} (token: ${hasToken})`);
   for await (const message of query({
     prompt,
     options: {
@@ -38520,12 +38559,29 @@ async function callClaude(prompt, sessionId, useFallback = false) {
           console.log(`    ${primaryModel} hit thinking budget error, retrying with ${fallbackModel}`);
           return await callClaude(prompt, sessionId, true);
         }
-        return result;
+        return {
+          summary: result,
+          tokens: { input_tokens: 0, output_tokens: 0 }
+        };
       }
-      return result;
+      const usage = message.usage || { input_tokens: 0, output_tokens: 0 };
+      const tokenUsage = {
+        input_tokens: usage.input_tokens || 0,
+        output_tokens: usage.output_tokens || 0,
+        cache_read_input_tokens: usage.cache_read_input_tokens,
+        cache_creation_input_tokens: usage.cache_creation_input_tokens
+      };
+      trackTokenUsage(tokenUsage);
+      return {
+        summary: result,
+        tokens: tokenUsage
+      };
     }
   }
-  return "";
+  return {
+    summary: "",
+    tokens: { input_tokens: 0, output_tokens: 0 }
+  };
 }
 function chunkExchanges(exchanges, chunkSize) {
   const chunks = [];
@@ -38544,6 +38600,7 @@ async function summarizeConversation(exchanges, sessionId) {
       return "Trivial conversation with no substantive content.";
     }
   }
+  const allTokenUsages = [];
   if (exchanges.length <= 15) {
     const conversationText = sessionId ? "" : formatConversationText(exchanges);
     const prompt = `${SUMMARIZER_CONTEXT_MARKER}.
@@ -38570,7 +38627,9 @@ Bad:
 
 ${conversationText}`;
     const result = await callClaude(prompt, sessionId);
-    return extractSummary(result);
+    allTokenUsages.push(result.tokens);
+    console.log(`  Tokens: ${formatTokenUsage(result.tokens)}`);
+    return extractSummaryFromResult(result);
   }
   console.log(`  Long conversation (${exchanges.length} exchanges) - using hierarchical summarization`);
   const chunks = chunkExchanges(exchanges, 8);
@@ -38586,10 +38645,11 @@ ${chunkText}
 
 Example: <summary>Implemented HID keyboard functionality for ESP32. Hit Bluetooth controller initialization error, fixed by adjusting memory allocation.</summary>`;
     try {
-      const summary = await callClaude(prompt);
-      const extracted = extractSummary(summary);
+      const result = await callClaude(prompt);
+      allTokenUsages.push(result.tokens);
+      const extracted = extractSummaryFromResult(result);
       chunkSummaries.push(extracted);
-      console.log(`  Chunk ${i + 1}/${chunks.length}: ${extracted.split(/\s+/).length} words`);
+      console.log(`  Chunk ${i + 1}/${chunks.length}: ${extracted.split(/\s+/).length} words (${formatTokenUsage(result.tokens)})`);
     } catch (error) {
       console.log(`  Chunk ${i + 1} failed, skipping`);
     }
@@ -38614,16 +38674,21 @@ Your summary (max 200 words):`;
   console.log(`  Synthesizing final summary...`);
   try {
     const result = await callClaude(synthesisPrompt);
-    return extractSummary(result);
+    allTokenUsages.push(result.tokens);
+    const totalUsage = sumTokenUsage(allTokenUsages);
+    console.log(`  Total tokens: ${formatTokenUsage(totalUsage)}`);
+    return extractSummaryFromResult(result);
   } catch (error) {
     console.log(`  Synthesis failed, using chunk summaries`);
     return chunkSummaries.join(" ");
   }
 }
+var currentRunTokenUsages;
 var init_summarizer = __esm({
   "src/core/summarizer.ts"() {
     "use strict";
     init_constants();
+    currentRunTokenUsages = [];
   }
 });
 
