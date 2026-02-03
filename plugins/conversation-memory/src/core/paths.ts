@@ -17,7 +17,7 @@ function ensureDir(dir: string): string {
  *
  * Precedence:
  * 1. CONVERSATION_MEMORY_CONFIG_DIR env var (if set, for testing)
- * 2. ~/.claude/conversation-memory/ (default)
+ * 2. ~/.config/baleen37/conversation-memory/ (default)
  */
 export function getSuperpowersDir(): string {
   let dir: string;
@@ -25,7 +25,7 @@ export function getSuperpowersDir(): string {
   if (process.env.CONVERSATION_MEMORY_CONFIG_DIR) {
     dir = process.env.CONVERSATION_MEMORY_CONFIG_DIR;
   } else {
-    dir = path.join(os.homedir(), '.claude', 'conversation-memory');
+    dir = path.join(os.homedir(), '.config', 'baleen37', 'conversation-memory');
   }
 
   return ensureDir(dir);
