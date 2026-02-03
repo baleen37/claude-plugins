@@ -70,5 +70,8 @@ jobs:
           # Configure git to use GITHUB_TOKEN for push
           git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
 
+          # Disable git hooks for semantic-release commits (CI environment)
+          git config core.hooksPath /dev/null
+
           # Run semantic-release (handles everything: version bump, commit, push, GitHub release)
           npx semantic-release
