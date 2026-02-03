@@ -79,8 +79,12 @@ teardown() {
   echo "old build" > "${TEST_DIR}/dist/mcp-server.mjs"
   echo "old build" > "${TEST_DIR}/dist/cli.mjs"
 
-  # Get original mtime
-  OLD_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  # Get original mtime (cross-platform: macOS uses -f, Linux uses -c)
+  if stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs" >/dev/null 2>&1; then
+    OLD_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  else
+    OLD_MTIME=$(stat -c %Y "${TEST_DIR}/dist/mcp-server.mjs")
+  fi
 
   # Wait a bit to ensure mtime difference
   sleep 0.1
@@ -92,7 +96,11 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # dist should not be rebuilt (mtime unchanged)
-  NEW_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  if stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs" >/dev/null 2>&1; then
+    NEW_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  else
+    NEW_MTIME=$(stat -c %Y "${TEST_DIR}/dist/mcp-server.mjs")
+  fi
   [ "${OLD_MTIME}" = "${NEW_MTIME}" ]
 }
 
@@ -108,8 +116,12 @@ teardown() {
   # Touch package.json to make it newer
   touch "${TEST_DIR}/package.json"
 
-  # Get dist mtime before
-  OLD_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  # Get dist mtime before (cross-platform: macOS uses -f, Linux uses -c)
+  if stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs" >/dev/null 2>&1; then
+    OLD_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  else
+    OLD_MTIME=$(stat -c %Y "${TEST_DIR}/dist/mcp-server.mjs")
+  fi
 
   # Wait a bit to ensure mtime difference
   sleep 0.1
@@ -121,7 +133,11 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # dist should be rebuilt (mtime changed)
-  NEW_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  if stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs" >/dev/null 2>&1; then
+    NEW_MTIME=$(stat -f "%m" "${TEST_DIR}/dist/mcp-server.mjs")
+  else
+    NEW_MTIME=$(stat -c %Y "${TEST_DIR}/dist/mcp-server.mjs")
+  fi
   [ "${NEW_MTIME}" -ge "${OLD_MTIME}" ]
 }
 
