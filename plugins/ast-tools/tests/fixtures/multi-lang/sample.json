@@ -1,0 +1,15 @@
+{
+  "name": "ast-tools",
+  "version": "1.0.0",
+  "description": "AST-based code search and transformation tools",
+  "main": "dist/mcp-server.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "dependencies": {
+    "@ast-grep/napi": "^0.31.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  }
+}
