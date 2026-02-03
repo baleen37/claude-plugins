@@ -14,7 +14,9 @@ Complete git workflow: commit → push → PR → verify merge-ready.
 ## Red Flags - STOP
 
 Stop if you:
-- Don't know which base branch to use
+- **On main/master branch** - MUST create feature branch first, NO EXCEPTIONS
+- **No changes to commit** - Inform user working tree is clean
+- **Don't know which base branch to use** - Detect via `gh repo view`
 - Skipped conflict check before push
 - Said "push will catch conflicts" or "push will detect it"
 - Used `git add` without first running `git status`
@@ -56,7 +58,22 @@ git branch --show-current &
 wait
 ```
 
-**1.2 Main Branch Protection**
+**1.2 Check for Changes**
+
+If `git status` shows "nothing to commit, working tree clean":
+
+```
+INFORM USER: "No changes to commit. Working tree is clean."
+
+OPTIONS:
+- If you meant to commit different work, switch to that branch
+- If you need to make changes first, complete your work then retry
+- If you want to create a PR from existing commits, use 'gh pr create' directly
+```
+
+STOP and wait for user direction. Do not proceed.
+
+**1.3 Main Branch Protection**
 
 ```bash
 CURRENT_BRANCH=$(git branch --show-current)
@@ -73,6 +90,25 @@ fi
 ```
 
 **Never proceed from main/master.** This protects against accidental direct commits.
+
+**1.4 Pre-commit Hook Check**
+
+Before committing, inform user:
+
+```
+NOTE: This project has pre-commit hooks (markdownlint, etc.).
+If commit fails due to hook errors, I can fix them automatically.
+Would you like me to proceed and fix any lint issues?
+```
+
+If user confirms, proceed with commit. If hooks fail:
+
+1. Parse error output to identify issues
+2. Fix issues automatically (formatting, line length, etc.)
+3. Stage fixed files
+4. Retry commit
+
+**Do NOT ask for permission to fix hook errors if user already confirmed.**
 
 ### Phase 2: Commit Changes
 
@@ -195,12 +231,24 @@ $(echo "$COMMITS" | sed 's/^[a-f0-9]* /- /')
 EOF
 ```
 
-**5.2 Create PR**
+**5.2 Generate PR Title**
+
+```bash
+# Use latest commit message as title
+TITLE=$(git log -1 --pretty=%s)
+
+# If no commits yet (shouldn't happen), use branch name
+if [[ -z "$TITLE" ]]; then
+  TITLE=$(git branch --show-current | sed 's/^[a-z]*\///')
+fi
+```
+
+**5.3 Create PR**
 
 ```bash
 gh pr create \
   --base "$BASE" \
-  --title "$(git log -1 --pretty=%s)" \
+  --title "$TITLE" \
   --body "$(cat /tmp/pr-body.md)"
 ```
 
@@ -250,8 +298,10 @@ esac
 
 | Error | Cause | Solution |
 |-------|-------|----------|
+| "No changes to commit" | Working tree is clean | Wait for user direction - don't proceed |
 | "Cannot create PR from main" | On protected branch | `git checkout -b feature/name` |
 | "Cannot determine base branch" | No default branch detected | Specify with `gh repo view` |
+| "Pre-commit hook failed" | Linting errors | Auto-fix then retry commit |
 | "Push failed: no remote" | Missing origin | `git remote add origin <url>` |
 | "Conflicts detected" | Changes conflict with base | `git merge origin/<base>` then resolve |
 | "PR status: BEHIND" | Base branch updated | Auto-merged and re-pushed |
@@ -263,12 +313,14 @@ esac
 
 | Mistake | Why Bad | Fix |
 |---------|---------|-----|
+| Proceeding with no changes | Wastes user time | Check git status first, inform user |
 | Omit `--base` flag | PR goes to wrong branch | Always specify explicitly |
 | `git add -A` blindly | Adds unintended files | Run `git status` first |
 | Skip conflict check | Breaks remote build | Always check before push |
 | Assume base = main | Repos use different names | Verify via `gh repo view` |
 | Stop after PR creation | May not be merge-ready | Check status, handle BEHIND |
 | Proceed from main | Violates workflow | Block with error |
+| Ignore pre-commit failures | Blocks workflow unnecessarily | Auto-fix then retry |
 
 ## Rationalizations to Reject
 
