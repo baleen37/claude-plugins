@@ -1,0 +1,13 @@
+{
+  "description": "Auto-sync conversations to conversation-memory database on session end",
+  "hooks": {
+    "SessionEnd": [{
+      "matcher": "*",
+      "hooks": [{
+        "type": "command",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/SessionEnd.sh",
+        "timeout": 60
+      }]
+    }]
+  }
+}

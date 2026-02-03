@@ -1,0 +1,8 @@
+{
+  "name": "conversation-memory",
+  "version": "1.0.0",
+  "description": "Conversation memory plugin with semantic search across Claude Code sessions",
+  "author": {
+    "name": "Baleen"
+  }
+}
