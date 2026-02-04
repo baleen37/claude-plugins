@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "git-guard",
@@ -43,7 +43,7 @@
         "pr",
         "security"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "lsp-support",
@@ -60,7 +60,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "me",
@@ -75,7 +75,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "ralph-loop",
@@ -88,7 +88,7 @@
         "loop",
         "ai"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "ast-tools",
@@ -102,7 +102,7 @@
         "mcp",
         "ast-grep"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "conversation-memory",
@@ -116,7 +116,7 @@
         "mcp",
         "sessions"
       ],
-      "version": "4.3.0"
+      "version": "2.0.0"
     },
     {
       "name": "handoff",
@@ -129,7 +129,7 @@
         "context",
         "pickup"
       ],
-      "version": "1.0.0"
+      "version": "2.0.0"
     }
   ]
 }
