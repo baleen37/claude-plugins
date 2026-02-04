@@ -24,6 +24,8 @@ function runNpmInstall() {
     console.error('[conversation-memory] Installing dependencies (first run only)...');
     console.error('This may take 30-60 seconds...');
 
+    let stderrOutput = '';
+
     const child = spawn(npmCommand, ['install', '--prefer-offline', '--no-audit', '--no-fund'], {
       cwd: PLUGIN_ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -35,6 +37,7 @@ function runNpmInstall() {
     });
 
     child.stderr.on('data', (data) => {
+      stderrOutput += data.toString();
       process.stderr.write(data);
     });
 
@@ -44,7 +47,20 @@ function runNpmInstall() {
         resolve();
       } else {
         console.error('[conversation-memory] ERROR: Failed to install dependencies.');
-        console.error(`Please run manually: cd "${PLUGIN_ROOT}" && npm install`);
+
+        // Analyze error cause
+        if (stderrOutput.includes('EACCES') || stderrOutput.includes('permission denied')) {
+          console.error('Cause: Permission denied');
+          console.error('Fix: sudo chown -R $(whoami) ~/.npm');
+        } else if (stderrOutput.includes('ENOSPC')) {
+          console.error('Cause: Disk space full');
+          console.error('Fix: Free up disk space');
+        } else if (/ETIMEDOUT|ECONNRESET|ENOTFOUND/i.test(stderrOutput)) {
+          console.error('Cause: Network error');
+          console.error('Fix: Check internet connection and retry');
+        }
+
+        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && npm install`);
         reject(new Error(`npm install failed with exit code ${code}`));
       }
     });
@@ -64,6 +80,8 @@ function runBuild() {
 
     console.error('[conversation-memory] Building plugin...');
 
+    let stderrOutput = '';
+
     const child = spawn(npmCommand, ['run', 'build', '--silent'], {
       cwd: PLUGIN_ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -75,6 +93,7 @@ function runBuild() {
     });
 
     child.stderr.on('data', (data) => {
+      stderrOutput += data.toString();
       process.stderr.write(data);
     });
 
@@ -84,7 +103,20 @@ function runBuild() {
         resolve();
       } else {
         console.error('[conversation-memory] ERROR: Build failed.');
-        console.error(`Please run manually: cd "${PLUGIN_ROOT}" && npm run build`);
+
+        // Analyze error cause
+        if (stderrOutput.includes('EACCES') || stderrOutput.includes('permission denied')) {
+          console.error('Cause: Permission denied');
+          console.error('Fix: sudo chown -R $(whoami) ~/.npm');
+        } else if (stderrOutput.includes('ENOSPC')) {
+          console.error('Cause: Disk space full');
+          console.error('Fix: Free up disk space');
+        } else if (/ETIMEDOUT|ECONNRESET|ENOTFOUND/i.test(stderrOutput)) {
+          console.error('Cause: Network error');
+          console.error('Fix: Check internet connection and retry');
+        }
+
+        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && npm run build`);
         reject(new Error(`npm run build failed with exit code ${code}`));
       }
     });
