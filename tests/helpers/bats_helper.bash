@@ -8,9 +8,14 @@
 # BATS_TEST_DIRNAME is the directory containing the test file
 # We need to find the project root from wherever the test is running
 # shellcheck disable=SC2155
-if [ -f "${BATS_TEST_DIRNAME}/../../helpers/bats_helper.bash" ]; then
-    # Running from tests/ directory (legacy)
+if [ -f "${BATS_TEST_DIRNAME}/helpers/bats_helper.bash" ]; then
+    # Running from tests/ directory (most common case)
+    # PROJECT_ROOT should be the parent of tests/
     export PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
+elif [ -f "${BATS_TEST_DIRNAME}/../../helpers/bats_helper.bash" ]; then
+    # Running from tests/helpers/ directory (direct load)
+    # PROJECT_ROOT should be two levels up
+    export PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
 elif [ -f "${BATS_TEST_DIRNAME}/../../../tests/helpers/bats_helper.bash" ]; then
     # Running from plugins/{plugin}/tests/ directory
     # Need to go up 4 levels: tests/ -> plugin/ -> plugins/ -> project_root
@@ -35,6 +40,9 @@ else
         export PROJECT_ROOT="$(cd "${script_dir}/../.." && pwd)"
     fi
 fi
+
+# Export common paths for use in test files
+export WORKFLOW_DIR="${PROJECT_ROOT}/.github/workflows"
 
 # Path to jq binary
 JQ_BIN="${JQ_BIN:-jq}"
