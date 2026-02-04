@@ -5,7 +5,8 @@
  */
 
 import * as esbuild from "esbuild";
-import { mkdir } from "fs/promises";
+import { mkdir, copyFile } from "fs/promises";
+import { join } from "path";
 
 const commonConfig = {
   bundle: true,
@@ -50,6 +51,13 @@ async function build() {
       },
     });
     console.log("✓ Built dist/cli.mjs");
+
+    // Copy wrapper script to dist/ for cached plugins
+    await copyFile(
+      join("scripts", "mcp-server-wrapper.mjs"),
+      join("dist", "mcp-wrapper.mjs")
+    );
+    console.log("✓ Copied dist/mcp-wrapper.mjs");
   } catch (error) {
     console.error("Build failed:", error);
     process.exit(1);
