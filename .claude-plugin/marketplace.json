@@ -117,6 +117,19 @@
         "sessions"
       ],
       "version": "4.3.0"
+    },
+    {
+      "name": "handoff",
+      "description": "Session handoff plugin for Claude Code - save and restore session context between sessions",
+      "source": "./plugins/handoff",
+      "category": "productivity",
+      "tags": [
+        "handoff",
+        "session",
+        "context",
+        "pickup"
+      ],
+      "version": "1.0.0"
     }
   ]
 }
