@@ -64,7 +64,7 @@ ensure_yq() {
 
 @test "CI workflow has only test job (no release job)" {
     ensure_yq
-    # CI workflow should only have test job, release is now handled by Release Please
+    # CI workflow should only have test job, release is handled by separate release.yml
     local jobs
     jobs=$(yaml_get "$CI_WORKFLOW" ".jobs | keys | .[]")
 
@@ -84,32 +84,28 @@ ensure_yq() {
     [[ "$permissions" == "read" ]]
 }
 
-@test "Release Please workflow exists" {
-    [ -f "${WORKFLOW_DIR}/release-please.yml" ]
+@test "Release workflow exists" {
+    [ -f "${WORKFLOW_DIR}/release.yml" ]
 }
 
-@test "Release Please workflow has valid YAML syntax" {
+@test "Release workflow has valid YAML syntax" {
     ensure_yq
-    yaml_get "${WORKFLOW_DIR}/release-please.yml" "." >/dev/null
+    yaml_get "${WORKFLOW_DIR}/release.yml" "." >/dev/null
 }
 
-@test "Release Please workflow triggers on push to main" {
+@test "Release workflow triggers on push to main" {
     ensure_yq
-    workflow_has_trigger "${WORKFLOW_DIR}/release-please.yml" "push"
+    workflow_has_trigger "${WORKFLOW_DIR}/release.yml" "push"
     local branches
-    branches=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".on.push.branches.[]")
+    branches=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".on.push.branches.[]")
     [[ "$branches" == "main" ]]
 }
 
-@test "Release Please workflow has required permissions" {
+@test "Release workflow has required permissions" {
     ensure_yq
     local contents_perm
-    contents_perm=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".permissions.contents")
+    contents_perm=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".permissions.contents")
     [[ "$contents_perm" == "write" ]]
-
-    local pr_perm
-    pr_perm=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".permissions.pull-requests")
-    [[ "$pr_perm" == "write" ]]
 }
 
 @test "Marketplace sync workflow exists" {
@@ -121,11 +117,22 @@ ensure_yq() {
     yaml_get "${WORKFLOW_DIR}/sync-marketplace.yml" "." >/dev/null
 }
 
-@test "Release Please workflow uses googleapis action" {
+@test "Release workflow has infinite loop prevention" {
     ensure_yq
-    # Verify that the workflow uses the official release-please action
-    local uses
-    uses=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".jobs.release-please.steps.[0].uses")
+    # Verify that the workflow prevents infinite loops from bot release commits
+    local if_condition
+    if_condition=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".jobs.release.if")
 
-    [[ "$uses" == *"googleapis/release-please-action@v4"* ]]
+    # Should check for bot actor and release commit message
+    [[ "$if_condition" == *"[bot]"* ]]
+    [[ "$if_condition" == *"chore(release):"* ]]
+}
+
+@test "Release workflow uses full git history" {
+    ensure_yq
+    # Verify that the workflow fetches full history for semantic-release
+    local fetch_depth
+    fetch_depth=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".jobs.release.steps[] | select(.uses == \"actions/checkout@v4\") | .with.\"fetch-depth\"")
+
+    [[ "$fetch_depth" == "0" ]]
 }
