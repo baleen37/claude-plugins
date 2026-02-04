@@ -5,7 +5,6 @@ load helpers/bats_helper
 
 # Path to workflow files
 WORKFLOW_DIR="${PROJECT_ROOT}/.github/workflows"
-RELEASE_WORKFLOW="${WORKFLOW_DIR}/release.yml"
 CI_WORKFLOW="${WORKFLOW_DIR}/ci.yml"
 
 # Helper: Parse YAML and extract value using yq
@@ -43,20 +42,9 @@ ensure_yq() {
     [ -d "$WORKFLOW_DIR" ]
 }
 
-@test "Release workflow file exists" {
-    [ -f "$RELEASE_WORKFLOW" ]
-    [ -s "$RELEASE_WORKFLOW" ]
-}
-
 @test "CI workflow file exists" {
     [ -f "$CI_WORKFLOW" ]
     [ -s "$CI_WORKFLOW" ]
-}
-
-@test "Release workflow has valid YAML syntax" {
-    ensure_yq
-    # yq will fail if YAML is invalid
-    yaml_get "$RELEASE_WORKFLOW" "." >/dev/null
 }
 
 @test "CI workflow has valid YAML syntax" {
@@ -64,26 +52,26 @@ ensure_yq() {
     yaml_get "$CI_WORKFLOW" "." >/dev/null
 }
 
-@test "Release workflow triggers on push to main" {
+@test "CI workflow triggers on push to main" {
     ensure_yq
-    workflow_has_trigger "$RELEASE_WORKFLOW" "push"
+    workflow_has_trigger "$CI_WORKFLOW" "push"
 }
 
-@test "Release workflow triggers on pull_request closed" {
+@test "CI workflow triggers on pull_request" {
     ensure_yq
-    workflow_has_trigger "$RELEASE_WORKFLOW" "pull_request"
+    workflow_has_trigger "$CI_WORKFLOW" "pull_request"
 }
 
-@test "Release workflow has release job" {
+@test "CI workflow has release job" {
     ensure_yq
-    yaml_get "$RELEASE_WORKFLOW" ".jobs.release" >/dev/null
+    yaml_get "$CI_WORKFLOW" ".jobs.release" >/dev/null
 }
 
-@test "Release workflow job has bot detection condition" {
+@test "CI workflow release job has bot detection condition" {
     ensure_yq
     # The job should have an 'if' condition that filters bot accounts
     local if_condition
-    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
+    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
 
     echo "Actual if condition: $if_condition"
 
@@ -96,32 +84,50 @@ ensure_yq() {
     [[ "$if_condition" == *"contains"* ]] || [[ "$if_condition" == *"!="* ]]
 }
 
-@test "Release workflow has required permissions" {
+@test "CI workflow has required permissions" {
     ensure_yq
     local permissions
-    permissions=$(yaml_get "$RELEASE_WORKFLOW" ".permissions.contents")
+    permissions=$(yaml_get "$CI_WORKFLOW" ".permissions.contents")
 
     [[ "$permissions" == "write" ]]
 }
 
-@test "Release workflow runs tests before release" {
-    # Check that 'Run tests' step exists in the job
+@test "CI workflow release job runs tests before release" {
+    # Check that 'Run tests' step exists in the release job
     # We'll check for the step name in the file
-    grep -q "name:.*Run tests" "$RELEASE_WORKFLOW" || grep -q "name:.*test" "$RELEASE_WORKFLOW"
+    grep -q "name:.*Run tests" "$CI_WORKFLOW" || grep -q "name:.*test" "$CI_WORKFLOW"
 }
 
-@test "Release workflow bot commit creates valid commit message" {
-    # When the bot creates a release commit, it should use chore(release): format
-    # This ensures the commit follows Conventional Commits
-    grep -q "chore(release):" "$RELEASE_WORKFLOW"
+@test "CI workflow release job depends on test job" {
+    ensure_yq
+    # The release job should have 'needs: test' to ensure proper execution order
+    local needs
+    needs=$(yaml_get "$CI_WORKFLOW" ".jobs.release.needs")
+
+    [[ "$needs" == "test" ]] || [[ "$needs" == *"test"* ]]
 }
 
-@test "Release workflow filters all bot accounts to prevent infinite loop" {
+@test "CI workflow release job only runs on main branch" {
+    ensure_yq
+    # The release job should only run on push to main, not on PRs
+    local if_condition
+    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
+
+    echo "Actual if condition: $if_condition"
+
+    # Should check for main branch
+    [[ "$if_condition" == *"main"* ]]
+
+    # Should check for push event (not pull_request)
+    [[ "$if_condition" == *"push"* ]]
+}
+
+@test "CI workflow filters all bot accounts to prevent infinite loop" {
     ensure_yq
     # The job should NOT run when ANY bot account is the actor
     # This prevents infinite loops when auto-update-bot-baleen[bot] merges PRs
     local if_condition
-    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
+    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
 
     echo "Actual if condition: $if_condition"
 
@@ -147,12 +153,12 @@ ensure_yq() {
     fi
 }
 
-@test "Release workflow blocks auto-update-bot-baleen" {
+@test "CI workflow blocks auto-update-bot-baleen" {
     ensure_yq
     # Specifically verify that auto-update-bot-baleen[bot] would be filtered
     # This is the actual bot causing the infinite loop
     local if_condition
-    if_condition=$(yaml_get "$RELEASE_WORKFLOW" ".jobs.release.if")
+    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
 
     echo "Checking if condition blocks auto-update-bot-baleen[bot]: $if_condition"
 

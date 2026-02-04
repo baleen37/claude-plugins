@@ -14,8 +14,9 @@ PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
     grep -q "bash tests/run-all-tests.sh" "$workflow"
 }
 
-@test "release.yml runs run-all-tests.sh" {
-    local workflow="${PROJECT_ROOT}/.github/workflows/release.yml"
+@test "ci.yml release job runs run-all-tests.sh" {
+    local workflow="${PROJECT_ROOT}/.github/workflows/ci.yml"
+    # Release job should also run tests
     grep -q "bash tests/run-all-tests.sh" "$workflow"
 }
 
@@ -24,8 +25,8 @@ PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
     grep -q "pull_request:" "$workflow"
 }
 
-@test "release.yml runs on push to main" {
-    local workflow="${PROJECT_ROOT}/.github/workflows/release.yml"
+@test "ci.yml runs on push to main" {
+    local workflow="${PROJECT_ROOT}/.github/workflows/ci.yml"
     grep -q "push:" "$workflow"
     grep -q "\\- main" "$workflow"
 }
