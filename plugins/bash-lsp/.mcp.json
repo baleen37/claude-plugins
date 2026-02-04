@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "bash-language-server": {
+      "command": "bash-language-server",
+      "args": ["start"],
+      "extensionToLanguage": {
+        ".sh": "bash",
+        ".bash": "bash"
+      }
+    }
+  }
+}
