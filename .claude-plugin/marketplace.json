@@ -130,6 +130,20 @@
         "pickup"
       ],
       "version": "5.3.0"
+    },
+    {
+      "name": "bash-lsp",
+      "description": "Bash Language Server integration - autocomplete, diagnostics, and navigation for Bash scripts",
+      "source": "./plugins/bash-lsp",
+      "category": "development",
+      "tags": [
+        "bash",
+        "lsp",
+        "shell",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.3.0"
     }
   ]
 }

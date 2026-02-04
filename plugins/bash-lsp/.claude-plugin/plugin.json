@@ -1,0 +1,9 @@
+{
+  "name": "bash-lsp",
+  "version": "0.1.0",
+  "description": "Bash Language Server integration for Claude Code - provides autocomplete, diagnostics, and navigation for Bash scripts",
+  "author": {
+    "name": "Jiho"
+  },
+  "keywords": ["bash", "lsp", "language-server", "shell", "shellscript"]
+}
