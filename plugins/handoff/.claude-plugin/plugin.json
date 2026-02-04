@@ -1,0 +1,9 @@
+{
+  "name": "handoff",
+  "version": "1.0.0",
+  "description": "Session handoff plugin for Claude Code - save and restore session context between sessions",
+  "author": {
+    "name": "Jiho"
+  },
+  "keywords": ["handoff", "session", "context", "pickup"]
+}
