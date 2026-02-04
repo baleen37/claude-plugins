@@ -1,0 +1,45 @@
+name: Sync Marketplace Version
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  sync-marketplace:
+    # Only run on Release Please PRs
+    if: "contains(github.event.pull_request.labels.*.name, 'autorelease: pending')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Sync marketplace.json version
+        run: bash scripts/sync-marketplace-version.sh
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet .claude-plugin/marketplace.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/marketplace.json
+          git commit -m "chore: sync marketplace.json version"
+          git push

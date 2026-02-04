@@ -8,9 +8,7 @@ on:
       - main
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   test:
@@ -35,73 +33,3 @@ jobs:
           BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
           TERM: xterm
         run: bash tests/run-all-tests.sh
-
-  release:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !(contains(github.actor, '[bot]') && startsWith(github.event.head_commit.message, 'chore(release):'))
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Generate bot app token
-        id: generate_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.MY_RELEASER_ID }}
-          private-key: ${{ secrets.MY_RELEASER_PRIVATE_KEY }}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Install yq
-        uses: mikefarah/yq@v4.40.1
-
-      - name: Setup Bats and bats libs
-        id: setup-bats
-        uses: bats-core/bats-action@3.0.1
-
-      - name: Run tests
-        shell: bash
-        env:
-          BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
-          TERM: xterm
-        run: bash tests/run-all-tests.sh
-
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
-        run: |
-          # Configure git with authentication
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Configure git to use GITHUB_TOKEN for push
-          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
-          # Disable git hooks for automated release commits
-          # This is intentional - the release commit has already passed all validation
-          # in the "Run tests" step above. Git hooks (pre-commit, etc.) are designed
-          # for developer commits and would be redundant here.
-          git config core.hooksPath /dev/null
-
-          # Run semantic-release (handles version bump, commit, push, GitHub release)
-          npx semantic-release

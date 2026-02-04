@@ -62,126 +62,70 @@ ensure_yq() {
     workflow_has_trigger "$CI_WORKFLOW" "pull_request"
 }
 
-@test "CI workflow has release job" {
+@test "CI workflow has only test job (no release job)" {
     ensure_yq
-    yaml_get "$CI_WORKFLOW" ".jobs.release" >/dev/null
+    # CI workflow should only have test job, release is now handled by Release Please
+    local jobs
+    jobs=$(yaml_get "$CI_WORKFLOW" ".jobs | keys | .[]")
+
+    [[ "$jobs" == "test" ]]
+
+    # Verify release job doesn't exist (should return "null")
+    local release_job
+    release_job=$(yaml_get "$CI_WORKFLOW" ".jobs.release")
+    [[ "$release_job" == "null" ]]
 }
 
-@test "CI workflow release job has bot detection condition" {
-    ensure_yq
-    # The job should have an 'if' condition that filters bot accounts
-    local if_condition
-    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
-
-    echo "Actual if condition: $if_condition"
-
-    # The condition should check github.actor
-    [[ "$if_condition" == *"github.actor"* ]]
-
-    # The condition should use either:
-    # 1. contains() function for universal bot filtering (recommended)
-    # 2. or != operator for specific bot filtering (brittle)
-    [[ "$if_condition" == *"contains"* ]] || [[ "$if_condition" == *"!="* ]]
-}
-
-@test "CI workflow has required permissions" {
+@test "CI workflow has read-only permissions" {
     ensure_yq
     local permissions
     permissions=$(yaml_get "$CI_WORKFLOW" ".permissions.contents")
 
-    [[ "$permissions" == "write" ]]
+    [[ "$permissions" == "read" ]]
 }
 
-@test "CI workflow release job runs tests before release" {
-    # Check that 'Run tests' step exists in the release job
-    # We'll check for the step name in the file
-    grep -q "name:.*Run tests" "$CI_WORKFLOW" || grep -q "name:.*test" "$CI_WORKFLOW"
+@test "Release Please workflow exists" {
+    [ -f "${WORKFLOW_DIR}/release-please.yml" ]
 }
 
-@test "CI workflow release job depends on test job" {
+@test "Release Please workflow has valid YAML syntax" {
     ensure_yq
-    # The release job should have 'needs: test' to ensure proper execution order
-    local needs
-    needs=$(yaml_get "$CI_WORKFLOW" ".jobs.release.needs")
-
-    [[ "$needs" == "test" ]] || [[ "$needs" == *"test"* ]]
+    yaml_get "${WORKFLOW_DIR}/release-please.yml" "." >/dev/null
 }
 
-@test "CI workflow release job only runs on main branch" {
+@test "Release Please workflow triggers on push to main" {
     ensure_yq
-    # The release job should only run on push to main, not on PRs
-    local if_condition
-    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
-
-    echo "Actual if condition: $if_condition"
-
-    # Should check for main branch
-    [[ "$if_condition" == *"main"* ]]
-
-    # Should check for push event (not pull_request)
-    [[ "$if_condition" == *"push"* ]]
+    workflow_has_trigger "${WORKFLOW_DIR}/release-please.yml" "push"
+    local branches
+    branches=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".on.push.branches.[]")
+    [[ "$branches" == "main" ]]
 }
 
-@test "CI workflow filters all bot accounts to prevent infinite loop" {
+@test "Release Please workflow has required permissions" {
     ensure_yq
-    # The job should NOT run when ANY bot account is the actor
-    # This prevents infinite loops when auto-update-bot-baleen[bot] merges PRs
-    local if_condition
-    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
+    local contents_perm
+    contents_perm=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".permissions.contents")
+    [[ "$contents_perm" == "write" ]]
 
-    echo "Actual if condition: $if_condition"
-
-    # The condition should use contains() to filter ANY bot with [bot] suffix
-    # Valid patterns:
-    # - !contains(github.actor, '[bot]')
-    # - contains(github.actor, '[bot]') == false
-
-    # Check that it uses contains() function for universal bot filtering
-    [[ "$if_condition" == *"contains"* ]]
-    [[ "$if_condition" == *"[bot]"* ]]
-
-    # Verify it doesn't hardcode specific bot names (like github-actions[bot])
-    # Hardcoding specific bot names will miss other bots like auto-update-bot-baleen[bot]
-    if [[ "$if_condition" == *"github-actions[bot]"* ]]; then
-        # If it mentions github-actions[bot], it must be a general pattern
-        # that would also catch other bots
-        if [[ "$if_condition" != *"contains"* ]]; then
-            echo "ERROR: Condition hardcodes github-actions[bot] without using contains()"
-            echo "This will miss other bots like auto-update-bot-baleen[bot]"
-            return 1
-        fi
-    fi
+    local pr_perm
+    pr_perm=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".permissions.pull-requests")
+    [[ "$pr_perm" == "write" ]]
 }
 
-@test "CI workflow blocks auto-update-bot-baleen" {
+@test "Marketplace sync workflow exists" {
+    [ -f "${WORKFLOW_DIR}/sync-marketplace.yml" ]
+}
+
+@test "Marketplace sync workflow has valid YAML syntax" {
     ensure_yq
-    # Specifically verify that auto-update-bot-baleen[bot] would be filtered
-    # This is the actual bot causing the infinite loop
-    local if_condition
-    if_condition=$(yaml_get "$CI_WORKFLOW" ".jobs.release.if")
+    yaml_get "${WORKFLOW_DIR}/sync-marketplace.yml" "." >/dev/null
+}
 
-    echo "Checking if condition blocks auto-update-bot-baleen[bot]: $if_condition"
+@test "Release Please workflow uses googleapis action" {
+    ensure_yq
+    # Verify that the workflow uses the official release-please action
+    local uses
+    uses=$(yaml_get "${WORKFLOW_DIR}/release-please.yml" ".jobs.release-please.steps.[0].uses")
 
-    # The condition must block any actor with [bot] suffix
-    # Valid approaches:
-    # 1. !contains(github.actor, '[bot]')
-    # 2. github.actor != 'github-actions[bot]' && github.actor != 'auto-update-bot-baleen[bot]' (brittle)
-
-    # Check for the robust solution (contains)
-    if [[ "$if_condition" == *"contains"* ]] && [[ "$if_condition" == *"[bot]"* ]]; then
-        # This is the good approach - catches all bots
-        return 0
-    fi
-
-    # If using specific bot names, check if auto-update-bot-baleen[bot] is included
-    if [[ "$if_condition" == *"github-actions[bot]"* ]] && [[ "$if_condition" != *"contains"* ]]; then
-        # Hardcoded approach - must explicitly list auto-update-bot-baleen[bot]
-        if [[ "$if_condition" != *"auto-update-bot-baleen"* ]]; then
-            echo "ERROR: Condition filters github-actions[bot] but not auto-update-bot-baleen[bot]"
-            echo "This will cause infinite loops when auto-update-bot merges PRs"
-            return 1
-        fi
-    fi
-
-    return 0
+    [[ "$uses" == *"googleapis/release-please-action@v4"* ]]
 }
