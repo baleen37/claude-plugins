@@ -39,11 +39,22 @@ fi
 # Path to jq binary
 JQ_BIN="${JQ_BIN:-jq}"
 
+# Cached plugin list (populated once per test file)
+_CACHED_PLUGIN_LIST=""
+
+# Cached plugin JSON data (plugin_path -> json_string)
+declare -A _CACHED_PLUGIN_JSON
+
 # Setup function - runs before each test
 # shellcheck disable=SC2155
 setup() {
     # Create temp directory for test-specific files
     export TEST_TEMP_DIR=$(mktemp -d -t claude-plugins-test.XXXXXX)
+
+    # Initialize plugin list cache on first setup
+    if [ -z "$_CACHED_PLUGIN_LIST" ]; then
+        _CACHED_PLUGIN_LIST=$(find "$PROJECT_ROOT/plugins" -maxdepth 1 -type d ! -name "plugins" 2>/dev/null)
+    fi
 }
 
 # Teardown function - runs after each test
@@ -286,7 +297,7 @@ assert_failure() {
 
 # Helper: Assert output contains partial string
 # Usage: assert_output --partial "substring"
-# shellcheck disable=SC2154
+# shellcheck disable=SC2155
 assert_output() {
     local expected="$1"
     if [ "$expected" = "--partial" ]; then
@@ -303,4 +314,40 @@ assert_output() {
             return 1
         fi
     fi
+}
+
+# Performance optimization: Get cached plugin list
+# Usage: get_all_plugins
+get_all_plugins() {
+    echo "$_CACHED_PLUGIN_LIST"
+}
+
+# Performance optimization: Get and cache plugin JSON data
+# Usage: parse_plugin_json <plugin_path>
+parse_plugin_json() {
+    local plugin_path="$1"
+    local json_file="${plugin_path}/.claude-plugin/plugin.json"
+
+    # Return cached data if available
+    if [ -n "${_CACHED_PLUGIN_JSON[$plugin_path]:-}" ]; then
+        echo "${_CACHED_PLUGIN_JSON[$plugin_path]}"
+        return 0
+    fi
+
+    # Parse and cache the JSON
+    if [ -f "$json_file" ]; then
+        local json_content
+        json_content=$($JQ_BIN '.' "$json_file" 2>/dev/null)
+        _CACHED_PLUGIN_JSON[$plugin_path]="$json_content"
+        echo "$json_content"
+        return 0
+    fi
+
+    return 1
+}
+
+# Performance optimization: Clear plugin JSON cache
+# Usage: clear_plugin_json_cache
+clear_plugin_json_cache() {
+    _CACHED_PLUGIN_JSON=()
 }
