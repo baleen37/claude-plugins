@@ -13,8 +13,26 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           # Use GitHub App token for better permissions
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Enable auto-merge for release PRs when CI passes
+      - name: Enable auto-merge for release PR
+        if: steps.release.outputs.release_created != 'true'
+        run: |
+          # Find release-please PRs by title pattern
+          PRS=$(gh pr list --search "chore(main): release" --state open --json number --jq '.[].number')
+
+          if [ -n "$PRS" ]; then
+            for PR in $PRS; do
+              echo "Enabling auto-merge for PR #$PR"
+              gh pr merge --auto --merge "$PR" || true
+            done
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
