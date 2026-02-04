@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.1](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.2.0...claude-plugins-v5.2.1) (2026-02-04)
+
+
+### Miscellaneous
+
+* trigger release-lease to test CI on bot PR ([269de2f](https://github.com/baleen37/claude-plugins/commit/269de2f1cddd819e9a92d2a41c3eda0d743d5f71))
+
 ## [5.2.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.1.0...claude-plugins-v5.2.0) (2026-02-04)
 
 
