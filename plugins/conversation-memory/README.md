@@ -302,6 +302,70 @@ node dist/cli.mjs index-all
 - ✅ **Memory Efficient**: < 200MB RAM usage with Q4 quantization
 - ✅ **Official Package**: Migrated to `@huggingface/transformers` v3
 
+## Troubleshooting
+
+### Installation Errors
+
+The plugin automatically installs dependencies on first run. If you encounter errors:
+
+#### Permission Denied (EACCES)
+
+**Symptoms:** Error messages containing "EACCES" or "permission denied"
+
+**Fix:**
+
+```bash
+sudo chown -R $(whoami) ~/.npm
+```
+
+Then restart Claude Code.
+
+#### Network Errors (ETIMEDOUT, ECONNRESET, ENOTFOUND)
+
+**Symptoms:** Timeout or connection errors during dependency installation
+
+**Fix:**
+
+1. Check your internet connection
+2. If behind a corporate firewall, configure npm proxy:
+   ```bash
+   npm config set proxy http://your-proxy:port
+   npm config set https-proxy http://your-proxy:port
+   ```
+3. Try installing manually:
+   ```bash
+   cd plugins/conversation-memory
+   npm install
+   ```
+
+#### Disk Space Full (ENOSPC)
+
+**Symptoms:** Error messages containing "ENOSPC"
+
+**Fix:**
+
+1. Check available disk space: `df -h`
+2. Free up space by cleaning npm cache:
+   ```bash
+   npm cache clean --force
+   ```
+3. Remove old node_modules:
+   ```bash
+   cd plugins/conversation-memory
+   rm -rf node_modules
+   npm install
+   ```
+
+### Manual Installation
+
+If automatic installation fails repeatedly, install dependencies manually:
+
+```bash
+cd plugins/conversation-memory
+npm install
+npm run build
+```
+
 ## Architecture Notes
 
 - **Standalone Plugin**: Complete implementation (not a wrapper)
