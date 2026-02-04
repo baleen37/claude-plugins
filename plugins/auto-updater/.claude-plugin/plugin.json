@@ -1,6 +1,6 @@
 {
   "name": "auto-updater",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
   "author": {
     "name": "baleen",

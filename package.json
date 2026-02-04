@@ -1,6 +1,6 @@
 {
   "name": "claude-plugins",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Baleen Claude Plugins - Claude Code plugin collection",
   "private": true,
   "type": "module",

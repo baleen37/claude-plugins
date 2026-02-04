@@ -1,5 +1,31 @@
 # Changelog
 
+## [5.1.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.0.0...claude-plugins-v5.1.0) (2026-02-04)
+
+
+### Features
+
+* **conversation-memory:** add automatic npm install when node_modules missing ([db55514](https://github.com/baleen37/claude-plugins/commit/db5551426ce267fdb43a81d16556dbc9875df441))
+* **conversation-memory:** add marked dependency for markdown rendering ([1887174](https://github.com/baleen37/claude-plugins/commit/1887174d2c21e02e420b6d08632427c321942061))
+
+
+### Bug Fixes
+
+* **handoff:** output notification to stderr to exclude from LLM context ([463bb08](https://github.com/baleen37/claude-plugins/commit/463bb08e75aa7199494e6c10a3f3938b0f667262))
+* **marketplace:** remove databricks plugin reference ([f0bc6b8](https://github.com/baleen37/claude-plugins/commit/f0bc6b863b13ff7dd6b979722dd425325d05b3f0))
+
+
+### Code Refactoring
+
+* **me/commands:** rename debug command to debugging ([862cbcb](https://github.com/baleen37/claude-plugins/commit/862cbcb96017173f6d620fa232cc23f2bb0aad25))
+* **me/research:** strengthen verification and tool selection via TDD ([ed67010](https://github.com/baleen37/claude-plugins/commit/ed670107438503d9815b831b6dc65065c87d1a8e))
+* **tests:** remove duplicate assert functions and fix helper loading paths ([9e31c0e](https://github.com/baleen37/claude-plugins/commit/9e31c0e48dd0fc0c44ea5f07dffc7bfe90b00db6))
+
+
+### Miscellaneous
+
+* update research documentation and build artifacts ([8b478c7](https://github.com/baleen37/claude-plugins/commit/8b478c7927a8b0d691f02905f02a8dd614eec475))
+
 ## [5.0.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v4.3.0...claude-plugins-v5.0.0) (2026-02-04)
 
 
