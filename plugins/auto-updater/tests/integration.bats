@@ -9,7 +9,9 @@ setup() {
     export SCRIPT_DIR="${TEST_DIR}/../scripts"
     export HOOK_DIR="${TEST_DIR}/../hooks"
     export LIB_DIR="${SCRIPT_DIR}/lib"
-    export TEMP_DIR="$(mktemp -d "${BATS_TMPDIR}/auto-updater-integration-XXXXXX")"
+    local temp_dir
+    temp_dir="$(mktemp -d "${BATS_TMPDIR}/auto-updater-integration-XXXXXX")"
+    export TEMP_DIR="${temp_dir}"
 
     # Create test directories
     mkdir -p "$TEMP_DIR/bin"
@@ -396,7 +398,8 @@ exit 1
 }
 
 @test "integration: hook - creates config directory if missing" {
-    local test_home="$(mktemp -d)"
+    local test_home
+    test_home="$(mktemp -d)"
     export HOME="$test_home"
 
     # Run hook - should create config dir
@@ -612,4 +615,180 @@ exit 1
     [ -f "$install_log" ]
     run grep "git-guard" "$install_log"
     [ "$status" -eq 0 ]
+}
+
+#=============================================================================
+# TEST SUITE 9: Update verification
+#=============================================================================
+
+@test "integration: update verification - detects version mismatch after install" {
+    local marketplace_file="$TEMP_DIR/fixtures/marketplace.json"
+    create_marketplace_fixture "$marketplace_file" '    {
+      "name": "git-guard",
+      "version": "2.5.0"
+    }'
+
+    create_mock_curl "$marketplace_file"
+
+    # Mock claude: install succeeds but returns wrong version
+    create_mock_claude "
+if [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"list\" ] && [ \"\$3\" = \"--json\" ]; then
+    # First call: old version
+    # Second call (after install): wrong version (not 2.5.0)
+    if [ ! -f \"$TEMP_DIR/second_call\" ]; then
+        touch \"$TEMP_DIR/second_call\"
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.0.0\"}]'
+    else
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.4.0\"}]'
+    fi
+    exit 0
+elif [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"install\" ]; then
+    exit 0
+fi
+exit 1
+"
+
+    create_config '    {"name": "baleen-plugins"}'
+
+    # Run update.sh
+    run "$SCRIPT_DIR/update.sh"
+    [ "$status" -eq 0 ]
+
+    # Should detect version mismatch and log error
+    [[ "$output" =~ "Version mismatch" ]] || [[ "$output" =~ "verification failed" ]]
+}
+
+@test "integration: update verification - succeeds with correct version" {
+    local marketplace_file="$TEMP_DIR/fixtures/marketplace.json"
+    create_marketplace_fixture "$marketplace_file" '    {
+      "name": "git-guard",
+      "version": "2.5.0"
+    }'
+
+    create_mock_curl "$marketplace_file"
+
+    # Mock claude: install succeeds and returns correct version
+    create_mock_claude "
+if [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"list\" ] && [ \"\$3\" = \"--json\" ]; then
+    # First call: old version
+    # Second call (after install): correct version
+    if [ ! -f \"$TEMP_DIR/second_call\" ]; then
+        touch \"$TEMP_DIR/second_call\"
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.0.0\"}]'
+    else
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.5.0\"}]'
+    fi
+    exit 0
+elif [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"install\" ]; then
+    exit 0
+fi
+exit 1
+"
+
+    create_config '    {"name": "baleen-plugins"}'
+
+    # Run update.sh
+    run "$SCRIPT_DIR/update.sh"
+    [ "$status" -eq 0 ]
+
+    # Should report successful update
+    [[ "$output" =~ Updated\ git-guard\ to\ 2\.5\.0 ]]
+}
+
+#=============================================================================
+# TEST SUITE 10: Partial update failures
+#=============================================================================
+
+@test "integration: partial failure - continues after first plugin fails" {
+    local marketplace_file="$TEMP_DIR/fixtures/marketplace.json"
+    create_marketplace_fixture "$marketplace_file" '    {
+      "name": "git-guard",
+      "version": "2.5.0"
+    },
+    {
+      "name": "ralph-loop",
+      "version": "1.5.0"
+    }'
+
+    create_mock_curl "$marketplace_file"
+
+    local install_log="$TEMP_DIR/installs.log"
+    touch "$install_log"
+
+    # Mock claude: first install fails, second succeeds
+    create_mock_claude "
+if [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"list\" ] && [ \"\$3\" = \"--json\" ]; then
+    if [ ! -f \"$TEMP_DIR/second_call\" ]; then
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.0.0\"}, {\"name\": \"ralph-loop\", \"version\": \"1.0.0\"}]'
+    else
+        # After first install fails, second install succeeds
+        echo '[{\"name\": \"git-guard\", \"version\": \"2.0.0\"}, {\"name\": \"ralph-loop\", \"version\": \"1.5.0\"}]'
+    fi
+    exit 0
+elif [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"install\" ]; then
+    echo \"Install: \$3\" >> \"$install_log\"
+    if [[ \"\$3\" == *\"git-guard\"* ]]; then
+        # First plugin fails
+        exit 1
+    else
+        # Second plugin succeeds
+        touch \"$TEMP_DIR/second_call\"
+        exit 0
+    fi
+fi
+exit 1
+"
+
+    create_config '    {"name": "baleen-plugins"}'
+
+    # Run update.sh
+    run "$SCRIPT_DIR/update.sh"
+    local script_output="$output"
+    [ "$status" -eq 0 ]
+
+    # Should have tried both plugins
+    [ -f "$install_log" ]
+    run grep -c "Install:" "$install_log"
+    [ "$output" -eq 2 ]
+
+    # Should log error for git-guard
+    [[ "$script_output" =~ "Failed to update git-guard" ]]
+
+    # Should succeed for ralph-loop
+    [[ "$script_output" =~ "Updated ralph-loop" ]]
+}
+
+#=============================================================================
+# TEST SUITE 11: Error message quality
+#=============================================================================
+
+@test "integration: error messages - install failure shows clear error" {
+    local marketplace_file="$TEMP_DIR/fixtures/marketplace.json"
+    create_marketplace_fixture "$marketplace_file" '    {
+      "name": "git-guard",
+      "version": "2.5.0"
+    }'
+
+    create_mock_curl "$marketplace_file"
+
+    # Mock claude: install fails
+    create_mock_claude "
+if [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"list\" ] && [ \"\$3\" = \"--json\" ]; then
+    echo '[{\"name\": \"git-guard\", \"version\": \"2.0.0\"}]'
+    exit 0
+elif [ \"\$1\" = \"plugin\" ] && [ \"\$2\" = \"install\" ]; then
+    exit 1
+fi
+exit 1
+"
+
+    create_config '    {"name": "baleen-plugins"}'
+
+    # Run update.sh
+    run "$SCRIPT_DIR/update.sh"
+    [ "$status" -eq 0 ]
+
+    # Should show clear error messages
+    [[ "$output" =~ Failed\ to\ update\ git-guard ]]
+    [[ "$output" =~ Plugin\ remains\ at\ version\ 2\.0\.0 ]]
 }
