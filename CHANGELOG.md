@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.3.1](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.3.0...claude-plugins-v5.3.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* **ralph-loop:** fix hooks matcher and stdin handling ([ebdd2c5](https://github.com/baleen37/claude-plugins/commit/ebdd2c52cd2cf5078067693dceca42150acf500f))
+* **ralph-loop:** fix hooks matcher and stdin handling ([326a570](https://github.com/baleen37/claude-plugins/commit/326a570cf4ec25b570de7f43f1d927efcb353bd8))
+
+
+### Code Refactoring
+
+* remove create-pr command, use skill instead ([20b0588](https://github.com/baleen37/claude-plugins/commit/20b0588223a6bc90907f2521696cbe1321516a1d))
+* remove generated CLAUDE.md files and create-pr command ([471e87b](https://github.com/baleen37/claude-plugins/commit/471e87b2d560c2acad3598a98c66b46ebc4a1c5d))
+
+
+### Tests
+
+* add create-pr skill tests ([ac1744c](https://github.com/baleen37/claude-plugins/commit/ac1744c0463f89f24aad39bd37a547be7a5b703f))
+
 ## [5.3.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.2.2...claude-plugins-v5.3.0) (2026-02-04)
 
 
