@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.3.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.2.2...claude-plugins-v5.3.0) (2026-02-04)
+
+
+### Features
+
+* **release-please:** add auto-merge for release PRs ([4e8cf86](https://github.com/baleen37/claude-plugins/commit/4e8cf86974f20179ab848c3a66d6f5774e861ec0))
+* **release-please:** add auto-merge for release PRs ([cef4678](https://github.com/baleen37/claude-plugins/commit/cef46781f9711b72be6f9f5c6df34edf60de5c6a))
+
+
+### Miscellaneous
+
+* trigger release-please to test auto-merge ([408c086](https://github.com/baleen37/claude-plugins/commit/408c0865884e1b2e51a533317dc7bdcc62f61606))
+
 ## [5.2.2](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.2.1...claude-plugins-v5.2.2) (2026-02-04)
 
 
