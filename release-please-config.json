@@ -6,7 +6,8 @@
         {
           "type": "json",
           "path": "plugins/*/.claude-plugin/plugin.json",
-          "jsonpath": "$.version"
+          "jsonpath": "$.version",
+          "glob": true
         }
       ],
       "changelog-sections": [
