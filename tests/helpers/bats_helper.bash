@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # bats-core test helper for claude-plugins project
+# This file provides project-level validation functions.
+# Basic BATS helpers (setup, teardown, validate_json, etc.) are
+# provided by @baleen/bats-helpers package.
 
 # Project root directory
 # BATS_TEST_DIRNAME is the directory containing the test file

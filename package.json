@@ -4,9 +4,13 @@
   "description": "Baleen Claude Plugins - Claude Code plugin collection",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "prepare": "husky",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

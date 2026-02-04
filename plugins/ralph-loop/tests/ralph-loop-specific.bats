@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC1090,SC2314
 # Ralph Loop plugin-specific tests
 # Basic validation is handled in tests/ directory
 
-load ../../../tests/helpers/bats_helper
+load ../../../packages/bats-helpers/src/bats_helper
 
 PLUGIN_DIR="${PROJECT_ROOT}/plugins/ralph-loop"
 
