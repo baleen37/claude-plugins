@@ -1,6 +1,6 @@
 {
   "name": "ast-tools",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "AST-based code search and transformation tools using ast-grep",
   "author": {
     "name": "Baleen"
