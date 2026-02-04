@@ -40,7 +40,7 @@ Need to understand before acting?
 ## Quick Reference
 
 | Phase | Codebase-only | Web-only | Hybrid |
-|-------|---------------|----------|--------|
+| :--- | :--- | :--- | :--- |
 | **Observe** | Clarify scope, identify files | Clarify question, note version | Define independent scopes |
 | **Explore** | Task: Explore agent | Task: web-researcher agent | Task: Explore + web-researcher (parallel) |
 | **Verify** | Run code, cross-reference files | Cross-check multiple sources | Compare code vs docs findings |
@@ -60,7 +60,7 @@ Research benefits from subagent delegation:
 ### Model Selection
 
 | Task Type | Model | Rationale |
-|-----------|-------|-----------|
+| :--- | :--- | :--- |
 | Codebase exploration | **haiku** (Explore agent default) | Fast, cheap, sufficient for code search |
 | Web research | **haiku** (web-researcher agent) | Quick information gathering |
 | Complex synthesis | **sonnet** (main session) | Analysis requires deeper reasoning |
@@ -68,10 +68,10 @@ Research benefits from subagent delegation:
 
 **Rule of thumb:** Use Haiku for subagent research tasks. Reserve Sonnet for final synthesis and complex verification.
 
-## Research Scenarios & Tool Selection
+## Research Scenarios and Tool Selection
 
 | Scenario | Tool Command | Model | When to Use |
-|----------|-------------|-------|-------------|
+| :--- | :--- | :--- | :--- |
 | **Codebase-only** | `Task tool: subagent_type="Explore"` | haiku | Unfamiliar architecture, existing bugs, code patterns |
 | **Web-only** | `Task tool: subagent_type="me:web-researcher"` | haiku | New tech, official docs, version-specific info |
 | **Hybrid** | Parallel: Explore + web-researcher | haiku (both) | Code vs docs comparison, version mismatches |
@@ -174,7 +174,7 @@ Identify: Gaps, anti-patterns, version mismatches
 ## Rationalization (REJECT ALL)
 
 | Excuse | Reality |
-|--------|---------|
+| :--- | :--- |
 | "User wants fast answer" | Fast right > fast wrong. Rework takes longer. |
 | "I'll search quickly myself" | Manual search = slow + single-perspective. Use subagents. |
 | "Sequential is fine" | Independent research = parallel. Don't waste time. |
@@ -254,7 +254,7 @@ These thoughts mean you're rushing or rationalizing:
 ## Common Mistakes
 
 | Mistake | Fix |
-|---------|-----|
+| :--- | :--- |
 | Manual Grep/Glob for exploration | ALWAYS use Explore agent - never do direct file search |
 | Doing research yourself | Delegate to subagents - fresh context per question |
 | Not using subagents for research | Delegate to Explore/web-researcher - faster, cheaper, fresh context |
