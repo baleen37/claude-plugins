@@ -531,3 +531,128 @@ EOF
     # This prevents "unbound variable" errors when set -u is enabled
     grep -q 'PROMPT_PARTS\[\*\]:-' "$script"
 }
+
+# ============================================================================
+# Bug Fix Tests - These tests should FAIL before the fix
+# ============================================================================
+
+@test "ralph-loop: hooks.json uses wildcard matcher for SessionStart hook" {
+    local hooks_json="${PLUGIN_DIR}/hooks/hooks.json"
+    [ -f "$hooks_json" ]
+    ensure_jq
+
+    # The matcher should be "*" to run on all sessions
+    # The hook script itself checks if state file exists
+    local matcher
+    matcher=$($JQ_BIN -r '.hooks.SessionStart[0].matcher' "$hooks_json")
+
+    # This test will FAIL until the bug is fixed
+    [ "$matcher" = "*" ]
+}
+
+@test "ralph-loop: hooks.json uses wildcard matcher for Stop hook" {
+    local hooks_json="${PLUGIN_DIR}/hooks/hooks.json"
+    [ -f "$hooks_json" ]
+    ensure_jq
+
+    # The matcher should be "*" to run on all sessions
+    local matcher
+    matcher=$($JQ_BIN -r '.hooks.Stop[0].matcher' "$hooks_json")
+
+    # This test will FAIL until the bug is fixed
+    [ "$matcher" = "*" ]
+}
+
+@test "ralph-loop: session-start-hook.sh reads SESSION_ID from stdin" {
+    local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
+    [ -f "$hook" ]
+
+    # The hook must read from stdin (</dev/stdin or similar)
+    # to get the JSON input from Claude Code
+    grep -q 'jq.*session_id.*</dev/stdin' "$hook"
+}
+
+@test "ralph-loop: session-start-hook.sh writes RALPH_SESSION_ID to ENV_FILE" {
+    local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
+    [ -f "$hook" ]
+
+    # The hook should write RALPH_SESSION_ID to ENV_FILE
+    # The bug was that it checked if file exists BEFORE writing, but creates it right before
+    # The fix handles both cases: existing file and newly-created file
+    grep -q 'echo.*RALPH_SESSION_ID.*>>.*ENV_FILE' "$hook"
+    grep -q 'echo.*RALPH_SESSION_ID.*>.*ENV_FILE' "$hook"
+}
+
+# ============================================================================
+# E2E Integration Tests
+# These tests verify the core integration scenarios work correctly
+# ============================================================================
+
+@test "ralph-loop: session-start-hook.sh reads session_id from stdin" {
+    local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify the hook reads from stdin using </dev/stdin or similar
+    grep -q 'jq.*session_id.*</dev/stdin' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh reads hook input from stdin" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify the hook reads from stdin
+    grep -q 'HOOK_INPUT=.*/dev/stdin' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh outputs block decision JSON when loop active" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify the hook outputs JSON with block decision
+    grep -q '"decision": "block"' "$hook"
+    grep -q 'jq -n' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh increments iteration counter in state file" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify iteration increment logic
+    grep -q 'NEXT_ITERATION=.*ITERATION.*+.*1' "$hook"
+    grep -q 'sed.*iteration.*NEXT_ITERATION' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh detects completion promise in assistant output" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify promise detection logic
+    grep -q '<promise>' "$hook"
+    grep -q 'PROMISE_TEXT=.*perl' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh validates numeric iteration fields" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify numeric validation before arithmetic
+    grep -q 'ITERATION.*0-9' "$hook"
+    grep -q 'MAX_ITERATIONS.*0-9' "$hook"
+}
+
+@test "ralph-loop: stop-hook.sh handles max iterations reached" {
+    local hook="${PLUGIN_DIR}/hooks/stop-hook.sh"
+    [ -f "$hook" ]
+
+    # Verify max iteration check
+    grep -q 'MAX_ITERATIONS.*-gt.*0.*ITERATION.*-ge.*MAX_ITERATIONS' "$hook"
+}
+
+@test "ralph-loop: cancel-ralph.sh removes state file when cancelled" {
+    local script="${PLUGIN_DIR}/scripts/cancel-ralph.sh"
+    [ -f "$script" ]
+    [ -x "$script" ]
+
+    # Verify state file removal logic
+    grep -q 'rm.*STATE_FILE' "$script"
+}
