@@ -119,6 +119,18 @@
       "version": "2.0.0"
     },
     {
+      "name": "databricks",
+      "description": "Databricks integration via MCP server",
+      "source": "./plugins/databricks",
+      "category": "integration",
+      "tags": [
+        "databricks",
+        "mcp",
+        "integration"
+      ],
+      "version": "1.0.0"
+    },
+    {
       "name": "handoff",
       "description": "Session handoff plugin for Claude Code - save and restore session context between sessions",
       "source": "./plugins/handoff",

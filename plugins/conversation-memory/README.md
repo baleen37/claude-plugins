@@ -131,9 +131,9 @@ The plugin automatically:
 
 ## How It Works
 
-### Automatic Indexing (SessionEnd Hook)
+### Automatic Indexing (SessionStart Hook)
 
-When each Claude Code session ends, the hook (`hooks/SessionEnd.sh`) runs:
+When each Claude Code session starts (startup or resume), the hook (`hooks/hooks.json`) runs:
 
 ```bash
 node dist/cli.mjs sync
@@ -215,12 +215,12 @@ npm run typecheck
 ### Project Structure
 
 ```text
-plugins/memory/
+plugins/conversation-memory/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin metadata
 ├── .mcp.json                     # MCP server registration
 ├── hooks/
-│   └── SessionEnd.sh            # Auto-sync on session end
+│   └── hooks.json               # Auto-sync on session start (startup|resume)
 ├── src/
 │   ├── core/                    # Core library (from @obra/episodic-memory)
 │   │   ├── indexer.ts           # Conversation indexing
@@ -236,9 +236,11 @@ plugins/memory/
 │       └── server.ts            # MCP server (search, read tools)
 ├── dist/
 │   ├── mcp-server.mjs           # Bundled MCP server
+│   ├── mcp-wrapper.mjs          # Cross-platform wrapper
 │   └── cli.mjs                  # Bundled CLI (for hooks)
 ├── scripts/
-│   └── build.mjs                # esbuild config
+│   ├── build.mjs                # esbuild config
+│   └── mcp-server-wrapper.mjs   # Wrapper script
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -328,11 +330,14 @@ Then restart Claude Code.
 
 1. Check your internet connection
 2. If behind a corporate firewall, configure npm proxy:
+
    ```bash
    npm config set proxy http://your-proxy:port
    npm config set https-proxy http://your-proxy:port
    ```
+
 3. Try installing manually:
+
    ```bash
    cd plugins/conversation-memory
    npm install
@@ -346,10 +351,13 @@ Then restart Claude Code.
 
 1. Check available disk space: `df -h`
 2. Free up space by cleaning npm cache:
+
    ```bash
    npm cache clean --force
    ```
+
 3. Remove old node_modules:
+
    ```bash
    cd plugins/conversation-memory
    rm -rf node_modules

@@ -86,7 +86,7 @@ var require_code = __commonJS({
     };
     exports._Code = _Code;
     exports.nil = new _Code("");
-    function _(strs, ...args) {
+    function _2(strs, ...args) {
       const code = [strs[0]];
       let i = 0;
       while (i < args.length) {
@@ -95,7 +95,7 @@ var require_code = __commonJS({
       }
       return new _Code(code);
     }
-    exports._ = _;
+    exports._ = _2;
     var plus = new _Code("+");
     function str(strs, ...args) {
       const expr = [safeStringify(strs[0])];
@@ -132,41 +132,41 @@ var require_code = __commonJS({
         i++;
       }
     }
-    function mergeExprItems(a, b) {
-      if (b === '""')
+    function mergeExprItems(a, b2) {
+      if (b2 === '""')
         return a;
       if (a === '""')
-        return b;
+        return b2;
       if (typeof a == "string") {
-        if (b instanceof Name || a[a.length - 1] !== '"')
+        if (b2 instanceof Name || a[a.length - 1] !== '"')
           return;
-        if (typeof b != "string")
-          return `${a.slice(0, -1)}${b}"`;
-        if (b[0] === '"')
-          return a.slice(0, -1) + b.slice(1);
+        if (typeof b2 != "string")
+          return `${a.slice(0, -1)}${b2}"`;
+        if (b2[0] === '"')
+          return a.slice(0, -1) + b2.slice(1);
         return;
       }
-      if (typeof b == "string" && b[0] === '"' && !(a instanceof Name))
-        return `"${a}${b.slice(1)}`;
+      if (typeof b2 == "string" && b2[0] === '"' && !(a instanceof Name))
+        return `"${a}${b2.slice(1)}`;
       return;
     }
     function strConcat(c1, c2) {
       return c2.emptyStr() ? c1 : c1.emptyStr() ? c2 : str`${c1}${c2}`;
     }
     exports.strConcat = strConcat;
-    function interpolate(x) {
-      return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
+    function interpolate(x2) {
+      return typeof x2 == "number" || typeof x2 == "boolean" || x2 === null ? x2 : safeStringify(Array.isArray(x2) ? x2.join(",") : x2);
     }
-    function stringify(x) {
-      return new _Code(safeStringify(x));
+    function stringify(x2) {
+      return new _Code(safeStringify(x2));
     }
     exports.stringify = stringify;
-    function safeStringify(x) {
-      return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+    function safeStringify(x2) {
+      return JSON.stringify(x2).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
     exports.safeStringify = safeStringify;
     function getProperty(key) {
-      return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
+      return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _2`[${key}]`;
     }
     exports.getProperty = getProperty;
     function getEsmExportName(key) {
@@ -311,8 +311,8 @@ var require_scope = __commonJS({
             nameSet.set(name, UsedValueState.Started);
             let c = valueCode(name);
             if (c) {
-              const def2 = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
-              code = (0, code_1._)`${code}${def2} ${name} = ${c};${this.opts._n}`;
+              const def = this.opts.es5 ? exports.varKinds.var : exports.varKinds.const;
+              code = (0, code_1._)`${code}${def} ${name} = ${c};${this.opts._n}`;
             } else if (c = getCode === null || getCode === void 0 ? void 0 : getCode(name)) {
               code = (0, code_1._)`${code}${c}${this.opts._n}`;
             } else {
@@ -1025,8 +1025,8 @@ var require_codegen = __commonJS({
       for (const n in from)
         names[n] = (names[n] || 0) - (from[n] || 0);
     }
-    function not(x) {
-      return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
+    function not(x2) {
+      return typeof x2 == "boolean" || typeof x2 == "number" || x2 === null ? !x2 : (0, code_1._)`!${par(x2)}`;
     }
     exports.not = not;
     var andCode = mappend(exports.operators.AND);
@@ -1040,10 +1040,10 @@ var require_codegen = __commonJS({
     }
     exports.or = or;
     function mappend(op) {
-      return (x, y) => x === code_1.nil ? y : y === code_1.nil ? x : (0, code_1._)`${par(x)} ${op} ${par(y)}`;
+      return (x2, y2) => x2 === code_1.nil ? y2 : y2 === code_1.nil ? x2 : (0, code_1._)`${par(x2)} ${op} ${par(y2)}`;
     }
-    function par(x) {
-      return x instanceof code_1.Name ? x : (0, code_1._)`(${x})`;
+    function par(x2) {
+      return x2 instanceof code_1.Name ? x2 : (0, code_1._)`(${x2})`;
     }
   }
 });
@@ -1133,8 +1133,8 @@ var require_util = __commonJS({
     exports.unescapeJsonPointer = unescapeJsonPointer;
     function eachItem(xs, f) {
       if (Array.isArray(xs)) {
-        for (const x of xs)
-          f(x);
+        for (const x2 of xs)
+          f(x2);
       } else {
         f(xs);
       }
@@ -1324,7 +1324,7 @@ var require_errors = __commonJS({
         gen.return(false);
       }
     }
-    var E = {
+    var E2 = {
       keyword: new codegen_1.Name("keyword"),
       schemaPath: new codegen_1.Name("schemaPath"),
       // also used in JTD errors
@@ -1358,20 +1358,20 @@ var require_errors = __commonJS({
       if (schemaPath) {
         schPath = (0, codegen_1.str)`${schPath}${(0, util_1.getErrorPath)(schemaPath, util_1.Type.Str)}`;
       }
-      return [E.schemaPath, schPath];
+      return [E2.schemaPath, schPath];
     }
     function extraErrorProps(cxt, { params, message }, keyValues) {
       const { keyword, data, schemaValue, it } = cxt;
       const { opts, propertyName, topSchemaRef, schemaPath } = it;
-      keyValues.push([E.keyword, keyword], [E.params, typeof params == "function" ? params(cxt) : params || (0, codegen_1._)`{}`]);
+      keyValues.push([E2.keyword, keyword], [E2.params, typeof params == "function" ? params(cxt) : params || (0, codegen_1._)`{}`]);
       if (opts.messages) {
-        keyValues.push([E.message, typeof message == "function" ? message(cxt) : message]);
+        keyValues.push([E2.message, typeof message == "function" ? message(cxt) : message]);
       }
       if (opts.verbose) {
-        keyValues.push([E.schema, schemaValue], [E.parentSchema, (0, codegen_1._)`${topSchemaRef}${schemaPath}`], [names_1.default.data, data]);
+        keyValues.push([E2.schema, schemaValue], [E2.parentSchema, (0, codegen_1._)`${topSchemaRef}${schemaPath}`], [names_1.default.data, data]);
       }
       if (propertyName)
-        keyValues.push([E.propertyName, propertyName]);
+        keyValues.push([E2.propertyName, propertyName]);
     }
   }
 });
@@ -1435,8 +1435,8 @@ var require_rules = __commonJS({
     exports.getRules = exports.isJSONType = void 0;
     var _jsonTypes = ["string", "number", "integer", "boolean", "null", "object", "array"];
     var jsonTypes = new Set(_jsonTypes);
-    function isJSONType(x) {
-      return typeof x == "string" && jsonTypes.has(x);
+    function isJSONType(x2) {
+      return typeof x2 == "string" && jsonTypes.has(x2);
     }
     exports.isJSONType = isJSONType;
     function getRules() {
@@ -1775,13 +1775,13 @@ var require_code2 = __commonJS({
     exports.callValidateCode = callValidateCode;
     var newRegExp = (0, codegen_1._)`new RegExp`;
     function usePattern({ gen, it: { opts } }, pattern) {
-      const u = opts.unicodeRegExp ? "u" : "";
+      const u3 = opts.unicodeRegExp ? "u" : "";
       const { regExp } = opts.code;
-      const rx = regExp(pattern, u);
+      const rx = regExp(pattern, u3);
       return gen.scopeValue("pattern", {
         key: rx.toString(),
         ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
+        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u3})`
       });
     }
     exports.usePattern = usePattern;
@@ -1845,9 +1845,9 @@ var require_keyword = __commonJS({
     var names_1 = require_names();
     var code_1 = require_code2();
     var errors_1 = require_errors();
-    function macroKeywordCode(cxt, def2) {
+    function macroKeywordCode(cxt, def) {
       const { gen, keyword, schema, parentSchema, it } = cxt;
-      const macroSchema = def2.macro.call(it.self, schema, parentSchema, it);
+      const macroSchema = def.macro.call(it.self, schema, parentSchema, it);
       const schemaRef = useKeyword(gen, keyword, macroSchema);
       if (it.opts.validateSchema !== false)
         it.self.validateSchema(macroSchema, true);
@@ -1862,24 +1862,24 @@ var require_keyword = __commonJS({
       cxt.pass(valid, () => cxt.error(true));
     }
     exports.macroKeywordCode = macroKeywordCode;
-    function funcKeywordCode(cxt, def2) {
+    function funcKeywordCode(cxt, def) {
       var _a;
       const { gen, keyword, schema, parentSchema, $data, it } = cxt;
-      checkAsyncKeyword(it, def2);
-      const validate = !$data && def2.compile ? def2.compile.call(it.self, schema, parentSchema, it) : def2.validate;
+      checkAsyncKeyword(it, def);
+      const validate = !$data && def.compile ? def.compile.call(it.self, schema, parentSchema, it) : def.validate;
       const validateRef = useKeyword(gen, keyword, validate);
       const valid = gen.let("valid");
       cxt.block$data(valid, validateKeyword);
-      cxt.ok((_a = def2.valid) !== null && _a !== void 0 ? _a : valid);
+      cxt.ok((_a = def.valid) !== null && _a !== void 0 ? _a : valid);
       function validateKeyword() {
-        if (def2.errors === false) {
+        if (def.errors === false) {
           assignValid();
-          if (def2.modifying)
+          if (def.modifying)
             modifyData(cxt);
           reportErrs(() => cxt.error());
         } else {
-          const ruleErrs = def2.async ? validateAsync() : validateSync();
-          if (def2.modifying)
+          const ruleErrs = def.async ? validateAsync() : validateSync();
+          if (def.modifying)
             modifyData(cxt);
           reportErrs(() => addErrs(cxt, ruleErrs));
         }
@@ -1895,14 +1895,14 @@ var require_keyword = __commonJS({
         assignValid(codegen_1.nil);
         return validateErrs;
       }
-      function assignValid(_await = def2.async ? (0, codegen_1._)`await ` : codegen_1.nil) {
+      function assignValid(_await = def.async ? (0, codegen_1._)`await ` : codegen_1.nil) {
         const passCxt = it.opts.passContext ? names_1.default.this : names_1.default.self;
-        const passSchema = !("compile" in def2 && !$data || def2.schema === false);
-        gen.assign(valid, (0, codegen_1._)`${_await}${(0, code_1.callValidateCode)(cxt, validateRef, passCxt, passSchema)}`, def2.modifying);
+        const passSchema = !("compile" in def && !$data || def.schema === false);
+        gen.assign(valid, (0, codegen_1._)`${_await}${(0, code_1.callValidateCode)(cxt, validateRef, passCxt, passSchema)}`, def.modifying);
       }
       function reportErrs(errors) {
         var _a2;
-        gen.if((0, codegen_1.not)((_a2 = def2.valid) !== null && _a2 !== void 0 ? _a2 : valid), errors);
+        gen.if((0, codegen_1.not)((_a2 = def.valid) !== null && _a2 !== void 0 ? _a2 : valid), errors);
       }
     }
     exports.funcKeywordCode = funcKeywordCode;
@@ -1917,8 +1917,8 @@ var require_keyword = __commonJS({
         (0, errors_1.extendErrors)(cxt);
       }, () => cxt.error());
     }
-    function checkAsyncKeyword({ schemaEnv }, def2) {
-      if (def2.async && !schemaEnv.$async)
+    function checkAsyncKeyword({ schemaEnv }, def) {
+      if (def.async && !schemaEnv.$async)
         throw new Error("async keyword in sync schema");
     }
     function useKeyword(gen, keyword, result) {
@@ -1930,18 +1930,18 @@ var require_keyword = __commonJS({
       return !schemaType.length || schemaType.some((st) => st === "array" ? Array.isArray(schema) : st === "object" ? schema && typeof schema == "object" && !Array.isArray(schema) : typeof schema == st || allowUndefined && typeof schema == "undefined");
     }
     exports.validSchemaType = validSchemaType;
-    function validateKeywordUsage({ schema, opts, self: self2, errSchemaPath }, def2, keyword) {
-      if (Array.isArray(def2.keyword) ? !def2.keyword.includes(keyword) : def2.keyword !== keyword) {
+    function validateKeywordUsage({ schema, opts, self: self2, errSchemaPath }, def, keyword) {
+      if (Array.isArray(def.keyword) ? !def.keyword.includes(keyword) : def.keyword !== keyword) {
         throw new Error("ajv implementation error");
       }
-      const deps = def2.dependencies;
+      const deps = def.dependencies;
       if (deps === null || deps === void 0 ? void 0 : deps.some((kwd) => !Object.prototype.hasOwnProperty.call(schema, kwd))) {
         throw new Error(`parent schema must have dependencies of ${keyword}: ${deps.join(",")}`);
       }
-      if (def2.validateSchema) {
-        const valid = def2.validateSchema(schema[keyword]);
+      if (def.validateSchema) {
+        const valid = def.validateSchema(schema[keyword]);
         if (!valid) {
-          const msg = `keyword "${keyword}" value is invalid at path "${errSchemaPath}": ` + self2.errorsText(def2.validateSchema.errors);
+          const msg = `keyword "${keyword}" value is invalid at path "${errSchemaPath}": ` + self2.errorsText(def.validateSchema.errors);
           if (opts.validateSchema === "log")
             self2.logger.error(msg);
           else
@@ -2040,43 +2040,43 @@ var require_subschema = __commonJS({
 var require_fast_deep_equal = __commonJS({
   "node_modules/fast-deep-equal/index.js"(exports, module) {
     "use strict";
-    module.exports = function equal(a, b) {
-      if (a === b)
+    module.exports = function equal(a, b2) {
+      if (a === b2)
         return true;
-      if (a && b && typeof a == "object" && typeof b == "object") {
-        if (a.constructor !== b.constructor)
+      if (a && b2 && typeof a == "object" && typeof b2 == "object") {
+        if (a.constructor !== b2.constructor)
           return false;
         var length, i, keys;
         if (Array.isArray(a)) {
           length = a.length;
-          if (length != b.length)
+          if (length != b2.length)
             return false;
           for (i = length; i-- !== 0; )
-            if (!equal(a[i], b[i]))
+            if (!equal(a[i], b2[i]))
               return false;
           return true;
         }
         if (a.constructor === RegExp)
-          return a.source === b.source && a.flags === b.flags;
+          return a.source === b2.source && a.flags === b2.flags;
         if (a.valueOf !== Object.prototype.valueOf)
-          return a.valueOf() === b.valueOf();
+          return a.valueOf() === b2.valueOf();
         if (a.toString !== Object.prototype.toString)
-          return a.toString() === b.toString();
+          return a.toString() === b2.toString();
         keys = Object.keys(a);
         length = keys.length;
-        if (length !== Object.keys(b).length)
+        if (length !== Object.keys(b2).length)
           return false;
         for (i = length; i-- !== 0; )
-          if (!Object.prototype.hasOwnProperty.call(b, keys[i]))
+          if (!Object.prototype.hasOwnProperty.call(b2, keys[i]))
             return false;
         for (i = length; i-- !== 0; ) {
           var key = keys[i];
-          if (!equal(a[key], b[key]))
+          if (!equal(a[key], b2[key]))
             return false;
         }
         return true;
       }
-      return a !== a && b !== b;
+      return a !== a && b2 !== b2;
     };
   }
 });
@@ -2273,7 +2273,7 @@ var require_resolve = __commonJS({
       const pathPrefix = getFullPath(uriResolver, schId, false);
       const localRefs = {};
       const schemaRefs = /* @__PURE__ */ new Set();
-      traverse(schema, { allKeys: true }, (sch, jsonPtr, _, parentJsonPtr) => {
+      traverse(schema, { allKeys: true }, (sch, jsonPtr, _2, parentJsonPtr) => {
         if (parentJsonPtr === void 0)
           return;
         const fullPath = pathPrefix + jsonPtr;
@@ -2605,29 +2605,29 @@ var require_validate = __commonJS({
       (0, util_1.checkStrictMode)(it, msg, it.opts.strictTypes);
     }
     var KeywordCxt = class {
-      constructor(it, def2, keyword) {
-        (0, keyword_1.validateKeywordUsage)(it, def2, keyword);
+      constructor(it, def, keyword) {
+        (0, keyword_1.validateKeywordUsage)(it, def, keyword);
         this.gen = it.gen;
         this.allErrors = it.allErrors;
         this.keyword = keyword;
         this.data = it.data;
         this.schema = it.schema[keyword];
-        this.$data = def2.$data && it.opts.$data && this.schema && this.schema.$data;
+        this.$data = def.$data && it.opts.$data && this.schema && this.schema.$data;
         this.schemaValue = (0, util_1.schemaRefOrVal)(it, this.schema, keyword, this.$data);
-        this.schemaType = def2.schemaType;
+        this.schemaType = def.schemaType;
         this.parentSchema = it.schema;
         this.params = {};
         this.it = it;
-        this.def = def2;
+        this.def = def;
         if (this.$data) {
           this.schemaCode = it.gen.const("vSchema", getData(this.$data, it));
         } else {
           this.schemaCode = this.schemaValue;
-          if (!(0, keyword_1.validSchemaType)(this.schema, def2.schemaType, def2.allowUndefined)) {
-            throw new Error(`${keyword} value must be ${JSON.stringify(def2.schemaType)}`);
+          if (!(0, keyword_1.validSchemaType)(this.schema, def.schemaType, def.allowUndefined)) {
+            throw new Error(`${keyword} value must be ${JSON.stringify(def.schemaType)}`);
           }
         }
-        if ("code" in def2 ? def2.trackErrors : def2.errors !== false) {
+        if ("code" in def ? def.trackErrors : def.errors !== false) {
           this.errsCount = it.gen.const("_errs", names_1.default.errors);
         }
       }
@@ -2715,11 +2715,11 @@ var require_validate = __commonJS({
       check$data(valid = codegen_1.nil, $dataValid = codegen_1.nil) {
         if (!this.$data)
           return;
-        const { gen, schemaCode, schemaType, def: def2 } = this;
+        const { gen, schemaCode, schemaType, def } = this;
         gen.if((0, codegen_1.or)((0, codegen_1._)`${schemaCode} === undefined`, $dataValid));
         if (valid !== codegen_1.nil)
           gen.assign(valid, true);
-        if (schemaType.length || def2.validateSchema) {
+        if (schemaType.length || def.validateSchema) {
           gen.elseIf(this.invalid$data());
           this.$dataError();
           if (valid !== codegen_1.nil)
@@ -2728,7 +2728,7 @@ var require_validate = __commonJS({
         gen.else();
       }
       invalid$data() {
-        const { gen, schemaCode, schemaType, def: def2, it } = this;
+        const { gen, schemaCode, schemaType, def, it } = this;
         return (0, codegen_1.or)(wrong$DataType(), invalid$DataSchema());
         function wrong$DataType() {
           if (schemaType.length) {
@@ -2740,8 +2740,8 @@ var require_validate = __commonJS({
           return codegen_1.nil;
         }
         function invalid$DataSchema() {
-          if (def2.validateSchema) {
-            const validateSchemaRef = gen.scopeValue("validate$data", { ref: def2.validateSchema });
+          if (def.validateSchema) {
+            const validateSchemaRef = gen.scopeValue("validate$data", { ref: def.validateSchema });
             return (0, codegen_1._)`!${validateSchemaRef}(${schemaCode})`;
           }
           return codegen_1.nil;
@@ -2775,16 +2775,16 @@ var require_validate = __commonJS({
       }
     };
     exports.KeywordCxt = KeywordCxt;
-    function keywordCode(it, keyword, def2, ruleType) {
-      const cxt = new KeywordCxt(it, def2, keyword);
-      if ("code" in def2) {
-        def2.code(cxt, ruleType);
-      } else if (cxt.$data && def2.validate) {
-        (0, keyword_1.funcKeywordCode)(cxt, def2);
-      } else if ("macro" in def2) {
-        (0, keyword_1.macroKeywordCode)(cxt, def2);
-      } else if (def2.compile || def2.validate) {
-        (0, keyword_1.funcKeywordCode)(cxt, def2);
+    function keywordCode(it, keyword, def, ruleType) {
+      const cxt = new KeywordCxt(it, def, keyword);
+      if ("code" in def) {
+        def.code(cxt, ruleType);
+      } else if (cxt.$data && def.validate) {
+        (0, keyword_1.funcKeywordCode)(cxt, def);
+      } else if ("macro" in def) {
+        (0, keyword_1.macroKeywordCode)(cxt, def);
+      } else if (def.compile || def.validate) {
+        (0, keyword_1.funcKeywordCode)(cxt, def);
       }
     }
     var JSON_POINTER = /^\/(?:[^~]|~0|~1)*$/;
@@ -3441,49 +3441,49 @@ var require_schemes = __commonJS({
       wsComponent.fragment = void 0;
       return wsComponent;
     }
-    function urnParse(urnComponent, options2) {
+    function urnParse(urnComponent, options) {
       if (!urnComponent.path) {
         urnComponent.error = "URN can not be parsed";
         return urnComponent;
       }
       const matches = urnComponent.path.match(URN_REG);
       if (matches) {
-        const scheme = options2.scheme || urnComponent.scheme || "urn";
+        const scheme = options.scheme || urnComponent.scheme || "urn";
         urnComponent.nid = matches[1].toLowerCase();
         urnComponent.nss = matches[2];
-        const urnScheme = `${scheme}:${options2.nid || urnComponent.nid}`;
+        const urnScheme = `${scheme}:${options.nid || urnComponent.nid}`;
         const schemeHandler = getSchemeHandler(urnScheme);
         urnComponent.path = void 0;
         if (schemeHandler) {
-          urnComponent = schemeHandler.parse(urnComponent, options2);
+          urnComponent = schemeHandler.parse(urnComponent, options);
         }
       } else {
         urnComponent.error = urnComponent.error || "URN can not be parsed.";
       }
       return urnComponent;
     }
-    function urnSerialize(urnComponent, options2) {
+    function urnSerialize(urnComponent, options) {
       if (urnComponent.nid === void 0) {
         throw new Error("URN without nid cannot be serialized");
       }
-      const scheme = options2.scheme || urnComponent.scheme || "urn";
+      const scheme = options.scheme || urnComponent.scheme || "urn";
       const nid = urnComponent.nid.toLowerCase();
-      const urnScheme = `${scheme}:${options2.nid || nid}`;
+      const urnScheme = `${scheme}:${options.nid || nid}`;
       const schemeHandler = getSchemeHandler(urnScheme);
       if (schemeHandler) {
-        urnComponent = schemeHandler.serialize(urnComponent, options2);
+        urnComponent = schemeHandler.serialize(urnComponent, options);
       }
       const uriComponent = urnComponent;
       const nss = urnComponent.nss;
-      uriComponent.path = `${nid || options2.nid}:${nss}`;
-      options2.skipEscape = true;
+      uriComponent.path = `${nid || options.nid}:${nss}`;
+      options.skipEscape = true;
       return uriComponent;
     }
-    function urnuuidParse(urnComponent, options2) {
+    function urnuuidParse(urnComponent, options) {
       const uuidComponent = urnComponent;
       uuidComponent.uuid = uuidComponent.nss;
       uuidComponent.nss = void 0;
-      if (!options2.tolerant && (!uuidComponent.uuid || !isUUID(uuidComponent.uuid))) {
+      if (!options.tolerant && (!uuidComponent.uuid || !isUUID(uuidComponent.uuid))) {
         uuidComponent.error = uuidComponent.error || "UUID is not valid.";
       }
       return uuidComponent;
@@ -3583,30 +3583,30 @@ var require_fast_uri = __commonJS({
     "use strict";
     var { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizeComponentEncoding, isIPv4, nonSimpleDomain } = require_utils();
     var { SCHEMES, getSchemeHandler } = require_schemes();
-    function normalize(uri, options2) {
+    function normalize(uri, options) {
       if (typeof uri === "string") {
         uri = /** @type {T} */
-        serialize(parse3(uri, options2), options2);
+        serialize(parse3(uri, options), options);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse3(serialize(uri, options2), options2);
+        parse3(serialize(uri, options), options);
       }
       return uri;
     }
-    function resolve(baseURI, relativeURI, options2) {
-      const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
+    function resolve(baseURI, relativeURI, options) {
+      const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const resolved = resolveComponent(parse3(baseURI, schemelessOptions), parse3(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options2, skipNormalization) {
+    function resolveComponent(base, relative, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse3(serialize(base, options2), options2);
-        relative = parse3(serialize(relative, options2), options2);
+        base = parse3(serialize(base, options), options);
+        relative = parse3(serialize(relative, options), options);
       }
-      options2 = options2 || {};
-      if (!options2.tolerant && relative.scheme) {
+      options = options || {};
+      if (!options.tolerant && relative.scheme) {
         target.scheme = relative.scheme;
         target.userinfo = relative.userinfo;
         target.host = relative.host;
@@ -3652,18 +3652,18 @@ var require_fast_uri = __commonJS({
       target.fragment = relative.fragment;
       return target;
     }
-    function equal(uriA, uriB, options2) {
+    function equal(uriA, uriB, options) {
       if (typeof uriA === "string") {
         uriA = unescape(uriA);
-        uriA = serialize(normalizeComponentEncoding(parse3(uriA, options2), true), { ...options2, skipEscape: true });
+        uriA = serialize(normalizeComponentEncoding(parse3(uriA, options), true), { ...options, skipEscape: true });
       } else if (typeof uriA === "object") {
-        uriA = serialize(normalizeComponentEncoding(uriA, true), { ...options2, skipEscape: true });
+        uriA = serialize(normalizeComponentEncoding(uriA, true), { ...options, skipEscape: true });
       }
       if (typeof uriB === "string") {
         uriB = unescape(uriB);
-        uriB = serialize(normalizeComponentEncoding(parse3(uriB, options2), true), { ...options2, skipEscape: true });
+        uriB = serialize(normalizeComponentEncoding(parse3(uriB, options), true), { ...options, skipEscape: true });
       } else if (typeof uriB === "object") {
-        uriB = serialize(normalizeComponentEncoding(uriB, true), { ...options2, skipEscape: true });
+        uriB = serialize(normalizeComponentEncoding(uriB, true), { ...options, skipEscape: true });
       }
       return uriA.toLowerCase() === uriB.toLowerCase();
     }
@@ -3684,13 +3684,13 @@ var require_fast_uri = __commonJS({
         secure: cmpts.secure,
         error: ""
       };
-      const options2 = Object.assign({}, opts);
+      const options = Object.assign({}, opts);
       const uriTokens = [];
-      const schemeHandler = getSchemeHandler(options2.scheme || component.scheme);
+      const schemeHandler = getSchemeHandler(options.scheme || component.scheme);
       if (schemeHandler && schemeHandler.serialize)
-        schemeHandler.serialize(component, options2);
+        schemeHandler.serialize(component, options);
       if (component.path !== void 0) {
-        if (!options2.skipEscape) {
+        if (!options.skipEscape) {
           component.path = escape(component.path);
           if (component.scheme !== void 0) {
             component.path = component.path.split("%3A").join(":");
@@ -3699,12 +3699,12 @@ var require_fast_uri = __commonJS({
           component.path = unescape(component.path);
         }
       }
-      if (options2.reference !== "suffix" && component.scheme) {
+      if (options.reference !== "suffix" && component.scheme) {
         uriTokens.push(component.scheme, ":");
       }
       const authority = recomposeAuthority(component);
       if (authority !== void 0) {
-        if (options2.reference !== "suffix") {
+        if (options.reference !== "suffix") {
           uriTokens.push("//");
         }
         uriTokens.push(authority);
@@ -3714,7 +3714,7 @@ var require_fast_uri = __commonJS({
       }
       if (component.path !== void 0) {
         let s = component.path;
-        if (!options2.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
+        if (!options.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
           s = removeDotSegments(s);
         }
         if (authority === void 0 && s[0] === "/" && s[1] === "/") {
@@ -3732,7 +3732,7 @@ var require_fast_uri = __commonJS({
     }
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
     function parse3(uri, opts) {
-      const options2 = Object.assign({}, opts);
+      const options = Object.assign({}, opts);
       const parsed = {
         scheme: void 0,
         userinfo: void 0,
@@ -3743,9 +3743,9 @@ var require_fast_uri = __commonJS({
         fragment: void 0
       };
       let isIP = false;
-      if (options2.reference === "suffix") {
-        if (options2.scheme) {
-          uri = options2.scheme + ":" + uri;
+      if (options.reference === "suffix") {
+        if (options.scheme) {
+          uri = options.scheme + ":" + uri;
         } else {
           uri = "//" + uri;
         }
@@ -3781,12 +3781,12 @@ var require_fast_uri = __commonJS({
         } else {
           parsed.reference = "uri";
         }
-        if (options2.reference && options2.reference !== "suffix" && options2.reference !== parsed.reference) {
-          parsed.error = parsed.error || "URI is not a " + options2.reference + " reference.";
+        if (options.reference && options.reference !== "suffix" && options.reference !== parsed.reference) {
+          parsed.error = parsed.error || "URI is not a " + options.reference + " reference.";
         }
-        const schemeHandler = getSchemeHandler(options2.scheme || parsed.scheme);
-        if (!options2.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport)) {
-          if (parsed.host && (options2.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
+        const schemeHandler = getSchemeHandler(options.scheme || parsed.scheme);
+        if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport)) {
+          if (parsed.host && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
             try {
               parsed.host = URL.domainToASCII(parsed.host.toLowerCase());
             } catch (e) {
@@ -3811,7 +3811,7 @@ var require_fast_uri = __commonJS({
           }
         }
         if (schemeHandler && schemeHandler.parse) {
-          schemeHandler.parse(parsed, options2);
+          schemeHandler.parse(parsed, options);
         }
       } else {
         parsed.error = parsed.error || "URI can not be parsed.";
@@ -3925,14 +3925,14 @@ var require_core = __commonJS({
     };
     var MAX_EXPRESSION = 200;
     function requiredOptions(o) {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
+      var _a, _b, _c, _d, _e2, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
       const s = o.strict;
       const _optz = (_a = o.code) === null || _a === void 0 ? void 0 : _a.optimize;
       const optimize = _optz === true || _optz === void 0 ? 1 : _optz || 0;
       const regExp = (_c = (_b = o.code) === null || _b === void 0 ? void 0 : _b.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
       const uriResolver = (_d = o.uriResolver) !== null && _d !== void 0 ? _d : uri_1.default;
       return {
-        strictSchema: (_f = (_e = o.strictSchema) !== null && _e !== void 0 ? _e : s) !== null && _f !== void 0 ? _f : true,
+        strictSchema: (_f = (_e2 = o.strictSchema) !== null && _e2 !== void 0 ? _e2 : s) !== null && _f !== void 0 ? _f : true,
         strictNumbers: (_h = (_g = o.strictNumbers) !== null && _g !== void 0 ? _g : s) !== null && _h !== void 0 ? _h : true,
         strictTypes: (_k = (_j = o.strictTypes) !== null && _j !== void 0 ? _j : s) !== null && _k !== void 0 ? _k : "log",
         strictTuples: (_m = (_l = o.strictTuples) !== null && _l !== void 0 ? _l : s) !== null && _m !== void 0 ? _m : "log",
@@ -4000,17 +4000,17 @@ var require_core = __commonJS({
         return this.opts.defaultMeta = typeof meta == "object" ? meta[schemaId] || meta : void 0;
       }
       validate(schemaKeyRef, data) {
-        let v;
+        let v2;
         if (typeof schemaKeyRef == "string") {
-          v = this.getSchema(schemaKeyRef);
-          if (!v)
+          v2 = this.getSchema(schemaKeyRef);
+          if (!v2)
             throw new Error(`no schema with key or ref "${schemaKeyRef}"`);
         } else {
-          v = this.compile(schemaKeyRef);
+          v2 = this.compile(schemaKeyRef);
         }
-        const valid = v(data);
-        if (!("$async" in v))
-          this.errors = v.errors;
+        const valid = v2(data);
+        if (!("$async" in v2))
+          this.errors = v2.errors;
         return valid;
       }
       compile(schema, _meta) {
@@ -4175,39 +4175,39 @@ var require_core = __commonJS({
       }
       // add "vocabulary" - a collection of keywords
       addVocabulary(definitions) {
-        for (const def2 of definitions)
-          this.addKeyword(def2);
+        for (const def of definitions)
+          this.addKeyword(def);
         return this;
       }
-      addKeyword(kwdOrDef, def2) {
+      addKeyword(kwdOrDef, def) {
         let keyword;
         if (typeof kwdOrDef == "string") {
           keyword = kwdOrDef;
-          if (typeof def2 == "object") {
+          if (typeof def == "object") {
             this.logger.warn("these parameters are deprecated, see docs for addKeyword");
-            def2.keyword = keyword;
+            def.keyword = keyword;
           }
-        } else if (typeof kwdOrDef == "object" && def2 === void 0) {
-          def2 = kwdOrDef;
-          keyword = def2.keyword;
+        } else if (typeof kwdOrDef == "object" && def === void 0) {
+          def = kwdOrDef;
+          keyword = def.keyword;
           if (Array.isArray(keyword) && !keyword.length) {
             throw new Error("addKeywords: keyword must be string or non-empty array");
           }
         } else {
           throw new Error("invalid addKeywords parameters");
         }
-        checkKeyword.call(this, keyword, def2);
-        if (!def2) {
+        checkKeyword.call(this, keyword, def);
+        if (!def) {
           (0, util_1.eachItem)(keyword, (kwd) => addRule.call(this, kwd));
           return this;
         }
-        keywordMetaschema.call(this, def2);
+        keywordMetaschema.call(this, def);
         const definition = {
-          ...def2,
-          type: (0, dataType_1.getJSONTypes)(def2.type),
-          schemaType: (0, dataType_1.getJSONTypes)(def2.schemaType)
+          ...def,
+          type: (0, dataType_1.getJSONTypes)(def.type),
+          schemaType: (0, dataType_1.getJSONTypes)(def.schemaType)
         };
-        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k) => addRule.call(this, k, definition) : (k) => definition.type.forEach((t) => addRule.call(this, k, definition, t)));
+        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k2) => addRule.call(this, k2, definition) : (k2) => definition.type.forEach((t) => addRule.call(this, k2, definition, t)));
         return this;
       }
       getKeyword(keyword) {
@@ -4325,10 +4325,10 @@ var require_core = __commonJS({
     Ajv2.ValidationError = validation_error_1.default;
     Ajv2.MissingRefError = ref_error_1.default;
     exports.default = Ajv2;
-    function checkOptions(checkOpts, options2, msg, log = "error") {
+    function checkOptions(checkOpts, options, msg, log = "error") {
       for (const key in checkOpts) {
         const opt = key;
-        if (opt in options2)
+        if (opt in options)
           this.logger[log](`${msg}: option ${key}. ${checkOpts[opt]}`);
       }
     }
@@ -4360,10 +4360,10 @@ var require_core = __commonJS({
       }
       this.logger.warn("keywords option as map is deprecated, pass array");
       for (const keyword in defs) {
-        const def2 = defs[keyword];
-        if (!def2.keyword)
-          def2.keyword = keyword;
-        this.addKeyword(def2);
+        const def = defs[keyword];
+        if (!def.keyword)
+          def.keyword = keyword;
+        this.addKeyword(def);
       }
     }
     function getMetaSchemaOptions() {
@@ -4386,7 +4386,7 @@ var require_core = __commonJS({
       throw new Error("logger must implement log, warn and error methods");
     }
     var KEYWORD_NAME = /^[a-z_$][a-z0-9_$:-]*$/i;
-    function checkKeyword(keyword, def2) {
+    function checkKeyword(keyword, def) {
       const { RULES } = this;
       (0, util_1.eachItem)(keyword, (kwd) => {
         if (RULES.keywords[kwd])
@@ -4394,9 +4394,9 @@ var require_core = __commonJS({
         if (!KEYWORD_NAME.test(kwd))
           throw new Error(`Keyword ${kwd} has invalid name`);
       });
-      if (!def2)
+      if (!def)
         return;
-      if (def2.$data && !("code" in def2 || "validate" in def2)) {
+      if (def.$data && !("code" in def || "validate" in def)) {
         throw new Error('$data keyword must have "code" or "validate" function');
       }
     }
@@ -4438,13 +4438,13 @@ var require_core = __commonJS({
         this.logger.warn(`rule ${before} is not defined`);
       }
     }
-    function keywordMetaschema(def2) {
-      let { metaSchema } = def2;
+    function keywordMetaschema(def) {
+      let { metaSchema } = def;
       if (metaSchema === void 0)
         return;
-      if (def2.$data && this.opts.$data)
+      if (def.$data && this.opts.$data)
         metaSchema = schemaOrData(metaSchema);
-      def2.validateSchema = this.compile(metaSchema, true);
+      def.validateSchema = this.compile(metaSchema, true);
     }
     var $dataRef = {
       $ref: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#"
@@ -4460,13 +4460,13 @@ var require_id = __commonJS({
   "node_modules/ajv/dist/vocabularies/core/id.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var def2 = {
+    var def = {
       keyword: "id",
       code() {
         throw new Error('NOT SUPPORTED: keyword "id", use "$id" for schema ID');
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4482,7 +4482,7 @@ var require_ref = __commonJS({
     var names_1 = require_names();
     var compile_1 = require_compile();
     var util_1 = require_util();
-    var def2 = {
+    var def = {
       keyword: "$ref",
       schemaType: "string",
       code(cxt) {
@@ -4504,8 +4504,8 @@ var require_ref = __commonJS({
           return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root, root.$async);
         }
         function callValidate(sch) {
-          const v = getValidate(cxt, sch);
-          callRef(cxt, v, sch, sch.$async);
+          const v2 = getValidate(cxt, sch);
+          callRef(cxt, v2, sch, sch.$async);
         }
         function inlineRefSchema(sch) {
           const schName = gen.scopeValue("schema", opts.code.source === true ? { ref: sch, code: (0, codegen_1.stringify)(sch) } : { ref: sch });
@@ -4527,7 +4527,7 @@ var require_ref = __commonJS({
       return sch.validate ? gen.scopeValue("validate", { ref: sch.validate }) : (0, codegen_1._)`${gen.scopeValue("wrapper", { ref: sch })}.validate`;
     }
     exports.getValidate = getValidate;
-    function callRef(cxt, v, sch, $async) {
+    function callRef(cxt, v2, sch, $async) {
       const { gen, it } = cxt;
       const { allErrors, schemaEnv: env3, opts } = it;
       const passCxt = opts.passContext ? names_1.default.this : codegen_1.nil;
@@ -4540,8 +4540,8 @@ var require_ref = __commonJS({
           throw new Error("async schema referenced by sync schema");
         const valid = gen.let("valid");
         gen.try(() => {
-          gen.code((0, codegen_1._)`await ${(0, code_1.callValidateCode)(cxt, v, passCxt)}`);
-          addEvaluatedFrom(v);
+          gen.code((0, codegen_1._)`await ${(0, code_1.callValidateCode)(cxt, v2, passCxt)}`);
+          addEvaluatedFrom(v2);
           if (!allErrors)
             gen.assign(valid, true);
         }, (e) => {
@@ -4553,7 +4553,7 @@ var require_ref = __commonJS({
         cxt.ok(valid);
       }
       function callSyncRef() {
-        cxt.result((0, code_1.callValidateCode)(cxt, v, passCxt), () => addEvaluatedFrom(v), () => addErrorsFrom(v));
+        cxt.result((0, code_1.callValidateCode)(cxt, v2, passCxt), () => addEvaluatedFrom(v2), () => addErrorsFrom(v2));
       }
       function addErrorsFrom(source) {
         const errs = (0, codegen_1._)`${source}.errors`;
@@ -4588,7 +4588,7 @@ var require_ref = __commonJS({
       }
     }
     exports.callRef = callRef;
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4630,7 +4630,7 @@ var require_limitNumber = __commonJS({
       message: ({ keyword, schemaCode }) => (0, codegen_1.str)`must be ${KWDs[keyword].okStr} ${schemaCode}`,
       params: ({ keyword, schemaCode }) => (0, codegen_1._)`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: Object.keys(KWDs),
       type: "number",
       schemaType: "number",
@@ -4641,7 +4641,7 @@ var require_limitNumber = __commonJS({
         cxt.fail$data((0, codegen_1._)`${data} ${KWDs[keyword].fail} ${schemaCode} || isNaN(${data})`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4655,7 +4655,7 @@ var require_multipleOf = __commonJS({
       message: ({ schemaCode }) => (0, codegen_1.str)`must be multiple of ${schemaCode}`,
       params: ({ schemaCode }) => (0, codegen_1._)`{multipleOf: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: "multipleOf",
       type: "number",
       schemaType: "number",
@@ -4669,7 +4669,7 @@ var require_multipleOf = __commonJS({
         cxt.fail$data((0, codegen_1._)`(${schemaCode} === 0 || (${res} = ${data}/${schemaCode}, ${invalid}))`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4714,7 +4714,7 @@ var require_limitLength = __commonJS({
       },
       params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: ["maxLength", "minLength"],
       type: "string",
       schemaType: "number",
@@ -4727,7 +4727,7 @@ var require_limitLength = __commonJS({
         cxt.fail$data((0, codegen_1._)`${len} ${op} ${schemaCode}`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4742,7 +4742,7 @@ var require_pattern = __commonJS({
       message: ({ schemaCode }) => (0, codegen_1.str)`must match pattern "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{pattern: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: "pattern",
       type: "string",
       schemaType: "string",
@@ -4750,12 +4750,12 @@ var require_pattern = __commonJS({
       error: error2,
       code(cxt) {
         const { data, $data, schema, schemaCode, it } = cxt;
-        const u = it.opts.unicodeRegExp ? "u" : "";
-        const regExp = $data ? (0, codegen_1._)`(new RegExp(${schemaCode}, ${u}))` : (0, code_1.usePattern)(cxt, schema);
+        const u3 = it.opts.unicodeRegExp ? "u" : "";
+        const regExp = $data ? (0, codegen_1._)`(new RegExp(${schemaCode}, ${u3}))` : (0, code_1.usePattern)(cxt, schema);
         cxt.fail$data((0, codegen_1._)`!${regExp}.test(${data})`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4772,7 +4772,7 @@ var require_limitProperties = __commonJS({
       },
       params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: ["maxProperties", "minProperties"],
       type: "object",
       schemaType: "number",
@@ -4784,7 +4784,7 @@ var require_limitProperties = __commonJS({
         cxt.fail$data((0, codegen_1._)`Object.keys(${data}).length ${op} ${schemaCode}`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4800,7 +4800,7 @@ var require_required = __commonJS({
       message: ({ params: { missingProperty } }) => (0, codegen_1.str)`must have required property '${missingProperty}'`,
       params: ({ params: { missingProperty } }) => (0, codegen_1._)`{missingProperty: ${missingProperty}}`
     };
-    var def2 = {
+    var def = {
       keyword: "required",
       type: "object",
       schemaType: "array",
@@ -4866,7 +4866,7 @@ var require_required = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4883,7 +4883,7 @@ var require_limitItems = __commonJS({
       },
       params: ({ schemaCode }) => (0, codegen_1._)`{limit: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: ["maxItems", "minItems"],
       type: "array",
       schemaType: "number",
@@ -4895,7 +4895,7 @@ var require_limitItems = __commonJS({
         cxt.fail$data((0, codegen_1._)`${data}.length ${op} ${schemaCode}`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4920,10 +4920,10 @@ var require_uniqueItems = __commonJS({
     var util_1 = require_util();
     var equal_1 = require_equal();
     var error2 = {
-      message: ({ params: { i, j } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j} and ${i} are identical)`,
-      params: ({ params: { i, j } }) => (0, codegen_1._)`{i: ${i}, j: ${j}}`
+      message: ({ params: { i, j: j2 } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j2} and ${i} are identical)`,
+      params: ({ params: { i, j: j2 } }) => (0, codegen_1._)`{i: ${i}, j: ${j2}}`
     };
-    var def2 = {
+    var def = {
       keyword: "uniqueItems",
       type: "array",
       schemaType: "boolean",
@@ -4939,15 +4939,15 @@ var require_uniqueItems = __commonJS({
         cxt.ok(valid);
         function validateUniqueItems() {
           const i = gen.let("i", (0, codegen_1._)`${data}.length`);
-          const j = gen.let("j");
-          cxt.setParams({ i, j });
+          const j2 = gen.let("j");
+          cxt.setParams({ i, j: j2 });
           gen.assign(valid, true);
-          gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j));
+          gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j2));
         }
         function canOptimize() {
           return itemTypes.length > 0 && !itemTypes.some((t) => t === "object" || t === "array");
         }
-        function loopN(i, j) {
+        function loopN(i, j2) {
           const item = gen.name("item");
           const wrongType = (0, dataType_1.checkDataTypes)(itemTypes, item, it.opts.strictNumbers, dataType_1.DataType.Wrong);
           const indices = gen.const("indices", (0, codegen_1._)`{}`);
@@ -4957,23 +4957,23 @@ var require_uniqueItems = __commonJS({
             if (itemTypes.length > 1)
               gen.if((0, codegen_1._)`typeof ${item} == "string"`, (0, codegen_1._)`${item} += "_"`);
             gen.if((0, codegen_1._)`typeof ${indices}[${item}] == "number"`, () => {
-              gen.assign(j, (0, codegen_1._)`${indices}[${item}]`);
+              gen.assign(j2, (0, codegen_1._)`${indices}[${item}]`);
               cxt.error();
               gen.assign(valid, false).break();
             }).code((0, codegen_1._)`${indices}[${item}] = ${i}`);
           });
         }
-        function loopN2(i, j) {
+        function loopN2(i, j2) {
           const eql = (0, util_1.useFunc)(gen, equal_1.default);
           const outer = gen.name("outer");
-          gen.label(outer).for((0, codegen_1._)`;${i}--;`, () => gen.for((0, codegen_1._)`${j} = ${i}; ${j}--;`, () => gen.if((0, codegen_1._)`${eql}(${data}[${i}], ${data}[${j}])`, () => {
+          gen.label(outer).for((0, codegen_1._)`;${i}--;`, () => gen.for((0, codegen_1._)`${j2} = ${i}; ${j2}--;`, () => gen.if((0, codegen_1._)`${eql}(${data}[${i}], ${data}[${j2}])`, () => {
             cxt.error();
             gen.assign(valid, false).break(outer);
           })));
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -4989,7 +4989,7 @@ var require_const = __commonJS({
       message: "must be equal to constant",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValue: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: "const",
       $data: true,
       error: error2,
@@ -5002,7 +5002,7 @@ var require_const = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5018,7 +5018,7 @@ var require_enum = __commonJS({
       message: "must be equal to one of the allowed values",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValues: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: "enum",
       schemaType: "array",
       $data: true,
@@ -5043,7 +5043,7 @@ var require_enum = __commonJS({
         cxt.pass(valid);
         function loopEnum() {
           gen.assign(valid, false);
-          gen.forOf("v", schemaCode, (v) => gen.if((0, codegen_1._)`${getEql()}(${data}, ${v})`, () => gen.assign(valid, true).break()));
+          gen.forOf("v", schemaCode, (v2) => gen.if((0, codegen_1._)`${getEql()}(${data}, ${v2})`, () => gen.assign(valid, true).break()));
         }
         function equalCode(vSchema, i) {
           const sch = schema[i];
@@ -5051,7 +5051,7 @@ var require_enum = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5105,7 +5105,7 @@ var require_additionalItems = __commonJS({
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
-    var def2 = {
+    var def = {
       keyword: "additionalItems",
       type: "array",
       schemaType: ["boolean", "object"],
@@ -5142,7 +5142,7 @@ var require_additionalItems = __commonJS({
       }
     }
     exports.validateAdditionalItems = validateAdditionalItems;
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5155,7 +5155,7 @@ var require_items = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var code_1 = require_code2();
-    var def2 = {
+    var def = {
       keyword: "items",
       type: "array",
       schemaType: ["object", "array", "boolean"],
@@ -5199,7 +5199,7 @@ var require_items = __commonJS({
       }
     }
     exports.validateTuple = validateTuple;
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5209,14 +5209,14 @@ var require_prefixItems = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var items_1 = require_items();
-    var def2 = {
+    var def = {
       keyword: "prefixItems",
       type: "array",
       schemaType: ["array"],
       before: "uniqueItems",
       code: (cxt) => (0, items_1.validateTuple)(cxt, "items")
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5233,7 +5233,7 @@ var require_items2020 = __commonJS({
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
-    var def2 = {
+    var def = {
       keyword: "items",
       type: "array",
       schemaType: ["object", "boolean"],
@@ -5251,7 +5251,7 @@ var require_items2020 = __commonJS({
           cxt.ok((0, code_1.validateArray)(cxt));
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5266,7 +5266,7 @@ var require_contains = __commonJS({
       message: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max} valid item(s)`,
       params: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max}}`
     };
-    var def2 = {
+    var def = {
       keyword: "contains",
       type: "array",
       schemaType: ["object", "boolean"],
@@ -5320,7 +5320,7 @@ var require_contains = __commonJS({
           const count = gen.let("count", 0);
           validateItems(schValid, () => gen.if(schValid, () => checkLimits(count)));
         }
-        function validateItems(_valid, block2) {
+        function validateItems(_valid, block) {
           gen.forRange("i", 0, len, (i) => {
             cxt.subschema({
               keyword: "contains",
@@ -5328,7 +5328,7 @@ var require_contains = __commonJS({
               dataPropType: util_1.Type.Num,
               compositeRule: true
             }, _valid);
-            block2();
+            block();
           });
         }
         function checkLimits(count) {
@@ -5345,7 +5345,7 @@ var require_contains = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5369,7 +5369,7 @@ var require_dependencies = __commonJS({
     deps: ${deps}}`
       // TODO change to reference
     };
-    var def2 = {
+    var def = {
       keyword: "dependencies",
       type: "object",
       schemaType: "object",
@@ -5439,7 +5439,7 @@ var require_dependencies = __commonJS({
       }
     }
     exports.validateSchemaDeps = validateSchemaDeps;
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5454,7 +5454,7 @@ var require_propertyNames = __commonJS({
       message: "property name must be valid",
       params: ({ params }) => (0, codegen_1._)`{propertyName: ${params.propertyName}}`
     };
-    var def2 = {
+    var def = {
       keyword: "propertyNames",
       type: "object",
       schemaType: ["object", "boolean"],
@@ -5482,7 +5482,7 @@ var require_propertyNames = __commonJS({
         cxt.ok(valid);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5499,7 +5499,7 @@ var require_additionalProperties = __commonJS({
       message: "must NOT have additional properties",
       params: ({ params }) => (0, codegen_1._)`{additionalProperty: ${params.additionalProperty}}`
     };
-    var def2 = {
+    var def = {
       keyword: "additionalProperties",
       type: ["object"],
       schemaType: ["boolean", "object"],
@@ -5588,7 +5588,7 @@ var require_additionalProperties = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5601,7 +5601,7 @@ var require_properties = __commonJS({
     var code_1 = require_code2();
     var util_1 = require_util();
     var additionalProperties_1 = require_additionalProperties();
-    var def2 = {
+    var def = {
       keyword: "properties",
       type: "object",
       schemaType: "object",
@@ -5646,7 +5646,7 @@ var require_properties = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5659,7 +5659,7 @@ var require_patternProperties = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var util_2 = require_util();
-    var def2 = {
+    var def = {
       keyword: "patternProperties",
       type: "object",
       schemaType: "object",
@@ -5720,7 +5720,7 @@ var require_patternProperties = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5730,7 +5730,7 @@ var require_not = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
-    var def2 = {
+    var def = {
       keyword: "not",
       schemaType: ["object", "boolean"],
       trackErrors: true,
@@ -5751,7 +5751,7 @@ var require_not = __commonJS({
       },
       error: { message: "must NOT be valid" }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5761,14 +5761,14 @@ var require_anyOf = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var code_1 = require_code2();
-    var def2 = {
+    var def = {
       keyword: "anyOf",
       schemaType: "array",
       trackErrors: true,
       code: code_1.validateUnion,
       error: { message: "must match a schema in anyOf" }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5783,7 +5783,7 @@ var require_oneOf = __commonJS({
       message: "must match exactly one schema in oneOf",
       params: ({ params }) => (0, codegen_1._)`{passingSchemas: ${params.passing}}`
     };
-    var def2 = {
+    var def = {
       keyword: "oneOf",
       schemaType: "array",
       trackErrors: true,
@@ -5826,7 +5826,7 @@ var require_oneOf = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5836,7 +5836,7 @@ var require_allOf = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
-    var def2 = {
+    var def = {
       keyword: "allOf",
       schemaType: "array",
       code(cxt) {
@@ -5853,7 +5853,7 @@ var require_allOf = __commonJS({
         });
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5868,7 +5868,7 @@ var require_if = __commonJS({
       message: ({ params }) => (0, codegen_1.str)`must match "${params.ifClause}" schema`,
       params: ({ params }) => (0, codegen_1._)`{failingKeyword: ${params.ifClause}}`
     };
-    var def2 = {
+    var def = {
       keyword: "if",
       schemaType: ["object", "boolean"],
       trackErrors: true,
@@ -5922,7 +5922,7 @@ var require_if = __commonJS({
       const schema = it.schema[keyword];
       return schema !== void 0 && !(0, util_1.alwaysValidSchema)(it, schema);
     }
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -5932,7 +5932,7 @@ var require_thenElse = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var util_1 = require_util();
-    var def2 = {
+    var def = {
       keyword: ["then", "else"],
       schemaType: ["object", "boolean"],
       code({ keyword, parentSchema, it }) {
@@ -5940,7 +5940,7 @@ var require_thenElse = __commonJS({
           (0, util_1.checkStrictMode)(it, `"${keyword}" without "if" is ignored`);
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -6002,7 +6002,7 @@ var require_format = __commonJS({
       message: ({ schemaCode }) => (0, codegen_1.str)`must match format "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{format: ${schemaCode}}`
     };
-    var def2 = {
+    var def = {
       keyword: "format",
       type: ["number", "string"],
       schemaType: "string",
@@ -6078,7 +6078,7 @@ var require_format = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -6164,9 +6164,9 @@ var require_discriminator = __commonJS({
     var util_1 = require_util();
     var error2 = {
       message: ({ params: { discrError, tagName } }) => discrError === types_1.DiscrError.Tag ? `tag "${tagName}" must be string` : `value of tag "${tagName}" must be in oneOf`,
-      params: ({ params: { discrError, tag: tag2, tagName } }) => (0, codegen_1._)`{error: ${discrError}, tag: ${tagName}, tagValue: ${tag2}}`
+      params: ({ params: { discrError, tag, tagName } }) => (0, codegen_1._)`{error: ${discrError}, tag: ${tagName}, tagValue: ${tag}}`
     };
-    var def2 = {
+    var def = {
       keyword: "discriminator",
       type: "object",
       schemaType: "object",
@@ -6185,18 +6185,18 @@ var require_discriminator = __commonJS({
         if (!oneOf)
           throw new Error("discriminator: requires oneOf keyword");
         const valid = gen.let("valid", false);
-        const tag2 = gen.const("tag", (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(tagName)}`);
-        gen.if((0, codegen_1._)`typeof ${tag2} == "string"`, () => validateMapping(), () => cxt.error(false, { discrError: types_1.DiscrError.Tag, tag: tag2, tagName }));
+        const tag = gen.const("tag", (0, codegen_1._)`${data}${(0, codegen_1.getProperty)(tagName)}`);
+        gen.if((0, codegen_1._)`typeof ${tag} == "string"`, () => validateMapping(), () => cxt.error(false, { discrError: types_1.DiscrError.Tag, tag, tagName }));
         cxt.ok(valid);
         function validateMapping() {
           const mapping = getMapping();
           gen.if(false);
           for (const tagValue in mapping) {
-            gen.elseIf((0, codegen_1._)`${tag2} === ${tagValue}`);
+            gen.elseIf((0, codegen_1._)`${tag} === ${tagValue}`);
             gen.assign(valid, applyTagSchema(mapping[tagValue]));
           }
           gen.else();
-          cxt.error(false, { discrError: types_1.DiscrError.Mapping, tag: tag2, tagName });
+          cxt.error(false, { discrError: types_1.DiscrError.Mapping, tag, tagName });
           gen.endIf();
         }
         function applyTagSchema(schemaProp) {
@@ -6253,7 +6253,7 @@ var require_discriminator = __commonJS({
         }
       }
     };
-    exports.default = def2;
+    exports.default = def;
   }
 });
 
@@ -6429,7 +6429,7 @@ var require_ajv = __commonJS({
     var Ajv2 = class extends core_1.default {
       _addVocabularies() {
         super._addVocabularies();
-        draft7_1.default.forEach((v) => this.addVocabulary(v));
+        draft7_1.default.forEach((v2) => this.addVocabulary(v2));
         if (this.opts.discriminator)
           this.addKeyword(discriminator_1.default);
       }
@@ -6585,7 +6585,7 @@ var require_formats = __commonJS({
         const matches = TIME.exec(str);
         if (!matches)
           return false;
-        const hr2 = +matches[1];
+        const hr = +matches[1];
         const min = +matches[2];
         const sec = +matches[3];
         const tz = matches[4];
@@ -6594,10 +6594,10 @@ var require_formats = __commonJS({
         const tzM = +(matches[7] || 0);
         if (tzH > 23 || tzM > 59 || strictTimeZone && !tz)
           return false;
-        if (hr2 <= 23 && min <= 59 && sec < 60)
+        if (hr <= 23 && min <= 59 && sec < 60)
           return true;
         const utcMin = min - tzM * tzSign;
-        const utcHr = hr2 - tzH * tzSign - (utcMin < 0 ? 1 : 0);
+        const utcHr = hr - tzH * tzSign - (utcMin < 0 ? 1 : 0);
         return (utcHr === 23 || utcHr === -1) && (utcMin === 59 || utcMin === -1) && sec < 61;
       };
     }
@@ -6775,8 +6775,8 @@ var require_dist = __commonJS({
         return ajv;
       }
       const [formats, exportName] = opts.mode === "fast" ? [formats_1.fastFormats, fastName] : [formats_1.fullFormats, fullName];
-      const list2 = opts.formats || formats_1.formatNames;
-      addFormats(ajv, list2, formats, exportName);
+      const list = opts.formats || formats_1.formatNames;
+      addFormats(ajv, list, formats, exportName);
       if (opts.keywords)
         (0, limit_1.default)(ajv);
       return ajv;
@@ -6788,11 +6788,11 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list2, fs5, exportName) {
+    function addFormats(ajv, list, fs5, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
-      for (const f of list2)
+      for (const f of list)
         ajv.addFormat(f, fs5[f]);
     }
     module.exports = exports = formatsPlugin;
@@ -6916,7 +6916,7 @@ __export(external_exports, {
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
-  util2.assertEqual = (_) => {
+  util2.assertEqual = (_2) => {
   };
   function assertIs2(_arg) {
   }
@@ -6933,10 +6933,10 @@ var util;
     return obj;
   };
   util2.getValidEnumValues = (obj) => {
-    const validKeys = util2.objectKeys(obj).filter((k) => typeof obj[obj[k]] !== "number");
+    const validKeys = util2.objectKeys(obj).filter((k2) => typeof obj[obj[k2]] !== "number");
     const filtered = {};
-    for (const k of validKeys) {
-      filtered[k] = obj[k];
+    for (const k2 of validKeys) {
+      filtered[k2] = obj[k2];
     }
     return util2.objectValues(filtered);
   };
@@ -6966,7 +6966,7 @@ var util;
     return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
-  util2.jsonStringifyReplacer = (_, value) => {
+  util2.jsonStringifyReplacer = (_2, value) => {
     if (typeof value === "bigint") {
       return value.toString();
     }
@@ -7293,7 +7293,7 @@ var makeIssue = (params) => {
     };
   }
   let errorMessage = "";
-  const maps = errorMaps.filter((m) => !!m).slice().reverse();
+  const maps = errorMaps.filter((m2) => !!m2).slice().reverse();
   for (const map of maps) {
     errorMessage = map(fullIssue, { data, defaultError: errorMessage }).message;
   }
@@ -7319,7 +7319,7 @@ function addIssueToContext(ctx, issueData) {
       // then global override map
       overrideMap === en_default ? void 0 : en_default
       // then global default map
-    ].filter((x) => !!x)
+    ].filter((x2) => !!x2)
   });
   ctx.common.issues.push(issue2);
 }
@@ -7382,10 +7382,10 @@ var INVALID = Object.freeze({
 });
 var DIRTY = (value) => ({ status: "dirty", value });
 var OK = (value) => ({ status: "valid", value });
-var isAborted = (x) => x.status === "aborted";
-var isDirty = (x) => x.status === "dirty";
-var isValid = (x) => x.status === "valid";
-var isAsync = (x) => typeof Promise !== "undefined" && x instanceof Promise;
+var isAborted = (x2) => x2.status === "aborted";
+var isDirty = (x2) => x2.status === "dirty";
+var isValid = (x2) => x2.status === "valid";
+var isAsync = (x2) => typeof Promise !== "undefined" && x2 instanceof Promise;
 
 // node_modules/zod/v3/helpers/errorUtil.js
 var errorUtil;
@@ -7632,9 +7632,9 @@ var ZodType = class {
   superRefine(refinement) {
     return this._refinement(refinement);
   }
-  constructor(def2) {
+  constructor(def) {
     this.spa = this.safeParseAsync;
-    this._def = def2;
+    this._def = def;
     this.parse = this.parse.bind(this);
     this.safeParse = this.safeParse.bind(this);
     this.parseAsync = this.parseAsync.bind(this);
@@ -7694,8 +7694,8 @@ var ZodType = class {
       effect: { type: "transform", transform: transform2 }
     });
   }
-  default(def2) {
-    const defaultValueFunc = typeof def2 === "function" ? def2 : () => def2;
+  default(def) {
+    const defaultValueFunc = typeof def === "function" ? def : () => def;
     return new ZodDefault({
       ...processCreateParams(this._def),
       innerType: this,
@@ -7710,8 +7710,8 @@ var ZodType = class {
       ...processCreateParams(this._def)
     });
   }
-  catch(def2) {
-    const catchValueFunc = typeof def2 === "function" ? def2 : () => def2;
+  catch(def) {
+    const catchValueFunc = typeof def === "function" ? def : () => def;
     return new ZodCatch({
       ...processCreateParams(this._def),
       innerType: this,
@@ -8167,48 +8167,48 @@ var ZodString = class _ZodString2 extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  jwt(options2) {
-    return this._addCheck({ kind: "jwt", ...errorUtil.errToObj(options2) });
+  jwt(options) {
+    return this._addCheck({ kind: "jwt", ...errorUtil.errToObj(options) });
   }
-  ip(options2) {
-    return this._addCheck({ kind: "ip", ...errorUtil.errToObj(options2) });
+  ip(options) {
+    return this._addCheck({ kind: "ip", ...errorUtil.errToObj(options) });
   }
-  cidr(options2) {
-    return this._addCheck({ kind: "cidr", ...errorUtil.errToObj(options2) });
+  cidr(options) {
+    return this._addCheck({ kind: "cidr", ...errorUtil.errToObj(options) });
   }
-  datetime(options2) {
-    if (typeof options2 === "string") {
+  datetime(options) {
+    if (typeof options === "string") {
       return this._addCheck({
         kind: "datetime",
         precision: null,
         offset: false,
         local: false,
-        message: options2
+        message: options
       });
     }
     return this._addCheck({
       kind: "datetime",
-      precision: typeof options2?.precision === "undefined" ? null : options2?.precision,
-      offset: options2?.offset ?? false,
-      local: options2?.local ?? false,
-      ...errorUtil.errToObj(options2?.message)
+      precision: typeof options?.precision === "undefined" ? null : options?.precision,
+      offset: options?.offset ?? false,
+      local: options?.local ?? false,
+      ...errorUtil.errToObj(options?.message)
     });
   }
   date(message) {
     return this._addCheck({ kind: "date", message });
   }
-  time(options2) {
-    if (typeof options2 === "string") {
+  time(options) {
+    if (typeof options === "string") {
       return this._addCheck({
         kind: "time",
         precision: null,
-        message: options2
+        message: options
       });
     }
     return this._addCheck({
       kind: "time",
-      precision: typeof options2?.precision === "undefined" ? null : options2?.precision,
-      ...errorUtil.errToObj(options2?.message)
+      precision: typeof options?.precision === "undefined" ? null : options?.precision,
+      ...errorUtil.errToObj(options?.message)
     });
   }
   duration(message) {
@@ -8221,12 +8221,12 @@ var ZodString = class _ZodString2 extends ZodType {
       ...errorUtil.errToObj(message)
     });
   }
-  includes(value, options2) {
+  includes(value, options) {
     return this._addCheck({
       kind: "includes",
       value,
-      position: options2?.position,
-      ...errorUtil.errToObj(options2?.message)
+      position: options?.position,
+      ...errorUtil.errToObj(options?.message)
     });
   }
   startsWith(value, message) {
@@ -9045,7 +9045,7 @@ ZodVoid.create = (params) => {
 var ZodArray = class _ZodArray extends ZodType {
   _parse(input) {
     const { ctx, status } = this._processInputParams(input);
-    const def2 = this._def;
+    const def = this._def;
     if (ctx.parsedType !== ZodParsedType.array) {
       addIssueToContext(ctx, {
         code: ZodIssueCode.invalid_type,
@@ -9054,57 +9054,57 @@ var ZodArray = class _ZodArray extends ZodType {
       });
       return INVALID;
     }
-    if (def2.exactLength !== null) {
-      const tooBig = ctx.data.length > def2.exactLength.value;
-      const tooSmall = ctx.data.length < def2.exactLength.value;
+    if (def.exactLength !== null) {
+      const tooBig = ctx.data.length > def.exactLength.value;
+      const tooSmall = ctx.data.length < def.exactLength.value;
       if (tooBig || tooSmall) {
         addIssueToContext(ctx, {
           code: tooBig ? ZodIssueCode.too_big : ZodIssueCode.too_small,
-          minimum: tooSmall ? def2.exactLength.value : void 0,
-          maximum: tooBig ? def2.exactLength.value : void 0,
+          minimum: tooSmall ? def.exactLength.value : void 0,
+          maximum: tooBig ? def.exactLength.value : void 0,
           type: "array",
           inclusive: true,
           exact: true,
-          message: def2.exactLength.message
+          message: def.exactLength.message
         });
         status.dirty();
       }
     }
-    if (def2.minLength !== null) {
-      if (ctx.data.length < def2.minLength.value) {
+    if (def.minLength !== null) {
+      if (ctx.data.length < def.minLength.value) {
         addIssueToContext(ctx, {
           code: ZodIssueCode.too_small,
-          minimum: def2.minLength.value,
+          minimum: def.minLength.value,
           type: "array",
           inclusive: true,
           exact: false,
-          message: def2.minLength.message
+          message: def.minLength.message
         });
         status.dirty();
       }
     }
-    if (def2.maxLength !== null) {
-      if (ctx.data.length > def2.maxLength.value) {
+    if (def.maxLength !== null) {
+      if (ctx.data.length > def.maxLength.value) {
         addIssueToContext(ctx, {
           code: ZodIssueCode.too_big,
-          maximum: def2.maxLength.value,
+          maximum: def.maxLength.value,
           type: "array",
           inclusive: true,
           exact: false,
-          message: def2.maxLength.message
+          message: def.maxLength.message
         });
         status.dirty();
       }
     }
     if (ctx.common.async) {
       return Promise.all([...ctx.data].map((item, i) => {
-        return def2.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+        return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
       })).then((result2) => {
         return ParseStatus.mergeArray(status, result2);
       });
     }
     const result = [...ctx.data].map((item, i) => {
-      return def2.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+      return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
     });
     return ParseStatus.mergeArray(status, result);
   }
@@ -9510,7 +9510,7 @@ ZodObject.lazycreate = (shape, params) => {
 var ZodUnion = class extends ZodType {
   _parse(input) {
     const { ctx } = this._processInputParams(input);
-    const options2 = this._def.options;
+    const options = this._def.options;
     function handleResults(results) {
       for (const result of results) {
         if (result.result.status === "valid") {
@@ -9531,7 +9531,7 @@ var ZodUnion = class extends ZodType {
       return INVALID;
     }
     if (ctx.common.async) {
-      return Promise.all(options2.map(async (option) => {
+      return Promise.all(options.map(async (option) => {
         const childCtx = {
           ...ctx,
           common: {
@@ -9552,7 +9552,7 @@ var ZodUnion = class extends ZodType {
     } else {
       let dirty = void 0;
       const issues = [];
-      for (const option of options2) {
+      for (const option of options) {
         const childCtx = {
           ...ctx,
           common: {
@@ -9682,9 +9682,9 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
    * @param types an array of object schemas
    * @param params
    */
-  static create(discriminator, options2, params) {
+  static create(discriminator, options, params) {
     const optionsMap = /* @__PURE__ */ new Map();
-    for (const type of options2) {
+    for (const type of options) {
       const discriminatorValues = getDiscriminator(type.shape[discriminator]);
       if (!discriminatorValues.length) {
         throw new Error(`A discriminator value for key \`${discriminator}\` could not be extracted from all schema options`);
@@ -9699,23 +9699,23 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
     return new _ZodDiscriminatedUnion({
       typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
       discriminator,
-      options: options2,
+      options,
       optionsMap,
       ...processCreateParams(params)
     });
   }
 };
-function mergeValues(a, b) {
+function mergeValues(a, b2) {
   const aType = getParsedType(a);
-  const bType = getParsedType(b);
-  if (a === b) {
+  const bType = getParsedType(b2);
+  if (a === b2) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-    const bKeys = util.objectKeys(b);
+    const bKeys = util.objectKeys(b2);
     const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
-    const newObj = { ...a, ...b };
+    const newObj = { ...a, ...b2 };
     for (const key of sharedKeys) {
-      const sharedValue = mergeValues(a[key], b[key]);
+      const sharedValue = mergeValues(a[key], b2[key]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
@@ -9723,13 +9723,13 @@ function mergeValues(a, b) {
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
-    if (a.length !== b.length) {
+    if (a.length !== b2.length) {
       return { valid: false };
     }
     const newArray = [];
     for (let index = 0; index < a.length; index++) {
       const itemA = a[index];
-      const itemB = b[index];
+      const itemB = b2[index];
       const sharedValue = mergeValues(itemA, itemB);
       if (!sharedValue.valid) {
         return { valid: false };
@@ -9737,7 +9737,7 @@ function mergeValues(a, b) {
       newArray.push(sharedValue.data);
     }
     return { valid: true, data: newArray };
-  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b) {
+  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b2) {
     return { valid: true, data: a };
   } else {
     return { valid: false };
@@ -9833,7 +9833,7 @@ var ZodTuple = class _ZodTuple extends ZodType {
       if (!schema)
         return null;
       return schema._parse(new ParseInputLazyPath(ctx, item, ctx.path, itemIndex));
-    }).filter((x) => !!x);
+    }).filter((x2) => !!x2);
     if (ctx.common.async) {
       return Promise.all(items).then((results) => {
         return ParseStatus.mergeArray(status, results);
@@ -9993,29 +9993,29 @@ var ZodSet = class _ZodSet extends ZodType {
       });
       return INVALID;
     }
-    const def2 = this._def;
-    if (def2.minSize !== null) {
-      if (ctx.data.size < def2.minSize.value) {
+    const def = this._def;
+    if (def.minSize !== null) {
+      if (ctx.data.size < def.minSize.value) {
         addIssueToContext(ctx, {
           code: ZodIssueCode.too_small,
-          minimum: def2.minSize.value,
+          minimum: def.minSize.value,
           type: "set",
           inclusive: true,
           exact: false,
-          message: def2.minSize.message
+          message: def.minSize.message
         });
         status.dirty();
       }
     }
-    if (def2.maxSize !== null) {
-      if (ctx.data.size > def2.maxSize.value) {
+    if (def.maxSize !== null) {
+      if (ctx.data.size > def.maxSize.value) {
         addIssueToContext(ctx, {
           code: ZodIssueCode.too_big,
-          maximum: def2.maxSize.value,
+          maximum: def.maxSize.value,
           type: "set",
           inclusive: true,
           exact: false,
-          message: def2.maxSize.message
+          message: def.maxSize.message
         });
         status.dirty();
       }
@@ -10086,7 +10086,7 @@ var ZodFunction = class _ZodFunction extends ZodType {
       return makeIssue({
         data: args,
         path: ctx.path,
-        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
+        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x2) => !!x2),
         issueData: {
           code: ZodIssueCode.invalid_arguments,
           argumentsError: error2
@@ -10097,7 +10097,7 @@ var ZodFunction = class _ZodFunction extends ZodType {
       return makeIssue({
         data: returns,
         path: ctx.path,
-        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
+        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x2) => !!x2),
         issueData: {
           code: ZodIssueCode.invalid_return_type,
           returnTypeError: error2
@@ -10107,29 +10107,29 @@ var ZodFunction = class _ZodFunction extends ZodType {
     const params = { errorMap: ctx.common.contextualErrorMap };
     const fn = ctx.data;
     if (this._def.returns instanceof ZodPromise) {
-      const me = this;
+      const me2 = this;
       return OK(async function(...args) {
         const error2 = new ZodError([]);
-        const parsedArgs = await me._def.args.parseAsync(args, params).catch((e) => {
+        const parsedArgs = await me2._def.args.parseAsync(args, params).catch((e) => {
           error2.addIssue(makeArgsIssue(args, e));
           throw error2;
         });
         const result = await Reflect.apply(fn, this, parsedArgs);
-        const parsedReturns = await me._def.returns._def.type.parseAsync(result, params).catch((e) => {
+        const parsedReturns = await me2._def.returns._def.type.parseAsync(result, params).catch((e) => {
           error2.addIssue(makeReturnsIssue(result, e));
           throw error2;
         });
         return parsedReturns;
       });
     } else {
-      const me = this;
+      const me2 = this;
       return OK(function(...args) {
-        const parsedArgs = me._def.args.safeParse(args, params);
+        const parsedArgs = me2._def.args.safeParse(args, params);
         if (!parsedArgs.success) {
           throw new ZodError([makeArgsIssue(args, parsedArgs.error)]);
         }
         const result = Reflect.apply(fn, this, parsedArgs.data);
-        const parsedReturns = me._def.returns.safeParse(result, params);
+        const parsedReturns = me2._def.returns.safeParse(result, params);
         if (!parsedReturns.success) {
           throw new ZodError([makeReturnsIssue(result, parsedReturns.error)]);
         }
@@ -10691,10 +10691,10 @@ var ZodPipeline = class _ZodPipeline extends ZodType {
       }
     }
   }
-  static create(a, b) {
+  static create(a, b2) {
     return new _ZodPipeline({
       in: a,
-      out: b,
+      out: b2,
       typeName: ZodFirstPartyTypeKind.ZodPipeline
     });
   }
@@ -10848,7 +10848,7 @@ var NEVER2 = Object.freeze({
 });
 // @__NO_SIDE_EFFECTS__
 function $constructor(name, initializer3, params) {
-  function init(inst, def2) {
+  function init(inst, def) {
     var _a;
     Object.defineProperty(inst, "_zod", {
       value: inst._zod ?? {},
@@ -10856,38 +10856,38 @@ function $constructor(name, initializer3, params) {
     });
     (_a = inst._zod).traits ?? (_a.traits = /* @__PURE__ */ new Set());
     inst._zod.traits.add(name);
-    initializer3(inst, def2);
-    for (const k in _.prototype) {
-      if (!(k in inst))
-        Object.defineProperty(inst, k, { value: _.prototype[k].bind(inst) });
+    initializer3(inst, def);
+    for (const k2 in _2.prototype) {
+      if (!(k2 in inst))
+        Object.defineProperty(inst, k2, { value: _2.prototype[k2].bind(inst) });
     }
-    inst._zod.constr = _;
-    inst._zod.def = def2;
+    inst._zod.constr = _2;
+    inst._zod.def = def;
   }
   const Parent = params?.Parent ?? Object;
   class Definition extends Parent {
   }
   Object.defineProperty(Definition, "name", { value: name });
-  function _(def2) {
+  function _2(def) {
     var _a;
     const inst = params?.Parent ? new Definition() : this;
-    init(inst, def2);
+    init(inst, def);
     (_a = inst._zod).deferred ?? (_a.deferred = []);
     for (const fn of inst._zod.deferred) {
       fn();
     }
     return inst;
   }
-  Object.defineProperty(_, "init", { value: init });
-  Object.defineProperty(_, Symbol.hasInstance, {
+  Object.defineProperty(_2, "init", { value: init });
+  Object.defineProperty(_2, Symbol.hasInstance, {
     value: (inst) => {
       if (params?.Parent && inst instanceof params.Parent)
         return true;
       return inst?._zod?.traits?.has(name);
     }
   });
-  Object.defineProperty(_, "name", { value: name });
-  return _;
+  Object.defineProperty(_2, "name", { value: name });
+  return _2;
 }
 var $brand = Symbol("zod_brand");
 var $ZodAsyncError = class extends Error {
@@ -10966,17 +10966,17 @@ function assertIs(_arg) {
 function assertNever(_x) {
   throw new Error();
 }
-function assert(_) {
+function assert(_2) {
 }
 function getEnumValues(entries) {
-  const numericValues = Object.values(entries).filter((v) => typeof v === "number");
-  const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
+  const numericValues = Object.values(entries).filter((v2) => typeof v2 === "number");
+  const values = Object.entries(entries).filter(([k2, _2]) => numericValues.indexOf(+k2) === -1).map(([_2, v2]) => v2);
   return values;
 }
 function joinValues(array2, separator = "|") {
   return array2.map((val) => stringifyPrimitive(val)).join(separator);
 }
-function jsonStringifyReplacer(_, value) {
+function jsonStringifyReplacer(_2, value) {
   if (typeof value === "bigint")
     return value.toString();
   return value;
@@ -11021,9 +11021,9 @@ function defineLazy(object3, key, getter) {
       }
       throw new Error("cached value already set");
     },
-    set(v) {
+    set(v2) {
       Object.defineProperty(object3, key, {
-        value: v
+        value: v2
         // configurable: true,
       });
     },
@@ -11075,10 +11075,10 @@ var allowsEval = cached(() => {
     return false;
   }
   try {
-    const F = Function;
-    new F("");
+    const F2 = Function;
+    new F2("");
     return true;
-  } catch (_) {
+  } catch (_2) {
     return false;
   }
 });
@@ -11154,9 +11154,9 @@ var primitiveTypes = /* @__PURE__ */ new Set(["string", "number", "bigint", "boo
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-function clone(inst, def2, params) {
-  const cl = new inst._zod.constr(def2 ?? inst._zod.def);
-  if (!def2 || params?.parent)
+function clone(inst, def, params) {
+  const cl = new inst._zod.constr(def ?? inst._zod.def);
+  if (!def || params?.parent)
     cl._zod.parent = inst;
   return cl;
 }
@@ -11179,31 +11179,31 @@ function normalizeParams(_params) {
 function createTransparentProxy(getter) {
   let target;
   return new Proxy({}, {
-    get(_, prop, receiver) {
+    get(_2, prop, receiver) {
       target ?? (target = getter());
       return Reflect.get(target, prop, receiver);
     },
-    set(_, prop, value, receiver) {
+    set(_2, prop, value, receiver) {
       target ?? (target = getter());
       return Reflect.set(target, prop, value, receiver);
     },
-    has(_, prop) {
+    has(_2, prop) {
       target ?? (target = getter());
       return Reflect.has(target, prop);
     },
-    deleteProperty(_, prop) {
+    deleteProperty(_2, prop) {
       target ?? (target = getter());
       return Reflect.deleteProperty(target, prop);
     },
-    ownKeys(_) {
+    ownKeys(_2) {
       target ?? (target = getter());
       return Reflect.ownKeys(target);
     },
-    getOwnPropertyDescriptor(_, prop) {
+    getOwnPropertyDescriptor(_2, prop) {
       target ?? (target = getter());
       return Reflect.getOwnPropertyDescriptor(target, prop);
     },
-    defineProperty(_, prop, descriptor) {
+    defineProperty(_2, prop, descriptor) {
       target ?? (target = getter());
       return Reflect.defineProperty(target, prop, descriptor);
     }
@@ -11217,8 +11217,8 @@ function stringifyPrimitive(value) {
   return `${value}`;
 }
 function optionalKeys(shape) {
-  return Object.keys(shape).filter((k) => {
-    return shape[k]._zod.optin === "optional" && shape[k]._zod.optout === "optional";
+  return Object.keys(shape).filter((k2) => {
+    return shape[k2]._zod.optin === "optional" && shape[k2]._zod.optout === "optional";
   });
 }
 var NUMBER_FORMAT_RANGES = {
@@ -11270,7 +11270,7 @@ function extend(schema, shape) {
   if (!isPlainObject(shape)) {
     throw new Error("Invalid input to extend: expected a plain object");
   }
-  const def2 = {
+  const def = {
     ...schema._zod.def,
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape };
@@ -11280,17 +11280,17 @@ function extend(schema, shape) {
     checks: []
     // delete existing checks
   };
-  return clone(schema, def2);
+  return clone(schema, def);
 }
-function merge(a, b) {
+function merge(a, b2) {
   return clone(a, {
     ...a._zod.def,
     get shape() {
-      const _shape = { ...a._zod.def.shape, ...b._zod.def.shape };
+      const _shape = { ...a._zod.def.shape, ...b2._zod.def.shape };
       assignProp(this, "shape", _shape);
       return _shape;
     },
-    catchall: b._zod.def.catchall,
+    catchall: b2._zod.def.catchall,
     checks: []
     // delete existing checks
   });
@@ -11354,9 +11354,9 @@ function required(Class2, schema, mask) {
     checks: []
   });
 }
-function aborted(x, startIndex = 0) {
-  for (let i = startIndex; i < x.issues.length; i++) {
-    if (x.issues[i]?.continue !== true)
+function aborted(x2, startIndex = 0) {
+  for (let i = startIndex; i < x2.issues.length; i++) {
+    if (x2.issues[i]?.continue !== true)
       return true;
   }
   return false;
@@ -11414,8 +11414,8 @@ function issue(...args) {
   return { ...iss };
 }
 function cleanEnum(obj) {
-  return Object.entries(obj).filter(([k, _]) => {
-    return Number.isNaN(Number.parseInt(k, 10));
+  return Object.entries(obj).filter(([k2, _2]) => {
+    return Number.isNaN(Number.parseInt(k2, 10));
   }).map((el) => el[1]);
 }
 var Class = class {
@@ -11424,19 +11424,19 @@ var Class = class {
 };
 
 // node_modules/zod/v4/core/errors.js
-var initializer = (inst, def2) => {
+var initializer = (inst, def) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
     value: inst._zod,
     enumerable: false
   });
   Object.defineProperty(inst, "issues", {
-    value: def2,
+    value: def,
     enumerable: false
   });
   Object.defineProperty(inst, "message", {
     get() {
-      return JSON.stringify(def2, jsonStringifyReplacer, 2);
+      return JSON.stringify(def, jsonStringifyReplacer, 2);
     },
     enumerable: true
     // configurable: false,
@@ -11607,10 +11607,10 @@ var lowercase = /^[^A-Z]*$/;
 var uppercase = /^[^a-z]*$/;
 
 // node_modules/zod/v4/core/checks.js
-var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def2) => {
+var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a;
   inst._zod ?? (inst._zod = {});
-  inst._zod.def = def2;
+  inst._zod.def = def;
   (_a = inst._zod).onattach ?? (_a.onattach = []);
 });
 var numericOriginMap = {
@@ -11618,93 +11618,93 @@ var numericOriginMap = {
   bigint: "bigint",
   object: "date"
 };
-var $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  const origin = numericOriginMap[typeof def2.value];
+var $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  const origin = numericOriginMap[typeof def.value];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    const curr = (def2.inclusive ? bag.maximum : bag.exclusiveMaximum) ?? Number.POSITIVE_INFINITY;
-    if (def2.value < curr) {
-      if (def2.inclusive)
-        bag.maximum = def2.value;
+    const curr = (def.inclusive ? bag.maximum : bag.exclusiveMaximum) ?? Number.POSITIVE_INFINITY;
+    if (def.value < curr) {
+      if (def.inclusive)
+        bag.maximum = def.value;
       else
-        bag.exclusiveMaximum = def2.value;
+        bag.exclusiveMaximum = def.value;
     }
   });
   inst._zod.check = (payload) => {
-    if (def2.inclusive ? payload.value <= def2.value : payload.value < def2.value) {
+    if (def.inclusive ? payload.value <= def.value : payload.value < def.value) {
       return;
     }
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: def2.value,
+      maximum: def.value,
       input: payload.value,
-      inclusive: def2.inclusive,
+      inclusive: def.inclusive,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  const origin = numericOriginMap[typeof def2.value];
+var $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  const origin = numericOriginMap[typeof def.value];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    const curr = (def2.inclusive ? bag.minimum : bag.exclusiveMinimum) ?? Number.NEGATIVE_INFINITY;
-    if (def2.value > curr) {
-      if (def2.inclusive)
-        bag.minimum = def2.value;
+    const curr = (def.inclusive ? bag.minimum : bag.exclusiveMinimum) ?? Number.NEGATIVE_INFINITY;
+    if (def.value > curr) {
+      if (def.inclusive)
+        bag.minimum = def.value;
       else
-        bag.exclusiveMinimum = def2.value;
+        bag.exclusiveMinimum = def.value;
     }
   });
   inst._zod.check = (payload) => {
-    if (def2.inclusive ? payload.value >= def2.value : payload.value > def2.value) {
+    if (def.inclusive ? payload.value >= def.value : payload.value > def.value) {
       return;
     }
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: def2.value,
+      minimum: def.value,
       input: payload.value,
-      inclusive: def2.inclusive,
+      inclusive: def.inclusive,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
+var $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def) => {
+  $ZodCheck.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     var _a;
-    (_a = inst2._zod.bag).multipleOf ?? (_a.multipleOf = def2.value);
+    (_a = inst2._zod.bag).multipleOf ?? (_a.multipleOf = def.value);
   });
   inst._zod.check = (payload) => {
-    if (typeof payload.value !== typeof def2.value)
+    if (typeof payload.value !== typeof def.value)
       throw new Error("Cannot mix number and bigint in multiple_of check.");
-    const isMultiple = typeof payload.value === "bigint" ? payload.value % def2.value === BigInt(0) : floatSafeRemainder2(payload.value, def2.value) === 0;
+    const isMultiple = typeof payload.value === "bigint" ? payload.value % def.value === BigInt(0) : floatSafeRemainder2(payload.value, def.value) === 0;
     if (isMultiple)
       return;
     payload.issues.push({
       origin: typeof payload.value,
       code: "not_multiple_of",
-      divisor: def2.value,
+      divisor: def.value,
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  def2.format = def2.format || "float64";
-  const isInt = def2.format?.includes("int");
+var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  def.format = def.format || "float64";
+  const isInt = def.format?.includes("int");
   const origin = isInt ? "int" : "number";
-  const [minimum, maximum] = NUMBER_FORMAT_RANGES[def2.format];
+  const [minimum, maximum] = NUMBER_FORMAT_RANGES[def.format];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.format = def2.format;
+    bag.format = def.format;
     bag.minimum = minimum;
     bag.maximum = maximum;
     if (isInt)
@@ -11716,7 +11716,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
       if (!Number.isInteger(input)) {
         payload.issues.push({
           expected: origin,
-          format: def2.format,
+          format: def.format,
           code: "invalid_type",
           input,
           inst
@@ -11732,7 +11732,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
-            continue: !def2.abort
+            continue: !def.abort
           });
         } else {
           payload.issues.push({
@@ -11742,7 +11742,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
             note: "Integers must be within the safe integer range.",
             inst,
             origin,
-            continue: !def2.abort
+            continue: !def.abort
           });
         }
         return;
@@ -11756,7 +11756,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
         minimum,
         inclusive: true,
         inst,
-        continue: !def2.abort
+        continue: !def.abort
       });
     }
     if (input > maximum) {
@@ -11770,224 +11770,224 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
     }
   };
 });
-var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def2) => {
+var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def) => {
   var _a;
-  $ZodCheck.init(inst, def2);
+  $ZodCheck.init(inst, def);
   (_a = inst._zod.def).when ?? (_a.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.maximum ?? Number.POSITIVE_INFINITY;
-    if (def2.maximum < curr)
-      inst2._zod.bag.maximum = def2.maximum;
+    if (def.maximum < curr)
+      inst2._zod.bag.maximum = def.maximum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length <= def2.maximum)
+    if (length <= def.maximum)
       return;
     const origin = getLengthableOrigin(input);
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: def2.maximum,
+      maximum: def.maximum,
       inclusive: true,
       input,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def2) => {
+var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def) => {
   var _a;
-  $ZodCheck.init(inst, def2);
+  $ZodCheck.init(inst, def);
   (_a = inst._zod.def).when ?? (_a.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.minimum ?? Number.NEGATIVE_INFINITY;
-    if (def2.minimum > curr)
-      inst2._zod.bag.minimum = def2.minimum;
+    if (def.minimum > curr)
+      inst2._zod.bag.minimum = def.minimum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length >= def2.minimum)
+    if (length >= def.minimum)
       return;
     const origin = getLengthableOrigin(input);
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: def2.minimum,
+      minimum: def.minimum,
       inclusive: true,
       input,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def2) => {
+var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def) => {
   var _a;
-  $ZodCheck.init(inst, def2);
+  $ZodCheck.init(inst, def);
   (_a = inst._zod.def).when ?? (_a.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.minimum = def2.length;
-    bag.maximum = def2.length;
-    bag.length = def2.length;
+    bag.minimum = def.length;
+    bag.maximum = def.length;
+    bag.length = def.length;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length === def2.length)
+    if (length === def.length)
       return;
     const origin = getLengthableOrigin(input);
-    const tooBig = length > def2.length;
+    const tooBig = length > def.length;
     payload.issues.push({
       origin,
-      ...tooBig ? { code: "too_big", maximum: def2.length } : { code: "too_small", minimum: def2.length },
+      ...tooBig ? { code: "too_big", maximum: def.length } : { code: "too_small", minimum: def.length },
       inclusive: true,
       exact: true,
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def2) => {
+var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def) => {
   var _a, _b;
-  $ZodCheck.init(inst, def2);
+  $ZodCheck.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.format = def2.format;
-    if (def2.pattern) {
+    bag.format = def.format;
+    if (def.pattern) {
       bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-      bag.patterns.add(def2.pattern);
+      bag.patterns.add(def.pattern);
     }
   });
-  if (def2.pattern)
+  if (def.pattern)
     (_a = inst._zod).check ?? (_a.check = (payload) => {
-      def2.pattern.lastIndex = 0;
-      if (def2.pattern.test(payload.value))
+      def.pattern.lastIndex = 0;
+      if (def.pattern.test(payload.value))
         return;
       payload.issues.push({
         origin: "string",
         code: "invalid_format",
-        format: def2.format,
+        format: def.format,
         input: payload.value,
-        ...def2.pattern ? { pattern: def2.pattern.toString() } : {},
+        ...def.pattern ? { pattern: def.pattern.toString() } : {},
         inst,
-        continue: !def2.abort
+        continue: !def.abort
       });
     });
   else
     (_b = inst._zod).check ?? (_b.check = () => {
     });
 });
-var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def2) => {
-  $ZodCheckStringFormat.init(inst, def2);
+var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def) => {
+  $ZodCheckStringFormat.init(inst, def);
   inst._zod.check = (payload) => {
-    def2.pattern.lastIndex = 0;
-    if (def2.pattern.test(payload.value))
+    def.pattern.lastIndex = 0;
+    if (def.pattern.test(payload.value))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "regex",
       input: payload.value,
-      pattern: def2.pattern.toString(),
+      pattern: def.pattern.toString(),
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckLowerCase = /* @__PURE__ */ $constructor("$ZodCheckLowerCase", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = lowercase);
-  $ZodCheckStringFormat.init(inst, def2);
+var $ZodCheckLowerCase = /* @__PURE__ */ $constructor("$ZodCheckLowerCase", (inst, def) => {
+  def.pattern ?? (def.pattern = lowercase);
+  $ZodCheckStringFormat.init(inst, def);
 });
-var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = uppercase);
-  $ZodCheckStringFormat.init(inst, def2);
+var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (inst, def) => {
+  def.pattern ?? (def.pattern = uppercase);
+  $ZodCheckStringFormat.init(inst, def);
 });
-var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  const escapedRegex = escapeRegex(def2.includes);
-  const pattern = new RegExp(typeof def2.position === "number" ? `^.{${def2.position}}${escapedRegex}` : escapedRegex);
-  def2.pattern = pattern;
+var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  const escapedRegex = escapeRegex(def.includes);
+  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
+  def.pattern = pattern;
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.includes(def2.includes, def2.position))
+    if (payload.value.includes(def.includes, def.position))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "includes",
-      includes: def2.includes,
+      includes: def.includes,
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  const pattern = new RegExp(`^${escapeRegex(def2.prefix)}.*`);
-  def2.pattern ?? (def2.pattern = pattern);
+var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
+  def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.startsWith(def2.prefix))
+    if (payload.value.startsWith(def.prefix))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "starts_with",
-      prefix: def2.prefix,
+      prefix: def.prefix,
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  const pattern = new RegExp(`.*${escapeRegex(def2.suffix)}$`);
-  def2.pattern ?? (def2.pattern = pattern);
+var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
+  def.pattern ?? (def.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.endsWith(def2.suffix))
+    if (payload.value.endsWith(def.suffix))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "ends_with",
-      suffix: def2.suffix,
+      suffix: def.suffix,
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
+var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (inst, def) => {
+  $ZodCheck.init(inst, def);
   inst._zod.check = (payload) => {
-    payload.value = def2.tx(payload.value);
+    payload.value = def.tx(payload.value);
   };
 });
 
@@ -12011,19 +12011,19 @@ var Doc = class {
       return;
     }
     const content = arg;
-    const lines = content.split("\n").filter((x) => x);
-    const minIndent = Math.min(...lines.map((x) => x.length - x.trimStart().length));
-    const dedented = lines.map((x) => x.slice(minIndent)).map((x) => " ".repeat(this.indent * 2) + x);
+    const lines = content.split("\n").filter((x2) => x2);
+    const minIndent = Math.min(...lines.map((x2) => x2.length - x2.trimStart().length));
+    const dedented = lines.map((x2) => x2.slice(minIndent)).map((x2) => " ".repeat(this.indent * 2) + x2);
     for (const line of dedented) {
       this.content.push(line);
     }
   }
   compile() {
-    const F = Function;
+    const F2 = Function;
     const args = this?.args;
     const content = this?.content ?? [``];
-    const lines = [...content.map((x) => `  ${x}`)];
-    return new F(...args, lines.join("\n"));
+    const lines = [...content.map((x2) => `  ${x2}`)];
+    return new F2(...args, lines.join("\n"));
   }
 };
 
@@ -12035,10 +12035,10 @@ var version = {
 };
 
 // node_modules/zod/v4/core/schemas.js
-var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def2) => {
+var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a;
   inst ?? (inst = {});
-  inst._zod.def = def2;
+  inst._zod.def = def;
   inst._zod.bag = inst._zod.bag || {};
   inst._zod.version = version;
   const checks = [...inst._zod.def.checks ?? []];
@@ -12068,13 +12068,13 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def2) => {
           continue;
         }
         const currLen = payload.issues.length;
-        const _ = ch._zod.check(payload);
-        if (_ instanceof Promise && ctx?.async === false) {
+        const _2 = ch._zod.check(payload);
+        if (_2 instanceof Promise && ctx?.async === false) {
           throw new $ZodAsyncError();
         }
-        if (asyncResult || _ instanceof Promise) {
+        if (asyncResult || _2 instanceof Promise) {
           asyncResult = (asyncResult ?? Promise.resolve()).then(async () => {
-            await _;
+            await _2;
             const nextLen = payload.issues.length;
             if (nextLen === currLen)
               return;
@@ -12111,7 +12111,7 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def2) => {
       try {
         const r = safeParse(inst, value);
         return r.success ? { value: r.data } : { issues: r.error?.issues };
-      } catch (_) {
+      } catch (_2) {
         return safeParseAsync(inst, value).then((r) => r.success ? { value: r.data } : { issues: r.error?.issues });
       }
     },
@@ -12119,14 +12119,14 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def2) => {
     version: 1
   };
 });
-var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.pattern = [...inst?._zod.bag?.patterns ?? []].pop() ?? string(inst._zod.bag);
-  inst._zod.parse = (payload, _) => {
-    if (def2.coerce)
+  inst._zod.parse = (payload, _2) => {
+    if (def.coerce)
       try {
         payload.value = String(payload.value);
-      } catch (_2) {
+      } catch (_3) {
       }
     if (typeof payload.value === "string")
       return payload;
@@ -12139,16 +12139,16 @@ var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def2) => {
     return payload;
   };
 });
-var $ZodStringFormat = /* @__PURE__ */ $constructor("$ZodStringFormat", (inst, def2) => {
-  $ZodCheckStringFormat.init(inst, def2);
-  $ZodString.init(inst, def2);
+var $ZodStringFormat = /* @__PURE__ */ $constructor("$ZodStringFormat", (inst, def) => {
+  $ZodCheckStringFormat.init(inst, def);
+  $ZodString.init(inst, def);
 });
-var $ZodGUID = /* @__PURE__ */ $constructor("$ZodGUID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = guid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodGUID = /* @__PURE__ */ $constructor("$ZodGUID", (inst, def) => {
+  def.pattern ?? (def.pattern = guid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def2) => {
-  if (def2.version) {
+var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def) => {
+  if (def.version) {
     const versionMap = {
       v1: 1,
       v2: 2,
@@ -12159,28 +12159,28 @@ var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def2) => {
       v7: 7,
       v8: 8
     };
-    const v = versionMap[def2.version];
-    if (v === void 0)
-      throw new Error(`Invalid UUID version: "${def2.version}"`);
-    def2.pattern ?? (def2.pattern = uuid(v));
+    const v2 = versionMap[def.version];
+    if (v2 === void 0)
+      throw new Error(`Invalid UUID version: "${def.version}"`);
+    def.pattern ?? (def.pattern = uuid(v2));
   } else
-    def2.pattern ?? (def2.pattern = uuid());
-  $ZodStringFormat.init(inst, def2);
+    def.pattern ?? (def.pattern = uuid());
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodEmail = /* @__PURE__ */ $constructor("$ZodEmail", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = email);
-  $ZodStringFormat.init(inst, def2);
+var $ZodEmail = /* @__PURE__ */ $constructor("$ZodEmail", (inst, def) => {
+  def.pattern ?? (def.pattern = email);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def2) => {
-  $ZodStringFormat.init(inst, def2);
+var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
+  $ZodStringFormat.init(inst, def);
   inst._zod.check = (payload) => {
     try {
       const orig = payload.value;
       const url = new URL(orig);
       const href = url.href;
-      if (def2.hostname) {
-        def2.hostname.lastIndex = 0;
-        if (!def2.hostname.test(url.hostname)) {
+      if (def.hostname) {
+        def.hostname.lastIndex = 0;
+        if (!def.hostname.test(url.hostname)) {
           payload.issues.push({
             code: "invalid_format",
             format: "url",
@@ -12188,21 +12188,21 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def2) => {
             pattern: hostname.source,
             input: payload.value,
             inst,
-            continue: !def2.abort
+            continue: !def.abort
           });
         }
       }
-      if (def2.protocol) {
-        def2.protocol.lastIndex = 0;
-        if (!def2.protocol.test(url.protocol.endsWith(":") ? url.protocol.slice(0, -1) : url.protocol)) {
+      if (def.protocol) {
+        def.protocol.lastIndex = 0;
+        if (!def.protocol.test(url.protocol.endsWith(":") ? url.protocol.slice(0, -1) : url.protocol)) {
           payload.issues.push({
             code: "invalid_format",
             format: "url",
             note: "Invalid protocol",
-            pattern: def2.protocol.source,
+            pattern: def.protocol.source,
             input: payload.value,
             inst,
-            continue: !def2.abort
+            continue: !def.abort
           });
         }
       }
@@ -12212,72 +12212,72 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def2) => {
         payload.value = href;
       }
       return;
-    } catch (_) {
+    } catch (_2) {
       payload.issues.push({
         code: "invalid_format",
         format: "url",
         input: payload.value,
         inst,
-        continue: !def2.abort
+        continue: !def.abort
       });
     }
   };
 });
-var $ZodEmoji = /* @__PURE__ */ $constructor("$ZodEmoji", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = emoji());
-  $ZodStringFormat.init(inst, def2);
+var $ZodEmoji = /* @__PURE__ */ $constructor("$ZodEmoji", (inst, def) => {
+  def.pattern ?? (def.pattern = emoji());
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodNanoID = /* @__PURE__ */ $constructor("$ZodNanoID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = nanoid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodNanoID = /* @__PURE__ */ $constructor("$ZodNanoID", (inst, def) => {
+  def.pattern ?? (def.pattern = nanoid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodCUID = /* @__PURE__ */ $constructor("$ZodCUID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = cuid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodCUID = /* @__PURE__ */ $constructor("$ZodCUID", (inst, def) => {
+  def.pattern ?? (def.pattern = cuid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodCUID2 = /* @__PURE__ */ $constructor("$ZodCUID2", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = cuid2);
-  $ZodStringFormat.init(inst, def2);
+var $ZodCUID2 = /* @__PURE__ */ $constructor("$ZodCUID2", (inst, def) => {
+  def.pattern ?? (def.pattern = cuid2);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodULID = /* @__PURE__ */ $constructor("$ZodULID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = ulid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodULID = /* @__PURE__ */ $constructor("$ZodULID", (inst, def) => {
+  def.pattern ?? (def.pattern = ulid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodXID = /* @__PURE__ */ $constructor("$ZodXID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = xid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodXID = /* @__PURE__ */ $constructor("$ZodXID", (inst, def) => {
+  def.pattern ?? (def.pattern = xid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodKSUID = /* @__PURE__ */ $constructor("$ZodKSUID", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = ksuid);
-  $ZodStringFormat.init(inst, def2);
+var $ZodKSUID = /* @__PURE__ */ $constructor("$ZodKSUID", (inst, def) => {
+  def.pattern ?? (def.pattern = ksuid);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodISODateTime = /* @__PURE__ */ $constructor("$ZodISODateTime", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = datetime(def2));
-  $ZodStringFormat.init(inst, def2);
+var $ZodISODateTime = /* @__PURE__ */ $constructor("$ZodISODateTime", (inst, def) => {
+  def.pattern ?? (def.pattern = datetime(def));
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = date);
-  $ZodStringFormat.init(inst, def2);
+var $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def) => {
+  def.pattern ?? (def.pattern = date);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = time(def2));
-  $ZodStringFormat.init(inst, def2);
+var $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def) => {
+  def.pattern ?? (def.pattern = time(def));
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = duration);
-  $ZodStringFormat.init(inst, def2);
+var $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def) => {
+  def.pattern ?? (def.pattern = duration);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodIPv4 = /* @__PURE__ */ $constructor("$ZodIPv4", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = ipv4);
-  $ZodStringFormat.init(inst, def2);
+var $ZodIPv4 = /* @__PURE__ */ $constructor("$ZodIPv4", (inst, def) => {
+  def.pattern ?? (def.pattern = ipv4);
+  $ZodStringFormat.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.format = `ipv4`;
   });
 });
-var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = ipv6);
-  $ZodStringFormat.init(inst, def2);
+var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def) => {
+  def.pattern ?? (def.pattern = ipv6);
+  $ZodStringFormat.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.format = `ipv6`;
@@ -12291,18 +12291,18 @@ var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def2) => {
         format: "ipv6",
         input: payload.value,
         inst,
-        continue: !def2.abort
+        continue: !def.abort
       });
     }
   };
 });
-var $ZodCIDRv4 = /* @__PURE__ */ $constructor("$ZodCIDRv4", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = cidrv4);
-  $ZodStringFormat.init(inst, def2);
+var $ZodCIDRv4 = /* @__PURE__ */ $constructor("$ZodCIDRv4", (inst, def) => {
+  def.pattern ?? (def.pattern = cidrv4);
+  $ZodStringFormat.init(inst, def);
 });
-var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = cidrv6);
-  $ZodStringFormat.init(inst, def2);
+var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
+  def.pattern ?? (def.pattern = cidrv6);
+  $ZodStringFormat.init(inst, def);
   inst._zod.check = (payload) => {
     const [address, prefix] = payload.value.split("/");
     try {
@@ -12320,7 +12320,7 @@ var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def2) => {
         format: "cidrv6",
         input: payload.value,
         inst,
-        continue: !def2.abort
+        continue: !def.abort
       });
     }
   };
@@ -12337,9 +12337,9 @@ function isValidBase64(data) {
     return false;
   }
 }
-var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = base64);
-  $ZodStringFormat.init(inst, def2);
+var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def) => {
+  def.pattern ?? (def.pattern = base64);
+  $ZodStringFormat.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     inst2._zod.bag.contentEncoding = "base64";
   });
@@ -12351,7 +12351,7 @@ var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def2) => {
       format: "base64",
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
@@ -12362,9 +12362,9 @@ function isValidBase64URL(data) {
   const padded = base642.padEnd(Math.ceil(base642.length / 4) * 4, "=");
   return isValidBase64(padded);
 }
-var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = base64url);
-  $ZodStringFormat.init(inst, def2);
+var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def) => {
+  def.pattern ?? (def.pattern = base64url);
+  $ZodStringFormat.init(inst, def);
   inst._zod.onattach.push((inst2) => {
     inst2._zod.bag.contentEncoding = "base64url";
   });
@@ -12376,13 +12376,13 @@ var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def2) =
       format: "base64url",
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodE164 = /* @__PURE__ */ $constructor("$ZodE164", (inst, def2) => {
-  def2.pattern ?? (def2.pattern = e164);
-  $ZodStringFormat.init(inst, def2);
+var $ZodE164 = /* @__PURE__ */ $constructor("$ZodE164", (inst, def) => {
+  def.pattern ?? (def.pattern = e164);
+  $ZodStringFormat.init(inst, def);
 });
 function isValidJWT2(token, algorithm = null) {
   try {
@@ -12404,28 +12404,28 @@ function isValidJWT2(token, algorithm = null) {
     return false;
   }
 }
-var $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def2) => {
-  $ZodStringFormat.init(inst, def2);
+var $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def) => {
+  $ZodStringFormat.init(inst, def);
   inst._zod.check = (payload) => {
-    if (isValidJWT2(payload.value, def2.alg))
+    if (isValidJWT2(payload.value, def.alg))
       return;
     payload.issues.push({
       code: "invalid_format",
       format: "jwt",
       input: payload.value,
       inst,
-      continue: !def2.abort
+      continue: !def.abort
     });
   };
 });
-var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.pattern = inst._zod.bag.pattern ?? number;
   inst._zod.parse = (payload, _ctx) => {
-    if (def2.coerce)
+    if (def.coerce)
       try {
         payload.value = Number(payload.value);
-      } catch (_) {
+      } catch (_2) {
       }
     const input = payload.value;
     if (typeof input === "number" && !Number.isNaN(input) && Number.isFinite(input)) {
@@ -12442,18 +12442,18 @@ var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def2) => {
     return payload;
   };
 });
-var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def2) => {
-  $ZodCheckNumberFormat.init(inst, def2);
-  $ZodNumber.init(inst, def2);
+var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
+  $ZodCheckNumberFormat.init(inst, def);
+  $ZodNumber.init(inst, def);
 });
-var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.pattern = boolean;
   inst._zod.parse = (payload, _ctx) => {
-    if (def2.coerce)
+    if (def.coerce)
       try {
         payload.value = Boolean(payload.value);
-      } catch (_) {
+      } catch (_2) {
       }
     const input = payload.value;
     if (typeof input === "boolean")
@@ -12467,8 +12467,8 @@ var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def2) => {
     return payload;
   };
 });
-var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.pattern = _null;
   inst._zod.values = /* @__PURE__ */ new Set([null]);
   inst._zod.parse = (payload, _ctx) => {
@@ -12484,12 +12484,12 @@ var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def2) => {
     return payload;
   };
 });
-var $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload) => payload;
 });
-var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload, _ctx) => {
     payload.issues.push({
       expected: "never",
@@ -12506,8 +12506,8 @@ function handleArrayResult(result, final, index) {
   }
   final.value[index] = result.value;
 }
-var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!Array.isArray(input)) {
@@ -12523,7 +12523,7 @@ var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def2) => {
     const proms = [];
     for (let i = 0; i < input.length; i++) {
       const item = input[i];
-      const result = def2.element._zod.run({
+      const result = def.element._zod.run({
         value: item,
         issues: []
       }, ctx);
@@ -12563,18 +12563,18 @@ function handleOptionalObjectResult(result, final, key, input) {
     final.value[key] = result.value;
   }
 }
-var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
+  $ZodType.init(inst, def);
   const _normalized = cached(() => {
-    const keys = Object.keys(def2.shape);
-    for (const k of keys) {
-      if (!(def2.shape[k] instanceof $ZodType)) {
-        throw new Error(`Invalid element at key "${k}": expected a Zod schema`);
+    const keys = Object.keys(def.shape);
+    for (const k2 of keys) {
+      if (!(def.shape[k2] instanceof $ZodType)) {
+        throw new Error(`Invalid element at key "${k2}": expected a Zod schema`);
       }
     }
-    const okeys = optionalKeys(def2.shape);
+    const okeys = optionalKeys(def.shape);
     return {
-      shape: def2.shape,
+      shape: def.shape,
       keys,
       keySet: new Set(keys),
       numKeys: keys.length,
@@ -12582,14 +12582,14 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
     };
   });
   defineLazy(inst._zod, "propValues", () => {
-    const shape = def2.shape;
+    const shape = def.shape;
     const propValues = {};
     for (const key in shape) {
       const field = shape[key]._zod;
       if (field.values) {
         propValues[key] ?? (propValues[key] = /* @__PURE__ */ new Set());
-        for (const v of field.values)
-          propValues[key].add(v);
+        for (const v2 of field.values)
+          propValues[key].add(v2);
       }
     }
     return propValues;
@@ -12598,8 +12598,8 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
     const doc = new Doc(["shape", "payload", "ctx"]);
     const normalized = _normalized.value;
     const parseStr = (key) => {
-      const k = esc(key);
-      return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
+      const k2 = esc(key);
+      return `shape[${k2}]._zod.run({ value: input[${k2}], issues: [] }, ctx)`;
     };
     doc.write(`const input = payload.value;`);
     const ids = /* @__PURE__ */ Object.create(null);
@@ -12612,25 +12612,25 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
       if (normalized.optionalKeys.has(key)) {
         const id = ids[key];
         doc.write(`const ${id} = ${parseStr(key)};`);
-        const k = esc(key);
+        const k2 = esc(key);
         doc.write(`
         if (${id}.issues.length) {
-          if (input[${k}] === undefined) {
-            if (${k} in input) {
-              newResult[${k}] = undefined;
+          if (input[${k2}] === undefined) {
+            if (${k2} in input) {
+              newResult[${k2}] = undefined;
             }
           } else {
             payload.issues = payload.issues.concat(
               ${id}.issues.map((iss) => ({
                 ...iss,
-                path: iss.path ? [${k}, ...iss.path] : [${k}],
+                path: iss.path ? [${k2}, ...iss.path] : [${k2}],
               }))
             );
           }
         } else if (${id}.value === undefined) {
-          if (${k} in input) newResult[${k}] = undefined;
+          if (${k2} in input) newResult[${k2}] = undefined;
         } else {
-          newResult[${k}] = ${id}.value;
+          newResult[${k2}] = ${id}.value;
         }
         `);
       } else {
@@ -12654,7 +12654,7 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
   const jit = !globalConfig.jitless;
   const allowsEval2 = allowsEval;
   const fastEnabled = jit && allowsEval2.value;
-  const catchall = def2.catchall;
+  const catchall = def.catchall;
   let value;
   inst._zod.parse = (payload, ctx) => {
     value ?? (value = _normalized.value);
@@ -12671,7 +12671,7 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
     const proms = [];
     if (jit && fastEnabled && ctx?.async === false && ctx.jitless !== true) {
       if (!fastpass)
-        fastpass = generateFastpass(def2.shape);
+        fastpass = generateFastpass(def.shape);
       payload = fastpass(payload, ctx);
     } else {
       payload.value = {};
@@ -12740,19 +12740,19 @@ function handleUnionResults(results, final, inst, ctx) {
   });
   return final;
 }
-var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  defineLazy(inst._zod, "optin", () => def2.options.some((o) => o._zod.optin === "optional") ? "optional" : void 0);
-  defineLazy(inst._zod, "optout", () => def2.options.some((o) => o._zod.optout === "optional") ? "optional" : void 0);
+var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def) => {
+  $ZodType.init(inst, def);
+  defineLazy(inst._zod, "optin", () => def.options.some((o) => o._zod.optin === "optional") ? "optional" : void 0);
+  defineLazy(inst._zod, "optout", () => def.options.some((o) => o._zod.optout === "optional") ? "optional" : void 0);
   defineLazy(inst._zod, "values", () => {
-    if (def2.options.every((o) => o._zod.values)) {
-      return new Set(def2.options.flatMap((option) => Array.from(option._zod.values)));
+    if (def.options.every((o) => o._zod.values)) {
+      return new Set(def.options.flatMap((option) => Array.from(option._zod.values)));
     }
     return void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    if (def2.options.every((o) => o._zod.pattern)) {
-      const patterns = def2.options.map((o) => o._zod.pattern);
+    if (def.options.every((o) => o._zod.pattern)) {
+      const patterns = def.options.map((o) => o._zod.pattern);
       return new RegExp(`^(${patterns.map((p) => cleanRegex(p.source)).join("|")})$`);
     }
     return void 0;
@@ -12760,7 +12760,7 @@ var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def2) => {
   inst._zod.parse = (payload, ctx) => {
     let async = false;
     const results = [];
-    for (const option of def2.options) {
+    for (const option of def.options) {
       const result = option._zod.run({
         value: payload.value,
         issues: []
@@ -12781,37 +12781,37 @@ var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def2) => {
     });
   };
 });
-var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnion", (inst, def2) => {
-  $ZodUnion.init(inst, def2);
+var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnion", (inst, def) => {
+  $ZodUnion.init(inst, def);
   const _super = inst._zod.parse;
   defineLazy(inst._zod, "propValues", () => {
     const propValues = {};
-    for (const option of def2.options) {
+    for (const option of def.options) {
       const pv = option._zod.propValues;
       if (!pv || Object.keys(pv).length === 0)
-        throw new Error(`Invalid discriminated union option at index "${def2.options.indexOf(option)}"`);
-      for (const [k, v] of Object.entries(pv)) {
-        if (!propValues[k])
-          propValues[k] = /* @__PURE__ */ new Set();
-        for (const val of v) {
-          propValues[k].add(val);
+        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(option)}"`);
+      for (const [k2, v2] of Object.entries(pv)) {
+        if (!propValues[k2])
+          propValues[k2] = /* @__PURE__ */ new Set();
+        for (const val of v2) {
+          propValues[k2].add(val);
         }
       }
     }
     return propValues;
   });
   const disc = cached(() => {
-    const opts = def2.options;
+    const opts = def.options;
     const map = /* @__PURE__ */ new Map();
     for (const o of opts) {
-      const values = o._zod.propValues[def2.discriminator];
+      const values = o._zod.propValues[def.discriminator];
       if (!values || values.size === 0)
-        throw new Error(`Invalid discriminated union option at index "${def2.options.indexOf(o)}"`);
-      for (const v of values) {
-        if (map.has(v)) {
-          throw new Error(`Duplicate discriminator value "${String(v)}"`);
+        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(o)}"`);
+      for (const v2 of values) {
+        if (map.has(v2)) {
+          throw new Error(`Duplicate discriminator value "${String(v2)}"`);
         }
-        map.set(v, o);
+        map.set(v2, o);
       }
     }
     return map;
@@ -12827,11 +12827,11 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
       });
       return payload;
     }
-    const opt = disc.value.get(input?.[def2.discriminator]);
+    const opt = disc.value.get(input?.[def.discriminator]);
     if (opt) {
       return opt._zod.run(payload, ctx);
     }
-    if (def2.unionFallback) {
+    if (def.unionFallback) {
       return _super(payload, ctx);
     }
     payload.issues.push({
@@ -12839,18 +12839,18 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
       errors: [],
       note: "No matching discriminator",
       input,
-      path: [def2.discriminator],
+      path: [def.discriminator],
       inst
     });
     return payload;
   };
 });
-var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
-    const left = def2.left._zod.run({ value: input, issues: [] }, ctx);
-    const right = def2.right._zod.run({ value: input, issues: [] }, ctx);
+    const left = def.left._zod.run({ value: input, issues: [] }, ctx);
+    const right = def.right._zod.run({ value: input, issues: [] }, ctx);
     const async = left instanceof Promise || right instanceof Promise;
     if (async) {
       return Promise.all([left, right]).then(([left2, right2]) => {
@@ -12860,19 +12860,19 @@ var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, d
     return handleIntersectionResults(payload, left, right);
   };
 });
-function mergeValues2(a, b) {
-  if (a === b) {
+function mergeValues2(a, b2) {
+  if (a === b2) {
     return { valid: true, data: a };
   }
-  if (a instanceof Date && b instanceof Date && +a === +b) {
+  if (a instanceof Date && b2 instanceof Date && +a === +b2) {
     return { valid: true, data: a };
   }
-  if (isPlainObject(a) && isPlainObject(b)) {
-    const bKeys = Object.keys(b);
+  if (isPlainObject(a) && isPlainObject(b2)) {
+    const bKeys = Object.keys(b2);
     const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
-    const newObj = { ...a, ...b };
+    const newObj = { ...a, ...b2 };
     for (const key of sharedKeys) {
-      const sharedValue = mergeValues2(a[key], b[key]);
+      const sharedValue = mergeValues2(a[key], b2[key]);
       if (!sharedValue.valid) {
         return {
           valid: false,
@@ -12883,14 +12883,14 @@ function mergeValues2(a, b) {
     }
     return { valid: true, data: newObj };
   }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) {
+  if (Array.isArray(a) && Array.isArray(b2)) {
+    if (a.length !== b2.length) {
       return { valid: false, mergeErrorPath: [] };
     }
     const newArray = [];
     for (let index = 0; index < a.length; index++) {
       const itemA = a[index];
-      const itemB = b[index];
+      const itemB = b2[index];
       const sharedValue = mergeValues2(itemA, itemB);
       if (!sharedValue.valid) {
         return {
@@ -12920,8 +12920,8 @@ function handleIntersectionResults(result, left, right) {
   result.value = merged.data;
   return result;
 }
-var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!isPlainObject(input)) {
@@ -12934,12 +12934,12 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
       return payload;
     }
     const proms = [];
-    if (def2.keyType._zod.values) {
-      const values = def2.keyType._zod.values;
+    if (def.keyType._zod.values) {
+      const values = def.keyType._zod.values;
       payload.value = {};
       for (const key of values) {
         if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
-          const result = def2.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
           if (result instanceof Promise) {
             proms.push(result.then((result2) => {
               if (result2.issues.length) {
@@ -12975,7 +12975,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
       for (const key of Reflect.ownKeys(input)) {
         if (key === "__proto__")
           continue;
-        const keyResult = def2.keyType._zod.run({ value: key, issues: [] }, ctx);
+        const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
         if (keyResult instanceof Promise) {
           throw new Error("Async schemas not supported in object keys currently");
         }
@@ -12991,7 +12991,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
           payload.value[keyResult.value] = keyResult.value;
           continue;
         }
-        const result = def2.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+        const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
         if (result instanceof Promise) {
           proms.push(result.then((result2) => {
             if (result2.issues.length) {
@@ -13013,11 +13013,11 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
     return payload;
   };
 });
-var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  const values = getEnumValues(def2.entries);
+var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
+  $ZodType.init(inst, def);
+  const values = getEnumValues(def.entries);
   inst._zod.values = new Set(values);
-  inst._zod.pattern = new RegExp(`^(${values.filter((k) => propertyKeyTypes.has(typeof k)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${values.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (inst._zod.values.has(input)) {
@@ -13032,10 +13032,10 @@ var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def2) => {
     return payload;
   };
 });
-var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  inst._zod.values = new Set(def2.values);
-  inst._zod.pattern = new RegExp(`^(${def2.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? o.toString() : String(o)).join("|")})$`);
+var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
+  $ZodType.init(inst, def);
+  inst._zod.values = new Set(def.values);
+  inst._zod.pattern = new RegExp(`^(${def.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? o.toString() : String(o)).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (inst._zod.values.has(input)) {
@@ -13043,17 +13043,17 @@ var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def2) => {
     }
     payload.issues.push({
       code: "invalid_value",
-      values: def2.values,
+      values: def.values,
       input,
       inst
     });
     return payload;
   };
 });
-var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.parse = (payload, _ctx) => {
-    const _out = def2.transform(payload.value, payload);
+    const _out = def.transform(payload.value, payload);
     if (_ctx.async) {
       const output = _out instanceof Promise ? _out : Promise.resolve(_out);
       return output.then((output2) => {
@@ -13068,85 +13068,85 @@ var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def2) =
     return payload;
   };
 });
-var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.optin = "optional";
   inst._zod.optout = "optional";
   defineLazy(inst._zod, "values", () => {
-    return def2.innerType._zod.values ? /* @__PURE__ */ new Set([...def2.innerType._zod.values, void 0]) : void 0;
+    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def2.innerType._zod.pattern;
+    const pattern = def.innerType._zod.pattern;
     return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
-    if (def2.innerType._zod.optin === "optional") {
-      return def2.innerType._zod.run(payload, ctx);
+    if (def.innerType._zod.optin === "optional") {
+      return def.innerType._zod.run(payload, ctx);
     }
     if (payload.value === void 0) {
       return payload;
     }
-    return def2.innerType._zod.run(payload, ctx);
+    return def.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  defineLazy(inst._zod, "optin", () => def2.innerType._zod.optin);
-  defineLazy(inst._zod, "optout", () => def2.innerType._zod.optout);
+var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
+  $ZodType.init(inst, def);
+  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
+  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def2.innerType._zod.pattern;
+    const pattern = def.innerType._zod.pattern;
     return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
   });
   defineLazy(inst._zod, "values", () => {
-    return def2.innerType._zod.values ? /* @__PURE__ */ new Set([...def2.innerType._zod.values, null]) : void 0;
+    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     if (payload.value === null)
       return payload;
-    return def2.innerType._zod.run(payload, ctx);
+    return def.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodDefault = /* @__PURE__ */ $constructor("$ZodDefault", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodDefault = /* @__PURE__ */ $constructor("$ZodDefault", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
+  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
     if (payload.value === void 0) {
-      payload.value = def2.defaultValue;
+      payload.value = def.defaultValue;
       return payload;
     }
-    const result = def2.innerType._zod.run(payload, ctx);
+    const result = def.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
-      return result.then((result2) => handleDefaultResult(result2, def2));
+      return result.then((result2) => handleDefaultResult(result2, def));
     }
-    return handleDefaultResult(result, def2);
+    return handleDefaultResult(result, def);
   };
 });
-function handleDefaultResult(payload, def2) {
+function handleDefaultResult(payload, def) {
   if (payload.value === void 0) {
-    payload.value = def2.defaultValue;
+    payload.value = def.defaultValue;
   }
   return payload;
 }
-var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
+  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
     if (payload.value === void 0) {
-      payload.value = def2.defaultValue;
+      payload.value = def.defaultValue;
     }
-    return def2.innerType._zod.run(payload, ctx);
+    return def.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def) => {
+  $ZodType.init(inst, def);
   defineLazy(inst._zod, "values", () => {
-    const v = def2.innerType._zod.values;
-    return v ? new Set([...v].filter((x) => x !== void 0)) : void 0;
+    const v2 = def.innerType._zod.values;
+    return v2 ? new Set([...v2].filter((x2) => x2 !== void 0)) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
-    const result = def2.innerType._zod.run(payload, ctx);
+    const result = def.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then((result2) => handleNonOptionalResult(result2, inst));
     }
@@ -13164,18 +13164,18 @@ function handleNonOptionalResult(payload, inst) {
   }
   return payload;
 }
-var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def2) => {
-  $ZodType.init(inst, def2);
+var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
+  $ZodType.init(inst, def);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "optout", () => def2.innerType._zod.optout);
-  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
+  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
+  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
-    const result = def2.innerType._zod.run(payload, ctx);
+    const result = def.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then((result2) => {
         payload.value = result2.value;
         if (result2.issues.length) {
-          payload.value = def2.catchValue({
+          payload.value = def.catchValue({
             ...payload,
             error: {
               issues: result2.issues.map((iss) => finalizeIssue(iss, ctx, config()))
@@ -13189,7 +13189,7 @@ var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def2) => {
     }
     payload.value = result.value;
     if (result.issues.length) {
-      payload.value = def2.catchValue({
+      payload.value = def.catchValue({
         ...payload,
         error: {
           issues: result.issues.map((iss) => finalizeIssue(iss, ctx, config()))
@@ -13201,33 +13201,33 @@ var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def2) => {
     return payload;
   };
 });
-var $ZodPipe = /* @__PURE__ */ $constructor("$ZodPipe", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  defineLazy(inst._zod, "values", () => def2.in._zod.values);
-  defineLazy(inst._zod, "optin", () => def2.in._zod.optin);
-  defineLazy(inst._zod, "optout", () => def2.out._zod.optout);
+var $ZodPipe = /* @__PURE__ */ $constructor("$ZodPipe", (inst, def) => {
+  $ZodType.init(inst, def);
+  defineLazy(inst._zod, "values", () => def.in._zod.values);
+  defineLazy(inst._zod, "optin", () => def.in._zod.optin);
+  defineLazy(inst._zod, "optout", () => def.out._zod.optout);
   inst._zod.parse = (payload, ctx) => {
-    const left = def2.in._zod.run(payload, ctx);
+    const left = def.in._zod.run(payload, ctx);
     if (left instanceof Promise) {
-      return left.then((left2) => handlePipeResult(left2, def2, ctx));
+      return left.then((left2) => handlePipeResult(left2, def, ctx));
     }
-    return handlePipeResult(left, def2, ctx);
+    return handlePipeResult(left, def, ctx);
   };
 });
-function handlePipeResult(left, def2, ctx) {
+function handlePipeResult(left, def, ctx) {
   if (aborted(left)) {
     return left;
   }
-  return def2.out._zod.run({ value: left.value, issues: left.issues }, ctx);
+  return def.out._zod.run({ value: left.value, issues: left.issues }, ctx);
 }
-var $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  defineLazy(inst._zod, "propValues", () => def2.innerType._zod.propValues);
-  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
-  defineLazy(inst._zod, "optin", () => def2.innerType._zod.optin);
-  defineLazy(inst._zod, "optout", () => def2.innerType._zod.optout);
+var $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def) => {
+  $ZodType.init(inst, def);
+  defineLazy(inst._zod, "propValues", () => def.innerType._zod.propValues);
+  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
+  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
+  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
   inst._zod.parse = (payload, ctx) => {
-    const result = def2.innerType._zod.run(payload, ctx);
+    const result = def.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then(handleReadonlyResult);
     }
@@ -13238,15 +13238,15 @@ function handleReadonlyResult(payload) {
   payload.value = Object.freeze(payload.value);
   return payload;
 }
-var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def2) => {
-  $ZodCheck.init(inst, def2);
-  $ZodType.init(inst, def2);
-  inst._zod.parse = (payload, _) => {
+var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
+  $ZodCheck.init(inst, def);
+  $ZodType.init(inst, def);
+  inst._zod.parse = (payload, _2) => {
     return payload;
   };
   inst._zod.check = (payload) => {
     const input = payload.value;
-    const r = def2.fn(input);
+    const r = def.fn(input);
     if (r instanceof Promise) {
       return r.then((r2) => handleRefineResult(r2, payload, input, inst));
     }
@@ -13918,22 +13918,22 @@ function getObjectShape(schema) {
 function getLiteralValue(schema) {
   if (isZ4Schema(schema)) {
     const v4Schema = schema;
-    const def3 = v4Schema._zod?.def;
-    if (def3) {
-      if (def3.value !== void 0)
-        return def3.value;
-      if (Array.isArray(def3.values) && def3.values.length > 0) {
-        return def3.values[0];
+    const def2 = v4Schema._zod?.def;
+    if (def2) {
+      if (def2.value !== void 0)
+        return def2.value;
+      if (Array.isArray(def2.values) && def2.values.length > 0) {
+        return def2.values[0];
       }
     }
   }
   const v3Schema = schema;
-  const def2 = v3Schema._def;
-  if (def2) {
-    if (def2.value !== void 0)
-      return def2.value;
-    if (Array.isArray(def2.values) && def2.values.length > 0) {
-      return def2.values[0];
+  const def = v3Schema._def;
+  if (def) {
+    if (def.value !== void 0)
+      return def.value;
+    if (Array.isArray(def.values) && def.values.length > 0) {
+      return def.values[0];
     }
   }
   const directValue = schema.value;
@@ -13954,30 +13954,30 @@ __export(iso_exports, {
   duration: () => duration2,
   time: () => time2
 });
-var ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def2) => {
-  $ZodISODateTime.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def) => {
+  $ZodISODateTime.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
 function datetime2(params) {
   return _isoDateTime(ZodISODateTime, params);
 }
-var ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def2) => {
-  $ZodISODate.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def) => {
+  $ZodISODate.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
 function date2(params) {
   return _isoDate(ZodISODate, params);
 }
-var ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def2) => {
-  $ZodISOTime.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
+  $ZodISOTime.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
 function time2(params) {
   return _isoTime(ZodISOTime, params);
 }
-var ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def2) => {
-  $ZodISODuration.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
+  $ZodISODuration.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
 function duration2(params) {
   return _isoDuration(ZodISODuration, params);
@@ -14024,23 +14024,23 @@ var safeParse3 = /* @__PURE__ */ _safeParse(ZodRealError);
 var safeParseAsync2 = /* @__PURE__ */ _safeParseAsync(ZodRealError);
 
 // node_modules/zod/v4/classic/schemas.js
-var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def2) => {
-  $ZodType.init(inst, def2);
-  inst.def = def2;
-  Object.defineProperty(inst, "_def", { value: def2 });
+var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
+  $ZodType.init(inst, def);
+  inst.def = def;
+  Object.defineProperty(inst, "_def", { value: def });
   inst.check = (...checks) => {
     return inst.clone(
       {
-        ...def2,
+        ...def,
         checks: [
-          ...def2.checks ?? [],
+          ...def.checks ?? [],
           ...checks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
         ]
       }
       // { parent: true }
     );
   };
-  inst.clone = (def3, params) => clone(inst, def3, params);
+  inst.clone = (def2, params) => clone(inst, def2, params);
   inst.brand = () => inst;
   inst.register = (reg, meta) => {
     reg.add(inst, meta);
@@ -14062,8 +14062,8 @@ var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def2) => {
   inst.or = (arg) => union([inst, arg]);
   inst.and = (arg) => intersection(inst, arg);
   inst.transform = (tx) => pipe(inst, transform(tx));
-  inst.default = (def3) => _default(inst, def3);
-  inst.prefault = (def3) => prefault(inst, def3);
+  inst.default = (def2) => _default(inst, def2);
+  inst.prefault = (def2) => prefault(inst, def2);
   inst.catch = (params) => _catch(inst, params);
   inst.pipe = (target) => pipe(inst, target);
   inst.readonly = () => readonly(inst);
@@ -14090,9 +14090,9 @@ var ZodType2 = /* @__PURE__ */ $constructor("ZodType", (inst, def2) => {
   inst.isNullable = () => inst.safeParse(null).success;
   return inst;
 });
-var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def2) => {
-  $ZodString.init(inst, def2);
-  ZodType2.init(inst, def2);
+var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
+  $ZodString.init(inst, def);
+  ZodType2.init(inst, def);
   const bag = inst._zod.bag;
   inst.format = bag.format ?? null;
   inst.minLength = bag.minimum ?? null;
@@ -14112,9 +14112,9 @@ var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def2) => {
   inst.toLowerCase = () => inst.check(_toLowerCase());
   inst.toUpperCase = () => inst.check(_toUpperCase());
 });
-var ZodString2 = /* @__PURE__ */ $constructor("ZodString", (inst, def2) => {
-  $ZodString.init(inst, def2);
-  _ZodString.init(inst, def2);
+var ZodString2 = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
+  $ZodString.init(inst, def);
+  _ZodString.init(inst, def);
   inst.email = (params) => inst.check(_email(ZodEmail, params));
   inst.url = (params) => inst.check(_url(ZodURL, params));
   inst.jwt = (params) => inst.check(_jwt(ZodJWT, params));
@@ -14146,89 +14146,89 @@ var ZodString2 = /* @__PURE__ */ $constructor("ZodString", (inst, def2) => {
 function string2(params) {
   return _string(ZodString2, params);
 }
-var ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def2) => {
-  $ZodStringFormat.init(inst, def2);
-  _ZodString.init(inst, def2);
+var ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def) => {
+  $ZodStringFormat.init(inst, def);
+  _ZodString.init(inst, def);
 });
-var ZodEmail = /* @__PURE__ */ $constructor("ZodEmail", (inst, def2) => {
-  $ZodEmail.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodEmail = /* @__PURE__ */ $constructor("ZodEmail", (inst, def) => {
+  $ZodEmail.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodGUID = /* @__PURE__ */ $constructor("ZodGUID", (inst, def2) => {
-  $ZodGUID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodGUID = /* @__PURE__ */ $constructor("ZodGUID", (inst, def) => {
+  $ZodGUID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodUUID = /* @__PURE__ */ $constructor("ZodUUID", (inst, def2) => {
-  $ZodUUID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodUUID = /* @__PURE__ */ $constructor("ZodUUID", (inst, def) => {
+  $ZodUUID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodURL = /* @__PURE__ */ $constructor("ZodURL", (inst, def2) => {
-  $ZodURL.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodURL = /* @__PURE__ */ $constructor("ZodURL", (inst, def) => {
+  $ZodURL.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodEmoji = /* @__PURE__ */ $constructor("ZodEmoji", (inst, def2) => {
-  $ZodEmoji.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodEmoji = /* @__PURE__ */ $constructor("ZodEmoji", (inst, def) => {
+  $ZodEmoji.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodNanoID = /* @__PURE__ */ $constructor("ZodNanoID", (inst, def2) => {
-  $ZodNanoID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodNanoID = /* @__PURE__ */ $constructor("ZodNanoID", (inst, def) => {
+  $ZodNanoID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodCUID = /* @__PURE__ */ $constructor("ZodCUID", (inst, def2) => {
-  $ZodCUID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodCUID = /* @__PURE__ */ $constructor("ZodCUID", (inst, def) => {
+  $ZodCUID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodCUID2 = /* @__PURE__ */ $constructor("ZodCUID2", (inst, def2) => {
-  $ZodCUID2.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodCUID2 = /* @__PURE__ */ $constructor("ZodCUID2", (inst, def) => {
+  $ZodCUID2.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodULID = /* @__PURE__ */ $constructor("ZodULID", (inst, def2) => {
-  $ZodULID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodULID = /* @__PURE__ */ $constructor("ZodULID", (inst, def) => {
+  $ZodULID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodXID = /* @__PURE__ */ $constructor("ZodXID", (inst, def2) => {
-  $ZodXID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodXID = /* @__PURE__ */ $constructor("ZodXID", (inst, def) => {
+  $ZodXID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodKSUID = /* @__PURE__ */ $constructor("ZodKSUID", (inst, def2) => {
-  $ZodKSUID.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodKSUID = /* @__PURE__ */ $constructor("ZodKSUID", (inst, def) => {
+  $ZodKSUID.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodIPv4 = /* @__PURE__ */ $constructor("ZodIPv4", (inst, def2) => {
-  $ZodIPv4.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodIPv4 = /* @__PURE__ */ $constructor("ZodIPv4", (inst, def) => {
+  $ZodIPv4.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodIPv6 = /* @__PURE__ */ $constructor("ZodIPv6", (inst, def2) => {
-  $ZodIPv6.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodIPv6 = /* @__PURE__ */ $constructor("ZodIPv6", (inst, def) => {
+  $ZodIPv6.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodCIDRv4 = /* @__PURE__ */ $constructor("ZodCIDRv4", (inst, def2) => {
-  $ZodCIDRv4.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodCIDRv4 = /* @__PURE__ */ $constructor("ZodCIDRv4", (inst, def) => {
+  $ZodCIDRv4.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodCIDRv6 = /* @__PURE__ */ $constructor("ZodCIDRv6", (inst, def2) => {
-  $ZodCIDRv6.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodCIDRv6 = /* @__PURE__ */ $constructor("ZodCIDRv6", (inst, def) => {
+  $ZodCIDRv6.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodBase64 = /* @__PURE__ */ $constructor("ZodBase64", (inst, def2) => {
-  $ZodBase64.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodBase64 = /* @__PURE__ */ $constructor("ZodBase64", (inst, def) => {
+  $ZodBase64.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodBase64URL = /* @__PURE__ */ $constructor("ZodBase64URL", (inst, def2) => {
-  $ZodBase64URL.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodBase64URL = /* @__PURE__ */ $constructor("ZodBase64URL", (inst, def) => {
+  $ZodBase64URL.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodE164 = /* @__PURE__ */ $constructor("ZodE164", (inst, def2) => {
-  $ZodE164.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodE164 = /* @__PURE__ */ $constructor("ZodE164", (inst, def) => {
+  $ZodE164.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def2) => {
-  $ZodJWT.init(inst, def2);
-  ZodStringFormat.init(inst, def2);
+var ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def) => {
+  $ZodJWT.init(inst, def);
+  ZodStringFormat.init(inst, def);
 });
-var ZodNumber2 = /* @__PURE__ */ $constructor("ZodNumber", (inst, def2) => {
-  $ZodNumber.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodNumber2 = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
+  $ZodNumber.init(inst, def);
+  ZodType2.init(inst, def);
   inst.gt = (value, params) => inst.check(_gt(value, params));
   inst.gte = (value, params) => inst.check(_gte(value, params));
   inst.min = (value, params) => inst.check(_gte(value, params));
@@ -14254,45 +14254,45 @@ var ZodNumber2 = /* @__PURE__ */ $constructor("ZodNumber", (inst, def2) => {
 function number2(params) {
   return _number(ZodNumber2, params);
 }
-var ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def2) => {
-  $ZodNumberFormat.init(inst, def2);
-  ZodNumber2.init(inst, def2);
+var ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
+  $ZodNumberFormat.init(inst, def);
+  ZodNumber2.init(inst, def);
 });
 function int(params) {
   return _int(ZodNumberFormat, params);
 }
-var ZodBoolean2 = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def2) => {
-  $ZodBoolean.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodBoolean2 = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
+  $ZodBoolean.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function boolean2(params) {
   return _boolean(ZodBoolean2, params);
 }
-var ZodNull2 = /* @__PURE__ */ $constructor("ZodNull", (inst, def2) => {
-  $ZodNull.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodNull2 = /* @__PURE__ */ $constructor("ZodNull", (inst, def) => {
+  $ZodNull.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function _null3(params) {
   return _null2(ZodNull2, params);
 }
-var ZodUnknown2 = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def2) => {
-  $ZodUnknown.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodUnknown2 = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
+  $ZodUnknown.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function unknown() {
   return _unknown(ZodUnknown2);
 }
-var ZodNever2 = /* @__PURE__ */ $constructor("ZodNever", (inst, def2) => {
-  $ZodNever.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodNever2 = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
+  $ZodNever.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function never(params) {
   return _never(ZodNever2, params);
 }
-var ZodArray2 = /* @__PURE__ */ $constructor("ZodArray", (inst, def2) => {
-  $ZodArray.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.element = def2.element;
+var ZodArray2 = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
+  $ZodArray.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.element = def.element;
   inst.min = (minLength, params) => inst.check(_minLength(minLength, params));
   inst.nonempty = (params) => inst.check(_minLength(1, params));
   inst.max = (maxLength, params) => inst.check(_maxLength(maxLength, params));
@@ -14302,10 +14302,10 @@ var ZodArray2 = /* @__PURE__ */ $constructor("ZodArray", (inst, def2) => {
 function array(element, params) {
   return _array(ZodArray2, element, params);
 }
-var ZodObject2 = /* @__PURE__ */ $constructor("ZodObject", (inst, def2) => {
-  $ZodObject.init(inst, def2);
-  ZodType2.init(inst, def2);
-  util_exports.defineLazy(inst, "shape", () => def2.shape);
+var ZodObject2 = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
+  $ZodObject.init(inst, def);
+  ZodType2.init(inst, def);
+  util_exports.defineLazy(inst, "shape", () => def.shape);
   inst.keyof = () => _enum(Object.keys(inst._zod.def.shape));
   inst.catchall = (catchall) => inst.clone({ ...inst._zod.def, catchall });
   inst.passthrough = () => inst.clone({ ...inst._zod.def, catchall: unknown() });
@@ -14315,14 +14315,14 @@ var ZodObject2 = /* @__PURE__ */ $constructor("ZodObject", (inst, def2) => {
   inst.extend = (incoming) => {
     return util_exports.extend(inst, incoming);
   };
-  inst.merge = (other2) => util_exports.merge(inst, other2);
+  inst.merge = (other) => util_exports.merge(inst, other);
   inst.pick = (mask) => util_exports.pick(inst, mask);
   inst.omit = (mask) => util_exports.omit(inst, mask);
   inst.partial = (...args) => util_exports.partial(ZodOptional2, inst, args[0]);
   inst.required = (...args) => util_exports.required(ZodNonOptional, inst, args[0]);
 });
 function object2(shape, params) {
-  const def2 = {
+  const def = {
     type: "object",
     get shape() {
       util_exports.assignProp(this, "shape", { ...shape });
@@ -14330,7 +14330,7 @@ function object2(shape, params) {
     },
     ...util_exports.normalizeParams(params)
   };
-  return new ZodObject2(def2);
+  return new ZodObject2(def);
 }
 function looseObject(shape, params) {
   return new ZodObject2({
@@ -14343,33 +14343,33 @@ function looseObject(shape, params) {
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodUnion2 = /* @__PURE__ */ $constructor("ZodUnion", (inst, def2) => {
-  $ZodUnion.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.options = def2.options;
+var ZodUnion2 = /* @__PURE__ */ $constructor("ZodUnion", (inst, def) => {
+  $ZodUnion.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.options = def.options;
 });
-function union(options2, params) {
+function union(options, params) {
   return new ZodUnion2({
     type: "union",
-    options: options2,
+    options,
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodDiscriminatedUnion2 = /* @__PURE__ */ $constructor("ZodDiscriminatedUnion", (inst, def2) => {
-  ZodUnion2.init(inst, def2);
-  $ZodDiscriminatedUnion.init(inst, def2);
+var ZodDiscriminatedUnion2 = /* @__PURE__ */ $constructor("ZodDiscriminatedUnion", (inst, def) => {
+  ZodUnion2.init(inst, def);
+  $ZodDiscriminatedUnion.init(inst, def);
 });
-function discriminatedUnion(discriminator, options2, params) {
+function discriminatedUnion(discriminator, options, params) {
   return new ZodDiscriminatedUnion2({
     type: "union",
-    options: options2,
+    options,
     discriminator,
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodIntersection2 = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def2) => {
-  $ZodIntersection.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodIntersection2 = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def) => {
+  $ZodIntersection.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function intersection(left, right) {
   return new ZodIntersection2({
@@ -14378,11 +14378,11 @@ function intersection(left, right) {
     right
   });
 }
-var ZodRecord2 = /* @__PURE__ */ $constructor("ZodRecord", (inst, def2) => {
-  $ZodRecord.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.keyType = def2.keyType;
-  inst.valueType = def2.valueType;
+var ZodRecord2 = /* @__PURE__ */ $constructor("ZodRecord", (inst, def) => {
+  $ZodRecord.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.keyType = def.keyType;
+  inst.valueType = def.valueType;
 });
 function record(keyType, valueType, params) {
   return new ZodRecord2({
@@ -14392,29 +14392,29 @@ function record(keyType, valueType, params) {
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def2) => {
-  $ZodEnum.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.enum = def2.entries;
-  inst.options = Object.values(def2.entries);
-  const keys = new Set(Object.keys(def2.entries));
+var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
+  $ZodEnum.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.enum = def.entries;
+  inst.options = Object.values(def.entries);
+  const keys = new Set(Object.keys(def.entries));
   inst.extract = (values, params) => {
     const newEntries = {};
     for (const value of values) {
       if (keys.has(value)) {
-        newEntries[value] = def2.entries[value];
+        newEntries[value] = def.entries[value];
       } else
         throw new Error(`Key ${value} not found in enum`);
     }
     return new ZodEnum2({
-      ...def2,
+      ...def,
       checks: [],
       ...util_exports.normalizeParams(params),
       entries: newEntries
     });
   };
   inst.exclude = (values, params) => {
-    const newEntries = { ...def2.entries };
+    const newEntries = { ...def.entries };
     for (const value of values) {
       if (keys.has(value)) {
         delete newEntries[value];
@@ -14422,7 +14422,7 @@ var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def2) => {
         throw new Error(`Key ${value} not found in enum`);
     }
     return new ZodEnum2({
-      ...def2,
+      ...def,
       checks: [],
       ...util_exports.normalizeParams(params),
       entries: newEntries
@@ -14430,23 +14430,23 @@ var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def2) => {
   };
 });
 function _enum(values, params) {
-  const entries = Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values;
+  const entries = Array.isArray(values) ? Object.fromEntries(values.map((v2) => [v2, v2])) : values;
   return new ZodEnum2({
     type: "enum",
     entries,
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodLiteral2 = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def2) => {
-  $ZodLiteral.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.values = new Set(def2.values);
+var ZodLiteral2 = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def) => {
+  $ZodLiteral.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.values = new Set(def.values);
   Object.defineProperty(inst, "value", {
     get() {
-      if (def2.values.length > 1) {
+      if (def.values.length > 1) {
         throw new Error("This schema contains multiple valid literal values. Use `.values` instead.");
       }
-      return def2.values[0];
+      return def.values[0];
     }
   });
 });
@@ -14457,13 +14457,13 @@ function literal(value, params) {
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def2) => {
-  $ZodTransform.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
+  $ZodTransform.init(inst, def);
+  ZodType2.init(inst, def);
   inst._zod.parse = (payload, _ctx) => {
     payload.addIssue = (issue2) => {
       if (typeof issue2 === "string") {
-        payload.issues.push(util_exports.issue(issue2, payload.value, def2));
+        payload.issues.push(util_exports.issue(issue2, payload.value, def));
       } else {
         const _issue = issue2;
         if (_issue.fatal)
@@ -14475,7 +14475,7 @@ var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def2) => 
         payload.issues.push(util_exports.issue(_issue));
       }
     };
-    const output = def2.transform(payload.value, payload);
+    const output = def.transform(payload.value, payload);
     if (output instanceof Promise) {
       return output.then((output2) => {
         payload.value = output2;
@@ -14492,9 +14492,9 @@ function transform(fn) {
     transform: fn
   });
 }
-var ZodOptional2 = /* @__PURE__ */ $constructor("ZodOptional", (inst, def2) => {
-  $ZodOptional.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodOptional2 = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
+  $ZodOptional.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function optional(innerType) {
@@ -14503,9 +14503,9 @@ function optional(innerType) {
     innerType
   });
 }
-var ZodNullable2 = /* @__PURE__ */ $constructor("ZodNullable", (inst, def2) => {
-  $ZodNullable.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodNullable2 = /* @__PURE__ */ $constructor("ZodNullable", (inst, def) => {
+  $ZodNullable.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nullable(innerType) {
@@ -14514,9 +14514,9 @@ function nullable(innerType) {
     innerType
   });
 }
-var ZodDefault2 = /* @__PURE__ */ $constructor("ZodDefault", (inst, def2) => {
-  $ZodDefault.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodDefault2 = /* @__PURE__ */ $constructor("ZodDefault", (inst, def) => {
+  $ZodDefault.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeDefault = inst.unwrap;
 });
@@ -14529,9 +14529,9 @@ function _default(innerType, defaultValue) {
     }
   });
 }
-var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def2) => {
-  $ZodPrefault.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def) => {
+  $ZodPrefault.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function prefault(innerType, defaultValue) {
@@ -14543,9 +14543,9 @@ function prefault(innerType, defaultValue) {
     }
   });
 }
-var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def2) => {
-  $ZodNonOptional.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def) => {
+  $ZodNonOptional.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nonoptional(innerType, params) {
@@ -14555,9 +14555,9 @@ function nonoptional(innerType, params) {
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodCatch2 = /* @__PURE__ */ $constructor("ZodCatch", (inst, def2) => {
-  $ZodCatch.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodCatch2 = /* @__PURE__ */ $constructor("ZodCatch", (inst, def) => {
+  $ZodCatch.init(inst, def);
+  ZodType2.init(inst, def);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeCatch = inst.unwrap;
 });
@@ -14568,11 +14568,11 @@ function _catch(innerType, catchValue) {
     catchValue: typeof catchValue === "function" ? catchValue : () => catchValue
   });
 }
-var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def2) => {
-  $ZodPipe.init(inst, def2);
-  ZodType2.init(inst, def2);
-  inst.in = def2.in;
-  inst.out = def2.out;
+var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def) => {
+  $ZodPipe.init(inst, def);
+  ZodType2.init(inst, def);
+  inst.in = def.in;
+  inst.out = def.out;
 });
 function pipe(in_, out) {
   return new ZodPipe({
@@ -14582,9 +14582,9 @@ function pipe(in_, out) {
     // ...util.normalizeParams(params),
   });
 }
-var ZodReadonly2 = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def2) => {
-  $ZodReadonly.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodReadonly2 = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def) => {
+  $ZodReadonly.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function readonly(innerType) {
   return new ZodReadonly2({
@@ -14592,9 +14592,9 @@ function readonly(innerType) {
     innerType
   });
 }
-var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def2) => {
-  $ZodCustom.init(inst, def2);
-  ZodType2.init(inst, def2);
+var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
+  $ZodCustom.init(inst, def);
+  ZodType2.init(inst, def);
 });
 function check(fn) {
   const ch = new $ZodCheck({
@@ -14642,7 +14642,7 @@ var LATEST_PROTOCOL_VERSION = "2025-11-25";
 var SUPPORTED_PROTOCOL_VERSIONS = [LATEST_PROTOCOL_VERSION, "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"];
 var RELATED_TASK_META_KEY = "io.modelcontextprotocol/related-task";
 var JSONRPC_VERSION = "2.0";
-var AssertObjectSchema = custom2((v) => v !== null && (typeof v === "object" || typeof v === "function"));
+var AssertObjectSchema = custom2((v2) => v2 !== null && (typeof v2 === "object" || typeof v2 === "function"));
 var ProgressTokenSchema = union([string2(), number2().int()]);
 var CursorSchema = string2();
 var TaskCreationParamsSchema = looseObject({
@@ -16440,8 +16440,8 @@ var Protocol = class {
         }
         await this.notification(notification, notificationOptions);
       },
-      sendRequest: async (r, resultSchema, options2) => {
-        const requestOptions = { ...options2, relatedRequestId: request.id };
+      sendRequest: async (r, resultSchema, options) => {
+        const requestOptions = { ...options, relatedRequestId: request.id };
         if (relatedTaskId && !requestOptions.relatedTask) {
           requestOptions.relatedTask = { taskId: relatedTaskId };
         }
@@ -16608,11 +16608,11 @@ var Protocol = class {
    *
    * @experimental Use `client.experimental.tasks.requestStream()` to access this method.
    */
-  async *requestStream(request, resultSchema, options2) {
-    const { task } = options2 ?? {};
+  async *requestStream(request, resultSchema, options) {
+    const { task } = options ?? {};
     if (!task) {
       try {
-        const result = await this.request(request, resultSchema, options2);
+        const result = await this.request(request, resultSchema, options);
         yield { type: "result", result };
       } catch (error2) {
         yield {
@@ -16624,7 +16624,7 @@ var Protocol = class {
     }
     let taskId;
     try {
-      const createResult = await this.request(request, CreateTaskResultSchema, options2);
+      const createResult = await this.request(request, CreateTaskResultSchema, options);
       if (createResult.task) {
         taskId = createResult.task.taskId;
         yield { type: "taskCreated", task: createResult.task };
@@ -16632,11 +16632,11 @@ var Protocol = class {
         throw new McpError(ErrorCode.InternalError, "Task creation did not return a task");
       }
       while (true) {
-        const task2 = await this.getTask({ taskId }, options2);
+        const task2 = await this.getTask({ taskId }, options);
         yield { type: "taskStatus", task: task2 };
         if (isTerminal(task2.status)) {
           if (task2.status === "completed") {
-            const result = await this.getTaskResult({ taskId }, resultSchema, options2);
+            const result = await this.getTaskResult({ taskId }, resultSchema, options);
             yield { type: "result", result };
           } else if (task2.status === "failed") {
             yield {
@@ -16652,13 +16652,13 @@ var Protocol = class {
           return;
         }
         if (task2.status === "input_required") {
-          const result = await this.getTaskResult({ taskId }, resultSchema, options2);
+          const result = await this.getTaskResult({ taskId }, resultSchema, options);
           yield { type: "result", result };
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
         await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        options2?.signal?.throwIfAborted();
+        options?.signal?.throwIfAborted();
       }
     } catch (error2) {
       yield {
@@ -16672,8 +16672,8 @@ var Protocol = class {
    *
    * Do not use this method to emit notifications! Use notification() instead.
    */
-  request(request, resultSchema, options2) {
-    const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options2 ?? {};
+  request(request, resultSchema, options) {
+    const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
     return new Promise((resolve, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
@@ -16693,15 +16693,15 @@ var Protocol = class {
           return;
         }
       }
-      options2?.signal?.throwIfAborted();
+      options?.signal?.throwIfAborted();
       const messageId = this._requestMessageId++;
       const jsonrpcRequest = {
         ...request,
         jsonrpc: "2.0",
         id: messageId
       };
-      if (options2?.onprogress) {
-        this._progressHandlers.set(messageId, options2.onprogress);
+      if (options?.onprogress) {
+        this._progressHandlers.set(messageId, options.onprogress);
         jsonrpcRequest.params = {
           ...request.params,
           _meta: {
@@ -16741,7 +16741,7 @@ var Protocol = class {
         reject(error2);
       };
       this._responseHandlers.set(messageId, (response) => {
-        if (options2?.signal?.aborted) {
+        if (options?.signal?.aborted) {
           return;
         }
         if (response instanceof Error) {
@@ -16758,12 +16758,12 @@ var Protocol = class {
           reject(error2);
         }
       });
-      options2?.signal?.addEventListener("abort", () => {
-        cancel(options2?.signal?.reason);
+      options?.signal?.addEventListener("abort", () => {
+        cancel(options?.signal?.reason);
       });
-      const timeout = options2?.timeout ?? DEFAULT_REQUEST_TIMEOUT_MSEC;
+      const timeout = options?.timeout ?? DEFAULT_REQUEST_TIMEOUT_MSEC;
       const timeoutHandler = () => cancel(McpError.fromError(ErrorCode.RequestTimeout, "Request timed out", { timeout }));
-      this._setupTimeout(messageId, timeout, options2?.maxTotalTimeout, timeoutHandler, options2?.resetTimeoutOnProgress ?? false);
+      this._setupTimeout(messageId, timeout, options?.maxTotalTimeout, timeoutHandler, options?.resetTimeoutOnProgress ?? false);
       const relatedTaskId = relatedTask?.taskId;
       if (relatedTaskId) {
         const responseResolver = (response) => {
@@ -16796,42 +16796,42 @@ var Protocol = class {
    *
    * @experimental Use `client.experimental.tasks.getTask()` to access this method.
    */
-  async getTask(params, options2) {
-    return this.request({ method: "tasks/get", params }, GetTaskResultSchema, options2);
+  async getTask(params, options) {
+    return this.request({ method: "tasks/get", params }, GetTaskResultSchema, options);
   }
   /**
    * Retrieves the result of a completed task.
    *
    * @experimental Use `client.experimental.tasks.getTaskResult()` to access this method.
    */
-  async getTaskResult(params, resultSchema, options2) {
-    return this.request({ method: "tasks/result", params }, resultSchema, options2);
+  async getTaskResult(params, resultSchema, options) {
+    return this.request({ method: "tasks/result", params }, resultSchema, options);
   }
   /**
    * Lists tasks, optionally starting from a pagination cursor.
    *
    * @experimental Use `client.experimental.tasks.listTasks()` to access this method.
    */
-  async listTasks(params, options2) {
-    return this.request({ method: "tasks/list", params }, ListTasksResultSchema, options2);
+  async listTasks(params, options) {
+    return this.request({ method: "tasks/list", params }, ListTasksResultSchema, options);
   }
   /**
    * Cancels a specific task.
    *
    * @experimental Use `client.experimental.tasks.cancelTask()` to access this method.
    */
-  async cancelTask(params, options2) {
-    return this.request({ method: "tasks/cancel", params }, CancelTaskResultSchema, options2);
+  async cancelTask(params, options) {
+    return this.request({ method: "tasks/cancel", params }, CancelTaskResultSchema, options);
   }
   /**
    * Emits a notification, which is a one-way message that does not expect a response.
    */
-  async notification(notification, options2) {
+  async notification(notification, options) {
     if (!this._transport) {
       throw new Error("Not connected");
     }
     this.assertNotificationCapability(notification.method);
-    const relatedTaskId = options2?.relatedTask?.taskId;
+    const relatedTaskId = options?.relatedTask?.taskId;
     if (relatedTaskId) {
       const jsonrpcNotification2 = {
         ...notification,
@@ -16840,7 +16840,7 @@ var Protocol = class {
           ...notification.params,
           _meta: {
             ...notification.params?._meta || {},
-            [RELATED_TASK_META_KEY]: options2.relatedTask
+            [RELATED_TASK_META_KEY]: options.relatedTask
           }
         }
       };
@@ -16852,7 +16852,7 @@ var Protocol = class {
       return;
     }
     const debouncedMethods = this._options?.debouncedNotificationMethods ?? [];
-    const canDebounce = debouncedMethods.includes(notification.method) && !notification.params && !options2?.relatedRequestId && !options2?.relatedTask;
+    const canDebounce = debouncedMethods.includes(notification.method) && !notification.params && !options?.relatedRequestId && !options?.relatedTask;
     if (canDebounce) {
       if (this._pendingDebouncedNotifications.has(notification.method)) {
         return;
@@ -16867,19 +16867,19 @@ var Protocol = class {
           ...notification,
           jsonrpc: "2.0"
         };
-        if (options2?.relatedTask) {
+        if (options?.relatedTask) {
           jsonrpcNotification2 = {
             ...jsonrpcNotification2,
             params: {
               ...jsonrpcNotification2.params,
               _meta: {
                 ...jsonrpcNotification2.params?._meta || {},
-                [RELATED_TASK_META_KEY]: options2.relatedTask
+                [RELATED_TASK_META_KEY]: options.relatedTask
               }
             }
           };
         }
-        this._transport?.send(jsonrpcNotification2, options2).catch((error2) => this._onerror(error2));
+        this._transport?.send(jsonrpcNotification2, options).catch((error2) => this._onerror(error2));
       });
       return;
     }
@@ -16887,19 +16887,19 @@ var Protocol = class {
       ...notification,
       jsonrpc: "2.0"
     };
-    if (options2?.relatedTask) {
+    if (options?.relatedTask) {
       jsonrpcNotification = {
         ...jsonrpcNotification,
         params: {
           ...jsonrpcNotification.params,
           _meta: {
             ...jsonrpcNotification.params?._meta || {},
-            [RELATED_TASK_META_KEY]: options2.relatedTask
+            [RELATED_TASK_META_KEY]: options.relatedTask
           }
         }
       };
     }
-    await this._transport.send(jsonrpcNotification, options2);
+    await this._transport.send(jsonrpcNotification, options);
   }
   /**
    * Registers a handler to invoke when this protocol object receives a request with the given method.
@@ -17097,15 +17097,15 @@ function isPlainObject2(value) {
 function mergeCapabilities(base, additional) {
   const result = { ...base };
   for (const key in additional) {
-    const k = key;
-    const addValue = additional[k];
+    const k2 = key;
+    const addValue = additional[k2];
     if (addValue === void 0)
       continue;
-    const baseValue = result[k];
+    const baseValue = result[k2];
     if (isPlainObject2(baseValue) && isPlainObject2(addValue)) {
-      result[k] = { ...baseValue, ...addValue };
+      result[k2] = { ...baseValue, ...addValue };
     } else {
-      result[k] = addValue;
+      result[k2] = addValue;
     }
   }
   return result;
@@ -17198,8 +17198,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  requestStream(request, resultSchema, options2) {
-    return this._server.requestStream(request, resultSchema, options2);
+  requestStream(request, resultSchema, options) {
+    return this._server.requestStream(request, resultSchema, options);
   }
   /**
    * Gets the current status of a task.
@@ -17210,8 +17210,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  async getTask(taskId, options2) {
-    return this._server.getTask({ taskId }, options2);
+  async getTask(taskId, options) {
+    return this._server.getTask({ taskId }, options);
   }
   /**
    * Retrieves the result of a completed task.
@@ -17223,8 +17223,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  async getTaskResult(taskId, resultSchema, options2) {
-    return this._server.getTaskResult({ taskId }, resultSchema, options2);
+  async getTaskResult(taskId, resultSchema, options) {
+    return this._server.getTaskResult({ taskId }, resultSchema, options);
   }
   /**
    * Lists tasks with optional pagination.
@@ -17235,8 +17235,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  async listTasks(cursor, options2) {
-    return this._server.listTasks(cursor ? { cursor } : void 0, options2);
+  async listTasks(cursor, options) {
+    return this._server.listTasks(cursor ? { cursor } : void 0, options);
   }
   /**
    * Cancels a running task.
@@ -17246,8 +17246,8 @@ var ExperimentalServerTasks = class {
    *
    * @experimental
    */
-  async cancelTask(taskId, options2) {
-    return this._server.cancelTask({ taskId }, options2);
+  async cancelTask(taskId, options) {
+    return this._server.cancelTask({ taskId }, options);
   }
 };
 
@@ -17291,8 +17291,8 @@ var Server = class extends Protocol {
   /**
    * Initializes this server with the given name and version information.
    */
-  constructor(_serverInfo, options2) {
-    super(options2);
+  constructor(_serverInfo, options) {
+    super(options);
     this._serverInfo = _serverInfo;
     this._loggingLevels = /* @__PURE__ */ new Map();
     this.LOG_LEVEL_SEVERITY = new Map(LoggingLevelSchema.options.map((level, index) => [level, index]));
@@ -17300,9 +17300,9 @@ var Server = class extends Protocol {
       const currentLevel = this._loggingLevels.get(sessionId);
       return currentLevel ? this.LOG_LEVEL_SEVERITY.get(level) < this.LOG_LEVEL_SEVERITY.get(currentLevel) : false;
     };
-    this._capabilities = options2?.capabilities ?? {};
-    this._instructions = options2?.instructions;
-    this._jsonSchemaValidator = options2?.jsonSchemaValidator ?? new AjvJsonSchemaValidator();
+    this._capabilities = options?.capabilities ?? {};
+    this._instructions = options?.instructions;
+    this._jsonSchemaValidator = options?.jsonSchemaValidator ?? new AjvJsonSchemaValidator();
     this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
     this.setNotificationHandler(InitializedNotificationSchema, () => this.oninitialized?.());
     if (this._capabilities.logging) {
@@ -17536,7 +17536,7 @@ var Server = class extends Protocol {
     return this.request({ method: "ping" }, EmptyResultSchema);
   }
   // Implementation
-  async createMessage(params, options2) {
+  async createMessage(params, options) {
     if (params.tools || params.toolChoice) {
       if (!this._clientCapabilities?.sampling?.tools) {
         throw new Error("Client does not support sampling tools capability.");
@@ -17566,9 +17566,9 @@ var Server = class extends Protocol {
       }
     }
     if (params.tools) {
-      return this.request({ method: "sampling/createMessage", params }, CreateMessageResultWithToolsSchema, options2);
+      return this.request({ method: "sampling/createMessage", params }, CreateMessageResultWithToolsSchema, options);
     }
-    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options2);
+    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options);
   }
   /**
    * Creates an elicitation request for the given parameters.
@@ -17577,7 +17577,7 @@ var Server = class extends Protocol {
    * @param options Optional request options.
    * @returns The result of the elicitation request.
    */
-  async elicitInput(params, options2) {
+  async elicitInput(params, options) {
     const mode = params.mode ?? "form";
     switch (mode) {
       case "url": {
@@ -17585,14 +17585,14 @@ var Server = class extends Protocol {
           throw new Error("Client does not support url elicitation.");
         }
         const urlParams = params;
-        return this.request({ method: "elicitation/create", params: urlParams }, ElicitResultSchema, options2);
+        return this.request({ method: "elicitation/create", params: urlParams }, ElicitResultSchema, options);
       }
       case "form": {
         if (!this._clientCapabilities?.elicitation?.form) {
           throw new Error("Client does not support form elicitation.");
         }
         const formParams = params.mode === "form" ? params : { ...params, mode: "form" };
-        const result = await this.request({ method: "elicitation/create", params: formParams }, ElicitResultSchema, options2);
+        const result = await this.request({ method: "elicitation/create", params: formParams }, ElicitResultSchema, options);
         if (result.action === "accept" && result.content && formParams.requestedSchema) {
           try {
             const validator = this._jsonSchemaValidator.getValidator(formParams.requestedSchema);
@@ -17619,7 +17619,7 @@ var Server = class extends Protocol {
    * @param options Optional notification options. Useful when the completion notification should be related to a prior request.
    * @returns A function that emits the completion notification when awaited.
    */
-  createElicitationCompletionNotifier(elicitationId, options2) {
+  createElicitationCompletionNotifier(elicitationId, options) {
     if (!this._clientCapabilities?.elicitation?.url) {
       throw new Error("Client does not support URL elicitation (required for notifications/elicitation/complete)");
     }
@@ -17628,10 +17628,10 @@ var Server = class extends Protocol {
       params: {
         elicitationId
       }
-    }, options2);
+    }, options);
   }
-  async listRoots(params, options2) {
-    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options2);
+  async listRoots(params, options) {
+    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options);
   }
   /**
    * Sends a logging message to the client, if connected.
@@ -17974,8 +17974,8 @@ var tryResolveAndInitializeBackend = async (backendName) => {
     }
   }
 };
-var resolveBackendAndExecutionProviders = async (options2) => {
-  const eps = options2.executionProviders || [];
+var resolveBackendAndExecutionProviders = async (options) => {
+  const eps = options.executionProviders || [];
   const backendHints = eps.map((i) => typeof i === "string" ? i : i.name);
   const backendNames = backendHints.length === 0 ? backendsSortedByPriority : backendHints;
   let backend;
@@ -18005,7 +18005,7 @@ var resolveBackendAndExecutionProviders = async (options2) => {
   const filteredEps = eps.filter((i) => availableBackendNames.has(typeof i === "string" ? i : i.name));
   return [
     backend,
-    new Proxy(options2, {
+    new Proxy(options, {
       get: (target, prop) => {
         if (prop === "executionProviders") {
           return filteredEps;
@@ -18045,7 +18045,7 @@ Object.defineProperty(env, "logLevel", { enumerable: true });
 var env2 = env;
 
 // node_modules/onnxruntime-common/dist/esm/tensor-conversion-impl.js
-var tensorToDataURL = (tensor, options2) => {
+var tensorToDataURL = (tensor, options) => {
   const canvas = typeof document !== "undefined" ? document.createElement("canvas") : new OffscreenCanvas(1, 1);
   canvas.width = tensor.dims[3];
   canvas.height = tensor.dims[2];
@@ -18053,15 +18053,15 @@ var tensorToDataURL = (tensor, options2) => {
   if (pixels2DContext != null) {
     let width;
     let height;
-    if (options2?.tensorLayout !== void 0 && options2.tensorLayout === "NHWC") {
+    if (options?.tensorLayout !== void 0 && options.tensorLayout === "NHWC") {
       width = tensor.dims[2];
       height = tensor.dims[3];
     } else {
       width = tensor.dims[3];
       height = tensor.dims[2];
     }
-    const inputformat = options2?.format !== void 0 ? options2.format : "RGB";
-    const norm = options2?.norm;
+    const inputformat = options?.format !== void 0 ? options.format : "RGB";
+    const norm = options?.norm;
     let normMean;
     let normBias;
     if (norm === void 0 || norm.mean === void 0) {
@@ -18105,13 +18105,13 @@ var tensorToDataURL = (tensor, options2) => {
       gTensorPointer = stride * 2;
     }
     for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
+      for (let j2 = 0; j2 < width; j2++) {
         const R = (tensor.data[rTensorPointer++] - normBias[0]) * normMean[0];
-        const G = (tensor.data[gTensorPointer++] - normBias[1]) * normMean[1];
-        const B = (tensor.data[bTensorPointer++] - normBias[2]) * normMean[2];
+        const G2 = (tensor.data[gTensorPointer++] - normBias[1]) * normMean[1];
+        const B2 = (tensor.data[bTensorPointer++] - normBias[2]) * normMean[2];
         const A = aTensorPointer === -1 ? 255 : (tensor.data[aTensorPointer++] - normBias[3]) * normMean[3];
-        pixels2DContext.fillStyle = "rgba(" + R + "," + G + "," + B + "," + A + ")";
-        pixels2DContext.fillRect(j, i, 1, 1);
+        pixels2DContext.fillStyle = "rgba(" + R + "," + G2 + "," + B2 + "," + A + ")";
+        pixels2DContext.fillRect(j2, i, 1, 1);
       }
     }
     if ("toDataURL" in canvas) {
@@ -18123,14 +18123,14 @@ var tensorToDataURL = (tensor, options2) => {
     throw new Error("Can not access image data");
   }
 };
-var tensorToImageData = (tensor, options2) => {
+var tensorToImageData = (tensor, options) => {
   const pixels2DContext = typeof document !== "undefined" ? document.createElement("canvas").getContext("2d") : new OffscreenCanvas(1, 1).getContext("2d");
   let image;
   if (pixels2DContext != null) {
     let width;
     let height;
     let channels;
-    if (options2?.tensorLayout !== void 0 && options2.tensorLayout === "NHWC") {
+    if (options?.tensorLayout !== void 0 && options.tensorLayout === "NHWC") {
       width = tensor.dims[2];
       height = tensor.dims[1];
       channels = tensor.dims[3];
@@ -18139,8 +18139,8 @@ var tensorToImageData = (tensor, options2) => {
       height = tensor.dims[2];
       channels = tensor.dims[1];
     }
-    const inputformat = options2 !== void 0 ? options2.format !== void 0 ? options2.format : "RGB" : "RGB";
-    const norm = options2?.norm;
+    const inputformat = options !== void 0 ? options.format !== void 0 ? options.format : "RGB" : "RGB";
+    const norm = options?.norm;
     let normMean;
     let normBias;
     if (norm === void 0 || norm.mean === void 0) {
@@ -18168,8 +18168,8 @@ var tensorToImageData = (tensor, options2) => {
       }
     }
     const stride = height * width;
-    if (options2 !== void 0) {
-      if (options2.format !== void 0 && channels === 4 && options2.format !== "RGBA" || channels === 3 && options2.format !== "RGB" && options2.format !== "BGR") {
+    if (options !== void 0) {
+      if (options.format !== void 0 && channels === 4 && options.format !== "RGBA" || channels === 3 && options.format !== "RGB" && options.format !== "BGR") {
         throw new Error("Tensor format doesn't match input tensor dims");
       }
     }
@@ -18204,18 +18204,18 @@ var tensorToImageData = (tensor, options2) => {
 };
 
 // node_modules/onnxruntime-common/dist/esm/tensor-factory-impl.js
-var bufferToTensor = (buffer, options2) => {
+var bufferToTensor = (buffer, options) => {
   if (buffer === void 0) {
     throw new Error("Image buffer must be defined");
   }
-  if (options2.height === void 0 || options2.width === void 0) {
+  if (options.height === void 0 || options.width === void 0) {
     throw new Error("Image height and width must be defined");
   }
-  if (options2.tensorLayout === "NHWC") {
+  if (options.tensorLayout === "NHWC") {
     throw new Error("NHWC Tensor layout is not supported yet");
   }
-  const { height, width } = options2;
-  const norm = options2.norm ?? { mean: 255, bias: 0 };
+  const { height, width } = options;
+  const norm = options.norm ?? { mean: 255, bias: 0 };
   let normMean;
   let normBias;
   if (typeof norm.mean === "number") {
@@ -18228,8 +18228,8 @@ var bufferToTensor = (buffer, options2) => {
   } else {
     normBias = [norm.bias[0], norm.bias[1], norm.bias[2], norm.bias[3] ?? 0];
   }
-  const inputformat = options2.format !== void 0 ? options2.format : "RGBA";
-  const outputformat = options2.tensorFormat !== void 0 ? options2.tensorFormat !== void 0 ? options2.tensorFormat : "RGB" : "RGB";
+  const inputformat = options.format !== void 0 ? options.format : "RGBA";
+  const outputformat = options.tensorFormat !== void 0 ? options.tensorFormat !== void 0 ? options.tensorFormat : "RGB" : "RGB";
   const stride = height * width;
   const float32Data = outputformat === "RGBA" ? new Float32Array(stride * 4) : new Float32Array(stride * 3);
   let step = 4, rImagePointer = 0, gImagePointer = 1, bImagePointer = 2, aImagePointer = 3;
@@ -18263,13 +18263,13 @@ var bufferToTensor = (buffer, options2) => {
   const outputTensor = outputformat === "RGBA" ? new Tensor("float32", float32Data, [1, 4, height, width]) : new Tensor("float32", float32Data, [1, 3, height, width]);
   return outputTensor;
 };
-var tensorFromImage = async (image, options2) => {
+var tensorFromImage = async (image, options) => {
   const isHTMLImageEle = typeof HTMLImageElement !== "undefined" && image instanceof HTMLImageElement;
   const isImageDataEle = typeof ImageData !== "undefined" && image instanceof ImageData;
   const isImageBitmap = typeof ImageBitmap !== "undefined" && image instanceof ImageBitmap;
   const isString = typeof image === "string";
   let data;
-  let bufferToTensorOptions = options2 ?? {};
+  let bufferToTensorOptions = options ?? {};
   const createCanvas = () => {
     if (typeof document !== "undefined") {
       return document.createElement("canvas");
@@ -18296,13 +18296,13 @@ var tensorFromImage = async (image, options2) => {
     if (pixels2DContext != null) {
       let height = image.height;
       let width = image.width;
-      if (options2 !== void 0 && options2.resizedHeight !== void 0 && options2.resizedWidth !== void 0) {
-        height = options2.resizedHeight;
-        width = options2.resizedWidth;
+      if (options !== void 0 && options.resizedHeight !== void 0 && options.resizedWidth !== void 0) {
+        height = options.resizedHeight;
+        width = options.resizedWidth;
       }
-      if (options2 !== void 0) {
-        bufferToTensorOptions = options2;
-        if (options2.tensorFormat !== void 0) {
+      if (options !== void 0) {
+        bufferToTensorOptions = options;
+        if (options.tensorFormat !== void 0) {
           throw new Error("Image input config format must be RGBA for HTMLImageElement");
         } else {
           bufferToTensorOptions.tensorFormat = "RGBA";
@@ -18322,20 +18322,20 @@ var tensorFromImage = async (image, options2) => {
   } else if (isImageDataEle) {
     let height;
     let width;
-    if (options2 !== void 0 && options2.resizedWidth !== void 0 && options2.resizedHeight !== void 0) {
-      height = options2.resizedHeight;
-      width = options2.resizedWidth;
+    if (options !== void 0 && options.resizedWidth !== void 0 && options.resizedHeight !== void 0) {
+      height = options.resizedHeight;
+      width = options.resizedWidth;
     } else {
       height = image.height;
       width = image.width;
     }
-    if (options2 !== void 0) {
-      bufferToTensorOptions = options2;
+    if (options !== void 0) {
+      bufferToTensorOptions = options;
     }
     bufferToTensorOptions.format = "RGBA";
     bufferToTensorOptions.height = height;
     bufferToTensorOptions.width = width;
-    if (options2 !== void 0) {
+    if (options !== void 0) {
       const tempCanvas = createCanvas();
       tempCanvas.width = width;
       tempCanvas.height = height;
@@ -18350,7 +18350,7 @@ var tensorFromImage = async (image, options2) => {
       data = image.data;
     }
   } else if (isImageBitmap) {
-    if (options2 === void 0) {
+    if (options === void 0) {
       throw new Error("Please provide image config with format for Imagebitmap");
     }
     const canvas = createCanvas();
@@ -18397,17 +18397,17 @@ var tensorFromImage = async (image, options2) => {
     throw new Error("Input data provided is not supported - aborted tensor creation");
   }
 };
-var tensorFromTexture = (texture, options2) => {
-  const { width, height, download, dispose } = options2;
+var tensorFromTexture = (texture, options) => {
+  const { width, height, download, dispose } = options;
   const dims = [1, height, width, 4];
   return new Tensor({ location: "texture", type: "float32", texture, dims, download, dispose });
 };
-var tensorFromGpuBuffer = (gpuBuffer, options2) => {
-  const { dataType, dims, download, dispose } = options2;
+var tensorFromGpuBuffer = (gpuBuffer, options) => {
+  const { dataType, dims, download, dispose } = options;
   return new Tensor({ location: "gpu-buffer", type: dataType ?? "float32", gpuBuffer, dims, download, dispose });
 };
-var tensorFromMLTensor = (mlTensor, options2) => {
-  const { dataType, dims, download, dispose } = options2;
+var tensorFromMLTensor = (mlTensor, options) => {
+  const { dataType, dims, download, dispose } = options;
   return new Tensor({ location: "ml-tensor", type: dataType ?? "float32", mlTensor, dims, download, dispose });
 };
 var tensorFromPinnedBuffer = (type, buffer, dims) => new Tensor({ location: "cpu-pinned", type, data: buffer, dims: dims ?? [buffer.length] });
@@ -18656,28 +18656,28 @@ var Tensor = class {
   }
   // #endregion
   // #region factory
-  static async fromImage(image, options2) {
-    return tensorFromImage(image, options2);
+  static async fromImage(image, options) {
+    return tensorFromImage(image, options);
   }
-  static fromTexture(texture, options2) {
-    return tensorFromTexture(texture, options2);
+  static fromTexture(texture, options) {
+    return tensorFromTexture(texture, options);
   }
-  static fromGpuBuffer(gpuBuffer, options2) {
-    return tensorFromGpuBuffer(gpuBuffer, options2);
+  static fromGpuBuffer(gpuBuffer, options) {
+    return tensorFromGpuBuffer(gpuBuffer, options);
   }
-  static fromMLTensor(mlTensor, options2) {
-    return tensorFromMLTensor(mlTensor, options2);
+  static fromMLTensor(mlTensor, options) {
+    return tensorFromMLTensor(mlTensor, options);
   }
   static fromPinnedBuffer(type, buffer, dims) {
     return tensorFromPinnedBuffer(type, buffer, dims);
   }
   // #endregion
   // #region conversions
-  toDataURL(options2) {
-    return tensorToDataURL(this, options2);
+  toDataURL(options) {
+    return tensorToDataURL(this, options);
   }
-  toImageData(options2) {
-    return tensorToImageData(this, options2);
+  toImageData(options) {
+    return tensorToImageData(this, options);
   }
   // #endregion
   // #region properties
@@ -18828,7 +18828,7 @@ var InferenceSession = class _InferenceSession {
   async run(feeds, arg1, arg2) {
     TRACE_FUNC_BEGIN();
     const fetches = {};
-    let options2 = {};
+    let options = {};
     if (typeof feeds !== "object" || feeds === null || feeds instanceof Tensor2 || Array.isArray(feeds)) {
       throw new TypeError("'feeds' must be an object that use input names as keys and OnnxValue as corresponding values.");
     }
@@ -18855,7 +18855,7 @@ var InferenceSession = class _InferenceSession {
           fetches[name] = null;
         }
         if (typeof arg2 === "object" && arg2 !== null) {
-          options2 = arg2;
+          options = arg2;
         } else if (typeof arg2 !== "undefined") {
           throw new TypeError("'options' must be an object.");
         }
@@ -18864,22 +18864,22 @@ var InferenceSession = class _InferenceSession {
         const arg1Keys = Object.getOwnPropertyNames(arg1);
         for (const name of this.outputNames) {
           if (arg1Keys.indexOf(name) !== -1) {
-            const v = arg1[name];
-            if (v === null || v instanceof Tensor2) {
+            const v2 = arg1[name];
+            if (v2 === null || v2 instanceof Tensor2) {
               isFetches = true;
               isFetchesEmpty = false;
-              fetches[name] = v;
+              fetches[name] = v2;
             }
           }
         }
         if (isFetches) {
           if (typeof arg2 === "object" && arg2 !== null) {
-            options2 = arg2;
+            options = arg2;
           } else if (typeof arg2 !== "undefined") {
             throw new TypeError("'options' must be an object.");
           }
         } else {
-          options2 = arg1;
+          options = arg1;
         }
       }
     } else if (typeof arg1 !== "undefined") {
@@ -18895,7 +18895,7 @@ var InferenceSession = class _InferenceSession {
         fetches[name] = null;
       }
     }
-    const results = await this.handler.run(feeds, fetches, options2);
+    const results = await this.handler.run(feeds, fetches, options);
     const returnValue = {};
     for (const key in results) {
       if (Object.hasOwnProperty.call(results, key)) {
@@ -18916,18 +18916,18 @@ var InferenceSession = class _InferenceSession {
   static async create(arg0, arg1, arg2, arg3) {
     TRACE_FUNC_BEGIN();
     let filePathOrUint8Array;
-    let options2 = {};
+    let options = {};
     if (typeof arg0 === "string") {
       filePathOrUint8Array = arg0;
       if (typeof arg1 === "object" && arg1 !== null) {
-        options2 = arg1;
+        options = arg1;
       } else if (typeof arg1 !== "undefined") {
         throw new TypeError("'options' must be an object.");
       }
     } else if (arg0 instanceof Uint8Array) {
       filePathOrUint8Array = arg0;
       if (typeof arg1 === "object" && arg1 !== null) {
-        options2 = arg1;
+        options = arg1;
       } else if (typeof arg1 !== "undefined") {
         throw new TypeError("'options' must be an object.");
       }
@@ -18936,7 +18936,7 @@ var InferenceSession = class _InferenceSession {
       let byteOffset = 0;
       let byteLength = arg0.byteLength;
       if (typeof arg1 === "object" && arg1 !== null) {
-        options2 = arg1;
+        options = arg1;
       } else if (typeof arg1 === "number") {
         byteOffset = arg1;
         if (!Number.isSafeInteger(byteOffset)) {
@@ -18955,7 +18955,7 @@ var InferenceSession = class _InferenceSession {
             throw new RangeError(`'byteLength' is out of range (0, ${buffer.byteLength - byteOffset}].`);
           }
           if (typeof arg3 === "object" && arg3 !== null) {
-            options2 = arg3;
+            options = arg3;
           } else if (typeof arg3 !== "undefined") {
             throw new TypeError("'options' must be an object.");
           }
@@ -18969,7 +18969,7 @@ var InferenceSession = class _InferenceSession {
     } else {
       throw new TypeError("Unexpected argument[0]: must be 'path' or 'buffer'.");
     }
-    const [backend, optionsWithValidatedEPs] = await resolveBackendAndExecutionProviders(options2);
+    const [backend, optionsWithValidatedEPs] = await resolveBackendAndExecutionProviders(options);
     const handler = await backend.createInferenceSessionHandler(filePathOrUint8Array, optionsWithValidatedEPs);
     TRACE_FUNC_END();
     return new _InferenceSession(handler);
@@ -19226,21 +19226,21 @@ var __webpack_modules__ = {
         ["\\", "\\"]
         // Backslash
       ]);
-      function preprocess2(template, options2 = {}) {
+      function preprocess2(template, options = {}) {
         if (template.endsWith("\n")) {
           template = template.slice(0, -1);
         }
-        if (options2.lstrip_blocks) {
+        if (options.lstrip_blocks) {
           template = template.replace(/^[ \t]*({[#%-])/gm, "$1");
         }
-        if (options2.trim_blocks) {
+        if (options.trim_blocks) {
           template = template.replace(/([#%-]})\n/g, "$1");
         }
         return template.replace(/{%\s*(end)?generation\s*%}/gs, "");
       }
-      function tokenize(source, options2 = {}) {
+      function tokenize(source, options = {}) {
         const tokens = [];
-        const src = preprocess2(source, options2);
+        const src = preprocess2(source, options);
         let cursorPosition = 0;
         let curlyBracketDepth = 0;
         const consumeWhile = (predicate) => {
@@ -20404,13 +20404,13 @@ var __webpack_modules__ = {
             const childrenPadding = basePadding + indentValue;
             if (input.type === "ArrayValue") {
               const core = input.value.map(
-                (x) => toJSON(x, indent, currentDepth + 1, convertUndefinedToNull)
+                (x2) => toJSON(x2, indent, currentDepth + 1, convertUndefinedToNull)
               );
               return indent ? `[${childrenPadding}${core.join(`,${childrenPadding}`)}${basePadding}]` : `[${core.join(", ")}]`;
             } else {
               const core = Array.from(input.value.entries()).map(([key, value]) => {
-                const v = `"${key}": ${toJSON(value, indent, currentDepth + 1, convertUndefinedToNull)}`;
-                return indent ? `${childrenPadding}${v}` : v;
+                const v2 = `"${key}": ${toJSON(value, indent, currentDepth + 1, convertUndefinedToNull)}`;
+                return indent ? `${childrenPadding}${v2}` : v2;
               });
               return indent ? `{${core.join(",")}${basePadding}}` : `{${core.join(", ")}}`;
             }
@@ -20471,10 +20471,10 @@ var __webpack_modules__ = {
               if (!(reverse instanceof BooleanValue)) {
                 throw new Error("reverse must be a boolean");
               }
-              const items = Array.from(this.value.entries()).map(([key, value]) => new ArrayValue([new StringValue(key), value])).sort((a, b) => {
+              const items = Array.from(this.value.entries()).map(([key, value]) => new ArrayValue([new StringValue(key), value])).sort((a, b2) => {
                 const index = by.value === "key" ? 0 : 1;
                 const aVal = a.value[index];
-                const bVal = b.value[index];
+                const bVal = b2.value[index];
                 const result = compareRuntimeValues(aVal, bVal, caseSensitive.value);
                 return reverse.value ? -result : result;
               });
@@ -20600,8 +20600,8 @@ var __webpack_modules__ = {
           ["none", (operand) => operand.type === "NullValue"],
           ["defined", (operand) => operand.type !== "UndefinedValue"],
           ["undefined", (operand) => operand.type === "UndefinedValue"],
-          ["equalto", (a, b) => a.value === b.value],
-          ["eq", (a, b) => a.value === b.value]
+          ["equalto", (a, b2) => a.value === b2.value],
+          ["eq", (a, b2) => a.value === b2.value]
         ]);
         /**
          * Set the value of a variable in the current environment.
@@ -20683,38 +20683,38 @@ var __webpack_modules__ = {
         }
         return value;
       }
-      function compareRuntimeValues(a, b, caseSensitive = false) {
-        if (a instanceof NullValue && b instanceof NullValue) {
+      function compareRuntimeValues(a, b2, caseSensitive = false) {
+        if (a instanceof NullValue && b2 instanceof NullValue) {
           return 0;
         }
-        if (a instanceof NullValue || b instanceof NullValue) {
-          throw new Error(`Cannot compare ${a.type} with ${b.type}`);
+        if (a instanceof NullValue || b2 instanceof NullValue) {
+          throw new Error(`Cannot compare ${a.type} with ${b2.type}`);
         }
-        if (a instanceof UndefinedValue && b instanceof UndefinedValue) {
+        if (a instanceof UndefinedValue && b2 instanceof UndefinedValue) {
           return 0;
         }
-        if (a instanceof UndefinedValue || b instanceof UndefinedValue) {
-          throw new Error(`Cannot compare ${a.type} with ${b.type}`);
+        if (a instanceof UndefinedValue || b2 instanceof UndefinedValue) {
+          throw new Error(`Cannot compare ${a.type} with ${b2.type}`);
         }
-        const isNumericLike = (v) => v instanceof IntegerValue || v instanceof FloatValue || v instanceof BooleanValue;
-        const getNumericValue = (v) => {
-          if (v instanceof BooleanValue) {
-            return v.value ? 1 : 0;
+        const isNumericLike = (v2) => v2 instanceof IntegerValue || v2 instanceof FloatValue || v2 instanceof BooleanValue;
+        const getNumericValue = (v2) => {
+          if (v2 instanceof BooleanValue) {
+            return v2.value ? 1 : 0;
           }
-          return v.value;
+          return v2.value;
         };
-        if (isNumericLike(a) && isNumericLike(b)) {
+        if (isNumericLike(a) && isNumericLike(b2)) {
           const aNum = getNumericValue(a);
-          const bNum = getNumericValue(b);
+          const bNum = getNumericValue(b2);
           return aNum < bNum ? -1 : aNum > bNum ? 1 : 0;
         }
-        if (a.type !== b.type) {
-          throw new Error(`Cannot compare different types: ${a.type} and ${b.type}`);
+        if (a.type !== b2.type) {
+          throw new Error(`Cannot compare different types: ${a.type} and ${b2.type}`);
         }
         switch (a.type) {
           case "StringValue": {
             let aStr = a.value;
-            let bStr = b.value;
+            let bStr = b2.value;
             if (!caseSensitive) {
               aStr = aStr.toLowerCase();
               bStr = bStr.toLowerCase();
@@ -20764,30 +20764,30 @@ var __webpack_modules__ = {
           } else if (node.operator.value === "~") {
             return new StringValue(left.value.toString() + right.value.toString());
           } else if ((left instanceof IntegerValue || left instanceof FloatValue) && (right instanceof IntegerValue || right instanceof FloatValue)) {
-            const a = left.value, b = right.value;
+            const a = left.value, b2 = right.value;
             switch (node.operator.value) {
               case "+":
               case "-":
               case "*": {
-                const res = node.operator.value === "+" ? a + b : node.operator.value === "-" ? a - b : a * b;
+                const res = node.operator.value === "+" ? a + b2 : node.operator.value === "-" ? a - b2 : a * b2;
                 const isFloat = left instanceof FloatValue || right instanceof FloatValue;
                 return isFloat ? new FloatValue(res) : new IntegerValue(res);
               }
               case "/":
-                return new FloatValue(a / b);
+                return new FloatValue(a / b2);
               case "%": {
-                const rem = a % b;
+                const rem = a % b2;
                 const isFloat = left instanceof FloatValue || right instanceof FloatValue;
                 return isFloat ? new FloatValue(rem) : new IntegerValue(rem);
               }
               case "<":
-                return new BooleanValue(a < b);
+                return new BooleanValue(a < b2);
               case ">":
-                return new BooleanValue(a > b);
+                return new BooleanValue(a > b2);
               case ">=":
-                return new BooleanValue(a >= b);
+                return new BooleanValue(a >= b2);
               case "<=":
-                return new BooleanValue(a <= b);
+                return new BooleanValue(a <= b2);
             }
           } else if (left instanceof ArrayValue && right instanceof ArrayValue) {
             switch (node.operator.value) {
@@ -20795,7 +20795,7 @@ var __webpack_modules__ = {
                 return new ArrayValue(left.value.concat(right.value));
             }
           } else if (right instanceof ArrayValue) {
-            const member = right.value.find((x) => x.value === left.value) !== void 0;
+            const member = right.value.find((x2) => x2.value === left.value) !== void 0;
             switch (node.operator.value) {
               case "in":
                 return new BooleanValue(member);
@@ -20871,10 +20871,10 @@ var __webpack_modules__ = {
                 case "reverse":
                   return new ArrayValue(operand.value.slice().reverse());
                 case "sort": {
-                  return new ArrayValue(operand.value.slice().sort((a, b) => compareRuntimeValues(a, b, false)));
+                  return new ArrayValue(operand.value.slice().sort((a, b2) => compareRuntimeValues(a, b2, false)));
                 }
                 case "join":
-                  return new StringValue(operand.value.map((x) => x.value).join(""));
+                  return new StringValue(operand.value.map((x2) => x2.value).join(""));
                 case "string":
                   return new StringValue(toJSON(operand, null, 0, false));
                 case "unique": {
@@ -20916,9 +20916,9 @@ var __webpack_modules__ = {
                 case "indent":
                   return new StringValue(
                     operand.value.split("\n").map(
-                      (x, i) => (
+                      (x2, i) => (
                         // By default, don't indent the first line or empty lines
-                        i === 0 || x.length === 0 ? x : "    " + x
+                        i === 0 || x2.length === 0 ? x2 : "    " + x2
                       )
                     ).join("\n")
                   );
@@ -20999,7 +20999,7 @@ var __webpack_modules__ = {
               if (operand instanceof StringValue) {
                 value = Array.from(operand.value);
               } else if (operand instanceof ArrayValue) {
-                value = operand.value.map((x) => x.value);
+                value = operand.value.map((x2) => x2.value);
               } else {
                 throw new Error(`Cannot apply filter "${filterName}" to type: ${operand.type}`);
               }
@@ -21058,9 +21058,9 @@ var __webpack_modules__ = {
                     return getAttributeValue(item, attrPath);
                   };
                   return new ArrayValue(
-                    operand.value.slice().sort((a, b) => {
+                    operand.value.slice().sort((a, b2) => {
                       const aVal = getSortValue(a);
-                      const bVal = getSortValue(b);
+                      const bVal = getSortValue(b2);
                       const result = compareRuntimeValues(aVal, bVal, caseSensitive.value);
                       return reverse.value ? -result : result;
                     })
@@ -21069,13 +21069,13 @@ var __webpack_modules__ = {
                 case "selectattr":
                 case "rejectattr": {
                   const select = filterName === "selectattr";
-                  if (operand.value.some((x) => !(x instanceof ObjectValue))) {
+                  if (operand.value.some((x2) => !(x2 instanceof ObjectValue))) {
                     throw new Error(`\`${filterName}\` can only be applied to array of objects`);
                   }
-                  if (filter.args.some((x) => x.type !== "StringLiteral")) {
+                  if (filter.args.some((x2) => x2.type !== "StringLiteral")) {
                     throw new Error(`arguments of \`${filterName}\` must be strings`);
                   }
-                  const [attr, testName, value] = filter.args.map((x) => this.evaluate(x, environment));
+                  const [attr, testName, value] = filter.args.map((x2) => this.evaluate(x2, environment));
                   let testFunction;
                   if (testName) {
                     const test = environment.tests.get(testName.value);
@@ -21084,7 +21084,7 @@ var __webpack_modules__ = {
                     }
                     testFunction = test;
                   } else {
-                    testFunction = (...x) => x[0].__bool__().value;
+                    testFunction = (...x2) => x2[0].__bool__().value;
                   }
                   const filtered = operand.value.filter((item) => {
                     const a = item.value.get(attr.value);
@@ -21128,7 +21128,7 @@ var __webpack_modules__ = {
                   const lines = operand.value.split("\n");
                   const indent = " ".repeat(width.value);
                   const indented = lines.map(
-                    (x, i) => !first.value && i === 0 || !blank.value && x.length === 0 ? x : indent + x
+                    (x2, i) => !first.value && i === 0 || !blank.value && x2.length === 0 ? x2 : indent + x2
                   );
                   return new StringValue(indented.join("\n"));
                 }
@@ -21363,11 +21363,11 @@ var __webpack_modules__ = {
                 throw new Error(`Too ${loopvar.value.length > c.value.length ? "few" : "many"} items to unpack`);
               }
               scopeUpdateFunction = (scope2) => {
-                for (let j = 0; j < loopvar.value.length; ++j) {
-                  if (loopvar.value[j].type !== "Identifier") {
-                    throw new Error(`Cannot unpack non-identifier type: ${loopvar.value[j].type}`);
+                for (let j2 = 0; j2 < loopvar.value.length; ++j2) {
+                  if (loopvar.value[j2].type !== "Identifier") {
+                    throw new Error(`Cannot unpack non-identifier type: ${loopvar.value[j2].type}`);
                   }
-                  scope2.setVariable(loopvar.value[j].value, c.value[j]);
+                  scope2.setVariable(loopvar.value[j2].value, c.value[j2]);
                 }
               };
             } else {
@@ -21511,9 +21511,9 @@ var __webpack_modules__ = {
             case "StringLiteral":
               return new StringValue(statement.value);
             case "ArrayLiteral":
-              return new ArrayValue(statement.value.map((x) => this.evaluate(x, environment)));
+              return new ArrayValue(statement.value.map((x2) => this.evaluate(x2, environment)));
             case "TupleLiteral":
-              return new TupleValue(statement.value.map((x) => this.evaluate(x, environment)));
+              return new TupleValue(statement.value.map((x2) => this.evaluate(x2, environment)));
             case "ObjectLiteral": {
               const mapping = /* @__PURE__ */ new Map();
               for (const [key, value] of statement.value) {
@@ -21574,7 +21574,7 @@ var __webpack_modules__ = {
             }
           case "function":
             return new FunctionValue((args, _scope) => {
-              const result = input(...args.map((x) => x.value)) ?? null;
+              const result = input(...args.map((x2) => x2.value)) ?? null;
               return convertToRuntimeValues(result);
             });
           default:
@@ -21787,7 +21787,7 @@ var __webpack_modules__ = {
           }
           case "ObjectLiteral": {
             const entries = Array.from(node.value.entries()).map(
-              ([k, v]) => `${formatExpression(k)}: ${formatExpression(v)}`
+              ([k2, v2]) => `${formatExpression(k2)}: ${formatExpression(v2)}`
             );
             return `{${entries.join(", ")}}`;
           }
@@ -21837,8 +21837,8 @@ var __webpack_modules__ = {
           const result = interpreter.run(this.parsed);
           return result.value;
         }
-        format(options2) {
-          return format(this.parsed, options2?.indent || "	");
+        format(options) {
+          return format(this.parsed, options?.indent || "	");
         }
       };
     }
@@ -21967,7 +21967,7 @@ var __webpack_modules__ = {
             return supportedDevices;
           case "gpu":
             return supportedDevices.filter(
-              (x) => ["webgpu", "cuda", "dml", "webnn-gpu"].includes(x)
+              (x2) => ["webgpu", "cuda", "dml", "webnn-gpu"].includes(x2)
             );
         }
         if (supportedDevices.includes(device)) {
@@ -21993,8 +21993,8 @@ var __webpack_modules__ = {
         const output = await (IS_WEB_ENV ? webInferenceChain = webInferenceChain.then(run) : run());
         return output;
       }
-      function isONNXTensor(x) {
-        return x instanceof ONNX.Tensor;
+      function isONNXTensor(x2) {
+        return x2 instanceof ONNX.Tensor;
       }
       const ONNX_ENV = ONNX?.env;
       if (ONNX_ENV?.wasm) {
@@ -22060,21 +22060,21 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the feature extractor classes of the library from a pretrained model.
-         * 
+         *
          * The feature extractor class to instantiate is selected based on the `feature_extractor_type` property of
          * the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         * 
+         *
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained feature_extractor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing feature_extractor files, e.g., `./my_model_directory/`.
          * @param {import('../utils/hub.js').PretrainedOptions} options Additional options for loading the feature_extractor.
-         * 
+         *
          * @returns {Promise<FeatureExtractor>} A new instance of the Feature Extractor class.
          */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
-          const config2 = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.FEATURE_EXTRACTOR_NAME, true, options2);
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
+          const config2 = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.FEATURE_EXTRACTOR_NAME, true, options);
           return new this(config2);
         }
       }
@@ -22158,14 +22158,14 @@ var __webpack_modules__ = {
       );
       function constraint_to_multiple_of(val, multiple, minVal = 0, maxVal = null) {
         const a = val / multiple;
-        let x = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.bankers_round)(a) * multiple;
-        if (maxVal !== null && x > maxVal) {
-          x = Math.floor(a) * multiple;
+        let x2 = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.bankers_round)(a) * multiple;
+        if (maxVal !== null && x2 > maxVal) {
+          x2 = Math.floor(a) * multiple;
         }
-        if (x < minVal) {
-          x = Math.ceil(a) * multiple;
+        if (x2 < minVal) {
+          x2 = Math.ceil(a) * multiple;
         }
-        return x;
+        return x2;
       }
       function enforce_size_divisibility([width, height], divisor) {
         return [
@@ -22198,15 +22198,15 @@ var __webpack_modules__ = {
           };
           let logits = out_logits[i];
           let bbox = out_bbox[i];
-          for (let j = 0; j < num_boxes; ++j) {
-            let logit = logits[j];
+          for (let j2 = 0; j2 < num_boxes; ++j2) {
+            let logit = logits[j2];
             let indices = [];
             let probs;
             if (is_zero_shot) {
               probs = logit.sigmoid().data;
-              for (let k = 0; k < probs.length; ++k) {
-                if (probs[k] > threshold) {
-                  indices.push(k);
+              for (let k2 = 0; k2 < probs.length; ++k2) {
+                if (probs[k2] > threshold) {
+                  indices.push(k2);
                 }
               }
             } else {
@@ -22221,10 +22221,10 @@ var __webpack_modules__ = {
               indices.push(maxIndex);
             }
             for (const index of indices) {
-              let box = bbox[j].data;
+              let box = bbox[j2].data;
               box = center_to_corners_format(box);
               if (target_size !== null) {
-                box = box.map((x, i2) => x * target_size[(i2 + 1) % 2]);
+                box = box.map((x2, i2) => x2 * target_size[(i2 + 1) % 2]);
               }
               info.boxes.push(box);
               info.classes.push(index);
@@ -22256,21 +22256,21 @@ var __webpack_modules__ = {
           );
           const buffer = data[0].data;
           const segmentation_data = segmentation.data;
-          for (let j = 1; j < data.dims[0]; ++j) {
-            const row = data[j].data;
-            for (let k = 0; k < row.length; ++k) {
-              if (row[k] > buffer[k]) {
-                buffer[k] = row[k];
-                segmentation_data[k] = j;
+          for (let j2 = 1; j2 < data.dims[0]; ++j2) {
+            const row = data[j2].data;
+            for (let k2 = 0; k2 < row.length; ++k2) {
+              if (row[k2] > buffer[k2]) {
+                buffer[k2] = row[k2];
+                segmentation_data[k2] = j2;
               }
             }
           }
           const hasLabel = new Array(data.dims[0]);
-          for (let j = 0; j < segmentation_data.length; ++j) {
-            const index = segmentation_data[j];
+          for (let j2 = 0; j2 < segmentation_data.length; ++j2) {
+            const index = segmentation_data[j2];
             hasLabel[index] = index;
           }
-          const labels = hasLabel.filter((x) => x !== void 0);
+          const labels = hasLabel.filter((x2) => x2 !== void 0);
           toReturn.push({ segmentation, labels });
         }
         return toReturn;
@@ -22279,9 +22279,9 @@ var __webpack_modules__ = {
         const mask_probs_item = [];
         const pred_scores_item = [];
         const pred_labels_item = [];
-        for (let j = 0; j < class_logits.dims[0]; ++j) {
-          const cls = class_logits[j];
-          const mask = mask_logits[j];
+        for (let j2 = 0; j2 < class_logits.dims[0]; ++j2) {
+          const cls = class_logits[j2];
+          const mask = mask_logits[j2];
           const pred_label = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.max)(cls.data)[1];
           if (pred_label === num_labels) {
             continue;
@@ -22296,13 +22296,13 @@ var __webpack_modules__ = {
         }
         return [mask_probs_item, pred_scores_item, pred_labels_item];
       }
-      function check_segment_validity(mask_labels, mask_probs, k, mask_threshold = 0.5, overlap_mask_area_threshold = 0.8) {
+      function check_segment_validity(mask_labels, mask_probs, k2, mask_threshold = 0.5, overlap_mask_area_threshold = 0.8) {
         const mask_k = [];
         let mask_k_area = 0;
         let original_area = 0;
-        const mask_probs_k_data = mask_probs[k].data;
+        const mask_probs_k_data = mask_probs[k2].data;
         for (let i = 0; i < mask_labels.length; ++i) {
-          if (mask_labels[i] === k) {
+          if (mask_labels[i] === k2) {
             mask_k.push(i);
             ++mask_k_area;
           }
@@ -22335,22 +22335,22 @@ var __webpack_modules__ = {
         for (let i = 0; i < mask_probs.length; ++i) {
           let score = pred_scores[i];
           const mask_probs_i_data = mask_probs[i].data;
-          for (let j = 0; j < mask_probs_i_data.length; ++j) {
-            mask_probs_i_data[j] *= score;
-            if (mask_probs_i_data[j] > bestScores[j]) {
-              mask_labels[j] = i;
-              bestScores[j] = mask_probs_i_data[j];
+          for (let j2 = 0; j2 < mask_probs_i_data.length; ++j2) {
+            mask_probs_i_data[j2] *= score;
+            if (mask_probs_i_data[j2] > bestScores[j2]) {
+              mask_labels[j2] = i;
+              bestScores[j2] = mask_probs_i_data[j2];
             }
           }
         }
         let current_segment_id = 0;
         const segmentation_data = segmentation.data;
-        for (let k = 0; k < pred_labels.length; ++k) {
-          const pred_class = pred_labels[k];
+        for (let k2 = 0; k2 < pred_labels.length; ++k2) {
+          const pred_class = pred_labels[k2];
           const [mask_exists, mask_k] = check_segment_validity(
             mask_labels,
             mask_probs,
-            k,
+            k2,
             mask_threshold,
             overlap_mask_area_threshold
           );
@@ -22365,7 +22365,7 @@ var __webpack_modules__ = {
             id: current_segment_id,
             label_id: pred_class,
             // was_fused: should_fuse, TODO
-            score: pred_scores[k]
+            score: pred_scores[k2]
           });
         }
         return [segmentation, segments];
@@ -22515,14 +22515,14 @@ var __webpack_modules__ = {
           const threshold = gray_threshold / 255;
           let x_min = gray_image.width, y_min = gray_image.height, x_max = 0, y_max = 0;
           const gray_image_data = gray_image.data;
-          for (let j = 0; j < gray_image.height; ++j) {
-            const row = j * gray_image.width;
+          for (let j2 = 0; j2 < gray_image.height; ++j2) {
+            const row = j2 * gray_image.width;
             for (let i = 0; i < gray_image.width; ++i) {
               if ((gray_image_data[row + i] - minValue) / diff < threshold) {
                 x_min = Math.min(x_min, i);
-                y_min = Math.min(y_min, j);
+                y_min = Math.min(y_min, j2);
                 x_max = Math.max(x_max, i);
-                y_max = Math.max(y_max, j);
+                y_max = Math.max(y_max, j2);
               }
             }
           }
@@ -22568,12 +22568,12 @@ var __webpack_modules__ = {
             const [left, top] = center ? [Math.floor((paddedImageWidth - imageWidth) / 2), Math.floor((paddedImageHeight - imageHeight) / 2)] : [0, 0];
             for (let i = 0; i < imageHeight; ++i) {
               const a = (i + top) * paddedImageWidth;
-              const b = i * imageWidth;
-              for (let j = 0; j < imageWidth; ++j) {
-                const c = (a + j + left) * imageChannels;
-                const d = (b + j) * imageChannels;
-                for (let k = 0; k < imageChannels; ++k) {
-                  paddedPixelData[c + k] = pixelData[d + k];
+              const b2 = i * imageWidth;
+              for (let j2 = 0; j2 < imageWidth; ++j2) {
+                const c = (a + j2 + left) * imageChannels;
+                const d2 = (b2 + j2) * imageChannels;
+                for (let k2 = 0; k2 < imageChannels; ++k2) {
+                  paddedPixelData[c + k2] = pixelData[d2 + k2];
                 }
               }
             }
@@ -22585,14 +22585,14 @@ var __webpack_modules__ = {
               const w1 = imageWidth - 1;
               for (let i = 0; i < paddedImageHeight; ++i) {
                 const a = i * paddedImageWidth;
-                const b = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.calculateReflectOffset)(i, h1) * imageWidth;
-                for (let j = 0; j < paddedImageWidth; ++j) {
-                  if (i < imageHeight && j < imageWidth)
+                const b2 = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.calculateReflectOffset)(i, h1) * imageWidth;
+                for (let j2 = 0; j2 < paddedImageWidth; ++j2) {
+                  if (i < imageHeight && j2 < imageWidth)
                     continue;
-                  const c = (a + j) * imageChannels;
-                  const d = (b + (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.calculateReflectOffset)(j, w1)) * imageChannels;
-                  for (let k = 0; k < imageChannels; ++k) {
-                    paddedPixelData[c + k] = pixelData[d + k];
+                  const c = (a + j2) * imageChannels;
+                  const d2 = (b2 + (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.calculateReflectOffset)(j2, w1)) * imageChannels;
+                  for (let k2 = 0; k2 < imageChannels; ++k2) {
+                    paddedPixelData[c + k2] = pixelData[d2 + k2];
                   }
                 }
               }
@@ -22616,7 +22616,7 @@ var __webpack_modules__ = {
          * Find the target (width, height) dimension of the output image after
          * resizing given the input image and the desired size.
          * @param {RawImage} image The image to resize.
-         * @param {any} size The size to use for resizing the image. 
+         * @param {any} size The size to use for resizing the image.
          * @returns {[number, number]} The target (width, height) dimension of the output image after resizing.
          */
         get_resize_output_image_size(image, size) {
@@ -22746,8 +22746,8 @@ var __webpack_modules__ = {
               throw new Error(`When set to arrays, the length of \`image_mean\` (${image_mean.length}) and \`image_std\` (${image_std.length}) must match the number of channels in the image (${image.channels}).`);
             }
             for (let i = 0; i < pixelData.length; i += image.channels) {
-              for (let j = 0; j < image.channels; ++j) {
-                pixelData[i + j] = (pixelData[i + j] - image_mean[j]) / image_std[j];
+              for (let j2 = 0; j2 < image.channels; ++j2) {
+                pixelData[i + j2] = (pixelData[i + j2] - image_mean[j2]) / image_std[j2];
               }
             }
           }
@@ -22789,33 +22789,33 @@ var __webpack_modules__ = {
           if (!Array.isArray(images)) {
             images = [images];
           }
-          const imageData = await Promise.all(images.map((x) => this.preprocess(x)));
-          const pixel_values = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.stack)(imageData.map((x) => x.pixel_values), 0);
+          const imageData = await Promise.all(images.map((x2) => this.preprocess(x2)));
+          const pixel_values = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.stack)(imageData.map((x2) => x2.pixel_values), 0);
           return {
             pixel_values,
             // Original sizes of images
-            original_sizes: imageData.map((x) => x.original_size),
+            original_sizes: imageData.map((x2) => x2.original_size),
             // Reshaped sizes of images, before padding or cropping
-            reshaped_input_sizes: imageData.map((x) => x.reshaped_input_size)
+            reshaped_input_sizes: imageData.map((x2) => x2.reshaped_input_size)
           };
         }
         /**
          * Instantiate one of the processor classes of the library from a pretrained model.
-         * 
+         *
          * The processor class to instantiate is selected based on the `image_processor_type` (or `feature_extractor_type`; legacy)
          * property of the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         * 
+         *
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained processor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing processor files, e.g., `./my_model_directory/`.
          * @param {import('../utils/hub.js').PretrainedOptions} options Additional options for loading the processor.
-         * 
+         *
          * @returns {Promise<ImageProcessor>} A new instance of the Processor class.
          */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
-          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_6__.IMAGE_PROCESSOR_NAME, true, options2);
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
+          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_6__.IMAGE_PROCESSOR_NAME, true, options);
           return new this(preprocessorConfig);
         }
       }
@@ -22859,8 +22859,8 @@ var __webpack_modules__ = {
         static uses_chat_template_file = false;
         /**
          * Creates a new Processor with the given components
-         * @param {Object} config 
-         * @param {Record<string, Object>} components 
+         * @param {Object} config
+         * @param {Record<string, Object>} components
          * @param {string} chat_template
          */
         constructor(config2, components, chat_template) {
@@ -22892,7 +22892,7 @@ var __webpack_modules__ = {
          * @param {Parameters<PreTrainedTokenizer['apply_chat_template']>[1]} options
          * @returns {ReturnType<PreTrainedTokenizer['apply_chat_template']>}
          */
-        apply_chat_template(messages, options2 = {}) {
+        apply_chat_template(messages, options = {}) {
           if (!this.tokenizer) {
             throw new Error("Unable to apply chat template without a tokenizer.");
           }
@@ -22900,7 +22900,7 @@ var __webpack_modules__ = {
             tokenize: false,
             // default to false
             chat_template: this.chat_template ?? void 0,
-            ...options2
+            ...options
           });
         }
         /**
@@ -22939,30 +22939,30 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the processor classes of the library from a pretrained model.
-         * 
+         *
          * The processor class to instantiate is selected based on the `image_processor_type` (or `feature_extractor_type`; legacy)
          * property of the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         * 
+         *
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained processor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing processor files, e.g., `./my_model_directory/`.
          * @param {PretrainedProcessorOptions} options Additional options for loading the processor.
-         * 
+         *
          * @returns {Promise<Processor>} A new instance of the Processor class.
          */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           const [config2, components, chat_template] = await Promise.all([
             // TODO:
-            this.uses_processor_config ? (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.PROCESSOR_NAME, true, options2) : {},
+            this.uses_processor_config ? (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.PROCESSOR_NAME, true, options) : {},
             Promise.all(
               this.classes.filter((cls) => cls in this).map(async (cls) => {
-                const component = await this[cls].from_pretrained(pretrained_model_name_or_path, options2);
+                const component = await this[cls].from_pretrained(pretrained_model_name_or_path, options);
                 return [cls.replace(/_class$/, ""), component];
               })
             ).then(Object.fromEntries),
-            this.uses_chat_template_file ? (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelText)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.CHAT_TEMPLATE_NAME, true, options2) : null
+            this.uses_chat_template_file ? (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelText)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.CHAT_TEMPLATE_NAME, true, options) : null
           ]);
           return new this(config2, components, chat_template);
         }
@@ -23003,8 +23003,8 @@ var __webpack_modules__ = {
         /*! ./utils/hub.js */
         "./src/utils/hub.js"
       );
-      async function loadConfig(pretrained_model_name_or_path, options2) {
-        return await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, "config.json", true, options2);
+      async function loadConfig(pretrained_model_name_or_path, options) {
+        return await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, "config.json", true, options);
       }
       function getNormalizedConfig(config2) {
         const mapping = {};
@@ -23196,14 +23196,14 @@ var __webpack_modules__ = {
         }
         return normalized_config;
       }
-      function getCacheShapes(config2, options2) {
+      function getCacheShapes(config2, options) {
         if (config2.model_type === "lfm2") {
-          const pkv_prefix = options2?.prefix ?? "past_key_values";
+          const pkv_prefix = options?.prefix ?? "past_key_values";
           const conv_prefix = pkv_prefix === "present" ? "present" : "past";
           const cache_values = {};
           const { layer_types, num_attention_heads, num_key_value_heads, hidden_size, conv_L_cache } = config2;
           const head_dim = hidden_size / num_attention_heads;
-          const batch_size = options2?.batch_size ?? 1;
+          const batch_size = options?.batch_size ?? 1;
           for (let i = 0; i < layer_types.length; ++i) {
             if (layer_types[i] === "full_attention") {
               for (const kv of ["key", "value"]) {
@@ -23217,7 +23217,7 @@ var __webpack_modules__ = {
           }
           return cache_values;
         }
-        return getKeyValueShapes(config2, options2);
+        return getKeyValueShapes(config2, options);
       }
       function getKeyValueShapes(config2, {
         prefix = "past_key_values",
@@ -23293,12 +23293,12 @@ var __webpack_modules__ = {
           this.normalized_config = getNormalizedConfig(this);
         }
         /**
-         * Loads a pre-trained config from the given `pretrained_model_name_or_path`. 
-         * 
+         * Loads a pre-trained config from the given `pretrained_model_name_or_path`.
+         *
          * @param {string} pretrained_model_name_or_path The path to the pre-trained config.
          * @param {PretrainedOptions} options Additional options for loading the config.
          * @throws {Error} Throws an error if the config.json is not found in the `pretrained_model_name_or_path`.
-         * 
+         *
          * @returns {Promise<PretrainedConfig>} A new instance of the `PretrainedConfig` class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -23779,8 +23779,8 @@ var __webpack_modules__ = {
          */
         generation_kwargs = {};
         /**
-         * 
-         * @param {GenerationConfig|import('../configs.js').PretrainedConfig} config 
+         *
+         * @param {GenerationConfig|import('../configs.js').PretrainedConfig} config
          */
         constructor(config2) {
           Object.assign(this, (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_0__.pick)(config2, Object.getOwnPropertyNames(this)));
@@ -24000,7 +24000,7 @@ var __webpack_modules__ = {
         }
         /**
          * Apply the processor to input_ids and logits.
-         * 
+         *
          * @param {bigint[][]} input_ids The input ids.
          * @param {Tensor} logits The logits tensor.
          */
@@ -24102,7 +24102,7 @@ var __webpack_modules__ = {
               batch_logits_data.subarray(last_allowed + 1).fill(-Infinity);
             }
             const logprobs = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.log_softmax)(batch_logits_data);
-            const timestamp_logprob = Math.log(logprobs.subarray(this.timestamp_begin).map(Math.exp).reduce((a, b) => a + b));
+            const timestamp_logprob = Math.log(logprobs.subarray(this.timestamp_begin).map(Math.exp).reduce((a, b2) => a + b2));
             const max_text_token_logprob = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.max)(logprobs.subarray(0, this.timestamp_begin))[0];
             if (timestamp_logprob > max_text_token_logprob) {
               batch_logits_data.subarray(0, this.timestamp_begin).fill(-Infinity);
@@ -24128,10 +24128,10 @@ var __webpack_modules__ = {
         getNgrams(prevInputIds) {
           const curLen = prevInputIds.length;
           const ngrams = [];
-          for (let j = 0; j < curLen + 1 - this.no_repeat_ngram_size; ++j) {
+          for (let j2 = 0; j2 < curLen + 1 - this.no_repeat_ngram_size; ++j2) {
             const ngram = [];
-            for (let k = 0; k < this.no_repeat_ngram_size; ++k) {
-              ngram.push(prevInputIds[j + k]);
+            for (let k2 = 0; k2 < this.no_repeat_ngram_size; ++k2) {
+              ngram.push(prevInputIds[j2 + k2]);
             }
             ngrams.push(ngram.map(Number));
           }
@@ -24321,8 +24321,8 @@ var __webpack_modules__ = {
               if (ids.length < bad_word_ids.length - 1)
                 continue;
               let mark = true;
-              for (let j = 1; j <= bad_word_ids.length - 1; ++j) {
-                if (bad_word_ids.at(-j - 1) != ids.at(-j)) {
+              for (let j2 = 1; j2 <= bad_word_ids.length - 1; ++j2) {
+                if (bad_word_ids.at(-j2 - 1) != ids.at(-j2)) {
                   mark = false;
                   break;
                 }
@@ -24588,14 +24588,14 @@ var __webpack_modules__ = {
          * @returns {Promise<[bigint, number][]>}
          */
         async sample(logits) {
-          let k = logits.dims.at(-1);
+          let k2 = logits.dims.at(-1);
           if (this.generation_config.top_k > 0) {
-            k = Math.min(this.generation_config.top_k, k);
+            k2 = Math.min(this.generation_config.top_k, k2);
           }
-          const [v, i] = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.topk)(logits, k);
+          const [v2, i] = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.topk)(logits, k2);
           const probabilities = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.softmax)(
             /** @type {Float32Array} */
-            v.data
+            v2.data
           );
           return Array.from({ length: this.generation_config.num_beams }, () => {
             const sampledIndex = this.randomSelect(probabilities);
@@ -24615,20 +24615,20 @@ var __webpack_modules__ = {
          * @returns {Promise<[bigint, number][]>}
          */
         async sample(logits) {
-          let k = logits.dims.at(-1);
+          let k2 = logits.dims.at(-1);
           if (this.generation_config.top_k > 0) {
-            k = Math.min(this.generation_config.top_k, k);
+            k2 = Math.min(this.generation_config.top_k, k2);
           }
-          const [v, i] = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.topk)(logits, k);
+          const [v2, i] = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.topk)(logits, k2);
           const probabilities = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_2__.softmax)(
             /** @type {Float32Array} */
-            v.data
+            v2.data
           );
-          return Array.from({ length: this.generation_config.num_beams }, (_, x) => {
+          return Array.from({ length: this.generation_config.num_beams }, (_2, x2) => {
             return [
-              i.data[x],
+              i.data[x2],
               // token id
-              Math.log(probabilities[x])
+              Math.log(probabilities[x2])
               // score
             ];
           });
@@ -24678,7 +24678,7 @@ var __webpack_modules__ = {
       );
       class StoppingCriteria extends _utils_generic_js__WEBPACK_IMPORTED_MODULE_0__.Callable {
         /**
-         * 
+         *
          * @param {number[][]} input_ids (`number[][]` of shape `(batch_size, sequence_length)`):
          * Indices of input sequence tokens in the vocabulary.
          * @param {number[][]} scores scores (`number[][]` of shape `(batch_size, config.vocab_size)`):
@@ -24735,7 +24735,7 @@ var __webpack_modules__ = {
       }
       class MaxLengthCriteria extends StoppingCriteria {
         /**
-         * 
+         *
          * @param {number} max_length The maximum length that the output sequence can have in number of tokens.
          * @param {number} [max_position_embeddings=null] The maximum model length, as defined by the model's `config.max_position_embeddings` attribute.
          */
@@ -24750,7 +24750,7 @@ var __webpack_modules__ = {
       }
       class EosTokenCriteria extends StoppingCriteria {
         /**
-         * 
+         *
          * @param {number|number[]} eos_token_id The id of the *end-of-sequence* token.
          * Optionally, use a list to set multiple *end-of-sequence* tokens.
          */
@@ -24762,9 +24762,9 @@ var __webpack_modules__ = {
           this.eos_token_id = eos_token_id;
         }
         /**
-         * 
-         * @param {number[][]} input_ids 
-         * @param {number[][]} scores 
+         *
+         * @param {number[][]} input_ids
+         * @param {number[][]} scores
          * @returns {boolean[]}
          */
         _call(input_ids, scores) {
@@ -24832,7 +24832,7 @@ var __webpack_modules__ = {
       class BaseStreamer {
         /**
          * Function that is called by `.generate()` to push new tokens
-         * @param {bigint[][]} value 
+         * @param {bigint[][]} value
          */
         put(value) {
           throw Error("Not implemented");
@@ -24844,10 +24844,10 @@ var __webpack_modules__ = {
           throw Error("Not implemented");
         }
       }
-      const stdout_write = _env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_PROCESS_AVAILABLE ? (x) => process.stdout.write(x) : (x) => console.log(x);
+      const stdout_write = _env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_PROCESS_AVAILABLE ? (x2) => process.stdout.write(x2) : (x2) => console.log(x2);
       class TextStreamer extends BaseStreamer {
         /**
-         * 
+         *
          * @param {import('../tokenizers.js').PreTrainedTokenizer} tokenizer
          * @param {Object} options
          * @param {boolean} [options.skip_prompt=false] Whether to skip the prompt tokens
@@ -24876,7 +24876,7 @@ var __webpack_modules__ = {
         }
         /**
          * Receives tokens, decodes them, and prints them to stdout as soon as they form entire words.
-         * @param {bigint[][]} value 
+         * @param {bigint[][]} value
          */
         put(value) {
           if (value.length > 1) {
@@ -24924,8 +24924,8 @@ var __webpack_modules__ = {
         }
         /**
          * Prints the new text to stdout. If the stream is ending, also prints a newline.
-         * @param {string} text 
-         * @param {boolean} stream_end 
+         * @param {string} text
+         * @param {boolean} stream_end
          */
         on_finalized_text(text, stream_end) {
           if (text.length > 0) {
@@ -24976,7 +24976,7 @@ var __webpack_modules__ = {
           this.waiting_for_timestamp = false;
         }
         /**
-         * @param {bigint[][]} value 
+         * @param {bigint[][]} value
          */
         put(value) {
           if (value.length > 1) {
@@ -28089,9 +28089,9 @@ var __webpack_modules__ = {
       const MODEL_TYPE_MAPPING = /* @__PURE__ */ new Map();
       const MODEL_NAME_TO_CLASS_MAPPING = /* @__PURE__ */ new Map();
       const MODEL_CLASS_TO_NAME_MAPPING = /* @__PURE__ */ new Map();
-      async function getSession(pretrained_model_name_or_path, fileName, options2) {
-        let custom_config = options2.config?.["transformers.js_config"] ?? {};
-        let device = options2.device ?? custom_config.device;
+      async function getSession(pretrained_model_name_or_path, fileName, options) {
+        let custom_config = options.config?.["transformers.js_config"] ?? {};
+        let device = options.device ?? custom_config.device;
         if (device && typeof device !== "string") {
           if (device.hasOwnProperty(fileName)) {
             device = device[fileName];
@@ -28112,7 +28112,7 @@ var __webpack_modules__ = {
             ...device_config[selectedDevice]
           };
         }
-        let dtype = options2.dtype ?? custom_config.dtype;
+        let dtype = options.dtype ?? custom_config.dtype;
         if (typeof dtype !== "string") {
           if (dtype && dtype.hasOwnProperty(fileName)) {
             dtype = dtype[fileName];
@@ -28153,8 +28153,8 @@ var __webpack_modules__ = {
         };
         const suffix = _utils_dtypes_js__WEBPACK_IMPORTED_MODULE_2__.DEFAULT_DTYPE_SUFFIX_MAPPING[selectedDtype];
         const baseName = `${fileName}${suffix}.onnx`;
-        const modelFileName = `${options2.subfolder ?? ""}/${baseName}`;
-        const session_options = { ...options2.session_options };
+        const modelFileName = `${options.subfolder ?? ""}/${baseName}`;
+        const session_options = { ...options.session_options };
         session_options.executionProviders ??= executionProviders;
         const free_dimension_overrides = custom_config.free_dimension_overrides;
         if (free_dimension_overrides) {
@@ -28165,8 +28165,8 @@ var __webpack_modules__ = {
           );
         }
         const return_path = _env_js__WEBPACK_IMPORTED_MODULE_14__.apis.IS_NODE_ENV && _env_js__WEBPACK_IMPORTED_MODULE_14__.env.useFSCache;
-        const bufferOrPathPromise = (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, modelFileName, true, options2, return_path);
-        const use_external_data_format = options2.use_external_data_format ?? custom_config.use_external_data_format;
+        const bufferOrPathPromise = (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, modelFileName, true, options, return_path);
+        const use_external_data_format = options.use_external_data_format ?? custom_config.use_external_data_format;
         let externalDataPromises = [];
         if (use_external_data_format) {
           let external_data_format;
@@ -28187,16 +28187,16 @@ var __webpack_modules__ = {
           }
           for (let i = 0; i < num_chunks; ++i) {
             const path3 = `${baseName}_data${i === 0 ? "" : "_" + i}`;
-            const fullPath = `${options2.subfolder ?? ""}/${path3}`;
+            const fullPath = `${options.subfolder ?? ""}/${path3}`;
             externalDataPromises.push(new Promise(async (resolve, reject) => {
-              const data = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, fullPath, true, options2, return_path);
+              const data = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, fullPath, true, options, return_path);
               resolve(data instanceof Uint8Array ? { path: path3, data } : path3);
             }));
           }
         } else if (session_options.externalData !== void 0) {
           externalDataPromises = session_options.externalData.map(async (ext) => {
             if (typeof ext.data === "string") {
-              const ext_buffer = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, ext.data, true, options2);
+              const ext_buffer = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, ext.data, true, options);
               return { ...ext, data: ext_buffer };
             }
             return ext;
@@ -28209,7 +28209,7 @@ var __webpack_modules__ = {
           }
         }
         if (selectedDevice === "webgpu") {
-          const shapes = (0, _configs_js__WEBPACK_IMPORTED_MODULE_0__.getCacheShapes)(options2.config, {
+          const shapes = (0, _configs_js__WEBPACK_IMPORTED_MODULE_0__.getCacheShapes)(options.config, {
             prefix: "present"
           });
           if (Object.keys(shapes).length > 0 && !(0, _backends_onnx_js__WEBPACK_IMPORTED_MODULE_1__.isONNXProxy)()) {
@@ -28223,19 +28223,19 @@ var __webpack_modules__ = {
         const buffer_or_path = await bufferOrPathPromise;
         return { buffer_or_path, session_options, session_config };
       }
-      async function constructSessions(pretrained_model_name_or_path, names, options2) {
+      async function constructSessions(pretrained_model_name_or_path, names, options) {
         return Object.fromEntries(await Promise.all(
           Object.keys(names).map(async (name) => {
-            const { buffer_or_path, session_options, session_config } = await getSession(pretrained_model_name_or_path, names[name], options2);
+            const { buffer_or_path, session_options, session_config } = await getSession(pretrained_model_name_or_path, names[name], options);
             const session = await (0, _backends_onnx_js__WEBPACK_IMPORTED_MODULE_1__.createInferenceSession)(buffer_or_path, session_options, session_config);
             return [name, session];
           })
         ));
       }
-      async function getOptionalConfigs(pretrained_model_name_or_path, names, options2) {
+      async function getOptionalConfigs(pretrained_model_name_or_path, names, options) {
         return Object.fromEntries(await Promise.all(
           Object.keys(names).map(async (name) => {
-            const config2 = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelJSON)(pretrained_model_name_or_path, names[name], false, options2);
+            const config2 = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelJSON)(pretrained_model_name_or_path, names[name], false, options);
             return [name, config2];
           })
         ));
@@ -28267,11 +28267,11 @@ var __webpack_modules__ = {
       async function sessionRun(session, inputs) {
         const checkedInputs = validateInputs(session, inputs);
         try {
-          const ortFeed = Object.fromEntries(Object.entries(checkedInputs).map(([k, v]) => [k, v.ort_tensor]));
+          const ortFeed = Object.fromEntries(Object.entries(checkedInputs).map(([k2, v2]) => [k2, v2.ort_tensor]));
           const output = await (0, _backends_onnx_js__WEBPACK_IMPORTED_MODULE_1__.runInferenceSession)(session, ortFeed);
           return replaceTensors(output);
         } catch (e) {
-          const formatted = Object.fromEntries(Object.entries(checkedInputs).map(([k, tensor]) => {
+          const formatted = Object.fromEntries(Object.entries(checkedInputs).map(([k2, tensor]) => {
             const unpacked = {
               type: tensor.type,
               dims: tensor.dims,
@@ -28280,7 +28280,7 @@ var __webpack_modules__ = {
             if (unpacked.location !== "gpu-buffer") {
               unpacked.data = tensor.data;
             }
-            return [k, unpacked];
+            return [k2, unpacked];
           }));
           console.error(`An error occurred during model execution: "${e}".`);
           console.error("Inputs given to model:", formatted);
@@ -28305,18 +28305,18 @@ var __webpack_modules__ = {
           throw Error("items must be non-empty");
         }
         if (Array.isArray(items[0])) {
-          if (items.some((x) => x.length !== items[0].length)) {
+          if (items.some((x2) => x2.length !== items[0].length)) {
             throw Error("Unable to create tensor, you should probably activate truncation and/or padding with 'padding=True' and/or 'truncation=True' to have batched tensors with the same length.");
           }
           return new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.Tensor(
             "int64",
-            BigInt64Array.from(items.flat().map((x) => BigInt(x))),
+            BigInt64Array.from(items.flat().map((x2) => BigInt(x2))),
             [items.length, items[0].length]
           );
         } else {
           return new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.Tensor(
             "int64",
-            BigInt64Array.from(items.map((x) => BigInt(x))),
+            BigInt64Array.from(items.map((x2) => BigInt(x2))),
             [1, items.length]
           );
         }
@@ -28389,13 +28389,13 @@ var __webpack_modules__ = {
         attention_mask
       }) {
         const token_positions = input_ids.tolist().map(
-          (ids) => ids.reduce((acc, x, idx) => {
-            if (x == modality_token_id)
+          (ids) => ids.reduce((acc, x2, idx) => {
+            if (x2 == modality_token_id)
               acc.push(idx);
             return acc;
           }, [])
         );
-        const n_tokens = token_positions.reduce((acc, x) => acc + x.length, 0);
+        const n_tokens = token_positions.reduce((acc, x2) => acc + x2.length, 0);
         const n_features = modality_features.dims[0];
         if (n_tokens !== n_features) {
           throw new Error(`Number of tokens and features do not match: tokens: ${n_tokens}, features ${n_features}`);
@@ -28404,8 +28404,8 @@ var __webpack_modules__ = {
         for (let i = 0; i < token_positions.length; ++i) {
           const tokens = token_positions[i];
           const embeds = inputs_embeds[i];
-          for (let j = 0; j < tokens.length; ++j) {
-            embeds[tokens[j]].data.set(modality_features[img++].data);
+          for (let j2 = 0; j2 < tokens.length; ++j2) {
+            embeds[tokens[j2]].data.set(modality_features[img++].data);
           }
         }
         return { inputs_embeds, attention_mask };
@@ -28525,8 +28525,8 @@ var __webpack_modules__ = {
         for (let i = 0; i < bz; ++i) {
           const start = i * seq_len;
           let sum = BigInt(start_index);
-          for (let j = 0; j < seq_len; ++j) {
-            const index = start + j;
+          for (let j2 = 0; j2 < seq_len; ++j2) {
+            const index = start + j2;
             if (attn_mask_data[index] === 0n) {
               data[index] = BigInt(1);
             } else {
@@ -28574,7 +28574,7 @@ var __webpack_modules__ = {
       }
       function encoder_decoder_prepare_inputs_for_generation(self2, input_ids, model_inputs, generation_config) {
         if (model_inputs.past_key_values) {
-          input_ids = input_ids.map((x) => [x.at(-1)]);
+          input_ids = input_ids.map((x2) => [x2.at(-1)]);
         }
         return {
           ...model_inputs,
@@ -28710,17 +28710,17 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the model classes of the library from a pretrained model.
-         * 
+         *
          * The model class to instantiate is selected based on the `model_type` property of the config object
          * (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         * 
+         *
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing model weights, e.g., `./my_model_directory/`.
          * @param {import('./utils/hub.js').PretrainedModelOptions} options Additional options for loading the model.
-         * 
+         *
          * @returns {Promise<PreTrainedModel>} A new instance of the `PreTrainedModel` class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -28736,7 +28736,7 @@ var __webpack_modules__ = {
           use_external_data_format = null,
           session_options = {}
         } = {}) {
-          let options2 = {
+          let options = {
             progress_callback,
             config: config2,
             cache_dir,
@@ -28751,40 +28751,40 @@ var __webpack_modules__ = {
           };
           const modelName = MODEL_CLASS_TO_NAME_MAPPING.get(this);
           const modelType = MODEL_TYPE_MAPPING.get(modelName);
-          config2 = options2.config = await _configs_js__WEBPACK_IMPORTED_MODULE_0__.AutoConfig.from_pretrained(pretrained_model_name_or_path, options2);
+          config2 = options.config = await _configs_js__WEBPACK_IMPORTED_MODULE_0__.AutoConfig.from_pretrained(pretrained_model_name_or_path, options);
           let info;
           if (modelType === MODEL_TYPES.DecoderOnly) {
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
-                model: options2.model_file_name ?? "model"
-              }, options2),
+                model: options.model_file_name ?? "model"
+              }, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.Seq2Seq || modelType === MODEL_TYPES.Vision2Seq) {
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
                 model: "encoder_model",
                 decoder_model_merged: "decoder_model_merged"
-              }, options2),
+              }, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.MaskGeneration) {
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
                 model: "vision_encoder",
                 prompt_encoder_mask_decoder: "prompt_encoder_mask_decoder"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.EncoderDecoder) {
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
                 model: "encoder_model",
                 decoder_model_merged: "decoder_model_merged"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.ImageTextToText) {
             const sessions = {
@@ -28796,10 +28796,10 @@ var __webpack_modules__ = {
               sessions["model"] = "encoder_model";
             }
             info = await Promise.all([
-              constructSessions(pretrained_model_name_or_path, sessions, options2),
+              constructSessions(pretrained_model_name_or_path, sessions, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.AudioTextToText) {
             const sessions = {
@@ -28808,10 +28808,10 @@ var __webpack_modules__ = {
               decoder_model_merged: "decoder_model_merged"
             };
             info = await Promise.all([
-              constructSessions(pretrained_model_name_or_path, sessions, options2),
+              constructSessions(pretrained_model_name_or_path, sessions, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.ImageAudioTextToText) {
             const sessions = {
@@ -28821,10 +28821,10 @@ var __webpack_modules__ = {
               decoder_model_merged: "decoder_model_merged"
             };
             info = await Promise.all([
-              constructSessions(pretrained_model_name_or_path, sessions, options2),
+              constructSessions(pretrained_model_name_or_path, sessions, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.Musicgen) {
             info = await Promise.all([
@@ -28832,10 +28832,10 @@ var __webpack_modules__ = {
                 model: "text_encoder",
                 decoder_model_merged: "decoder_model_merged",
                 encodec_decode: "encodec_decode"
-              }, options2),
+              }, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.MultiModality) {
             info = await Promise.all([
@@ -28846,10 +28846,10 @@ var __webpack_modules__ = {
                 gen_head: "gen_head",
                 gen_img_embeds: "gen_img_embeds",
                 image_decode: "image_decode"
-              }, options2),
+              }, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.Phi3V) {
             info = await Promise.all([
@@ -28857,17 +28857,17 @@ var __webpack_modules__ = {
                 prepare_inputs_embeds: "prepare_inputs_embeds",
                 model: "model",
                 vision_encoder: "vision_encoder"
-              }, options2),
+              }, options),
               getOptionalConfigs(pretrained_model_name_or_path, {
                 generation_config: "generation_config.json"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.AutoEncoder) {
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
                 encoder_model: "encoder_model",
                 decoder_model: "decoder_model"
-              }, options2)
+              }, options)
             ]);
           } else if (modelType === MODEL_TYPES.Supertonic) {
             info = await Promise.all([
@@ -28875,7 +28875,7 @@ var __webpack_modules__ = {
                 text_encoder: "text_encoder",
                 latent_denoiser: "latent_denoiser",
                 voice_decoder: "voice_decoder"
-              }, options2)
+              }, options)
             ]);
           } else {
             if (modelType !== MODEL_TYPES.EncoderOnly) {
@@ -28886,8 +28886,8 @@ var __webpack_modules__ = {
             }
             info = await Promise.all([
               constructSessions(pretrained_model_name_or_path, {
-                model: options2.model_file_name ?? "model"
-              }, options2)
+                model: options.model_file_name ?? "model"
+              }, options)
             ]);
           }
           return new this(config2, ...info);
@@ -28918,7 +28918,7 @@ var __webpack_modules__ = {
           return this.configs?.generation_config ?? null;
         }
         /**
-         * @param {GenerationConfig} generation_config 
+         * @param {GenerationConfig} generation_config
          * @param {number} input_ids_seq_length The starting sequence length for the input ids.
          * @returns {LogitsProcessorList}
          * @private
@@ -28999,9 +28999,9 @@ var __webpack_modules__ = {
           return gen_config;
         }
         /**
-         * 
-         * @param {GenerationConfig} generation_config 
-         * @param {StoppingCriteriaList} [stopping_criteria=null] 
+         *
+         * @param {GenerationConfig} generation_config
+         * @param {StoppingCriteriaList} [stopping_criteria=null]
          */
         _get_stopping_criteria(generation_config, stopping_criteria = null) {
           const criteria = new _generation_stopping_criteria_js__WEBPACK_IMPORTED_MODULE_12__.StoppingCriteriaList();
@@ -29052,7 +29052,7 @@ var __webpack_modules__ = {
           return this._prepare_inputs_for_generation(this, ...args);
         }
         /**
-         * 
+         *
          * @param {Object} inputs
          * @param {bigint[][]} inputs.generated_input_ids
          * @param {Object} inputs.outputs
@@ -29136,7 +29136,7 @@ var __webpack_modules__ = {
         }
         /**
          * Prepares `decoder_input_ids` for generation with encoder-decoder models
-         * @param {*} param0 
+         * @param {*} param0
          */
         _prepare_decoder_input_ids_for_generation({ batch_size, model_input_name, model_kwargs, decoder_start_token_id, bos_token_id, generation_config }) {
           let { decoder_input_ids, ...model_inputs } = model_kwargs;
@@ -29262,7 +29262,7 @@ var __webpack_modules__ = {
               streamer.put(generated_input_ids);
             }
             const stop = prepared_stopping_criteria(all_input_ids);
-            if (stop.every((x) => x)) {
+            if (stop.every((x2) => x2)) {
               break;
             }
             model_inputs = this._update_model_kwargs_for_generation({
@@ -29359,7 +29359,7 @@ var __webpack_modules__ = {
             const cls = dtype === "float16" ? _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.DataTypeMap.float16 : _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.DataTypeMap.float32;
             const shapes = (0, _configs_js__WEBPACK_IMPORTED_MODULE_0__.getCacheShapes)(this.config, { batch_size });
             for (const name in shapes) {
-              const size = shapes[name].reduce((a, b) => a * b, 1);
+              const size = shapes[name].reduce((a, b2) => a * b2, 1);
               decoderFeeds[name] = new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.Tensor(dtype, new cls(size), shapes[name]);
             }
           }
@@ -30319,8 +30319,8 @@ var __webpack_modules__ = {
           );
         }
         /**
-         * 
-         * @param {WhisperGenerationConfig} generation_config 
+         *
+         * @param {WhisperGenerationConfig} generation_config
          */
         _retrieve_init_tokens(generation_config) {
           const init_tokens = [generation_config.decoder_start_token_id];
@@ -30439,7 +30439,7 @@ var __webpack_modules__ = {
           const cross_attentions = Array.from(
             { length: this.config.decoder_layers },
             // Concatenate the cross attentions for each layer across sequence length dimension.
-            (_, i) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.cat)(batch.map((x) => x[i]), 2)
+            (_2, i) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.cat)(batch.map((x2) => x2[i]), 2)
           );
           const weights = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.stack)(alignment_heads.map(([l, h]) => {
             if (l >= cross_attentions.length) {
@@ -30451,14 +30451,14 @@ var __webpack_modules__ = {
           const smoothedWeights = weights.clone();
           for (let a = 0; a < smoothedWeights.dims[0]; ++a) {
             const aTensor = smoothedWeights[a];
-            for (let b = 0; b < aTensor.dims[0]; ++b) {
-              const bTensor = aTensor[b];
-              const stdTensorData = std[a][b][0].data;
-              const meanTensorData = calculatedMean[a][b][0].data;
+            for (let b2 = 0; b2 < aTensor.dims[0]; ++b2) {
+              const bTensor = aTensor[b2];
+              const stdTensorData = std[a][b2][0].data;
+              const meanTensorData = calculatedMean[a][b2][0].data;
               for (let c = 0; c < bTensor.dims[0]; ++c) {
                 let cTensorData = bTensor[c].data;
-                for (let d = 0; d < cTensorData.length; ++d) {
-                  cTensorData[d] = (cTensorData[d] - meanTensorData[d]) / stdTensorData[d];
+                for (let d2 = 0; d2 < cTensorData.length; ++d2) {
+                  cTensorData[d2] = (cTensorData[d2] - meanTensorData[d2]) / stdTensorData[d2];
                 }
                 cTensorData.set((0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.medianFilter)(cTensorData, median_filter_width));
               }
@@ -30474,8 +30474,8 @@ var __webpack_modules__ = {
           for (let batch_idx = 0; batch_idx < timestampsShape[0]; ++batch_idx) {
             const matrix = batchedMatrices[batch_idx].neg().squeeze_(0);
             const [text_indices, time_indices] = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.dynamic_time_warping)(matrix.tolist());
-            const diffs = Array.from({ length: text_indices.length - 1 }, (v, i) => text_indices[i + 1] - text_indices[i]);
-            const jumps = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.mergeArrays)([1], diffs).map((x) => !!x);
+            const diffs = Array.from({ length: text_indices.length - 1 }, (v2, i) => text_indices[i + 1] - text_indices[i]);
+            const jumps = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.mergeArrays)([1], diffs).map((x2) => !!x2);
             const jump_times = [];
             for (let i = 0; i < jumps.length; ++i) {
               if (jumps[i]) {
@@ -30861,41 +30861,41 @@ var __webpack_modules__ = {
       }
       class CLIPTextModel extends CLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "text_model"
+            model_file_name: options.model_file_name ?? "text_model"
           });
         }
       }
       class CLIPTextModelWithProjection extends CLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "text_model"
+            model_file_name: options.model_file_name ?? "text_model"
           });
         }
       }
       class CLIPVisionModel extends CLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "vision_model"
+            model_file_name: options.model_file_name ?? "vision_model"
           });
         }
       }
       class CLIPVisionModelWithProjection extends CLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "vision_model"
+            model_file_name: options.model_file_name ?? "vision_model"
           });
         }
       }
@@ -30905,21 +30905,21 @@ var __webpack_modules__ = {
       }
       class SiglipTextModel extends SiglipPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "text_model"
+            model_file_name: options.model_file_name ?? "text_model"
           });
         }
       }
       class SiglipVisionModel extends CLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "vision_model"
+            model_file_name: options.model_file_name ?? "vision_model"
           });
         }
       }
@@ -30958,21 +30958,21 @@ var __webpack_modules__ = {
       }
       class JinaCLIPTextModel extends JinaCLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "text_model"
+            model_file_name: options.model_file_name ?? "text_model"
           });
         }
       }
       class JinaCLIPVisionModel extends JinaCLIPPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "vision_model"
+            model_file_name: options.model_file_name ?? "vision_model"
           });
         }
       }
@@ -31192,7 +31192,7 @@ var __webpack_modules__ = {
          *         text height position_ids: [3, 4, 5, 6, 7]
          *         text width position_ids: [3, 4, 5, 6, 7]
          *         Here we calculate the text start position_ids as the max vision position_ids plus 1.
-         * 
+         *
          * @param {Tensor} input_ids Indices of input sequence tokens in the vocabulary. Tensor of shape `(batch_size, sequence_length)`.
          * @param {Tensor} image_grid_thw (Optional) The temporal, height and width of feature shape of each image in LLM. Tensor of shape `(num_images, 3)`.
          * @param {Tensor} video_grid_thw (Optional) The temporal, height and width of feature shape of each video in LLM. Tensor of shape `(num_videos, 3)`.
@@ -31213,39 +31213,39 @@ var __webpack_modules__ = {
               attention_mask = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.ones_like)(input_ids);
             }
             const attention_mask_list = attention_mask.tolist();
-            const position_ids_list = Array.from({ length: 3 }, (_) => Array.from({ length: input_ids.dims[0] }, (_2) => Array.from({ length: input_ids.dims[1] }, (_3) => 1)));
+            const position_ids_list = Array.from({ length: 3 }, (_2) => Array.from({ length: input_ids.dims[0] }, (_3) => Array.from({ length: input_ids.dims[1] }, (_4) => 1)));
             const image_grid_thw_list = image_grid_thw ? image_grid_thw.tolist() : [];
             const video_grid_thw_list = video_grid_thw ? video_grid_thw.tolist() : [];
             let image_index = 0;
             let video_index = 0;
             for (let i = 0; i < total_input_ids.length; ++i) {
-              const ids = total_input_ids[i].filter((_, j) => attention_mask_list[i][j] == 1);
-              const vision_start_indices = ids.reduce((acc, x, idx) => {
-                if (x == vision_start_token_id)
+              const ids = total_input_ids[i].filter((_2, j2) => attention_mask_list[i][j2] == 1);
+              const vision_start_indices = ids.reduce((acc, x2, idx) => {
+                if (x2 == vision_start_token_id)
                   acc.push(idx);
                 return acc;
               }, []);
-              const vision_tokens = vision_start_indices.map((x) => ids[x + 1]);
-              const image_nums = vision_tokens.filter((x) => x == image_token_id).length;
-              const video_nums = vision_tokens.filter((x) => x == video_token_id).length;
+              const vision_tokens = vision_start_indices.map((x2) => ids[x2 + 1]);
+              const image_nums = vision_tokens.filter((x2) => x2 == image_token_id).length;
+              const video_nums = vision_tokens.filter((x2) => x2 == video_token_id).length;
               let llm_pos_ids_list = [];
               let st = 0;
               let remain_images = image_nums;
               let remain_videos = video_nums;
-              for (let j = 0; j < vision_tokens.length; ++j) {
-                const next_image_token = ids.findIndex((x, i2) => i2 > st && x == image_token_id);
-                const next_video_token = ids.findIndex((x, i2) => i2 > st && x == video_token_id);
+              for (let j2 = 0; j2 < vision_tokens.length; ++j2) {
+                const next_image_token = ids.findIndex((x2, i2) => i2 > st && x2 == image_token_id);
+                const next_video_token = ids.findIndex((x2, i2) => i2 > st && x2 == video_token_id);
                 const ed_image = remain_images > 0 && next_image_token !== -1 ? next_image_token : ids.length + 1;
                 const ed_video = remain_videos > 0 && next_video_token !== -1 ? next_video_token : ids.length + 1;
                 let ed;
-                let t, h, w;
+                let t, h, w2;
                 if (ed_image < ed_video) {
-                  [t, h, w] = image_grid_thw_list[image_index];
+                  [t, h, w2] = image_grid_thw_list[image_index];
                   ++image_index;
                   --remain_images;
                   ed = ed_image;
                 } else {
-                  [t, h, w] = video_grid_thw_list[video_index];
+                  [t, h, w2] = video_grid_thw_list[video_index];
                   ++video_index;
                   --remain_videos;
                   ed = ed_video;
@@ -31253,18 +31253,18 @@ var __webpack_modules__ = {
                 const [llm_grid_t, llm_grid_h, llm_grid_w] = [
                   Number(t),
                   Math.floor(Number(h) / spatial_merge_size),
-                  Math.floor(Number(w) / spatial_merge_size)
+                  Math.floor(Number(w2) / spatial_merge_size)
                 ];
                 const text_len = ed - st;
                 const st_idx = llm_pos_ids_list.length > 0 ? (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.max)(llm_pos_ids_list.at(-1))[0] + 1 : 0;
                 llm_pos_ids_list.push(
-                  Array.from({ length: 3 * text_len }, (_, i2) => st_idx + i2 % text_len)
+                  Array.from({ length: 3 * text_len }, (_2, i2) => st_idx + i2 % text_len)
                 );
                 const offset = text_len + st_idx;
                 const grid_size = llm_grid_t * llm_grid_h * llm_grid_w;
-                const t_index = Array.from({ length: grid_size }, (_, i2) => offset + Math.floor(i2 / (llm_grid_h * llm_grid_w)));
-                const h_index = Array.from({ length: grid_size }, (_, i2) => offset + Math.floor(i2 / llm_grid_w) % llm_grid_h);
-                const w_index = Array.from({ length: grid_size }, (_, i2) => offset + i2 % llm_grid_w);
+                const t_index = Array.from({ length: grid_size }, (_2, i2) => offset + Math.floor(i2 / (llm_grid_h * llm_grid_w)));
+                const h_index = Array.from({ length: grid_size }, (_2, i2) => offset + Math.floor(i2 / llm_grid_w) % llm_grid_h);
+                const w_index = Array.from({ length: grid_size }, (_2, i2) => offset + i2 % llm_grid_w);
                 llm_pos_ids_list.push([t_index, h_index, w_index].flat());
                 st = ed + grid_size;
               }
@@ -31272,27 +31272,27 @@ var __webpack_modules__ = {
                 const st_idx = llm_pos_ids_list.length > 0 ? (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.max)(llm_pos_ids_list.at(-1))[0] + 1 : 0;
                 const text_len = ids.length - st;
                 llm_pos_ids_list.push(
-                  Array.from({ length: 3 * text_len }, (_, i2) => st_idx + i2 % text_len)
+                  Array.from({ length: 3 * text_len }, (_2, i2) => st_idx + i2 % text_len)
                 );
               }
-              const num_items = llm_pos_ids_list.reduce((acc, x) => acc + x.length, 0);
+              const num_items = llm_pos_ids_list.reduce((acc, x2) => acc + x2.length, 0);
               const llm_positions = new Array(num_items);
               let index = 0;
-              for (let x = 0; x < 3; ++x) {
-                for (let y = 0; y < llm_pos_ids_list.length; ++y) {
-                  const val = llm_pos_ids_list[y];
+              for (let x2 = 0; x2 < 3; ++x2) {
+                for (let y2 = 0; y2 < llm_pos_ids_list.length; ++y2) {
+                  const val = llm_pos_ids_list[y2];
                   const text_len = val.length / 3;
-                  for (let z = x * text_len; z < (x + 1) * text_len; ++z) {
-                    llm_positions[index++] = val[z];
+                  for (let z2 = x2 * text_len; z2 < (x2 + 1) * text_len; ++z2) {
+                    llm_positions[index++] = val[z2];
                   }
                 }
               }
               let count = 0;
               const attn_mask = attention_mask_list[i];
-              for (let y = 0; y < attn_mask.length; ++y) {
-                if (attn_mask[y] == 1) {
-                  for (let x = 0; x < 3; ++x) {
-                    position_ids_list[x][i][y] = llm_positions[x * num_items / 3 + count];
+              for (let y2 = 0; y2 < attn_mask.length; ++y2) {
+                if (attn_mask[y2] == 1) {
+                  for (let x2 = 0; x2 < 3; ++x2) {
+                    position_ids_list[x2][i][y2] = llm_positions[x2 * num_items / 3 + count];
                   }
                   ++count;
                 }
@@ -31309,11 +31309,11 @@ var __webpack_modules__ = {
               const { data, dims } = cumsum_masked_fill(attention_mask);
               const position_ids = BigInt64Array.from(
                 { length: 3 * data.length },
-                (_, i) => data[i % data.length]
+                (_2, i) => data[i % data.length]
               );
               const mrope_position_deltas2 = Array.from(
                 { length: dims[0] },
-                (_, i) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.max)(data.subarray(dims[1] * i, dims[1] * (i + 1)))[0] + 1n + BigInt(dims[1])
+                (_2, i) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_11__.max)(data.subarray(dims[1] * i, dims[1] * (i + 1)))[0] + 1n + BigInt(dims[1])
               );
               return [
                 new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.Tensor("int64", position_ids, [3, ...dims]),
@@ -31323,7 +31323,7 @@ var __webpack_modules__ = {
               const [batch_size, seq_length] = input_ids.dims;
               const position_ids = BigInt64Array.from(
                 { length: 3 * batch_size * seq_length },
-                (_, i) => BigInt(Math.floor(i % seq_length / batch_size))
+                (_2, i) => BigInt(Math.floor(i % seq_length / batch_size))
               );
               return [
                 new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.Tensor("int64", position_ids, [3, ...input_ids.dims]),
@@ -31355,7 +31355,7 @@ var __webpack_modules__ = {
             } else {
               model_inputs.pixel_values = null;
               const delta = BigInt(Object.values(model_inputs.past_key_values)[0].dims.at(-2));
-              const rope_deltas_list = model_inputs.rope_deltas.map((x) => delta + x);
+              const rope_deltas_list = model_inputs.rope_deltas.map((x2) => delta + x2);
               model_inputs.position_ids = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_9__.stack)([rope_deltas_list, rope_deltas_list, rope_deltas_list], 0);
             }
           }
@@ -31943,7 +31943,7 @@ var __webpack_modules__ = {
         }
         async forward(model_inputs) {
           const { num_feature_levels } = this.config.vision_config;
-          const image_embeddings_name = Array.from({ length: num_feature_levels }, (_, i) => `image_embeddings.${i}`);
+          const image_embeddings_name = Array.from({ length: num_feature_levels }, (_2, i) => `image_embeddings.${i}`);
           if (image_embeddings_name.some((name) => !model_inputs[name])) {
             model_inputs = {
               ...model_inputs,
@@ -32406,21 +32406,21 @@ var __webpack_modules__ = {
       }
       class ClapTextModelWithProjection extends ClapPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "text_model"
+            model_file_name: options.model_file_name ?? "text_model"
           });
         }
       }
       class ClapAudioModelWithProjection extends ClapPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "audio_model"
+            model_file_name: options.model_file_name ?? "audio_model"
           });
         }
       }
@@ -32511,9 +32511,9 @@ var __webpack_modules__ = {
         prepare_inputs_for_generation(input_ids, model_inputs, generation_config) {
           let clonedInputIds = structuredClone(input_ids);
           for (let i = 0; i < clonedInputIds.length; ++i) {
-            for (let j = 0; j < clonedInputIds[i].length; ++j) {
-              if (i % this.config.decoder.num_codebooks >= j) {
-                clonedInputIds[i][j] = BigInt(this.config.decoder.pad_token_id);
+            for (let j2 = 0; j2 < clonedInputIds[i].length; ++j2) {
+              if (i % this.config.decoder.num_codebooks >= j2) {
+                clonedInputIds[i][j2] = BigInt(this.config.decoder.pad_token_id);
               }
             }
           }
@@ -32528,8 +32528,8 @@ var __webpack_modules__ = {
          * @param {import('./generation/parameters.js').GenerationFunctionParameters} options
          * @returns {Promise<ModelOutput|Tensor>} The output of the model, which can contain the generated token ids, attentions, and scores.
          */
-        async generate(options2) {
-          const output_ids = await super.generate(options2);
+        async generate(options) {
+          const output_ids = await super.generate(options);
           const audio_codes = this._apply_and_filter_by_delay_pattern_mask(
             /** @type {Tensor} */
             output_ids
@@ -32649,17 +32649,17 @@ var __webpack_modules__ = {
         /**
          * @param {import('./generation/parameters.js').GenerationFunctionParameters} options
          */
-        async generate(options2) {
+        async generate(options) {
           this._generation_mode = "text";
-          return super.generate(options2);
+          return super.generate(options);
         }
         /**
          * @param {import('./generation/parameters.js').GenerationFunctionParameters} options
          */
-        async generate_images(options2) {
+        async generate_images(options) {
           this._generation_mode = "image";
-          const start_num_tokens = (options2.inputs ?? options2[this.main_input_name]).dims[1];
-          const all_tokens = await super.generate(options2);
+          const start_num_tokens = (options.inputs ?? options[this.main_input_name]).dims[1];
+          const all_tokens = await super.generate(options);
           const generated_tokens = (
             /** @type {Tensor} */
             all_tokens.slice(null, [start_num_tokens, null])
@@ -32778,21 +32778,21 @@ var __webpack_modules__ = {
       }
       class MimiEncoderModel extends MimiPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "encoder_model"
+            model_file_name: options.model_file_name ?? "encoder_model"
           });
         }
       }
       class MimiDecoderModel extends MimiPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "decoder_model"
+            model_file_name: options.model_file_name ?? "decoder_model"
           });
         }
       }
@@ -32841,21 +32841,21 @@ var __webpack_modules__ = {
       }
       class DacEncoderModel extends DacPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "encoder_model"
+            model_file_name: options.model_file_name ?? "encoder_model"
           });
         }
       }
       class DacDecoderModel extends DacPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "decoder_model"
+            model_file_name: options.model_file_name ?? "decoder_model"
           });
         }
       }
@@ -32884,21 +32884,21 @@ var __webpack_modules__ = {
       }
       class SnacEncoderModel extends SnacPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "encoder_model"
+            model_file_name: options.model_file_name ?? "encoder_model"
           });
         }
       }
       class SnacDecoderModel extends SnacPreTrainedModel {
         /** @type {typeof PreTrainedModel.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
           return super.from_pretrained(pretrained_model_name_or_path, {
-            ...options2,
+            ...options,
             // Update default model file name if not provided
-            model_file_name: options2.model_file_name ?? "decoder_model"
+            model_file_name: options.model_file_name ?? "decoder_model"
           });
         }
       }
@@ -32909,7 +32909,7 @@ var __webpack_modules__ = {
          */
         static MODEL_CLASS_MAPPINGS = null;
         /**
-         * Whether to attempt to instantiate the base class (`PretrainedModel`) if 
+         * Whether to attempt to instantiate the base class (`PretrainedModel`) if
          * the model type is not found in the mapping.
          */
         static BASE_IF_FAIL = false;
@@ -32927,7 +32927,7 @@ var __webpack_modules__ = {
           use_external_data_format = null,
           session_options = {}
         } = {}) {
-          const options2 = {
+          const options = {
             progress_callback,
             config: config2,
             cache_dir,
@@ -32940,11 +32940,11 @@ var __webpack_modules__ = {
             use_external_data_format,
             session_options
           };
-          options2.config = await _configs_js__WEBPACK_IMPORTED_MODULE_0__.AutoConfig.from_pretrained(pretrained_model_name_or_path, options2);
+          options.config = await _configs_js__WEBPACK_IMPORTED_MODULE_0__.AutoConfig.from_pretrained(pretrained_model_name_or_path, options);
           if (!this.MODEL_CLASS_MAPPINGS) {
             throw new Error("`MODEL_CLASS_MAPPINGS` not implemented for this type of `AutoClass`: " + this.name);
           }
-          const model_type = options2.config.model_type;
+          const model_type = options.config.model_type;
           for (const MODEL_CLASS_MAPPING of this.MODEL_CLASS_MAPPINGS) {
             let modelInfo = MODEL_CLASS_MAPPING.get(model_type);
             if (!modelInfo) {
@@ -32957,13 +32957,13 @@ var __webpack_modules__ = {
               if (!modelInfo)
                 continue;
             }
-            return await modelInfo[1].from_pretrained(pretrained_model_name_or_path, options2);
+            return await modelInfo[1].from_pretrained(pretrained_model_name_or_path, options);
           }
           if (this.BASE_IF_FAIL) {
             if (!CUSTOM_ARCHITECTURES.has(model_type)) {
               console.warn(`Unknown model class "${model_type}", attempting to construct from base class.`);
             }
-            return await PreTrainedModel.from_pretrained(pretrained_model_name_or_path, options2);
+            return await PreTrainedModel.from_pretrained(pretrained_model_name_or_path, options);
           } else {
             throw Error(`Unsupported model type: ${model_type}`);
           }
@@ -33493,7 +33493,7 @@ var __webpack_modules__ = {
       class AutoModel extends PretrainedMixin {
         /** @type {Map<string, Object>[]} */
         // @ts-ignore
-        static MODEL_CLASS_MAPPINGS = MODEL_CLASS_TYPE_MAPPING.map((x) => x[0]);
+        static MODEL_CLASS_MAPPINGS = MODEL_CLASS_TYPE_MAPPING.map((x2) => x2[0]);
         static BASE_IF_FAIL = true;
       }
       class AutoModelForSequenceClassification extends PretrainedMixin {
@@ -33855,8 +33855,8 @@ var __webpack_modules__ = {
       );
       class AutoFeatureExtractor {
         /** @type {typeof FeatureExtractor.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
-          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.FEATURE_EXTRACTOR_NAME, true, options2);
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
+          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.FEATURE_EXTRACTOR_NAME, true, options);
           const key = preprocessorConfig.feature_extractor_type;
           const feature_extractor_class = _feature_extractors_js__WEBPACK_IMPORTED_MODULE_3__[key];
           if (!feature_extractor_class) {
@@ -33901,8 +33901,8 @@ var __webpack_modules__ = {
       );
       class AutoImageProcessor {
         /** @type {typeof ImageProcessor.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
-          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.IMAGE_PROCESSOR_NAME, true, options2);
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
+          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.IMAGE_PROCESSOR_NAME, true, options);
           const key = preprocessorConfig.image_processor_type ?? preprocessorConfig.feature_extractor_type;
           let image_processor_class = _image_processors_js__WEBPACK_IMPORTED_MODULE_3__[key?.replace(/Fast$/, "")];
           if (!image_processor_class) {
@@ -33958,11 +33958,11 @@ var __webpack_modules__ = {
       );
       class AutoProcessor {
         /** @type {typeof Processor.from_pretrained} */
-        static async from_pretrained(pretrained_model_name_or_path, options2 = {}) {
-          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.IMAGE_PROCESSOR_NAME, true, options2);
+        static async from_pretrained(pretrained_model_name_or_path, options = {}) {
+          const preprocessorConfig = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_1__.getModelJSON)(pretrained_model_name_or_path, _utils_constants_js__WEBPACK_IMPORTED_MODULE_0__.IMAGE_PROCESSOR_NAME, true, options);
           const { image_processor_type, feature_extractor_type, processor_class } = preprocessorConfig;
           if (processor_class && _processors_js__WEBPACK_IMPORTED_MODULE_3__[processor_class]) {
-            return _processors_js__WEBPACK_IMPORTED_MODULE_3__[processor_class].from_pretrained(pretrained_model_name_or_path, options2);
+            return _processors_js__WEBPACK_IMPORTED_MODULE_3__[processor_class].from_pretrained(pretrained_model_name_or_path, options);
           }
           if (!image_processor_type && !feature_extractor_type) {
             throw new Error("No `image_processor_type` or `feature_extractor_type` found in the config.");
@@ -34132,7 +34132,7 @@ var __webpack_modules__ = {
         }
         /**
          * Extracts the mel spectrogram and prepares it for the mode based on the `truncation` and `padding` arguments.
-         * 
+         *
          * Four different path are possible:
          *   - `truncation="fusion"` and the length of the waveform is greater than the max length: the mel spectrogram
          *     will be computed on the entire audio. 3 random crops and a dowsampled version of the full mel spectrogram
@@ -34143,7 +34143,7 @@ var __webpack_modules__ = {
          *     based on `padding`, and is repeated `4` times.
          *   - `truncation="rand_trunc"` and the length of the waveform is greater than the max length: the mel
          *     spectrogram will be computed on a random crop of the waveform.
-         * 
+         *
          * @param {Float32Array|Float64Array} waveform The input waveform.
          * @param {number} max_length The maximum length of the waveform.
          * @param {string} truncation The truncation strategy to use.
@@ -34195,7 +34195,7 @@ var __webpack_modules__ = {
          *  - `self.mel_filteres_slaney` : they correspond to the default parameters of `librosa` which used
          *    `librosa.filters.mel` when computing the mel spectrogram. These filters were only used in the original
          *    implementation when the truncation mode is not `"fusion"`.
-         * 
+         *
          * @param {Float32Array|Float64Array} waveform The audio waveform to process.
          * @param {number[][]} mel_filters The mel filters to use.
          * @param {number} [max_length=null] The maximum number of frames to return.
@@ -34494,7 +34494,7 @@ var __webpack_modules__ = {
         "./src/base/image_processors_utils.js"
       );
       class DonutImageProcessor extends _base_image_processors_utils_js__WEBPACK_IMPORTED_MODULE_0__.ImageProcessor {
-        pad_image(pixelData, imgDims, padSize, options2 = {}) {
+        pad_image(pixelData, imgDims, padSize, options = {}) {
           const [imageHeight, imageWidth, imageChannels] = imgDims;
           let image_mean = this.image_mean;
           if (!Array.isArray(this.image_mean)) {
@@ -34504,13 +34504,13 @@ var __webpack_modules__ = {
           if (!Array.isArray(image_std)) {
             image_std = new Array(imageChannels).fill(image_mean);
           }
-          const constant_values = image_mean.map((x, i) => -x / image_std[i]);
+          const constant_values = image_mean.map((x2, i) => -x2 / image_std[i]);
           return super.pad_image(pixelData, imgDims, padSize, {
             center: true,
             // Since normalization is done after padding, we need to use certain constant values to ensure the same behaviour is observed.
             // For more information, see https://github.com/huggingface/transformers/blob/main/src/transformers/models/donut/image_processing_donut.py#L433-L451
             constant_values,
-            ...options2
+            ...options
           });
         }
       }
@@ -34574,7 +34574,7 @@ var __webpack_modules__ = {
           super(config2);
           this.include_top = this.config.include_top ?? true;
           if (this.include_top) {
-            this.image_std = this.image_std.map((x) => x * x);
+            this.image_std = this.image_std.map((x2) => x2 * x2);
           }
         }
       }
@@ -34881,12 +34881,12 @@ var __webpack_modules__ = {
               const matches = text.matchAll(this.regexes[key]);
               const labels = [];
               const items = [];
-              for (const [_, label, ...locations] of matches) {
+              for (const [_2, label, ...locations] of matches) {
                 labels.push(label ? label.trim() : labels.at(-1) ?? "");
                 items.push(
-                  locations.map((x, i) => (
+                  locations.map((x2, i) => (
                     // NOTE: Add 0.5 to use the center position of the bin as the coordinate.
-                    (Number(x) + 0.5) / this.size_per_bin * image_size[i % 2]
+                    (Number(x2) + 0.5) / this.size_per_bin * image_size[i % 2]
                   ))
                 );
               }
@@ -35125,27 +35125,27 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
 `;
         }
         /**
-         * 
-         * @param {string|string[]} text 
+         *
+         * @param {string|string[]} text
          * @param {RawImage|RawImage[]|RawImage[][]} images
          * @param {RawAudio|RawAudio[]|RawAudio[][]} audio
          * @returns {Promise<any>}
          */
-        async _call(text, images = null, audio = null, options2 = {}) {
+        async _call(text, images = null, audio = null, options = {}) {
           if (typeof text === "string") {
             text = [text];
           }
           let audio_inputs;
           if (audio) {
-            audio_inputs = await this.feature_extractor(audio, options2);
+            audio_inputs = await this.feature_extractor(audio, options);
             text = text.map((prompt) => prompt.replaceAll(this.audio_token, this.full_audio_sequence));
           }
           let image_inputs;
           if (images) {
-            image_inputs = await this.image_processor(images, options2);
+            image_inputs = await this.image_processor(images, options);
             text = text.map((prompt) => prompt.replaceAll(this.image_token, this.full_image_sequence));
           }
-          let text_inputs = this.tokenizer(text, options2);
+          let text_inputs = this.tokenizer(text, options);
           return {
             ...text_inputs,
             ...image_inputs,
@@ -35267,14 +35267,14 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
          * @typedef {import('../../utils/image.js').RawImage} RawImage
          */
         /**
-         * 
-         * @param {RawImage|RawImage[]|RawImage[][]} images  
-         * @param {string|string[]} text 
+         *
+         * @param {RawImage|RawImage[]|RawImage[][]} images
+         * @param {string|string[]} text
          * @returns {Promise<any>}
          */
-        async _call(images, text, options2 = {}) {
-          const image_inputs = images ? await this.image_processor(images, options2) : {};
-          const text_inputs = text ? this.tokenizer(text, options2) : {};
+        async _call(images, text, options = {}) {
+          const image_inputs = images ? await this.image_processor(images, options) : {};
+          const text_inputs = text ? this.tokenizer(text, options) : {};
           return {
             ...text_inputs,
             ...image_inputs
@@ -35298,19 +35298,19 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
           for (let i = 0; i < batch_size; ++i) {
             const target_size = target_sizes !== null ? target_sizes[i] : null;
             if (target_size !== null) {
-              boxes[i] = boxes[i].map((box) => box.map((x, j) => x * target_size[(j + 1) % 2]));
+              boxes[i] = boxes[i].map((box) => box.map((x2, j2) => x2 * target_size[(j2 + 1) % 2]));
             }
             const batch_scores = scores[i];
             const final_scores = [];
             const final_phrases = [];
             const final_boxes = [];
-            for (let j = 0; j < num_queries; ++j) {
-              const score = batch_scores[j];
+            for (let j2 = 0; j2 < num_queries; ++j2) {
+              const score = batch_scores[j2];
               if (score <= box_threshold) {
                 continue;
               }
-              const box = boxes[i][j];
-              const prob = probs[i][j];
+              const box = boxes[i][j2];
+              const prob = probs[i][j2];
               final_scores.push(score);
               final_boxes.push(box);
               const phrases = get_phrases_from_posmap(prob.gt(text_threshold), input_ids[i]);
@@ -35405,18 +35405,18 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
           const original_sizes = [];
           const reshaped_input_sizes = [];
           for (const image_batch of batched_2d_images) {
-            let images_list = await Promise.all(image_batch.map((x) => this.preprocess(x)));
-            original_sizes.push(...images_list.map((x) => x.original_size));
-            reshaped_input_sizes.push(...images_list.map((x) => x.reshaped_input_size));
-            images_list.forEach((x) => x.pixel_values.unsqueeze_(0));
+            let images_list = await Promise.all(image_batch.map((x2) => this.preprocess(x2)));
+            original_sizes.push(...images_list.map((x2) => x2.original_size));
+            reshaped_input_sizes.push(...images_list.map((x2) => x2.reshaped_input_size));
+            images_list.forEach((x2) => x2.pixel_values.unsqueeze_(0));
             const { longest_edge } = this.max_image_size;
             let images_tensor;
             if (do_image_splitting ?? this.do_image_splitting) {
               let image_rows = new Array(images_list.length);
               let image_cols = new Array(images_list.length);
-              images_tensor = await Promise.all(images_list.map(async (x, i) => {
-                const new_size = this.get_resize_for_vision_encoder(x.pixel_values, longest_edge);
-                const resized = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.interpolate_4d)(x.pixel_values, {
+              images_tensor = await Promise.all(images_list.map(async (x2, i) => {
+                const new_size = this.get_resize_for_vision_encoder(x2.pixel_values, longest_edge);
+                const resized = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.interpolate_4d)(x2.pixel_values, {
                   size: [new_size.height, new_size.width]
                 });
                 const { frames, num_splits_h, num_splits_w } = await this.split_image(resized, this.max_image_size);
@@ -35429,7 +35429,7 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
             } else {
               const size = [longest_edge, longest_edge];
               images_tensor = await Promise.all(
-                images_list.map((x) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.interpolate_4d)(x.pixel_values, { size }))
+                images_list.map((x2) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.interpolate_4d)(x2.pixel_values, { size }))
               );
               images_list_rows.push(new Array(images_list.length).fill(0));
               images_list_cols.push(new Array(images_list.length).fill(0));
@@ -35437,25 +35437,25 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
             all_pixel_values.push((0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.cat)(images_tensor, 0));
           }
           const batch_size = all_pixel_values.length;
-          const [n, c, h, w] = all_pixel_values[0].dims;
+          const [n, c, h, w2] = all_pixel_values[0].dims;
           let pixel_values;
           let pixel_attention_mask;
           if (batch_size === 1) {
             pixel_values = all_pixel_values[0].unsqueeze_(0);
-            pixel_attention_mask = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([batch_size, n, h, w], true);
+            pixel_attention_mask = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([batch_size, n, h, w2], true);
           } else {
-            const max_num_patches = Math.max(...all_pixel_values.map((x) => x.dims.at(0)));
-            pixel_attention_mask = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([batch_size, max_num_patches, h, w], true);
+            const max_num_patches = Math.max(...all_pixel_values.map((x2) => x2.dims.at(0)));
+            pixel_attention_mask = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([batch_size, max_num_patches, h, w2], true);
             const pixel_attention_mask_data = pixel_attention_mask.data;
-            const pixel_attention_mask_stride = max_num_patches * h * w;
+            const pixel_attention_mask_stride = max_num_patches * h * w2;
             for (let i = 0; i < batch_size; ++i) {
               const num_patches = all_pixel_values[i].dims[0];
               if (num_patches < max_num_patches) {
                 all_pixel_values[i] = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.cat)([
                   all_pixel_values[i],
-                  (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([max_num_patches - num_patches, c, h, w], 0)
+                  (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.full)([max_num_patches - num_patches, c, h, w2], 0)
                 ], 0);
-                const start_offset = i * pixel_attention_mask_stride + num_patches * h * w;
+                const start_offset = i * pixel_attention_mask_stride + num_patches * h * w2;
                 const end_offset = (i + 1) * pixel_attention_mask_stride;
                 pixel_attention_mask_data.fill(false, start_offset, end_offset);
               }
@@ -35595,16 +35595,16 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         image_token = "<image>";
         global_img_token = "<global-img>";
         /**
-         * 
-         * @param {string|string[]} text 
-         * @param {RawImage|RawImage[]|RawImage[][]} images  
+         *
+         * @param {string|string[]} text
+         * @param {RawImage|RawImage[]|RawImage[][]} images
          * @returns {Promise<any>}
          */
-        async _call(text, images = null, options2 = {}) {
-          options2.return_row_col_info ??= true;
+        async _call(text, images = null, options = {}) {
+          options.return_row_col_info ??= true;
           let image_inputs;
           if (images) {
-            image_inputs = await this.image_processor(images, options2);
+            image_inputs = await this.image_processor(images, options);
           }
           if (!Array.isArray(text)) {
             text = [text];
@@ -35620,9 +35620,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const sample_cols = image_cols[i];
             n_images_in_text.push((0, _utils_core_js__WEBPACK_IMPORTED_MODULE_4__.count)(sample, this.image_token));
             const image_prompt_strings = sample_rows.map(
-              (n_rows, j) => get_image_prompt_string(
+              (n_rows, j2) => get_image_prompt_string(
                 n_rows,
-                sample_cols[j],
+                sample_cols[j2],
                 image_seq_len,
                 this.fake_image_token,
                 this.image_token,
@@ -35634,8 +35634,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               throw new Error("The image token should be present in the text.");
             }
             let new_sample = split_sample[0];
-            for (let j = 0; j < image_prompt_strings.length; ++j) {
-              new_sample += image_prompt_strings[j] + split_sample[j + 1];
+            for (let j2 = 0; j2 < image_prompt_strings.length; ++j2) {
+              new_sample += image_prompt_strings[j2] + split_sample[j2 + 1];
             }
             prompt_strings.push(new_sample);
           }
@@ -36158,13 +36158,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             },
             ...config2
           });
-          this.constant_values = this.config.background_color.map((x) => x * this.rescale_factor);
+          this.constant_values = this.config.background_color.map((x2) => x2 * this.rescale_factor);
         }
-        pad_image(pixelData, imgDims, padSize, options2) {
+        pad_image(pixelData, imgDims, padSize, options) {
           return super.pad_image(pixelData, imgDims, padSize, {
             constant_values: this.constant_values,
             center: true,
-            ...options2
+            ...options
           });
         }
       }
@@ -36339,11 +36339,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       );
       class JinaCLIPImageProcessor extends _base_image_processors_utils_js__WEBPACK_IMPORTED_MODULE_0__.ImageProcessor {
         constructor(config2) {
-          const { resize_mode, fill_color, interpolation, size, ...other2 } = config2;
+          const { resize_mode, fill_color, interpolation, size, ...other } = config2;
           const new_size = resize_mode === "squash" ? { width: size, height: size } : resize_mode === "shortest" ? { shortest_edge: size } : { longest_edge: size };
           const resample = interpolation === "bicubic" ? 3 : 2;
           super({
-            ...other2,
+            ...other,
             size: new_size,
             resample,
             do_center_crop: true,
@@ -36625,15 +36625,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const logits = pred_logits_list[i];
             const ids = [];
             const scores = [];
-            for (let j = 1; j < batch_max_length; ++j) {
-              const [max_prob, max_prob_index] = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.max)((0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.softmax)(logits[j]));
+            for (let j2 = 1; j2 < batch_max_length; ++j2) {
+              const [max_prob, max_prob_index] = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.max)((0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.softmax)(logits[j2]));
               scores.push(max_prob);
               if (max_prob_index == eos_token) {
                 break;
               }
               ids.push(max_prob_index);
             }
-            const confidence_score = scores.length > 0 ? scores.reduce((a, b) => a * b, 1) : 0;
+            const confidence_score = scores.length > 0 ? scores.reduce((a, b2) => a * b2, 1) : 0;
             all_ids.push(ids);
             conf_scores.push(confidence_score);
           }
@@ -37233,8 +37233,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         async _extract_fbank_features(waveform) {
           const preemphasis = this.config.preemphasis;
           waveform = new Float64Array(waveform);
-          for (let j = waveform.length - 1; j >= 1; --j) {
-            waveform[j] -= preemphasis * waveform[j - 1];
+          for (let j2 = waveform.length - 1; j2 >= 1; --j2) {
+            waveform[j2] -= preemphasis * waveform[j2 - 1];
           }
           const features = await (0, _utils_audio_js__WEBPACK_IMPORTED_MODULE_2__.spectrogram)(
             waveform,
@@ -37280,20 +37280,20 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const sum_sq = new Float64Array(num_features);
           for (let i = 0; i < features_length; ++i) {
             const offset = i * num_features;
-            for (let j = 0; j < num_features; ++j) {
-              const val = features_data[offset + j];
-              sum[j] += val;
-              sum_sq[j] += val * val;
+            for (let j2 = 0; j2 < num_features; ++j2) {
+              const val = features_data[offset + j2];
+              sum[j2] += val;
+              sum_sq[j2] += val * val;
             }
           }
           const divisor = features_length > 1 ? features_length - 1 : 1;
-          for (let j = 0; j < num_features; ++j) {
-            const mean = sum[j] / features_length;
-            const variance = (sum_sq[j] - features_length * mean * mean) / divisor;
+          for (let j2 = 0; j2 < num_features; ++j2) {
+            const mean = sum[j2] / features_length;
+            const variance = (sum_sq[j2] - features_length * mean * mean) / divisor;
             const std = Math.sqrt(variance) + EPSILON;
             const inv_std = 1 / std;
             for (let i = 0; i < features_length; ++i) {
-              const index = i * num_features + j;
+              const index = i * num_features + j2;
               features_data[index] = (features_data[index] - mean) * inv_std;
             }
           }
@@ -37366,15 +37366,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           return [new_w, new_h];
         }
         /** @type {ImageProcessor['pad_image']} */
-        pad_image(pixelData, imgDims, padSize, options2 = {}) {
+        pad_image(pixelData, imgDims, padSize, options = {}) {
           const [imageHeight, imageWidth] = imgDims;
           const height = IMAGE_SIZE * ceil(imageHeight / IMAGE_SIZE);
           const width = IMAGE_SIZE * ceil(imageWidth / IMAGE_SIZE);
-          const constant_values = [1, 1, 1].map((x, i) => (x - this.image_mean[i]) / this.image_std[i]);
+          const constant_values = [1, 1, 1].map((x2, i) => (x2 - this.image_mean[i]) / this.image_std[i]);
           return super.pad_image(pixelData, imgDims, { width, height }, {
             center: true,
             constant_values,
-            ...options2
+            ...options
           });
         }
         async _call(images, {
@@ -37388,9 +37388,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             images = [images];
           }
           const num_images = images.length;
-          const imageData = await Promise.all(images.map((x) => this.preprocess(x)));
-          const original_sizes = imageData.map((x) => x.original_size);
-          const reshaped_input_sizes = imageData.map((x) => x.reshaped_input_size);
+          const imageData = await Promise.all(images.map((x2) => this.preprocess(x2)));
+          const original_sizes = imageData.map((x2) => x2.original_size);
+          const reshaped_input_sizes = imageData.map((x2) => x2.reshaped_input_size);
           const all_pixel_values = [];
           for (const { pixel_values: pixel_values2 } of imageData) {
             pixel_values2.unsqueeze_(0);
@@ -37404,22 +37404,22 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               const sqrt_patches = sqrt(num_crops);
               const patch_width = floor(width / sqrt_patches);
               const patch_height = floor(height / sqrt_patches);
-              for (let y = 0; y < sqrt_patches; ++y) {
-                for (let x = 0; x < sqrt_patches; ++x) {
+              for (let y2 = 0; y2 < sqrt_patches; ++y2) {
+                for (let x2 = 0; x2 < sqrt_patches; ++x2) {
                   let start_x, start_y, end_x, end_y;
-                  if (y === sqrt_patches - 1) {
+                  if (y2 === sqrt_patches - 1) {
                     start_y = height - patch_height;
                     end_y = height;
                   } else {
-                    start_y = y * patch_height;
-                    end_y = (y + 1) * patch_height;
+                    start_y = y2 * patch_height;
+                    end_y = (y2 + 1) * patch_height;
                   }
-                  if (x === sqrt_patches - 1) {
+                  if (x2 === sqrt_patches - 1) {
                     start_x = width - patch_width;
                     end_x = width;
                   } else {
-                    start_x = x * patch_width;
-                    end_x = (x + 1) * patch_width;
+                    start_x = x2 * patch_width;
+                    end_x = (x2 + 1) * patch_width;
                   }
                   const starts = [start_y, start_x];
                   const ends = [end_y, end_x];
@@ -37437,7 +37437,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             }
           }
           const pixel_values = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.stack)(all_pixel_values, 0);
-          const sizes = reshaped_input_sizes.map((x) => x.map((y) => IMAGE_SIZE * ceil(y / IMAGE_SIZE)));
+          const sizes = reshaped_input_sizes.map((x2) => x2.map((y2) => IMAGE_SIZE * ceil(y2 / IMAGE_SIZE)));
           const image_sizes = new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.Tensor(
             "int64",
             sizes.flat(),
@@ -37489,9 +37489,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         static image_processor_class = _auto_image_processing_auto_js__WEBPACK_IMPORTED_MODULE_1__.AutoImageProcessor;
         static tokenizer_class = _tokenizers_js__WEBPACK_IMPORTED_MODULE_2__.AutoTokenizer;
         /**
-         * 
-         * @param {string|string[]} text 
-         * @param {RawImage|RawImage[]} images 
+         *
+         * @param {string|string[]} text
+         * @param {RawImage|RawImage[]} images
          * @param  { { padding?: boolean, truncation?: boolean, num_crops?: number } | undefined } options
          * @returns {Promise<any>}
          */
@@ -38135,10 +38135,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         static image_processor_class = _auto_image_processing_auto_js__WEBPACK_IMPORTED_MODULE_1__.AutoImageProcessor;
         static tokenizer_class = _tokenizers_js__WEBPACK_IMPORTED_MODULE_2__.AutoTokenizer;
         /**
-         * 
-         * @param {string|string[]} text 
-         * @param {RawImage|RawImage[]} images 
-         * @param  {...any} args 
+         *
+         * @param {string|string[]} text
+         * @param {RawImage|RawImage[]} images
+         * @param  {...any} args
          * @returns {Promise<any>}
          */
         async _call(text, images = null, ...args) {
@@ -38156,7 +38156,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const image_grid_thw_list = image_grid_thw.tolist();
             text = text.map((t) => {
               while (t.includes("<|image_pad|>")) {
-                const prod = Number(image_grid_thw_list[index++].reduce((a, b) => a * b, 1n));
+                const prod = Number(image_grid_thw_list[index++].reduce((a, b2) => a * b2, 1n));
                 t = t.replace("<|image_pad|>", "<|placeholder|>".repeat(Math.floor(prod / merge_length)));
               }
               return t.replaceAll("<|placeholder|>", "<|image_pad|>");
@@ -38230,10 +38230,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       );
       class SamImageProcessor extends _base_image_processors_utils_js__WEBPACK_IMPORTED_MODULE_0__.ImageProcessor {
         /**
-         * 
-         * @param {any} input_points 
-         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} original_sizes 
-         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} reshaped_input_sizes 
+         *
+         * @param {any} input_points
+         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} original_sizes
+         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} reshaped_input_sizes
          * @returns {Tensor}
          */
         reshape_input_points(input_points, original_sizes, reshaped_input_sizes, is_bounding_box = false) {
@@ -38254,10 +38254,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               reshapedWidth / originalWidth,
               reshapedHeight / originalHeight
             ];
-            for (let j = 0; j < input_points[i].length; ++j) {
-              for (let k = 0; k < input_points[i][j].length; ++k) {
-                for (let w = 0; w < input_points[i][j][k].length; ++w) {
-                  input_points[i][j][k][w] *= resizeFactors[w % 2];
+            for (let j2 = 0; j2 < input_points[i].length; ++j2) {
+              for (let k2 = 0; k2 < input_points[i][j2].length; ++k2) {
+                for (let w2 = 0; w2 < input_points[i][j2][k2].length; ++w2) {
+                  input_points[i][j2][k2][w2] *= resizeFactors[w2 % 2];
                 }
               }
             }
@@ -38269,9 +38269,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           );
         }
         /**
-         * 
-         * @param {any} input_labels 
-         * @param {Tensor} input_points 
+         *
+         * @param {any} input_labels
+         * @param {Tensor} input_points
          * @returns {Tensor}
          */
         add_input_labels(input_labels, input_points) {
@@ -38282,7 +38282,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           } else if (shape.length !== 3) {
             throw Error("The input_points must be a 4D tensor of shape `batch_size`, `point_batch_size`, `nb_points_per_image`, `2`.");
           }
-          if (shape.some((x, i) => x !== input_points.dims[i])) {
+          if (shape.some((x2, i) => x2 !== input_points.dims[i])) {
             throw Error(`The first ${shape.length} dimensions of 'input_points' and 'input_labels' must be the same.`);
           }
           return new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_2__.Tensor(
@@ -38395,7 +38395,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Generates a list of crop boxes of different sizes. Each layer has (2**i)**2 boxes for the ith layer.
          * @param {import("../../utils/image.js").RawImage} image Input original image
          * @param {number} target_size Target size of the resized image
-         * @param {Object} options Options for generating crop boxes 
+         * @param {Object} options Options for generating crop boxes
          * @param {number} [options.crop_n_layers] If >0, mask prediction will be run again on crops of the image.
          * Sets the number of layers to run, where each layer has 2**i_layer number of image crops.
          * @param {number} [options.overlap_ratio] Sets the degree to which crops overlap. In the first crop layer,
@@ -38590,7 +38590,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @returns {Promise<Tensor>} An object containing the log-Mel spectrogram data as a Float32Array and its dimensions as an array of numbers.
          */
         async _extract_fbank_features(waveform, max_length) {
-          waveform = waveform.map((x) => x * 32768);
+          waveform = waveform.map((x2) => x2 * 32768);
           return (0, _utils_audio_js__WEBPACK_IMPORTED_MODULE_2__.spectrogram)(
             waveform,
             this.window,
@@ -38637,18 +38637,18 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const data = features.data;
             for (let i = 0; i < feature_size; ++i) {
               let sum = 0;
-              for (let j = 0; j < num_features; ++j) {
-                sum += data[j * feature_size + i];
+              for (let j2 = 0; j2 < num_features; ++j2) {
+                sum += data[j2 * feature_size + i];
               }
               const mean = sum / num_features;
               let variance = 0;
-              for (let j = 0; j < num_features; ++j) {
-                variance += (data[j * feature_size + i] - mean) ** 2;
+              for (let j2 = 0; j2 < num_features; ++j2) {
+                variance += (data[j2 * feature_size + i] - mean) ** 2;
               }
               variance /= num_features - 1;
               const std = Math.sqrt(variance + 1e-7);
-              for (let j = 0; j < num_features; ++j) {
-                const index = j * feature_size + i;
+              for (let j2 = 0; j2 < num_features; ++j2) {
+                const index = j2 * feature_size + i;
                 data[index] = (data[index] - mean) / std;
               }
             }
@@ -38698,8 +38698,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const attention_mask_data = new BigInt64Array(reshapedNumFrames);
             if (padded_attention_mask) {
               const padded_attention_mask_data = padded_attention_mask.data;
-              for (let i = 1, j = 0; i < num_frames; i += stride, ++j) {
-                attention_mask_data[j] = padded_attention_mask_data[i];
+              for (let i = 1, j2 = 0; i < num_frames; i += stride, ++j2) {
+                attention_mask_data[j2] = padded_attention_mask_data[i];
               }
             } else {
               attention_mask_data.fill(1n);
@@ -38929,7 +38929,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         "./src/base/image_processors_utils.js"
       );
       class Swin2SRImageProcessor extends _base_image_processors_utils_js__WEBPACK_IMPORTED_MODULE_0__.ImageProcessor {
-        pad_image(pixelData, imgDims, padSize, options2 = {}) {
+        pad_image(pixelData, imgDims, padSize, options = {}) {
           const [imageHeight, imageWidth, imageChannels] = imgDims;
           return super.pad_image(pixelData, imgDims, {
             // NOTE: For Swin2SR models, the original python implementation adds padding even when the image's width/height is already
@@ -38941,7 +38941,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             mode: "symmetric",
             center: false,
             constant_values: -1,
-            ...options2
+            ...options
           });
         }
       }
@@ -39086,22 +39086,22 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           if (!Array.isArray(trimaps)) {
             trimaps = [trimaps];
           }
-          const imageData = await Promise.all(images.map((x) => this.preprocess(x)));
-          const trimapData = await Promise.all(trimaps.map((x) => this.preprocess(x, {
+          const imageData = await Promise.all(images.map((x2) => this.preprocess(x2)));
+          const trimapData = await Promise.all(trimaps.map((x2) => this.preprocess(x2, {
             do_normalize: false,
             do_convert_rgb: false,
             do_convert_grayscale: true
           })));
           const pixel_values = (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.stack)(imageData.map(
             // Concatenate images and trimaps
-            (x, i) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.cat)([x.pixel_values, trimapData[i].pixel_values], 0)
+            (x2, i) => (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.cat)([x2.pixel_values, trimapData[i].pixel_values], 0)
           ), 0);
           return {
             pixel_values,
             // Original sizes of images
-            original_sizes: imageData.map((x) => x.original_size),
+            original_sizes: imageData.map((x2) => x2.original_size),
             // Reshaped sizes of images, before padding or cropping
-            reshaped_input_sizes: imageData.map((x) => x.reshaped_input_size)
+            reshaped_input_sizes: imageData.map((x2) => x2.reshaped_input_size)
           };
         }
       }
@@ -39151,9 +39151,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const heatmaps = outputs.tolist();
           const [batch_size, num_classes, height, width] = outputs.dims;
           const results = [];
-          for (let b = 0; b < batch_size; ++b) {
-            const heatmap = heatmaps[b];
-            const bboxes = boxes[b];
+          for (let b2 = 0; b2 < batch_size; ++b2) {
+            const heatmap = heatmaps[b2];
+            const bboxes = boxes[b2];
             const batch_results = [];
             for (let n = 0; n < bboxes.length; ++n) {
               const bbox = bboxes[n];
@@ -39167,14 +39167,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 let sum = 0;
                 let score = -Infinity;
                 const row = heatmap[c];
-                for (let y = 0; y < row.length; ++y) {
-                  const col = row[y];
-                  for (let x = 0; x < col.length; ++x) {
-                    const value = col[x];
+                for (let y2 = 0; y2 < row.length; ++y2) {
+                  const col = row[y2];
+                  for (let x2 = 0; x2 < col.length; ++x2) {
+                    const value = col[x2];
                     sum += value;
                     score = Math.max(score, value);
-                    xWeightedSum += (x + 0.5) * value;
-                    yWeightedSum += y * value;
+                    xWeightedSum += (x2 + 0.5) * value;
+                    yWeightedSum += y2 * value;
                   }
                 }
                 if (threshold != null && score < threshold)
@@ -39274,12 +39274,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const all_chunks = audio_chunks.flat();
             const features = (await Promise.all(
               all_chunks.map((audio_input) => this.feature_extractor(audio_input, kwargs))
-            )).map((x) => x.input_features);
+            )).map((x2) => x2.input_features);
             audio_inputs["audio_values"] = features.length > 1 ? (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_3__.cat)(features, 0) : features[0];
             let new_text = text_parts[0];
             for (let i = 0; i < chunk_counts.length; ++i) {
               new_text += BEGIN_AUDIO_TOKEN;
-              for (let j = 0; j < chunk_counts[i]; ++j) {
+              for (let j2 = 0; j2 < chunk_counts[i]; ++j2) {
                 new_text += AUDIO_TOKEN.repeat(NUM_AUDIO_TOKENS);
               }
               new_text += text_parts[i + 1];
@@ -39324,14 +39324,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       );
       class Wav2Vec2FeatureExtractor extends _base_feature_extraction_utils_js__WEBPACK_IMPORTED_MODULE_0__.FeatureExtractor {
         /**
-         * @param {Float32Array} input_values 
-         * @returns {Float32Array} 
+         * @param {Float32Array} input_values
+         * @returns {Float32Array}
          */
         _zero_mean_unit_var_norm(input_values) {
-          const sum = input_values.reduce((a, b) => a + b, 0);
+          const sum = input_values.reduce((a, b2) => a + b2, 0);
           const mean = sum / input_values.length;
-          const variance = input_values.reduce((a, b) => a + (b - mean) ** 2, 0) / input_values.length;
-          return input_values.map((x) => (x - mean) / Math.sqrt(variance + 1e-7));
+          const variance = input_values.reduce((a, b2) => a + (b2 - mean) ** 2, 0) / input_values.length;
+          return input_values.map((x2) => (x2 - mean) / Math.sqrt(variance + 1e-7));
         }
         /**
          * Asynchronously extracts features from a given audio using the provided configuration.
@@ -39502,7 +39502,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @returns {Promise<Tensor>} An object containing the log-Mel spectrogram data as a Float32Array and its dimensions as an array of numbers.
          */
         async _extract_fbank_features(waveform) {
-          waveform = waveform.map((x) => x * 32768);
+          waveform = waveform.map((x2) => x2 * 32768);
           return (0, _utils_audio_js__WEBPACK_IMPORTED_MODULE_2__.spectrogram)(
             waveform,
             this.window,
@@ -39547,10 +39547,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             for (let i = 0; i < batch_size; ++i) {
               const offset1 = i * num_frames * feature_size;
               const offset2 = i * feature_size;
-              for (let j = 0; j < num_frames; ++j) {
-                const offset3 = offset1 + j * feature_size;
-                for (let k = 0; k < feature_size; ++k) {
-                  featuresData[offset3 + k] -= meanData[offset2 + k];
+              for (let j2 = 0; j2 < num_frames; ++j2) {
+                const offset3 = offset1 + j2 * feature_size;
+                for (let k2 = 0; k2 < feature_size; ++k2) {
+                  featuresData[offset3 + k2] -= meanData[offset2 + k2];
                 }
               }
             }
@@ -39691,7 +39691,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       ];
       const WHISPER_LANGUAGE_MAPPING = new Map(WHISPER_LANGUAGES);
       const WHISPER_TO_LANGUAGE_CODE_MAPPING = new Map([
-        ...WHISPER_LANGUAGES.map(([k, v]) => [v, k]),
+        ...WHISPER_LANGUAGES.map(([k2, v2]) => [v2, k2]),
         ...[
           ["burmese", "my"],
           ["valencian", "ca"],
@@ -40048,7 +40048,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           /** @type {any} */
           async (inputs) => {
             const proxied = (0, _backends_onnx_js__WEBPACK_IMPORTED_MODULE_0__.isONNXProxy)();
-            const ortFeed = Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, (proxied ? v.clone() : v).ort_tensor]));
+            const ortFeed = Object.fromEntries(Object.entries(inputs).map(([k2, v2]) => [k2, (proxied ? v2.clone() : v2).ort_tensor]));
             const outputs = await (0, _backends_onnx_js__WEBPACK_IMPORTED_MODULE_0__.runInferenceSession)(session, ortFeed);
             if (Array.isArray(names)) {
               return names.map((n) => new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_1__.Tensor(outputs[n]));
@@ -40344,24 +40344,24 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         if (!Array.isArray(images)) {
           images = [images];
         }
-        return await Promise.all(images.map((x) => _utils_image_js__WEBPACK_IMPORTED_MODULE_9__.RawImage.read(x)));
+        return await Promise.all(images.map((x2) => _utils_image_js__WEBPACK_IMPORTED_MODULE_9__.RawImage.read(x2)));
       }
       async function prepareAudios(audios, sampling_rate) {
         if (!Array.isArray(audios)) {
           audios = [audios];
         }
-        return await Promise.all(audios.map((x) => {
-          if (typeof x === "string" || x instanceof URL) {
-            return (0, _utils_audio_js__WEBPACK_IMPORTED_MODULE_7__.read_audio)(x, sampling_rate);
-          } else if (x instanceof Float64Array) {
-            return new Float32Array(x);
+        return await Promise.all(audios.map((x2) => {
+          if (typeof x2 === "string" || x2 instanceof URL) {
+            return (0, _utils_audio_js__WEBPACK_IMPORTED_MODULE_7__.read_audio)(x2, sampling_rate);
+          } else if (x2 instanceof Float64Array) {
+            return new Float32Array(x2);
           }
-          return x;
+          return x2;
         }));
       }
       function get_bounding_box(box, asInteger) {
         if (asInteger) {
-          box = box.map((x) => x | 0);
+          box = box.map((x2) => x2 | 0);
         }
         const [xmin, ymin, xmax, ymax] = box;
         return { xmin, ymin, xmax, ymax };
@@ -40393,8 +40393,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new TextClassificationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {TextClassificationPipelineCallback} */
         async _call(texts, {
@@ -40420,8 +40420,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const scores = await (0, _utils_tensor_js__WEBPACK_IMPORTED_MODULE_8__.topk)(output, top_k);
             const values = scores[0].tolist();
             const indices = scores[1].tolist();
-            const vals = indices.map((x, i) => ({
-              label: id2label ? id2label[x] : `LABEL_${x}`,
+            const vals = indices.map((x2, i) => ({
+              label: id2label ? id2label[x2] : `LABEL_${x2}`,
               score: values[i]
             }));
             if (top_k === 1) {
@@ -40445,8 +40445,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new TokenClassificationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {TokenClassificationPipelineCallback} */
         async _call(texts, {
@@ -40465,14 +40465,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const ids = model_inputs.input_ids[i];
             const batch = logits[i];
             const tokens = [];
-            for (let j = 0; j < batch.dims[0]; ++j) {
-              const tokenData = batch[j];
+            for (let j2 = 0; j2 < batch.dims[0]; ++j2) {
+              const tokenData = batch[j2];
               const topScoreIndex = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.max)(tokenData.data)[1];
               const entity = id2label ? id2label[topScoreIndex] : `LABEL_${topScoreIndex}`;
               if (ignore_labels.includes(entity)) {
                 continue;
               }
-              const word = this.tokenizer.decode([ids[j].item()], { skip_special_tokens: true });
+              const word = this.tokenizer.decode([ids[j2].item()], { skip_special_tokens: true });
               if (word === "") {
                 continue;
               }
@@ -40480,7 +40480,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               tokens.push({
                 entity,
                 score: scores[topScoreIndex],
-                index: j,
+                index: j2,
                 word
                 // TODO: Add support for start and end
                 // start: null,
@@ -40498,8 +40498,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new QuestionAnsweringPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {QuestionAnsweringPipelineCallback} */
         async _call(question, context, {
@@ -40515,31 +40515,31 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const attention_mask = inputs.attention_mask.tolist();
           const special_tokens = this.tokenizer.all_special_ids;
           const toReturn = [];
-          for (let j = 0; j < start_logits.dims[0]; ++j) {
-            const ids = input_ids[j];
+          for (let j2 = 0; j2 < start_logits.dims[0]; ++j2) {
+            const ids = input_ids[j2];
             const sepIndex = ids.findIndex(
-              (x) => (
+              (x2) => (
                 // We use == to match bigint with number
                 // @ts-ignore
-                x == this.tokenizer.sep_token_id
+                x2 == this.tokenizer.sep_token_id
               )
             );
-            const valid_mask = attention_mask[j].map((y, ix) => y == 1 && (ix === 0 || ix > sepIndex && special_tokens.findIndex((x) => x == ids[ix]) === -1));
-            const start = start_logits[j].tolist();
-            const end = end_logits[j].tolist();
+            const valid_mask = attention_mask[j2].map((y2, ix) => y2 == 1 && (ix === 0 || ix > sepIndex && special_tokens.findIndex((x2) => x2 == ids[ix]) === -1));
+            const start = start_logits[j2].tolist();
+            const end = end_logits[j2].tolist();
             for (let i = 1; i < start.length; ++i) {
-              if (attention_mask[j] == 0 || i <= sepIndex || special_tokens.findIndex((x) => x == ids[i]) !== -1) {
+              if (attention_mask[j2] == 0 || i <= sepIndex || special_tokens.findIndex((x2) => x2 == ids[i]) !== -1) {
                 start[i] = -Infinity;
                 end[i] = -Infinity;
               }
             }
-            const start_scores = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(start).map((x, i) => [x, i]);
-            const end_scores = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(end).map((x, i) => [x, i]);
+            const start_scores = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(start).map((x2, i) => [x2, i]);
+            const end_scores = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(end).map((x2, i) => [x2, i]);
             start_scores[0][0] = 0;
             end_scores[0][0] = 0;
-            const options2 = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_5__.product)(start_scores, end_scores).filter((x) => x[0][1] <= x[1][1]).map((x) => [x[0][1], x[1][1], x[0][0] * x[1][0]]).sort((a, b) => b[2] - a[2]);
-            for (let k = 0; k < Math.min(options2.length, top_k); ++k) {
-              const [start2, end2, score] = options2[k];
+            const options = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_5__.product)(start_scores, end_scores).filter((x2) => x2[0][1] <= x2[1][1]).map((x2) => [x2[0][1], x2[1][1], x2[0][0] * x2[1][0]]).sort((a, b2) => b2[2] - a[2]);
+            for (let k2 = 0; k2 < Math.min(options.length, top_k); ++k2) {
+              const [start2, end2, score] = options[k2];
               const answer_tokens = ids.slice(start2, end2 + 1);
               const answer = this.tokenizer.decode(answer_tokens, {
                 skip_special_tokens: true
@@ -40559,8 +40559,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new FillMaskPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {FillMaskPipelineCallback} */
         async _call(texts, {
@@ -40576,10 +40576,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           for (let i = 0; i < input_ids.length; ++i) {
             const ids = input_ids[i];
             const mask_token_index = ids.findIndex(
-              (x) => (
+              (x2) => (
                 // We use == to match bigint with number
                 // @ts-ignore
-                x == this.tokenizer.mask_token_id
+                x2 == this.tokenizer.mask_token_id
               )
             );
             if (mask_token_index === -1) {
@@ -40593,13 +40593,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ), top_k);
             const values = scores[0].tolist();
             const indices = scores[1].tolist();
-            toReturn.push(indices.map((x, i2) => {
+            toReturn.push(indices.map((x2, i2) => {
               const sequence = ids.slice();
-              sequence[mask_token_index] = x;
+              sequence[mask_token_index] = x2;
               return {
                 score: values[i2],
-                token: Number(x),
-                token_str: this.tokenizer.decode([x]),
+                token: Number(x2),
+                token_str: this.tokenizer.decode([x2]),
                 sequence: this.tokenizer.decode(sequence, { skip_special_tokens: true })
               };
             }));
@@ -40615,8 +40615,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new Text2TextGenerationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {Text2TextGenerationPipelineCallback} */
         async _call(texts, generate_kwargs = {}) {
@@ -40624,12 +40624,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             texts = [texts];
           }
           if (this.model.config.prefix) {
-            texts = texts.map((x) => this.model.config.prefix + x);
+            texts = texts.map((x2) => this.model.config.prefix + x2);
           }
           const task_specific_params = this.model.config.task_specific_params;
           if (task_specific_params && task_specific_params[this.task]) {
             if (task_specific_params[this.task].prefix) {
-              texts = texts.map((x) => task_specific_params[this.task].prefix + x);
+              texts = texts.map((x2) => task_specific_params[this.task].prefix + x2);
             }
           }
           const tokenizer = this.tokenizer;
@@ -40662,8 +40662,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new SummarizationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
       }
       class TranslationPipeline extends /** @type {new (options: TextPipelineConstructorArgs) => TranslationPipelineType} */
@@ -40675,12 +40675,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new TranslationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
       }
-      function isChat(x) {
-        return Array.isArray(x) && x.every((x2) => "role" in x2 && "content" in x2);
+      function isChat(x2) {
+        return Array.isArray(x2) && x2.every((x3) => "role" in x3 && "content" in x3);
       }
       class TextGenerationPipeline extends /** @type {new (options: TextPipelineConstructorArgs) => TextGenerationPipelineType} */
       Pipeline {
@@ -40688,8 +40688,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new TextGenerationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {TextGenerationPipelineCallback} */
         async _call(texts, generate_kwargs = {}) {
@@ -40699,7 +40699,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           let inputs;
           if (typeof texts === "string") {
             inputs = texts = [texts];
-          } else if (Array.isArray(texts) && texts.every((x) => typeof x === "string")) {
+          } else if (Array.isArray(texts) && texts.every((x2) => typeof x2 === "string")) {
             isBatched = true;
             inputs = /** @type {string[]} */
             texts;
@@ -40718,7 +40718,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             inputs = /** @type {string[]} */
             /** @type {Chat[]} */
             texts.map(
-              (x) => this.tokenizer.apply_chat_template(x, {
+              (x2) => this.tokenizer.apply_chat_template(x2, {
                 tokenize: false,
                 add_generation_prompt: true
               })
@@ -40746,9 +40746,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           if (!return_full_text && text_inputs.input_ids.dims.at(-1) > 0) {
             promptLengths = this.tokenizer.batch_decode(text_inputs.input_ids, {
               skip_special_tokens: true
-            }).map((x) => x.length);
+            }).map((x2) => x2.length);
           }
-          const toReturn = Array.from({ length: texts.length }, (_) => []);
+          const toReturn = Array.from({ length: texts.length }, (_2) => []);
           for (let i = 0; i < decoded.length; ++i) {
             const textIndex = Math.floor(i / outputTokenIds.dims[0] * texts.length);
             if (promptLengths) {
@@ -40771,14 +40771,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ZeroShotClassificationPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
           this.label2id = Object.fromEntries(
             Object.entries(
               /** @type {any} */
               this.model.config.label2id
             ).map(
-              ([k, v]) => [k.toLowerCase(), v]
+              ([k2, v2]) => [k2.toLowerCase(), v2]
             )
           );
           this.entailment_id = this.label2id["entailment"];
@@ -40808,7 +40808,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             candidate_labels = [candidate_labels];
           }
           const hypotheses = candidate_labels.map(
-            (x) => hypothesis_template.replace("{}", x)
+            (x2) => hypothesis_template.replace("{}", x2)
           );
           const softmaxEach = multi_label || candidate_labels.length === 1;
           const toReturn = [];
@@ -40830,12 +40830,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 entails_logits.push(outputs.logits.data[this.entailment_id]);
               }
             }
-            const scores = softmaxEach ? entails_logits.map((x) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(x)[1]) : (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(entails_logits);
-            const scores_sorted = scores.map((x, i) => [x, i]).sort((a, b) => b[0] - a[0]);
+            const scores = softmaxEach ? entails_logits.map((x2) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(x2)[1]) : (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(entails_logits);
+            const scores_sorted = scores.map((x2, i) => [x2, i]).sort((a, b2) => b2[0] - a[0]);
             toReturn.push({
               sequence: premise,
-              labels: scores_sorted.map((x) => candidate_labels[x[1]]),
-              scores: scores_sorted.map((x) => x[0])
+              labels: scores_sorted.map((x2) => candidate_labels[x2[1]]),
+              scores: scores_sorted.map((x2) => x2[0])
             });
           }
           return isBatched ? toReturn : toReturn[0];
@@ -40847,8 +40847,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new FeatureExtractionPipeline.
          * @param {TextPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {FeatureExtractionPipelineCallback} */
         async _call(texts, {
@@ -40901,8 +40901,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ImageFeatureExtractionPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ImageFeatureExtractionPipelineCallback} */
         async _call(images, {
@@ -40929,8 +40929,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new AudioClassificationPipeline.
          * @param {AudioPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {AudioClassificationPipelineCallback} */
         async _call(audio, {
@@ -40951,10 +40951,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ), top_k);
             const values = scores[0].tolist();
             const indices = scores[1].tolist();
-            const vals = indices.map((x, i) => ({
+            const vals = indices.map((x2, i) => ({
               label: (
                 /** @type {string} */
-                id2label ? id2label[x] : `LABEL_${x}`
+                id2label ? id2label[x2] : `LABEL_${x2}`
               ),
               score: (
                 /** @type {number} */
@@ -40973,8 +40973,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ZeroShotAudioClassificationPipeline.
          * @param {TextAudioPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ZeroShotAudioClassificationPipelineCallback} */
         async _call(audio, candidate_labels, {
@@ -40988,7 +40988,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ];
           }
           const texts = candidate_labels.map(
-            (x) => hypothesis_template.replace("{}", x)
+            (x2) => hypothesis_template.replace("{}", x2)
           );
           const text_inputs = this.tokenizer(texts, {
             padding: true,
@@ -41001,8 +41001,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const audio_inputs = await this.processor(aud);
             const output = await this.model({ ...text_inputs, ...audio_inputs });
             const probs = (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.softmax)(output.logits_per_audio.data);
-            toReturn.push([...probs].map((x, i) => ({
-              score: x,
+            toReturn.push([...probs].map((x2, i) => ({
+              score: x2,
               label: candidate_labels[i]
             })));
           }
@@ -41015,8 +41015,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new AutomaticSpeechRecognitionPipeline.
          * @param {TextAudioPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {AutomaticSpeechRecognitionPipelineCallback} */
         async _call(audio, kwargs = {}) {
@@ -41144,13 +41144,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               if (return_timestamps === "word") {
                 chunk.tokens = data.sequences.tolist()[0];
                 chunk.token_timestamps = data.token_timestamps.tolist()[0].map(
-                  (x) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.round)(x, 2)
+                  (x2) => (0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_6__.round)(x2, 2)
                 );
               } else {
                 chunk.tokens = /** @type {Tensor} */
                 data[0].tolist();
               }
-              chunk.stride = chunk.stride.map((x) => x / sampling_rate);
+              chunk.stride = chunk.stride.map((x2) => x2 / sampling_rate);
             }
             const [full_text, optional2] = this.tokenizer._decode_asr(chunks, {
               time_precision,
@@ -41196,8 +41196,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ImageToTextPipeline.
          * @param {TextImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ImageToTextPipelineCallback} */
         async _call(images, generate_kwargs = {}) {
@@ -41214,7 +41214,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               {
                 skip_special_tokens: true
               }
-            ).map((x) => ({ generated_text: x.trim() }));
+            ).map((x2) => ({ generated_text: x2.trim() }));
             toReturn.push(decoded);
           }
           return isBatched ? toReturn : toReturn[0];
@@ -41226,8 +41226,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ImageClassificationPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ImageClassificationPipelineCallback} */
         async _call(images, {
@@ -41246,10 +41246,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ), top_k);
             const values = scores[0].tolist();
             const indices = scores[1].tolist();
-            const vals = indices.map((x, i) => ({
+            const vals = indices.map((x2, i) => ({
               label: (
                 /** @type {string} */
-                id2label ? id2label[x] : `LABEL_${x}`
+                id2label ? id2label[x2] : `LABEL_${x2}`
               ),
               score: (
                 /** @type {number} */
@@ -41267,8 +41267,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ImageSegmentationPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
           this.subtasks_mapping = {
             // Mapping of subtasks to their corresponding post-processing function names.
             panoptic: "post_process_panoptic_segmentation",
@@ -41290,7 +41290,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             throw Error("Image segmentation pipeline currently only supports a batch size of 1.");
           }
           const preparedImages = await prepareImages(images);
-          const imageSizes = preparedImages.map((x) => [x.height, x.width]);
+          const imageSizes = preparedImages.map((x2) => [x2.height, x2.width]);
           const inputs = await this.processor(preparedImages);
           const { inputNames, outputNames } = this.model.sessions["model"];
           if (!inputNames.includes("pixel_values")) {
@@ -41324,7 +41324,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             for (let i = 0; i < imageSizes.length; ++i) {
               const size = imageSizes[i];
               const item = result[i];
-              if (item.data.some((x) => x < -epsilon || x > 1 + epsilon)) {
+              if (item.data.some((x2) => x2 < -epsilon || x2 > 1 + epsilon)) {
                 item.sigmoid_();
               }
               const mask = await _utils_image_js__WEBPACK_IMPORTED_MODULE_9__.RawImage.fromTensor(item.mul_(255).to("uint8")).resize(size[1], size[0]);
@@ -41388,17 +41388,17 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new BackgroundRemovalPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {BackgroundRemovalPipelineCallback} */
-        async _call(images, options2 = {}) {
+        async _call(images, options = {}) {
           const isBatched = Array.isArray(images);
           if (isBatched && images.length !== 1) {
             throw Error("Background removal pipeline currently only supports a batch size of 1.");
           }
           const preparedImages = await prepareImages(images);
-          const masks = await super._call(images, options2);
+          const masks = await super._call(images, options);
           const result = preparedImages.map((img, i) => {
             const cloned = img.clone();
             cloned.putAlpha(masks[i].mask);
@@ -41413,8 +41413,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ZeroShotImageClassificationPipeline.
          * @param {TextImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ZeroShotImageClassificationPipelineCallback} */
         async _call(images, candidate_labels, {
@@ -41423,7 +41423,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const isBatched = Array.isArray(images);
           const preparedImages = await prepareImages(images);
           const texts = candidate_labels.map(
-            (x) => hypothesis_template.replace("{}", x)
+            (x2) => hypothesis_template.replace("{}", x2)
           );
           const text_inputs = this.tokenizer(texts, {
             padding: this.model.config.model_type === "siglip" ? "max_length" : true,
@@ -41435,11 +41435,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const toReturn = [];
           for (const batch of output.logits_per_image) {
             const probs = function_to_apply(batch);
-            const result = [...probs].map((x, i) => ({
-              score: x,
+            const result = [...probs].map((x2, i) => ({
+              score: x2,
               label: candidate_labels[i]
             }));
-            result.sort((a, b) => b.score - a.score);
+            result.sort((a, b2) => b2.score - a.score);
             toReturn.push(result);
           }
           return isBatched ? toReturn : toReturn[0];
@@ -41451,8 +41451,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ObjectDetectionPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ObjectDetectionPipelineCallback} */
         async _call(images, {
@@ -41464,7 +41464,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             throw Error("Object detection pipeline currently only supports a batch size of 1.");
           }
           const preparedImages = await prepareImages(images);
-          const imageSizes = percentage ? null : preparedImages.map((x) => [x.height, x.width]);
+          const imageSizes = percentage ? null : preparedImages.map((x2) => [x2.height, x2.width]);
           const { pixel_values, pixel_mask } = await this.processor(preparedImages);
           const output = await this.model({ pixel_values, pixel_mask });
           const processed = this.processor.image_processor.post_process_object_detection(output, threshold, imageSizes);
@@ -41483,8 +41483,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ZeroShotObjectDetectionPipeline.
          * @param {TextImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ZeroShotObjectDetectionPipelineCallback} */
         async _call(images, candidate_labels, {
@@ -41530,7 +41530,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 box: get_bounding_box(box, !percentage)
               }));
             }
-            result.sort((a, b) => b.score - a.score);
+            result.sort((a, b2) => b2.score - a.score);
             if (top_k !== null) {
               result = result.slice(0, top_k);
             }
@@ -41545,8 +41545,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new DocumentQuestionAnsweringPipeline.
          * @param {TextImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {DocumentQuestionAnsweringPipelineCallback} */
         async _call(image, question, generate_kwargs = {}) {
@@ -41584,9 +41584,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new TextToAudioPipeline.
          * @param {TextToAudioPipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
-          this.vocoder = options2.vocoder ?? null;
+        constructor(options) {
+          super(options);
+          this.vocoder = options.vocoder ?? null;
         }
         async _prepare_speaker_embeddings(speaker_embeddings) {
           if (typeof speaker_embeddings === "string" || speaker_embeddings instanceof URL) {
@@ -41679,8 +41679,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new ImageToImagePipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {ImageToImagePipelineCallback} */
         async _call(images) {
@@ -41701,8 +41701,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new DepthEstimationPipeline.
          * @param {ImagePipelineConstructorArgs} options An object used to instantiate the pipeline.
          */
-        constructor(options2) {
-          super(options2);
+        constructor(options) {
+          super(options);
         }
         /** @type {DepthEstimationPipelineCallback} */
         async _call(images) {
@@ -42421,13 +42421,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /*! ./models/whisper/common_whisper.js */
         "./src/models/whisper/common_whisper.js"
       );
-      async function loadTokenizer(pretrained_model_name_or_path, options2) {
+      async function loadTokenizer(pretrained_model_name_or_path, options) {
         const info = await Promise.all([
-          (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, "tokenizer.json", true, options2),
-          (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, "tokenizer_config.json", true, options2)
+          (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, "tokenizer.json", true, options),
+          (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_2__.getModelJSON)(pretrained_model_name_or_path, "tokenizer_config.json", true, options)
         ]);
-        if (options2.legacy !== null) {
-          info[1].legacy = options2.legacy;
+        if (options.legacy !== null) {
+          info[1].legacy = options.legacy;
         }
         return info;
       }
@@ -42718,7 +42718,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           }
           this.unk_token_id = config2.unk_id;
           this.unk_token = this.vocab[config2.unk_id];
-          this.tokens_to_ids = new Map(this.vocab.map((x, i) => [x, i]));
+          this.tokens_to_ids = new Map(this.vocab.map((x2, i) => [x2, i]));
           this.bos_token = " ";
           this.bos_token_id = this.tokens_to_ids.get(this.bos_token);
           this.eos_token = moreConfig.eos_token;
@@ -42787,21 +42787,21 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       }
       const BYTES_TO_UNICODE = (() => {
         const bs = [
-          ...Array.from({ length: "~".charCodeAt(0) - "!".charCodeAt(0) + 1 }, (_, i) => i + "!".charCodeAt(0)),
-          ...Array.from({ length: "\xAC".charCodeAt(0) - "\xA1".charCodeAt(0) + 1 }, (_, i) => i + "\xA1".charCodeAt(0)),
-          ...Array.from({ length: "\xFF".charCodeAt(0) - "\xAE".charCodeAt(0) + 1 }, (_, i) => i + "\xAE".charCodeAt(0))
+          ...Array.from({ length: "~".charCodeAt(0) - "!".charCodeAt(0) + 1 }, (_2, i) => i + "!".charCodeAt(0)),
+          ...Array.from({ length: "\xAC".charCodeAt(0) - "\xA1".charCodeAt(0) + 1 }, (_2, i) => i + "\xA1".charCodeAt(0)),
+          ...Array.from({ length: "\xFF".charCodeAt(0) - "\xAE".charCodeAt(0) + 1 }, (_2, i) => i + "\xAE".charCodeAt(0))
         ];
         const cs = bs.slice();
         let n = 0;
-        for (let b = 0; b < 256; ++b) {
-          if (!bs.includes(b)) {
-            bs.push(b);
+        for (let b2 = 0; b2 < 256; ++b2) {
+          if (!bs.includes(b2)) {
+            bs.push(b2);
             cs.push(256 + n);
             n += 1;
           }
         }
         const ccs = cs.map((n2) => String.fromCharCode(n2));
-        return Object.fromEntries(bs.map((b, i) => [b, ccs[i]]));
+        return Object.fromEntries(bs.map((b2, i) => [b2, ccs[i]]));
       })();
       const UNICODE_TO_BYTES = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.reverseDictionary)(BYTES_TO_UNICODE);
       class BPE extends TokenizerModel {
@@ -42831,12 +42831,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             config2.merges
           ) : (
             /** @type {string[]} */
-            config2.merges.map((x) => (
+            config2.merges.map((x2) => (
               /** @type {[string, string]} */
-              x.split(" ", 2)
+              x2.split(" ", 2)
             ))
           );
-          this.bpe_ranks = new Map(this.merges.map((x, i) => [JSON.stringify(x), i]));
+          this.bpe_ranks = new Map(this.merges.map((x2, i) => [JSON.stringify(x2), i]));
           this.end_of_word_suffix = config2.end_of_word_suffix;
           this.continuing_subword_suffix = config2.continuing_subword_suffix ?? null;
           this.byte_fallback = this.config.byte_fallback ?? false;
@@ -42874,7 +42874,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           }
           let result = [];
           if (word.length > 1) {
-            const queue = new _utils_data_structures_js__WEBPACK_IMPORTED_MODULE_5__.PriorityQueue((a, b) => a.score < b.score);
+            const queue = new _utils_data_structures_js__WEBPACK_IMPORTED_MODULE_5__.PriorityQueue((a, b2) => a.score < b2.score);
             let startingNode = {
               token: word[0],
               bias: 0,
@@ -42945,7 +42945,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Helper function to add a node to the priority queue.
-         * @param {PriorityQueue} queue 
+         * @param {PriorityQueue} queue
          * @param {BPENode} node
          * @private
          */
@@ -42973,8 +42973,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               if (this.tokens_to_ids.has(t)) {
                 outputTokens.push(t);
               } else if (this.byte_fallback) {
-                const byteTokens = Array.from(this.text_encoder.encode(t)).map((x) => `<0x${x.toString(16).toUpperCase().padStart(2, "0")}>`);
-                if (byteTokens.every((x) => this.tokens_to_ids.has(x))) {
+                const byteTokens = Array.from(this.text_encoder.encode(t)).map((x2) => `<0x${x2.toString(16).toUpperCase().padStart(2, "0")}>`);
+                if (byteTokens.every((x2) => this.tokens_to_ids.has(x2))) {
                   outputTokens.push(...byteTokens);
                 } else {
                   outputTokens.push(this.unk_token);
@@ -43182,7 +43182,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         */
         constructor(config2) {
           super(config2);
-          this.normalizers = config2.normalizers.map((x) => Normalizer.fromConfig(x));
+          this.normalizers = config2.normalizers.map((x2) => Normalizer.fromConfig(x2));
         }
         /**
         * Apply a sequence of Normalizers to the input text.
@@ -43333,7 +43333,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @returns {string[]} The pre-tokenized text.
          * @throws {Error} If the method is not implemented in the subclass.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           throw Error("pre_tokenize_text should be implemented in subclass.");
         }
         /**
@@ -43342,8 +43342,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of pre-tokens.
          */
-        pre_tokenize(text, options2) {
-          return (Array.isArray(text) ? text.map((x) => this.pre_tokenize_text(x, options2)) : this.pre_tokenize_text(text, options2)).flat();
+        pre_tokenize(text, options) {
+          return (Array.isArray(text) ? text.map((x2) => this.pre_tokenize_text(x2, options)) : this.pre_tokenize_text(text, options)).flat();
         }
         /**
          * Alias for {@link PreTokenizer#pre_tokenize}.
@@ -43351,15 +43351,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of pre-tokens.
          */
-        _call(text, options2) {
-          return this.pre_tokenize(text, options2);
+        _call(text, options) {
+          return this.pre_tokenize(text, options);
         }
       }
       class BertPreTokenizer extends PreTokenizer {
         /**
          * A PreTokenizer that splits text into wordpieces using a basic tokenization scheme
          * similar to that used in the original implementation of BERT.
-         * 
+         *
          * @param {Object} config The configuration object.
          */
         constructor(config2) {
@@ -43368,12 +43368,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Tokenizes a single text using the BERT pre-tokenization scheme.
-         * 
+         *
          * @param {string} text The text to tokenize.
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return text.trim().match(this.pattern) || [];
         }
       }
@@ -43398,7 +43398,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           if (this.add_prefix_space && !text.startsWith(" ")) {
             text = " " + text;
           }
@@ -43428,14 +43428,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           if (this.pattern === null) {
             return [];
           }
           if (this.config.invert) {
             return text.match(this.pattern) || [];
           } else if (this.config.behavior?.toLowerCase() === "removed") {
-            return text.split(this.pattern).filter((x) => x);
+            return text.split(this.pattern).filter((x2) => x2);
           } else {
             return regexSplit(text, this.pattern);
           }
@@ -43457,7 +43457,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return text.match(this.pattern) || [];
         }
       }
@@ -43478,7 +43478,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return text.match(this.pattern) || [];
         }
       }
@@ -43636,7 +43636,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          */
         constructor(config2) {
           super(config2);
-          this.processors = config2.processors.map((x) => PostProcessor.fromConfig(x));
+          this.processors = config2.processors.map((x2) => PostProcessor.fromConfig(x2));
         }
         /**
          * Post process the given tokens.
@@ -43644,7 +43644,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {string[]} [tokens_pair=null] The list of tokens for the second sequence (optional).
          * @returns {PostProcessedOutput} An object containing the post-processed tokens.
          */
-        post_process(tokens, tokens_pair = null, options2 = {}) {
+        post_process(tokens, tokens_pair = null, options = {}) {
           let token_type_ids;
           for (const processor of this.processors) {
             if (processor instanceof ByteLevelPostProcessor) {
@@ -43655,7 +43655,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 tokens_pair = pair_output.tokens;
               }
             } else {
-              const output = processor.post_process(tokens, tokens_pair, options2);
+              const output = processor.post_process(tokens, tokens_pair, options);
               tokens = output.tokens;
               token_type_ids = output.token_type_ids;
             }
@@ -43730,7 +43730,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Apply the decoder to a list of tokens.
-         * 
+         *
          * @param {string[]} tokens The list of tokens.
          * @returns {string[]} The decoded list of tokens.
          * @throws {Error} If the `decode_chain` method is not implemented in the subclass.
@@ -43879,7 +43879,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const sub_texts = [];
           let current_sub_text = [];
           for (const token of tokens) {
-            if (this.added_tokens.find((x) => x.content === token) !== void 0) {
+            if (this.added_tokens.find((x2) => x2.content === token) !== void 0) {
               if (current_sub_text.length > 0) {
                 sub_texts.push(this.convert_tokens_to_string(current_sub_text));
                 current_sub_text = [];
@@ -43936,7 +43936,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          */
         constructor(config2) {
           super(config2);
-          this.decoders = config2.decoders.map((x) => Decoder.fromConfig(x));
+          this.decoders = config2.decoders.map((x2) => Decoder.fromConfig(x2));
         }
         /** @type {Decoder['decode_chain']} */
         decode_chain(tokens) {
@@ -44060,7 +44060,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          */
         constructor(config2) {
           super();
-          this.tokenizers = config2.pretokenizers.map((x) => PreTokenizer.fromConfig(x));
+          this.tokenizers = config2.pretokenizers.map((x2) => PreTokenizer.fromConfig(x2));
         }
         /**
          * Applies each pre-tokenizer in the sequence to the input text in turn.
@@ -44068,9 +44068,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} The pre-tokenized text.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return this.tokenizers.reduce((preTokenizedText, tokenizer) => {
-            return tokenizer.pre_tokenize(preTokenizedText, options2);
+            return tokenizer.pre_tokenize(preTokenizedText, options);
           }, [text]);
         }
       }
@@ -44088,7 +44088,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens produced by splitting the input text on whitespace.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return text.match(/\w+|[^\w\s]+/g) || [];
         }
       }
@@ -44106,7 +44106,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens produced by splitting the input text on whitespace.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           return whitespace_split(text);
         }
       }
@@ -44128,7 +44128,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens produced by replacing certain characters.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           if (this.pattern === null) {
             return [text];
           }
@@ -44150,7 +44150,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens produced by splitting the input text into fixed-length tokens.
          */
-        pre_tokenize_text(text, options2) {
+        pre_tokenize_text(text, options) {
           const tokens = [];
           for (let i = 0; i < text.length; i += this._length) {
             tokens.push(text.slice(i, i + this._length));
@@ -44218,9 +44218,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             this.decoder.end_of_word_suffix = this.model.end_of_word_suffix;
           }
           this.added_tokens_splitter = new _utils_data_structures_js__WEBPACK_IMPORTED_MODULE_5__.DictionarySplitter(
-            this.added_tokens.map((x) => x.content)
+            this.added_tokens.map((x2) => x2.content)
           );
-          this.added_tokens_map = new Map(this.added_tokens.map((x) => [x.content, x]));
+          this.added_tokens_map = new Map(this.added_tokens.map((x2) => [x2.content, x2]));
           this.mask_token = this.getToken("mask_token");
           this.mask_token_id = this.model.tokens_to_ids.get(this.mask_token);
           this.pad_token = this.getToken("pad_token", "eos_token");
@@ -44281,11 +44281,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           return null;
         }
         /**
-         * Loads a pre-trained tokenizer from the given `pretrained_model_name_or_path`. 
-         * 
+         * Loads a pre-trained tokenizer from the given `pretrained_model_name_or_path`.
+         *
          * @param {string} pretrained_model_name_or_path The path to the pre-trained tokenizer.
          * @param {PretrainedTokenizerOptions} options Additional options for loading the tokenizer.
-         * 
+         *
          * @throws {Error} Throws an error if the tokenizer.json or tokenizer_config.json files are not found in the `pretrained_model_name_or_path`.
          * @returns {Promise<PreTrainedTokenizer>} A new instance of the `PreTrainedTokenizer` class.
          */
@@ -44309,7 +44309,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * @typedef {number[]|number[][]|Tensor} BatchEncodingItem
-         * 
+         *
          * @typedef {Object} BatchEncoding Holds the output of the tokenizer's call function.
          * @property {BatchEncodingItem} input_ids List of token ids to be fed to a model.
          * @property {BatchEncodingItem} attention_mask List of indices specifying which tokens should be attended to by the model.
@@ -44354,7 +44354,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 (t, i) => this._encode_plus(t, { text_pair: text_pair[i], add_special_tokens, return_token_type_ids })
               );
             } else {
-              encodedTokens = text.map((x) => this._encode_plus(x, { add_special_tokens, return_token_type_ids }));
+              encodedTokens = text.map((x2) => this._encode_plus(x2, { add_special_tokens, return_token_type_ids }));
             }
           } else {
             if (text === null || text === void 0) {
@@ -44379,7 +44379,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             }
           }
           if (padding === true) {
-            max_length = Math.min((0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.max)(encodedTokens.map((x) => x.input_ids.length))[0], max_length ?? Infinity);
+            max_length = Math.min((0, _utils_maths_js__WEBPACK_IMPORTED_MODULE_3__.max)(encodedTokens.map((x2) => x2.input_ids.length))[0], max_length ?? Infinity);
           }
           max_length = Math.min(max_length, this.model_max_length ?? Infinity);
           if (padding || truncation) {
@@ -44405,9 +44405,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const result = {};
           if (return_tensor) {
             if (!(padding && truncation)) {
-              if (encodedTokens.some((x) => {
-                for (const key of Object.keys(x)) {
-                  if (x[key].length !== encodedTokens[0][key]?.length) {
+              if (encodedTokens.some((x2) => {
+                for (const key of Object.keys(x2)) {
+                  if (x2[key].length !== encodedTokens[0][key]?.length) {
                     return true;
                   }
                 }
@@ -44422,13 +44422,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             for (const key of Object.keys(encodedTokens[0])) {
               result[key] = new _utils_tensor_js__WEBPACK_IMPORTED_MODULE_4__.Tensor(
                 "int64",
-                BigInt64Array.from(encodedTokens.flatMap((x) => x[key]).map(BigInt)),
+                BigInt64Array.from(encodedTokens.flatMap((x2) => x2[key]).map(BigInt)),
                 dims
               );
             }
           } else {
             for (const key of Object.keys(encodedTokens[0])) {
-              result[key] = encodedTokens.map((x) => x[key]);
+              result[key] = encodedTokens.map((x2) => x2[key]);
             }
             if (!isBatched) {
               for (const key of Object.keys(result)) {
@@ -44462,26 +44462,26 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               }
             }
           }
-          const tokens = sections.flatMap((x, section_index) => {
-            if (x.length === 0)
+          const tokens = sections.flatMap((x2, section_index) => {
+            if (x2.length === 0)
               return [];
-            if (this.added_tokens_map.has(x))
-              return [x];
+            if (this.added_tokens_map.has(x2))
+              return [x2];
             if (this.remove_space === true) {
-              x = x.trim().split(/\s+/).join(" ");
+              x2 = x2.trim().split(/\s+/).join(" ");
             }
             if (this.do_lowercase_and_remove_accent) {
-              x = lowercase_and_remove_accent(x);
+              x2 = lowercase_and_remove_accent(x2);
             }
             if (this.normalizer !== null) {
-              x = this.normalizer(x);
+              x2 = this.normalizer(x2);
             }
-            if (x.length === 0) {
+            if (x2.length === 0) {
               return [];
             }
-            const sectionTokens = this.pre_tokenizer !== null ? this.pre_tokenizer(x, {
+            const sectionTokens = this.pre_tokenizer !== null ? this.pre_tokenizer(x2, {
               section_index
-            }) : [x];
+            }) : [x2];
             const tokens2 = this.model(sectionTokens);
             return tokens2;
           });
@@ -44575,7 +44575,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           if (batch instanceof _utils_tensor_js__WEBPACK_IMPORTED_MODULE_4__.Tensor) {
             batch = batch.tolist();
           }
-          return batch.map((x) => this.decode(x, decode_args));
+          return batch.map((x2) => this.decode(x2, decode_args));
         }
         /**
          * Decodes a sequence of token IDs back to a string.
@@ -44612,7 +44612,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }) {
           let tokens = this.model.convert_ids_to_tokens(token_ids);
           if (skip_special_tokens) {
-            tokens = tokens.filter((x) => !this.special_tokens.includes(x));
+            tokens = tokens.filter((x2) => !this.special_tokens.includes(x2));
           }
           let decoded = this.decoder ? this.decoder(tokens) : tokens.join(" ");
           if (this.decoder && this.decoder.end_of_word_suffix) {
@@ -44630,7 +44630,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Retrieve the chat template string used for tokenizing chat messages. This template is used
          * internally by the `apply_chat_template` method and can also be used externally to retrieve the model's chat
          * template for better generation tracking.
-         * 
+         *
          * @param {Object} options An optional object containing the following properties:
          * @param {string} [options.chat_template=null]
          * A Jinja template or the name of a template to use for this conversion.
@@ -44678,29 +44678,29 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Converts a list of message objects with `"role"` and `"content"` keys to a list of token
          * ids. This method is intended for use with chat models, and will read the tokenizer's chat_template attribute to
          * determine the format and control tokens to use when converting.
-         * 
+         *
          * See [here](https://huggingface.co/docs/transformers/chat_templating) for more information.
-         * 
+         *
          * **Example:** Applying a chat template to a conversation.
-         * 
+         *
          * ```javascript
          * import { AutoTokenizer } from "@huggingface/transformers";
-         * 
+         *
          * const tokenizer = await AutoTokenizer.from_pretrained("Xenova/mistral-tokenizer-v1");
-         * 
+         *
          * const chat = [
          *   { "role": "user", "content": "Hello, how are you?" },
          *   { "role": "assistant", "content": "I'm doing great. How can I help you today?" },
          *   { "role": "user", "content": "I'd like to show off how chat templating works!" },
          * ]
-         * 
+         *
          * const text = tokenizer.apply_chat_template(chat, { tokenize: false });
          * // "<s>[INST] Hello, how are you? [/INST]I'm doing great. How can I help you today?</s> [INST] I'd like to show off how chat templating works! [/INST]"
-         * 
+         *
          * const input_ids = tokenizer.apply_chat_template(chat, { tokenize: true, return_tensor: false });
          * // [1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]
          * ```
-         * 
+         *
          * @param {Message[]} conversation A list of message objects with `"role"` and `"content"` keys,
          * representing the chat history so far.
          * @param {Object} options An optional object containing the following properties:
@@ -44835,8 +44835,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         constructor(tokenizerJSON, tokenizerConfig) {
           super(tokenizerJSON, tokenizerConfig);
           this.languageRegex = /^[a-z]{2}_[A-Z]{2}$/;
-          this.language_codes = this.special_tokens.filter((x) => this.languageRegex.test(x));
-          this.lang_to_token = (x) => x;
+          this.language_codes = this.special_tokens.filter((x2) => this.languageRegex.test(x2));
+          this.lang_to_token = (x2) => x2;
         }
         /**
          * Helper function to build translation inputs for an `MBartTokenizer`.
@@ -44939,8 +44939,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         constructor(tokenizerJSON, tokenizerConfig) {
           super(tokenizerJSON, tokenizerConfig);
           this.languageRegex = /^[a-z]{3}_[A-Z][a-z]{3}$/;
-          this.language_codes = this.special_tokens.filter((x) => this.languageRegex.test(x));
-          this.lang_to_token = (x) => x;
+          this.language_codes = this.special_tokens.filter((x2) => this.languageRegex.test(x2));
+          this.lang_to_token = (x2) => x2;
         }
         /**
          * Helper function to build translation inputs for an `NllbTokenizer`.
@@ -44957,8 +44957,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         constructor(tokenizerJSON, tokenizerConfig) {
           super(tokenizerJSON, tokenizerConfig);
           this.languageRegex = /^__[a-z]{2,3}__$/;
-          this.language_codes = this.special_tokens.filter((x) => this.languageRegex.test(x)).map((x) => x.slice(2, -2));
-          this.lang_to_token = (x) => `__${x}__`;
+          this.language_codes = this.special_tokens.filter((x2) => this.languageRegex.test(x2)).map((x2) => x2.slice(2, -2));
+          this.lang_to_token = (x2) => `__${x2}__`;
         }
         /**
          * Helper function to build translation inputs for an `M2M100Tokenizer`.
@@ -45187,12 +45187,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             let max = 0;
             let maxIndices = [leftLength, leftLength, 0, 0];
             const rightLength = rightSequence.length;
-            for (let j = 1; j < leftLength + rightLength; ++j) {
-              const leftStart2 = Math.max(0, leftLength - j);
-              const leftStop2 = Math.min(leftLength, leftLength + rightLength - j);
+            for (let j2 = 1; j2 < leftLength + rightLength; ++j2) {
+              const leftStart2 = Math.max(0, leftLength - j2);
+              const leftStop2 = Math.min(leftLength, leftLength + rightLength - j2);
               const left = leftSequence.slice(leftStart2, leftStop2);
-              const rightStart2 = Math.max(0, j - leftLength);
-              const rightStop2 = Math.min(rightLength, j);
+              const rightStart2 = Math.max(0, j2 - leftLength);
+              const rightStop2 = Math.min(rightLength, j2);
               const right = rightSequence.slice(rightStart2, rightStop2);
               if (left.length !== right.length) {
                 throw new Error("There is a bug within whisper `decode_asr` function, please report it. Dropping to prevent bad inference.");
@@ -45203,8 +45203,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               } else {
                 matches = left.filter((elem, idx) => elem === right[idx]).length;
               }
-              const eps = j / 1e4;
-              const matching = matches / j + eps;
+              const eps = j2 / 1e4;
+              const matching = matches / j2 + eps;
               if (matches > 1 && matching > max) {
                 max = matching;
                 maxIndices = [leftStart2, leftStop2, rightStart2, rightStop2];
@@ -45231,7 +45231,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /** @private */
         collateWordTimestamps(tokens, token_timestamps, language) {
-          const [words, _, token_indices] = this.combineTokensIntoWords(tokens, language);
+          const [words, _2, token_indices] = this.combineTokensIntoWords(tokens, language);
           const timings = [];
           for (let i = 0; i < words.length; ++i) {
             const indices = token_indices[i];
@@ -45248,11 +45248,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /**
          * Groups tokens by word. Returns a tuple containing a list of strings with the words,
          * and a list of `token_id` sequences with the tokens making up each word.
-         * @param {number[]} tokens 
-         * @param {string} [language] 
-         * @param {string} prepend_punctionations 
-         * @param {string} append_punctuations 
-         * 
+         * @param {number[]} tokens
+         * @param {string} [language]
+         * @param {string} prepend_punctionations
+         * @param {string} append_punctuations
+         *
          * @private
          */
         combineTokensIntoWords(tokens, language, prepend_punctionations = `"'\u201C\xA1\xBF([{-`, append_punctuations = `"'.\u3002,\uFF0C!\uFF01?\uFF1F:\uFF1A\u201D)]}\u3001`) {
@@ -45304,7 +45304,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Combine tokens into words by splitting at any position where the tokens are decoded as valid unicode points.
-         * @param {number[]} tokens 
+         * @param {number[]} tokens
          * @returns {*}
          * @private
          */
@@ -45341,7 +45341,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Combine tokens into words by splitting at whitespace and punctuation tokens.
-         * @param {number[]} tokens 
+         * @param {number[]} tokens
          * @private
          */
         splitTokensOnSpaces(tokens) {
@@ -45357,8 +45357,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const special = subword_tokens[0] >= this.model.tokens_to_ids.get("<|endoftext|>");
             const with_space = subword.startsWith(" ");
             const trimmed = subword.trim();
-            const punctuation2 = punctuationRegex.test(trimmed);
-            if (special || with_space || punctuation2 || words.length === 0) {
+            const punctuation = punctuationRegex.test(trimmed);
+            if (special || with_space || punctuation || words.length === 0) {
               words.push(subword);
               word_tokens.push(subword_tokens);
               token_indices.push(subword_indices);
@@ -45373,11 +45373,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Merges punctuation tokens with neighboring words.
-         * @param {string[]} words 
-         * @param {number[][]} tokens 
-         * @param {number[][]} indices 
-         * @param {string} prepended 
-         * @param {string} appended 
+         * @param {string[]} words
+         * @param {number[][]} tokens
+         * @param {number[][]} indices
+         * @param {string} prepended
+         * @param {string} appended
          * @private
          */
         mergePunctuations(words, tokens, indices, prepended, appended) {
@@ -45385,39 +45385,39 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const newTokens = structuredClone(tokens);
           const newIndices = structuredClone(indices);
           let i = newWords.length - 2;
-          let j = newWords.length - 1;
+          let j2 = newWords.length - 1;
           while (i >= 0) {
             if (newWords[i].startsWith(" ") && prepended.includes(newWords[i].trim())) {
-              newWords[j] = newWords[i] + newWords[j];
-              newTokens[j] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newTokens[i], newTokens[j]);
-              newIndices[j] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newIndices[i], newIndices[j]);
+              newWords[j2] = newWords[i] + newWords[j2];
+              newTokens[j2] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newTokens[i], newTokens[j2]);
+              newIndices[j2] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newIndices[i], newIndices[j2]);
               newWords[i] = "";
               newTokens[i] = [];
               newIndices[i] = [];
             } else {
-              j = i;
+              j2 = i;
             }
             --i;
           }
           i = 0;
-          j = 1;
-          while (j < newWords.length) {
-            if (!newWords[i].endsWith(" ") && appended.includes(newWords[j])) {
-              newWords[i] += newWords[j];
-              newTokens[i] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newTokens[i], newTokens[j]);
-              newIndices[i] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newIndices[i], newIndices[j]);
-              newWords[j] = "";
-              newTokens[j] = [];
-              newIndices[j] = [];
+          j2 = 1;
+          while (j2 < newWords.length) {
+            if (!newWords[i].endsWith(" ") && appended.includes(newWords[j2])) {
+              newWords[i] += newWords[j2];
+              newTokens[i] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newTokens[i], newTokens[j2]);
+              newIndices[i] = (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_1__.mergeArrays)(newIndices[i], newIndices[j2]);
+              newWords[j2] = "";
+              newTokens[j2] = [];
+              newIndices[j2] = [];
             } else {
-              i = j;
+              i = j2;
             }
-            ++j;
+            ++j2;
           }
           return [
-            newWords.filter((x) => x),
-            newTokens.filter((x) => x.length > 0),
-            newIndices.filter((x) => x.length > 0)
+            newWords.filter((x2) => x2),
+            newTokens.filter((x2) => x2.length > 0),
+            newIndices.filter((x2) => x2.length > 0)
           ];
         }
       }
@@ -45437,7 +45437,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           super(tokenizerJSON, tokenizerConfig);
           this.languageRegex = /^(>>\w+<<)\s*/g;
           this.supported_language_codes = this.model.vocab.filter(
-            (x) => this.languageRegex.test(x)
+            (x2) => this.languageRegex.test(x2)
           );
           console.warn('WARNING: `MarianTokenizer` is not yet supported by Hugging Face\'s "fast" tokenizers library. Therefore, you may experience slightly inaccurate results.');
         }
@@ -45536,17 +45536,17 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         };
         /**
          * Instantiate one of the tokenizer classes of the library from a pretrained model.
-         * 
+         *
          * The tokenizer class to instantiate is selected based on the `tokenizer_class` property of the config object
          * (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         * 
+         *
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained tokenizer hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing tokenizer files, e.g., `./my_model_directory/`.
          * @param {PretrainedTokenizerOptions} options Additional options for loading the tokenizer.
-         * 
+         *
          * @returns {Promise<PreTrainedTokenizer>} A new instance of the PreTrainedTokenizer class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -45672,26 +45672,26 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         return audio;
       }
-      function generalized_cosine_window(M, a_0) {
-        if (M < 1) {
+      function generalized_cosine_window(M2, a_0) {
+        if (M2 < 1) {
           return new Float64Array();
         }
-        if (M === 1) {
+        if (M2 === 1) {
           return new Float64Array([1]);
         }
         const a_1 = 1 - a_0;
-        const factor = 2 * Math.PI / (M - 1);
-        const cos_vals = new Float64Array(M);
-        for (let i = 0; i < M; ++i) {
+        const factor = 2 * Math.PI / (M2 - 1);
+        const cos_vals = new Float64Array(M2);
+        for (let i = 0; i < M2; ++i) {
           cos_vals[i] = a_0 - a_1 * Math.cos(i * factor);
         }
         return cos_vals;
       }
-      function hanning(M) {
-        return generalized_cosine_window(M, 0.5);
+      function hanning(M2) {
+        return generalized_cosine_window(M2, 0.5);
       }
-      function hamming(M) {
-        return generalized_cosine_window(M, 0.54);
+      function hamming(M2) {
+        return generalized_cosine_window(M2, 0.54);
       }
       const HERTZ_TO_MEL_MAPPING = {
         "htk": (freq) => 2595 * Math.log10(1 + freq / 700),
@@ -45703,7 +45703,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         if (!fn) {
           throw new Error('mel_scale should be one of "htk", "slaney" or "kaldi".');
         }
-        return typeof freq === "number" ? fn(freq) : freq.map((x) => fn(x));
+        return typeof freq === "number" ? fn(freq) : freq.map((x2) => fn(x2));
       }
       const MEL_TO_HERTZ_MAPPING = {
         "htk": (mels) => 700 * (10 ** (mels / 2595) - 1),
@@ -45715,37 +45715,37 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         if (!fn) {
           throw new Error('mel_scale should be one of "htk", "slaney" or "kaldi".');
         }
-        return typeof mels === "number" ? fn(mels) : mels.map((x) => fn(x));
+        return typeof mels === "number" ? fn(mels) : mels.map((x2) => fn(x2));
       }
       function _create_triangular_filter_bank(fft_freqs, filter_freqs) {
         const filter_diff = Float64Array.from(
           { length: filter_freqs.length - 1 },
-          (_, i) => filter_freqs[i + 1] - filter_freqs[i]
+          (_2, i) => filter_freqs[i + 1] - filter_freqs[i]
         );
         const slopes = Array.from({
           length: fft_freqs.length
         }, () => new Array(filter_freqs.length));
-        for (let j = 0; j < fft_freqs.length; ++j) {
-          const slope = slopes[j];
+        for (let j2 = 0; j2 < fft_freqs.length; ++j2) {
+          const slope = slopes[j2];
           for (let i = 0; i < filter_freqs.length; ++i) {
-            slope[i] = filter_freqs[i] - fft_freqs[j];
+            slope[i] = filter_freqs[i] - fft_freqs[j2];
           }
         }
         const numFreqs = filter_freqs.length - 2;
         const ret = Array.from({ length: numFreqs }, () => new Array(fft_freqs.length));
-        for (let j = 0; j < fft_freqs.length; ++j) {
-          const slope = slopes[j];
+        for (let j2 = 0; j2 < fft_freqs.length; ++j2) {
+          const slope = slopes[j2];
           for (let i = 0; i < numFreqs; ++i) {
             const down = -slope[i] / filter_diff[i];
             const up = slope[i + 2] / filter_diff[i + 1];
-            ret[i][j] = Math.max(0, Math.min(down, up));
+            ret[i][j2] = Math.max(0, Math.min(down, up));
           }
         }
         return ret;
       }
       function linspace(start, end, num) {
         const step = (end - start) / (num - 1);
-        return Float64Array.from({ length: num }, (_, i) => start + step * i);
+        return Float64Array.from({ length: num }, (_2, i) => start + step * i);
       }
       function mel_filter_bank(num_frequency_bins, num_mel_filters, min_frequency, max_frequency, sampling_rate, norm = null, mel_scale = "htk", triangularize_in_mel_space = false) {
         if (norm !== null && norm !== "slaney") {
@@ -45764,7 +45764,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         let fft_freqs;
         if (triangularize_in_mel_space) {
           const fft_bin_width = sampling_rate / ((num_frequency_bins - 1) * 2);
-          fft_freqs = hertz_to_mel(Float64Array.from({ length: num_frequency_bins }, (_, i) => i * fft_bin_width), mel_scale);
+          fft_freqs = hertz_to_mel(Float64Array.from({ length: num_frequency_bins }, (_2, i) => i * fft_bin_width), mel_scale);
           filter_freqs = mel_freqs;
         } else {
           fft_freqs = linspace(0, Math.floor(sampling_rate / 2), num_frequency_bins);
@@ -45774,8 +45774,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           for (let i = 0; i < num_mel_filters; ++i) {
             const filter = mel_filters[i];
             const enorm = 2 / (filter_freqs[i + 2] - filter_freqs[i]);
-            for (let j = 0; j < num_frequency_bins; ++j) {
-              filter[j] *= enorm;
+            for (let j2 = 0; j2 < num_frequency_bins; ++j2) {
+              filter[j2] *= enorm;
             }
           }
         }
@@ -45783,15 +45783,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       }
       function padReflect(array2, left, right) {
         const padded = new array2.constructor(array2.length + left + right);
-        const w = array2.length - 1;
+        const w2 = array2.length - 1;
         for (let i = 0; i < array2.length; ++i) {
           padded[left + i] = array2[i];
         }
         for (let i = 1; i <= left; ++i) {
-          padded[left - i] = array2[(0, _core_js__WEBPACK_IMPORTED_MODULE_2__.calculateReflectOffset)(i, w)];
+          padded[left - i] = array2[(0, _core_js__WEBPACK_IMPORTED_MODULE_2__.calculateReflectOffset)(i, w2)];
         }
         for (let i = 1; i <= right; ++i) {
-          padded[w + left + i] = array2[(0, _core_js__WEBPACK_IMPORTED_MODULE_2__.calculateReflectOffset)(w - i, w)];
+          padded[w2 + left + i] = array2[(0, _core_js__WEBPACK_IMPORTED_MODULE_2__.calculateReflectOffset)(w2 - i, w2)];
         }
         return padded;
       }
@@ -45913,32 +45913,32 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           if (buffer_size !== frame_length) {
             inputBuffer.fill(0, 0, frame_length);
           }
-          for (let j = 0; j < buffer_size; ++j) {
-            inputBuffer[j] = waveform[offset + j];
+          for (let j2 = 0; j2 < buffer_size; ++j2) {
+            inputBuffer[j2] = waveform[offset + j2];
           }
           if (remove_dc_offset) {
             let sum = 0;
-            for (let j = 0; j < buffer_size; ++j) {
-              sum += inputBuffer[j];
+            for (let j2 = 0; j2 < buffer_size; ++j2) {
+              sum += inputBuffer[j2];
             }
             const mean = sum / buffer_size;
-            for (let j = 0; j < buffer_size; ++j) {
-              inputBuffer[j] -= mean;
+            for (let j2 = 0; j2 < buffer_size; ++j2) {
+              inputBuffer[j2] -= mean;
             }
           }
           if (preemphasis !== null) {
-            for (let j = buffer_size - 1; j >= 1; --j) {
-              inputBuffer[j] -= preemphasis * inputBuffer[j - 1];
+            for (let j2 = buffer_size - 1; j2 >= 1; --j2) {
+              inputBuffer[j2] -= preemphasis * inputBuffer[j2 - 1];
             }
             inputBuffer[0] *= 1 - preemphasis;
           }
-          for (let j = 0; j < window2.length; ++j) {
-            inputBuffer[j] *= window2[j];
+          for (let j2 = 0; j2 < window2.length; ++j2) {
+            inputBuffer[j2] *= window2[j2];
           }
           fft.realTransform(outputBuffer, inputBuffer);
-          for (let j = 0; j < num_frequency_bins; ++j) {
-            const j2 = j << 1;
-            transposedMagnitudeData[j * d1Max + i] = outputBuffer[j2] ** 2 + outputBuffer[j2 + 1] ** 2;
+          for (let j2 = 0; j2 < num_frequency_bins; ++j2) {
+            const j22 = j2 << 1;
+            transposedMagnitudeData[j2 * d1Max + i] = outputBuffer[j22] ** 2 + outputBuffer[j22 + 1] ** 2;
           }
         }
         if (power !== null && power !== 2) {
@@ -46010,7 +46010,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             window2 = hamming(length);
             break;
           case "povey":
-            window2 = hanning(length).map((x) => Math.pow(x, 0.85));
+            window2 = hanning(length).map((x2) => Math.pow(x2, 0.85));
             break;
           default:
             throw new Error(`Unknown window type ${name}.`);
@@ -46257,11 +46257,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       function isTypedArray(val) {
         return val?.prototype?.__proto__?.constructor?.name === "TypedArray";
       }
-      function isIntegralNumber(x) {
-        return Number.isInteger(x) || typeof x === "bigint";
+      function isIntegralNumber(x2) {
+        return Number.isInteger(x2) || typeof x2 === "bigint";
       }
-      function isNullishDimension(x) {
-        return x === null || x === void 0 || x === -1;
+      function isNullishDimension(x2) {
+        return x2 === null || x2 === void 0 || x2 === -1;
       }
       function calculateDimensions(arr) {
         const dimensions = [];
@@ -46287,10 +46287,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         return Array.prototype.concat.apply([], arrs);
       }
       function product(...a) {
-        return a.reduce((a2, b) => a2.flatMap((d) => b.map((e) => [d, e])));
+        return a.reduce((a2, b2) => a2.flatMap((d2) => b2.map((e) => [d2, e])));
       }
-      function calculateReflectOffset(i, w) {
-        return Math.abs((i + w) % (2 * w) - w);
+      function calculateReflectOffset(i, w2) {
+        return Math.abs((i + w2) % (2 * w2) - w2);
       }
       function saveBlob(path3, blob) {
         const dataURL = URL.createObjectURL(blob);
@@ -46319,8 +46319,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       }
       function count(arr, value) {
         let count2 = 0;
-        for (const v of arr) {
-          if (v === value)
+        for (const v2 of arr) {
+          if (v2 === value)
             ++count2;
         }
         return count2;
@@ -46368,7 +46368,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Create a new PriorityQueue.
          * @param {function(any, any): boolean} comparator Comparator function to determine priority. Defaults to a MaxHeap.
          */
-        constructor(comparator = (a, b) => a > b, maxSize = Infinity) {
+        constructor(comparator = (a, b2) => a > b2, maxSize = Infinity) {
           this._heap = [];
           this._comparator = comparator;
           this._maxSize = maxSize;
@@ -46480,8 +46480,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @returns {boolean} `true` if the element at index `i` is greater than the element at index `j`, `false` otherwise.
          * @private
          */
-        _greater(i, j) {
-          return this._comparator(this._heap[i], this._heap[j]);
+        _greater(i, j2) {
+          return this._comparator(this._heap[i], this._heap[j2]);
         }
         /**
          * Swap the elements at indices `i` and `j`.
@@ -46489,10 +46489,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {number} j The index of the second element to swap.
          * @private
          */
-        _swap(i, j) {
+        _swap(i, j2) {
           const temp = this._heap[i];
-          this._heap[i] = this._heap[j];
-          this._heap[j] = temp;
+          this._heap[i] = this._heap[j2];
+          this._heap[j2] = temp;
         }
         /**
          * Maintain the heap property by updating positions in the heap,
@@ -46699,14 +46699,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          */
         tokens() {
           const nodes = this.viterbi();
-          return nodes.map((x) => this.piece(x));
+          return nodes.map((x2) => this.piece(x2));
         }
         /**
          * @returns {number[]} The most likely sequence of token ids.
          */
         tokenIds() {
           const nodes = this.viterbi();
-          return nodes.map((x) => x.tokenId);
+          return nodes.map((x2) => x2.tokenId);
         }
       }
       class TokenLatticeNode {
@@ -46775,12 +46775,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           while (i < n) {
             let node = this.trie;
             let match = null;
-            let j = i;
-            while (j < n && (node = node[text[j]])) {
+            let j2 = i;
+            while (j2 < n && (node = node[text[j2]])) {
               if (node.end) {
                 match = node.end;
               }
-              ++j;
+              ++j2;
             }
             if (match) {
               if (i > start) {
@@ -47181,7 +47181,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         let url;
         try {
           url = new URL(string3);
-        } catch (_) {
+        } catch (_2) {
           return false;
         }
         if (protocols && !protocols.includes(url.protocol)) {
@@ -47329,15 +47329,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         return void 0;
       }
-      async function getModelFile(path_or_repo_id, filename, fatal = true, options2 = {}, return_path = false) {
+      async function getModelFile(path_or_repo_id, filename, fatal = true, options = {}, return_path = false) {
         if (!_env_js__WEBPACK_IMPORTED_MODULE_2__.env.allowLocalModels) {
-          if (options2.local_files_only) {
+          if (options.local_files_only) {
             throw Error("Invalid configuration detected: local models are disabled (`env.allowLocalModels=false`) but you have requested to only use local models (`local_files_only=true`).");
           } else if (!_env_js__WEBPACK_IMPORTED_MODULE_2__.env.allowRemoteModels) {
             throw Error("Invalid configuration detected: both local and remote models are disabled. Fix by setting `env.allowLocalModels` or `env.allowRemoteModels` to `true`.");
           }
         }
-        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
           status: "initiate",
           name: path_or_repo_id,
           file: filename
@@ -47368,9 +47368,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           if (!_env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_FS_AVAILABLE) {
             throw Error("File System Cache is not available in this environment.");
           }
-          cache = new FileCache(options2.cache_dir ?? _env_js__WEBPACK_IMPORTED_MODULE_2__.env.cacheDir);
+          cache = new FileCache(options.cache_dir ?? _env_js__WEBPACK_IMPORTED_MODULE_2__.env.cacheDir);
         }
-        const revision = options2.revision ?? "main";
+        const revision = options.revision ?? "main";
         const requestURL = pathJoin(path_or_repo_id, filename);
         const validModelId = isValidHfModelId(path_or_repo_id);
         const localPath = validModelId ? pathJoin(_env_js__WEBPACK_IMPORTED_MODULE_2__.env.localModelPath, requestURL) : requestURL;
@@ -47397,14 +47397,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               } catch (e) {
                 console.warn(`Unable to load from local path "${localPath}": "${e}"`);
               }
-            } else if (options2.local_files_only) {
+            } else if (options.local_files_only) {
               throw new Error(`\`local_files_only=true\`, but attempted to load a remote file from: ${requestURL}.`);
             } else if (!_env_js__WEBPACK_IMPORTED_MODULE_2__.env.allowRemoteModels) {
               throw new Error(`\`env.allowRemoteModels=false\`, but attempted to load a remote file from: ${requestURL}.`);
             }
           }
           if (response === void 0 || response.status === 404) {
-            if (options2.local_files_only || !_env_js__WEBPACK_IMPORTED_MODULE_2__.env.allowRemoteModels) {
+            if (options.local_files_only || !_env_js__WEBPACK_IMPORTED_MODULE_2__.env.allowRemoteModels) {
               if (fatal) {
                 throw Error(`\`local_files_only=true\` or \`env.allowRemoteModels=false\` and file was not found locally at "${localPath}".`);
               } else {
@@ -47422,7 +47422,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           }
           toCacheResponse = cache && typeof Response !== "undefined" && response instanceof Response && response.status === 200;
         }
-        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
           status: "download",
           name: path_or_repo_id,
           file: filename
@@ -47430,11 +47430,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         let result;
         if (!(_env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_NODE_ENV && return_path)) {
           let buffer;
-          if (!options2.progress_callback) {
+          if (!options.progress_callback) {
             buffer = new Uint8Array(await response.arrayBuffer());
           } else if (cacheHit && typeof navigator !== "undefined" && /firefox/i.test(navigator.userAgent)) {
             buffer = new Uint8Array(await response.arrayBuffer());
-            (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+            (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
               status: "progress",
               name: path_or_repo_id,
               file: filename,
@@ -47444,7 +47444,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             });
           } else {
             buffer = await readResponse(response, (data) => {
-              (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+              (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
                 status: "progress",
                 name: path_or_repo_id,
                 file: filename,
@@ -47461,7 +47461,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           await cache.match(cacheKey) === void 0
         ) {
           if (!result) {
-            const wrapped_progress = options2.progress_callback ? (data) => (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+            const wrapped_progress = options.progress_callback ? (data) => (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
               status: "progress",
               name: path_or_repo_id,
               file: filename,
@@ -47481,7 +47481,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             });
           }
         }
-        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options2.progress_callback, {
+        (0, _core_js__WEBPACK_IMPORTED_MODULE_3__.dispatchCallback)(options.progress_callback, {
           status: "done",
           name: path_or_repo_id,
           file: filename
@@ -47505,8 +47505,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         throw new Error("Unable to get model file path or buffer.");
       }
-      async function getModelText(modelPath, fileName, fatal = true, options2 = {}) {
-        const buffer = await getModelFile(modelPath, fileName, fatal, options2, false);
+      async function getModelText(modelPath, fileName, fatal = true, options = {}) {
+        const buffer = await getModelFile(modelPath, fileName, fatal, options, false);
         if (buffer === null) {
           return null;
         }
@@ -47516,8 +47516,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           buffer
         );
       }
-      async function getModelJSON(modelPath, fileName, fatal = true, options2 = {}) {
-        const text = await getModelText(modelPath, fileName, fatal, options2);
+      async function getModelJSON(modelPath, fileName, fatal = true, options = {}) {
+        const text = await getModelText(modelPath, fileName, fatal, options);
         if (text === null) {
           return {};
         }
@@ -48147,7 +48147,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /**
          * Split this image into individual bands. This method returns an array of individual image bands from an image.
          * For example, splitting an "RGB" image creates three new images each containing a copy of one of the original bands (red, green, blue).
-         * 
+         *
          * Inspired by PIL's `Image.split()` [function](https://pillow.readthedocs.io/en/latest/reference/Image.html#PIL.Image.Image.split).
          * @returns {RawImage[]} An array containing bands.
          */
@@ -48164,8 +48164,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           );
           for (let i = 0; i < per_channel_length; ++i) {
             const data_offset = channels * i;
-            for (let j = 0; j < channels; ++j) {
-              split_data[j][i] = data[data_offset + j];
+            for (let j2 = 0; j2 < channels; ++j2) {
+              split_data[j2][i] = data[data_offset + j2];
             }
           }
           return split_data.map((data2) => new RawImage(data2, width, height, 1));
@@ -48341,31 +48341,31 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         const inStride = in_height * in_width;
         const outStride = out_height * out_width;
         for (let i = 0; i < out_height; ++i) {
-          for (let j = 0; j < out_width; ++j) {
-            const outOffset = i * out_width + j;
-            const x = (j + 0.5) / x_scale - 0.5;
-            const y = (i + 0.5) / y_scale - 0.5;
-            let x1 = Math.floor(x);
-            let y1 = Math.floor(y);
-            const x2 = Math.min(x1 + 1, in_width - 1);
-            const y2 = Math.min(y1 + 1, in_height - 1);
+          for (let j2 = 0; j2 < out_width; ++j2) {
+            const outOffset = i * out_width + j2;
+            const x2 = (j2 + 0.5) / x_scale - 0.5;
+            const y2 = (i + 0.5) / y_scale - 0.5;
+            let x1 = Math.floor(x2);
+            let y1 = Math.floor(y2);
+            const x22 = Math.min(x1 + 1, in_width - 1);
+            const y22 = Math.min(y1 + 1, in_height - 1);
             x1 = Math.max(x1, 0);
             y1 = Math.max(y1, 0);
-            const s = x - x1;
-            const t = y - y1;
+            const s = x2 - x1;
+            const t = y2 - y1;
             const w1 = (1 - s) * (1 - t);
             const w2 = s * (1 - t);
             const w3 = (1 - s) * t;
             const w4 = s * t;
             const yStride = y1 * in_width;
-            const xStride = y2 * in_width;
+            const xStride = y22 * in_width;
             const idx1 = yStride + x1;
-            const idx2 = yStride + x2;
+            const idx2 = yStride + x22;
             const idx3 = xStride + x1;
-            const idx4 = xStride + x2;
-            for (let k = 0; k < in_channels; ++k) {
-              const cOffset = k * inStride;
-              out_img[k * outStride + outOffset] = w1 * input[cOffset + idx1] + w2 * input[cOffset + idx2] + w3 * input[cOffset + idx3] + w4 * input[cOffset + idx4];
+            const idx4 = xStride + x22;
+            for (let k2 = 0; k2 < in_channels; ++k2) {
+              const cOffset = k2 * inStride;
+              out_img[k2 * outStride + outOffset] = w1 * input[cOffset + idx1] + w2 * input[cOffset + idx2] + w3 * input[cOffset + idx3] + w4 * input[cOffset + idx4];
             }
           }
         }
@@ -48379,13 +48379,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           shape[i] = dims[axes[i]];
           s *= shape[i];
         }
-        const invStride = axes.map((_, i) => stride[axes.indexOf(i)]);
+        const invStride = axes.map((_2, i) => stride[axes.indexOf(i)]);
         const permutedData = new array2.constructor(array2.length);
         for (let i = 0; i < array2.length; ++i) {
           let newIndex = 0;
-          for (let j = dims.length - 1, k = i; j >= 0; --j) {
-            newIndex += k % dims[j] * invStride[j];
-            k = Math.floor(k / dims[j]);
+          for (let j2 = dims.length - 1, k2 = i; j2 >= 0; --j2) {
+            newIndex += k2 % dims[j2] * invStride[j2];
+            k2 = Math.floor(k2 / dims[j2]);
           }
           permutedData[newIndex] = array2[i];
         }
@@ -48393,9 +48393,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       }
       function softmax(arr) {
         const maxVal = max(arr)[0];
-        const exps = arr.map((x) => Math.exp(x - maxVal));
+        const exps = arr.map((x2) => Math.exp(x2 - maxVal));
         const sumExps = exps.reduce((acc, val) => acc + val, 0);
-        const softmaxArr = exps.map((x) => x / sumExps);
+        const softmaxArr = exps.map((x2) => x2 / sumExps);
         return (
           /** @type {T} */
           softmaxArr
@@ -48408,7 +48408,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           sumExps += Math.exp(arr[i] - maxVal);
         }
         const logSum = Math.log(sumExps);
-        const logSoftmaxArr = arr.map((x) => x - maxVal - logSum);
+        const logSoftmaxArr = arr.map((x2) => x2 - maxVal - logSum);
         return (
           /** @type {T} */
           logSoftmaxArr
@@ -48487,11 +48487,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ++power;
           this._width = power % 2 === 0 ? power - 1 : power;
           this._bitrev = new Int32Array(1 << this._width);
-          for (let j = 0; j < this._bitrev.length; ++j) {
-            this._bitrev[j] = 0;
+          for (let j2 = 0; j2 < this._bitrev.length; ++j2) {
+            this._bitrev[j2] = 0;
             for (let shift = 0; shift < this._width; shift += 2) {
               const revShift = this._width - shift - 2;
-              this._bitrev[j] |= (j >>> shift & 3) << revShift;
+              this._bitrev[j2] |= (j2 >>> shift & 3) << revShift;
             }
           }
         }
@@ -48505,7 +48505,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Converts a complex number representation stored in a Float64Array to an array of real numbers.
-         * 
+         *
          * @param {Float64Array} complex The complex number representation to be converted.
          * @param {number[]} [storage] An optional array to store the result in.
          * @returns {number[]} An array of real numbers representing the input complex number representation.
@@ -48532,12 +48532,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Performs a Fast Fourier Transform (FFT) on the given input data and stores the result in the output buffer.
-         * 
+         *
          * @param {Float64Array} out The output buffer to store the result.
          * @param {Float64Array} data The input data to transform.
-         * 
+         *
          * @throws {Error} Input and output buffers must be different.
-         * 
+         *
          * @returns {void}
          */
         transform(out, data) {
@@ -48574,7 +48574,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Performs an inverse FFT transformation on the given `data` array, and stores the result in `out`.
          * The `out` array must be a different buffer than the `data` array. The `out` array will contain the
          * result of the transformation. The `data` array will not be modified.
-         * 
+         *
          * @param {Float64Array} out The output buffer for the transformed data.
          * @param {Float64Array} data The input data to transform.
          * @throws {Error} If `out` and `data` refer to the same buffer.
@@ -48625,29 +48625,29 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const quarterLen = len >>> 2;
             for (outOff = 0; outOff < size; outOff += len) {
               const limit = outOff + quarterLen - 1;
-              for (let i = outOff, k = 0; i < limit; i += 2, k += step) {
+              for (let i = outOff, k2 = 0; i < limit; i += 2, k2 += step) {
                 const A = i;
-                const B = A + quarterLen;
-                const C = B + quarterLen;
-                const D = C + quarterLen;
+                const B2 = A + quarterLen;
+                const C2 = B2 + quarterLen;
+                const D2 = C2 + quarterLen;
                 const Ar = out[A];
                 const Ai = out[A + 1];
-                const Br = out[B];
-                const Bi = out[B + 1];
-                const Cr = out[C];
-                const Ci = out[C + 1];
-                const Dr = out[D];
-                const Di = out[D + 1];
-                const tableBr = table[k];
-                const tableBi = inv * table[k + 1];
+                const Br = out[B2];
+                const Bi = out[B2 + 1];
+                const Cr = out[C2];
+                const Ci = out[C2 + 1];
+                const Dr = out[D2];
+                const Di = out[D2 + 1];
+                const tableBr = table[k2];
+                const tableBi = inv * table[k2 + 1];
                 const MBr = Br * tableBr - Bi * tableBi;
                 const MBi = Br * tableBi + Bi * tableBr;
-                const tableCr = table[2 * k];
-                const tableCi = inv * table[2 * k + 1];
+                const tableCr = table[2 * k2];
+                const tableCi = inv * table[2 * k2 + 1];
                 const MCr = Cr * tableCr - Ci * tableCi;
                 const MCi = Cr * tableCi + Ci * tableCr;
-                const tableDr = table[3 * k];
-                const tableDi = inv * table[3 * k + 1];
+                const tableDr = table[3 * k2];
+                const tableDi = inv * table[3 * k2 + 1];
                 const MDr = Dr * tableDr - Di * tableDi;
                 const MDi = Dr * tableDi + Di * tableDr;
                 const T0r = Ar + MCr;
@@ -48660,12 +48660,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 const T3i = inv * (MBi - MDi);
                 out[A] = T0r + T2r;
                 out[A + 1] = T0i + T2i;
-                out[B] = T1r + T3i;
-                out[B + 1] = T1i - T3r;
-                out[C] = T0r - T2r;
-                out[C + 1] = T0i - T2i;
-                out[D] = T1r - T3i;
-                out[D + 1] = T1i + T3r;
+                out[B2] = T1r + T3i;
+                out[B2 + 1] = T1i - T3r;
+                out[C2] = T0r - T2r;
+                out[C2 + 1] = T0i - T2i;
+                out[D2] = T1r - T3i;
+                out[D2 + 1] = T1i + T3r;
               }
             }
           }
@@ -48699,7 +48699,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {number} off Index of input array to start reading from
          * @param {number} step Step size between elements in input array
          * @param {number} inv Scaling factor for inverse transform
-         * 
+         *
          * @returns {void}
          */
         _singleTransform4(data, out, outOff, off, step, inv) {
@@ -48762,31 +48762,31 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const quarterLen = halfLen >>> 1;
             const hquarterLen = quarterLen >>> 1;
             for (outOff = 0; outOff < size; outOff += len) {
-              for (let i = 0, k = 0; i <= hquarterLen; i += 2, k += step) {
+              for (let i = 0, k2 = 0; i <= hquarterLen; i += 2, k2 += step) {
                 const A = outOff + i;
-                const B = A + quarterLen;
-                const C = B + quarterLen;
-                const D = C + quarterLen;
+                const B2 = A + quarterLen;
+                const C2 = B2 + quarterLen;
+                const D2 = C2 + quarterLen;
                 const Ar = out[A];
                 const Ai = out[A + 1];
-                const Br = out[B];
-                const Bi = out[B + 1];
-                const Cr = out[C];
-                const Ci = out[C + 1];
-                const Dr = out[D];
-                const Di = out[D + 1];
+                const Br = out[B2];
+                const Bi = out[B2 + 1];
+                const Cr = out[C2];
+                const Ci = out[C2 + 1];
+                const Dr = out[D2];
+                const Di = out[D2 + 1];
                 const MAr = Ar;
                 const MAi = Ai;
-                const tableBr = table[k];
-                const tableBi = inv * table[k + 1];
+                const tableBr = table[k2];
+                const tableBi = inv * table[k2 + 1];
                 const MBr = Br * tableBr - Bi * tableBi;
                 const MBi = Br * tableBi + Bi * tableBr;
-                const tableCr = table[2 * k];
-                const tableCi = inv * table[2 * k + 1];
+                const tableCr = table[2 * k2];
+                const tableCi = inv * table[2 * k2 + 1];
                 const MCr = Cr * tableCr - Ci * tableCi;
                 const MCi = Cr * tableCi + Ci * tableCr;
-                const tableDr = table[3 * k];
-                const tableDi = inv * table[3 * k + 1];
+                const tableDr = table[3 * k2];
+                const tableDi = inv * table[3 * k2 + 1];
                 const MDr = Dr * tableDr - Di * tableDi;
                 const MDi = Dr * tableDi + Di * tableDr;
                 const T0r = MAr + MCr;
@@ -48799,11 +48799,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 const T3i = inv * (MBi - MDi);
                 out[A] = T0r + T2r;
                 out[A + 1] = T0i + T2i;
-                out[B] = T1r + T3i;
-                out[B + 1] = T1i - T3r;
+                out[B2] = T1r + T3i;
+                out[B2 + 1] = T1i - T3r;
                 if (i === 0) {
-                  out[C] = T0r - T2r;
-                  out[C + 1] = T0i - T2i;
+                  out[C2] = T0r - T2r;
+                  out[C2 + 1] = T0i - T2i;
                   continue;
                 }
                 if (i === hquarterLen)
@@ -48825,13 +48825,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Performs a single real input radix-2 transformation on the provided data
-         * 
+         *
          * @param {Float64Array} data The input data array
          * @param {Float64Array} out The output data array
          * @param {number} outOff The output offset
          * @param {number} off The input offset
          * @param {number} step The step
-         * 
+         *
          * @returns {void}
          */
         _singleRealTransform2(data, out, outOff, off, step) {
@@ -48881,11 +48881,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          */
         constructor(fft_length) {
           const a = 2 * (fft_length - 1);
-          const b = 2 * (2 * fft_length - 1);
-          const nextP2 = 2 ** Math.ceil(Math.log2(b));
+          const b2 = 2 * (2 * fft_length - 1);
+          const nextP2 = 2 ** Math.ceil(Math.log2(b2));
           this.bufferSize = nextP2;
           this._a = a;
-          const chirp = new Float64Array(b);
+          const chirp = new Float64Array(b2);
           const ichirp = new Float64Array(nextP2);
           this._chirpBuffer = new Float64Array(nextP2);
           this._buffer1 = new Float64Array(nextP2);
@@ -48895,7 +48895,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const theta = -2 * Math.PI / fft_length;
           const baseR = Math.cos(theta);
           const baseI = Math.sin(theta);
-          for (let i = 0; i < b >> 1; ++i) {
+          for (let i = 0; i < b2 >> 1; ++i) {
             const e = (i + 1 - fft_length) ** 2 / 2;
             const result_mod = Math.sqrt(baseR ** 2 + baseI ** 2) ** e;
             const result_arg = e * Math.atan2(baseI, baseR);
@@ -48905,7 +48905,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             ichirp[i2] = chirp[i2];
             ichirp[i2 + 1] = -chirp[i2 + 1];
           }
-          this._slicedChirpBuffer = chirp.subarray(a, b);
+          this._slicedChirpBuffer = chirp.subarray(a, b2);
           this._f = new P2FFT(nextP2 >> 1);
           this._f.transform(this._chirpBuffer, ichirp);
         }
@@ -48918,34 +48918,34 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const sb = this._slicedChirpBuffer;
           const a = this._a;
           if (real) {
-            for (let j = 0; j < sb.length; j += 2) {
-              const j2 = j + 1;
-              const j3 = j >> 1;
+            for (let j2 = 0; j2 < sb.length; j2 += 2) {
+              const j22 = j2 + 1;
+              const j3 = j2 >> 1;
               const a_real = input[j3];
-              ib1[j] = a_real * sb[j];
               ib1[j2] = a_real * sb[j2];
+              ib1[j22] = a_real * sb[j22];
             }
           } else {
-            for (let j = 0; j < sb.length; j += 2) {
-              const j2 = j + 1;
-              ib1[j] = input[j] * sb[j] - input[j2] * sb[j2];
-              ib1[j2] = input[j] * sb[j2] + input[j2] * sb[j];
+            for (let j2 = 0; j2 < sb.length; j2 += 2) {
+              const j22 = j2 + 1;
+              ib1[j2] = input[j2] * sb[j2] - input[j22] * sb[j22];
+              ib1[j22] = input[j2] * sb[j22] + input[j22] * sb[j2];
             }
           }
           this._f.transform(ob2, ib1);
-          for (let j = 0; j < cb.length; j += 2) {
-            const j2 = j + 1;
-            ib2[j] = ob2[j] * cb[j] - ob2[j2] * cb[j2];
-            ib2[j2] = ob2[j] * cb[j2] + ob2[j2] * cb[j];
+          for (let j2 = 0; j2 < cb.length; j2 += 2) {
+            const j22 = j2 + 1;
+            ib2[j2] = ob2[j2] * cb[j2] - ob2[j22] * cb[j22];
+            ib2[j22] = ob2[j2] * cb[j22] + ob2[j22] * cb[j2];
           }
           this._f.inverseTransform(ob3, ib2);
-          for (let j = 0; j < ob3.length; j += 2) {
-            const a_real = ob3[j + a];
-            const a_imag = ob3[j + a + 1];
-            const b_real = sb[j];
-            const b_imag = sb[j + 1];
-            output[j] = a_real * b_real - a_imag * b_imag;
-            output[j + 1] = a_real * b_imag + a_imag * b_real;
+          for (let j2 = 0; j2 < ob3.length; j2 += 2) {
+            const a_real = ob3[j2 + a];
+            const a_imag = ob3[j2 + a + 1];
+            const b_real = sb[j2];
+            const b_imag = sb[j2 + 1];
+            output[j2] = a_real * b_real - a_imag * b_imag;
+            output[j2 + 1] = a_real * b_imag + a_imag * b_real;
           }
         }
         transform(output, input) {
@@ -48983,8 +48983,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         const halfWindowSize = Math.floor(windowSize / 2);
         for (let i = 0; i < data.length; ++i) {
           let valuesIndex = 0;
-          for (let j = -halfWindowSize; j <= halfWindowSize; ++j) {
-            let index = i + j;
+          for (let j2 = -halfWindowSize; j2 <= halfWindowSize; ++j2) {
+            let index = i + j2;
             if (index < 0) {
               index = Math.abs(index);
             } else if (index >= data.length) {
@@ -49001,10 +49001,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         const pow = Math.pow(10, decimals);
         return Math.round(num * pow) / pow;
       }
-      function bankers_round(x) {
-        const r = Math.round(x);
-        const br2 = Math.abs(x) % 1 === 0.5 ? r % 2 === 0 ? r : r - 1 : r;
-        return br2;
+      function bankers_round(x2) {
+        const r = Math.round(x2);
+        const br = Math.abs(x2) % 1 === 0.5 ? r % 2 === 0 ? r : r - 1 : r;
+        return br;
       }
       function dynamic_time_warping(matrix) {
         const output_length = matrix.length;
@@ -49019,11 +49019,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           { length: outputShape[0] },
           () => Array(outputShape[1]).fill(-1)
         );
-        for (let j2 = 1; j2 < outputShape[1]; ++j2) {
+        for (let j3 = 1; j3 < outputShape[1]; ++j3) {
           for (let i2 = 1; i2 < outputShape[0]; ++i2) {
-            const c0 = cost[i2 - 1][j2 - 1];
-            const c1 = cost[i2 - 1][j2];
-            const c2 = cost[i2][j2 - 1];
+            const c0 = cost[i2 - 1][j3 - 1];
+            const c1 = cost[i2 - 1][j3];
+            const c2 = cost[i2][j3 - 1];
             let c, t;
             if (c0 < c1 && c0 < c2) {
               c = c0;
@@ -49035,8 +49035,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               c = c2;
               t = 2;
             }
-            cost[i2][j2] = matrix[i2 - 1][j2 - 1] + c;
-            trace[i2][j2] = t;
+            cost[i2][j3] = matrix[i2 - 1][j3 - 1] + c;
+            trace[i2][j3] = t;
           }
         }
         for (let i2 = 0; i2 < outputShape[1]; ++i2) {
@@ -49046,26 +49046,26 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           trace[i2][0] = 1;
         }
         let i = output_length;
-        let j = input_length;
+        let j2 = input_length;
         let text_indices = [];
         let time_indices = [];
-        while (i > 0 || j > 0) {
+        while (i > 0 || j2 > 0) {
           text_indices.push(i - 1);
-          time_indices.push(j - 1);
-          switch (trace[i][j]) {
+          time_indices.push(j2 - 1);
+          switch (trace[i][j2]) {
             case 0:
               --i;
-              --j;
+              --j2;
               break;
             case 1:
               --i;
               break;
             case 2:
-              --j;
+              --j2;
               break;
             default:
               throw new Error(
-                `Internal error in dynamic time warping. Unexpected trace[${i}, ${j}]. Please file a bug report.`
+                `Internal error in dynamic time warping. Unexpected trace[${i}, ${j2}]. Please file a bug report.`
               );
           }
         }
@@ -49307,7 +49307,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         *[Symbol.iterator]() {
           const [iterLength, ...iterDims] = this.dims;
           if (iterDims.length > 0) {
-            const iterSize = iterDims.reduce((a, b) => a * b);
+            const iterSize = iterDims.reduce((a, b2) => a * b2);
             for (let i = 0; i < iterLength; ++i) {
               yield this._subarray(i, iterSize, iterDims);
             }
@@ -49324,7 +49324,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const [iterLength, ...iterDims] = this.dims;
           index = safeIndex(index, iterLength);
           if (iterDims.length > 0) {
-            const iterSize = iterDims.reduce((a, b) => a * b);
+            const iterSize = iterDims.reduce((a, b2) => a * b2);
             return this._subarray(index, iterSize, iterDims);
           } else {
             return new Tensor3(this.type, [this.data[index]], iterDims);
@@ -49560,7 +49560,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             }
           }
           const newDims = newOffsets.map(([start, end]) => end - start);
-          const newBufferSize = newDims.reduce((a, b) => a * b);
+          const newBufferSize = newDims.reduce((a, b2) => a * b2);
           const this_data = this.data;
           const data = new this_data.constructor(newBufferSize);
           const stride = this.stride();
@@ -49587,9 +49587,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           } else {
             for (let i = 0; i < newBufferSize; ++i) {
               let originalIndex = 0;
-              for (let j = newDims.length - 1, num = i; j >= 0; --j) {
-                const size = newDims[j];
-                originalIndex += (num % size + newOffsets[j][0]) * stride[j];
+              for (let j2 = newDims.length - 1, num = i; j2 >= 0; --j2) {
+                const size = newDims[j2];
+                originalIndex += (num % size + newOffsets[j2][0]) * stride[j2];
                 num = Math.floor(num / size);
               }
               data[i] = this_data[originalIndex];
@@ -49634,7 +49634,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             throw Error(`Unsupported norm: ${p}`);
           }
           const this_data = this.data;
-          const fn = (a, b) => a + b ** p;
+          const fn = (a, b2) => a + b2 ** p;
           if (dim === null) {
             const val = this_data.reduce(fn, 0) ** (1 / p);
             return new Tensor3(this.type, [val], []);
@@ -49660,12 +49660,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           const norm_data = norm.data;
           for (let i = 0; i < this_data.length; ++i) {
             let resultIndex = 0;
-            for (let j = this.dims.length - 1, num = i, resultMultiplier = 1; j >= 0; --j) {
-              const size = this.dims[j];
-              if (j !== dim) {
+            for (let j2 = this.dims.length - 1, num = i, resultMultiplier = 1; j2 >= 0; --j2) {
+              const size = this.dims[j2];
+              if (j2 !== dim) {
                 const index = num % size;
                 resultIndex += index * resultMultiplier;
-                resultMultiplier *= this.dims[j];
+                resultMultiplier *= this.dims[j2];
               }
               num = Math.floor(num / size);
             }
@@ -49743,7 +49743,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           let dimsToKeepBefore = this.dims.slice(0, start_dim);
           let dimsToFlatten = this.dims.slice(start_dim, end_dim + 1);
           let dimsToKeepAfter = this.dims.slice(end_dim + 1);
-          this.dims = [...dimsToKeepBefore, dimsToFlatten.reduce((a, b) => a * b, 1), ...dimsToKeepAfter];
+          this.dims = [...dimsToKeepBefore, dimsToFlatten.reduce((a, b2) => a * b2, 1), ...dimsToKeepAfter];
           return this;
         }
         /**
@@ -49863,7 +49863,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               /* scalar */
             ]);
           }
-          const [type, result, resultDims] = reduce_helper((a, b) => Math.min(a, b), this, dim, keepdim, Infinity);
+          const [type, result, resultDims] = reduce_helper((a, b2) => Math.min(a, b2), this, dim, keepdim, Infinity);
           return new Tensor3(type, result, resultDims);
         }
         max(dim = null, keepdim = false) {
@@ -49873,7 +49873,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
               /* scalar */
             ]);
           }
-          const [type, result, resultDims] = reduce_helper((a, b) => Math.max(a, b), this, dim, keepdim, -Infinity);
+          const [type, result, resultDims] = reduce_helper((a, b2) => Math.max(a, b2), this, dim, keepdim, -Infinity);
           return new Tensor3(type, result, resultDims);
         }
         argmin(dim = null, keepdim = false) {
@@ -49908,7 +49908,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             map_fn = Number;
           } else if (!is_source_bigint && is_dest_bigint) {
             if (["float16", "float32", "float64"].includes(this.type)) {
-              map_fn = (x) => BigInt(Math.floor(x));
+              map_fn = (x2) => BigInt(Math.floor(x2));
             } else {
               map_fn = BigInt;
             }
@@ -49918,7 +49918,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       }
       function reshape(data, dimensions) {
         const totalElements = data.length;
-        const dimensionSize = dimensions.reduce((a, b) => a * b);
+        const dimensionSize = dimensions.reduce((a, b2) => a * b2);
         if (totalElements !== dimensionSize) {
           throw Error(`cannot reshape array of size ${totalElements} into shape (${dimensions})`);
         }
@@ -49987,26 +49987,26 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         const sizeTensor = new Tensor3("int64", new BigInt64Array(targetDims.map(BigInt)), [targetDims.length]);
         return await op({ x: input, s: sizeTensor });
       }
-      async function matmul(a, b) {
+      async function matmul(a, b2) {
         const op = await _ops_registry_js__WEBPACK_IMPORTED_MODULE_2__.TensorOpRegistry.matmul;
-        return await op({ a, b });
+        return await op({ a, b: b2 });
       }
-      async function rfft(x, a) {
+      async function rfft(x2, a) {
         const op = await _ops_registry_js__WEBPACK_IMPORTED_MODULE_2__.TensorOpRegistry.rfft;
-        return await op({ x, a });
+        return await op({ x: x2, a });
       }
-      async function topk(x, k) {
+      async function topk(x2, k2) {
         const op = await _ops_registry_js__WEBPACK_IMPORTED_MODULE_2__.TensorOpRegistry.top_k;
-        if (k == null) {
-          k = x.dims.at(-1);
+        if (k2 == null) {
+          k2 = x2.dims.at(-1);
         } else {
-          k = Math.min(k, x.dims.at(-1));
+          k2 = Math.min(k2, x2.dims.at(-1));
         }
         return await op({
-          x,
+          x: x2,
           k: new Tensor3(
             "int64",
-            [BigInt(k)],
+            [BigInt(k2)],
             [1]
           )
         });
@@ -50031,15 +50031,15 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         let outIndex = 0;
         for (let i = 0; i < batchSize; ++i) {
           const offset = i * embedDim * seqLength;
-          for (let k = 0; k < embedDim; ++k) {
+          for (let k2 = 0; k2 < embedDim; ++k2) {
             let sum = 0;
             let count = 0;
             const attnMaskOffset = i * seqLength;
-            const offset2 = offset + k;
-            for (let j = 0; j < seqLength; ++j) {
-              const attn = Number(attentionMaskData[attnMaskOffset + j]);
+            const offset2 = offset + k2;
+            for (let j2 = 0; j2 < seqLength; ++j2) {
+              const attn = Number(attentionMaskData[attnMaskOffset + j2]);
               count += attn;
-              sum += lastHiddenStateData[offset2 + j * embedDim] * attn;
+              sum += lastHiddenStateData[offset2 + j2 * embedDim] * attn;
             }
             const avg = sum / count;
             returnedData[outIndex++] = avg;
@@ -50077,8 +50077,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         const returnedData = new inputData.constructor(inputData.length);
         for (let i = 0; i < batchSize; ++i) {
           const offset = i * featureDim;
-          for (let j = 0; j < featureDim; ++j) {
-            const offset2 = offset + j;
+          for (let j2 = 0; j2 < featureDim; ++j2) {
+            const offset2 = offset + j2;
             returnedData[offset2] = (inputData[offset2] - meanData[i]) / (stdData[i] + eps);
           }
         }
@@ -50087,14 +50087,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       function calc_squeeze_dims(dims, dim) {
         dims = dims.slice();
         if (dim === null) {
-          dims = dims.filter((d) => d !== 1);
+          dims = dims.filter((d2) => d2 !== 1);
         } else if (typeof dim === "number") {
           if (dims[dim] === 1) {
             dims.splice(dim, 1);
           }
         } else if (Array.isArray(dim)) {
-          dims = dims.filter((x, i) => {
-            return x !== 1 || !dim.includes(i);
+          dims = dims.filter((x2, i) => {
+            return x2 !== 1 || !dim.includes(i);
           });
         }
         return dims;
@@ -50121,8 +50121,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       function cat(tensors, dim = 0) {
         dim = safeIndex(dim, tensors[0].dims.length);
         const resultDims = tensors[0].dims.slice();
-        resultDims[dim] = tensors.reduce((a, b) => a + b.dims[dim], 0);
-        const resultSize = resultDims.reduce((a, b) => a * b, 1);
+        resultDims[dim] = tensors.reduce((a, b2) => a + b2.dims[dim], 0);
+        const resultSize = resultDims.reduce((a, b2) => a * b2, 1);
         const result = new tensors[0].data.constructor(resultSize);
         const resultType = tensors[0].type;
         if (dim === 0) {
@@ -50138,14 +50138,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
             const { data, dims } = tensors[t];
             for (let i = 0; i < data.length; ++i) {
               let resultIndex = 0;
-              for (let j = dims.length - 1, num = i, resultMultiplier = 1; j >= 0; --j) {
-                const size = dims[j];
+              for (let j2 = dims.length - 1, num = i, resultMultiplier = 1; j2 >= 0; --j2) {
+                const size = dims[j2];
                 let index = num % size;
-                if (j === dim) {
+                if (j2 === dim) {
                   index += currentDim;
                 }
                 resultIndex += index * resultMultiplier;
-                resultMultiplier *= resultDims[j];
+                resultMultiplier *= resultDims[j2];
                 num = Math.floor(num / size);
               }
               result[resultIndex] = data[i];
@@ -50170,12 +50170,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         for (let i = 0; i < inputData.length; ++i) {
           let resultIndex = 0;
-          for (let j = inputDims.length - 1, num = i, resultMultiplier = 1; j >= 0; --j) {
-            const size = inputDims[j];
-            if (j !== dim) {
+          for (let j2 = inputDims.length - 1, num = i, resultMultiplier = 1; j2 >= 0; --j2) {
+            const size = inputDims[j2];
+            if (j2 !== dim) {
               const index = num % size;
               resultIndex += index * resultMultiplier;
-              resultMultiplier *= resultDims[j];
+              resultMultiplier *= resultDims[j2];
             }
             num = Math.floor(num / size);
           }
@@ -50192,9 +50192,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         );
         const inputDims = input.dims;
         if (dim === null) {
-          const sum = inputData.reduce((a, b) => a + b, 0);
+          const sum = inputData.reduce((a, b2) => a + b2, 0);
           const mean2 = sum / inputData.length;
-          const std = Math.sqrt(inputData.reduce((a, b) => a + (b - mean2) ** 2, 0) / (inputData.length - correction));
+          const std = Math.sqrt(inputData.reduce((a, b2) => a + (b2 - mean2) ** 2, 0) / (inputData.length - correction));
           const meanTensor2 = new Tensor3(input.type, [mean2], [
             /* scalar */
           ]);
@@ -50206,7 +50206,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         dim = safeIndex(dim, inputDims.length);
         const meanTensor = mean(input, dim, keepdim);
         const meanTensorData = meanTensor.data;
-        const [type, result, resultDims] = reduce_helper((a, b, i, j) => a + (b - meanTensorData[j]) ** 2, input, dim, keepdim);
+        const [type, result, resultDims] = reduce_helper((a, b2, i, j2) => a + (b2 - meanTensorData[j2]) ** 2, input, dim, keepdim);
         for (let i = 0; i < result.length; ++i) {
           result[i] = Math.sqrt(result[i] / (inputDims[dim] - correction));
         }
@@ -50220,13 +50220,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           input.data
         );
         if (dim === null) {
-          const val = inputData.reduce((a, b) => a + b, 0);
+          const val = inputData.reduce((a, b2) => a + b2, 0);
           return new Tensor3(input.type, [val / inputData.length], [
             /* scalar */
           ]);
         }
         dim = safeIndex(dim, inputDims.length);
-        const [type, result, resultDims] = reduce_helper((a, b) => a + b, input, dim, keepdim);
+        const [type, result, resultDims] = reduce_helper((a, b2) => a + b2, input, dim, keepdim);
         if (inputDims[dim] !== 1) {
           for (let i = 0; i < result.length; ++i) {
             result[i] /= inputDims[dim];
@@ -50243,7 +50243,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         return stride;
       }
       function fullHelper(size, fill_value, dtype, cls) {
-        const numElements = size.reduce((a, b) => a * b, 1);
+        const numElements = size.reduce((a, b2) => a * b2, 1);
         return new Tensor3(
           dtype,
           new cls(numElements).fill(fill_value),
@@ -50283,7 +50283,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         return zeros(tensor.dims);
       }
       function rand(size) {
-        const length = size.reduce((a, b) => a * b, 1);
+        const length = size.reduce((a, b2) => a * b2, 1);
         return new Tensor3(
           "float32",
           Float32Array.from({ length }, () => Math.random()),
@@ -50291,11 +50291,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         );
       }
       function randn(size) {
-        const length = size.reduce((a, b) => a * b, 1);
+        const length = size.reduce((a, b2) => a * b2, 1);
         function boxMullerRandom() {
-          const u = 1 - Math.random();
-          const v = 1 - Math.random();
-          return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+          const u3 = 1 - Math.random();
+          const v2 = 1 - Math.random();
+          return Math.sqrt(-2 * Math.log(u3)) * Math.cos(2 * Math.PI * v2);
         }
         return new Tensor3(
           "float32",
@@ -50495,13 +50495,13 @@ function __webpack_require__(moduleId) {
     }
     var ns = /* @__PURE__ */ Object.create(null);
     __webpack_require__.r(ns);
-    var def2 = {};
+    var def = {};
     leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
     for (var current = mode & 2 && value; typeof current == "object" && !~leafPrototypes.indexOf(current); current = getProto(current)) {
-      Object.getOwnPropertyNames(current).forEach((key) => def2[key] = () => value[key]);
+      Object.getOwnPropertyNames(current).forEach((key) => def[key] = () => value[key]);
     }
-    def2["default"] = () => value;
-    __webpack_require__.d(ns, def2);
+    def["default"] = () => value;
+    __webpack_require__.d(ns, def);
     return ns;
   };
 })();
@@ -55797,8 +55797,8 @@ function validateISODate(dateStr, paramName) {
     throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
   }
 }
-async function searchConversations(query, options2 = {}) {
-  const { limit = 10, mode = "both", after, before } = options2;
+async function searchConversations(query, options = {}) {
+  const { limit = 10, mode = "both", after, before } = options;
   if (after)
     validateISODate(after, "--after");
   if (before)
@@ -55959,13 +55959,13 @@ async function formatResults(results) {
   }
   return output;
 }
-async function searchMultipleConcepts(concepts, options2 = {}) {
-  const { limit = 10 } = options2;
+async function searchMultipleConcepts(concepts, options = {}) {
+  const { limit = 10 } = options;
   if (concepts.length === 0) {
     return [];
   }
   const conceptResults = await Promise.all(
-    concepts.map((concept) => searchConversations(concept, { ...options2, limit: limit * 5, mode: "vector" }))
+    concepts.map((concept) => searchConversations(concept, { ...options, limit: limit * 5, mode: "vector" }))
   );
   const conversationMap = /* @__PURE__ */ new Map();
   conceptResults.forEach((results, conceptIndex) => {
@@ -55995,7 +55995,7 @@ async function searchMultipleConcepts(concepts, options2 = {}) {
       });
     }
   }
-  multiConceptResults.sort((a, b) => b.averageSimilarity - a.averageSimilarity);
+  multiConceptResults.sort((a, b2) => b2.averageSimilarity - a.averageSimilarity);
   return multiConceptResults.slice(0, limit);
 }
 async function formatMultiConceptResults(results, concepts) {
@@ -56035,2148 +56035,1270 @@ async function formatMultiConceptResults(results, concepts) {
   return output;
 }
 
-// ../../../../node_modules/marked/lib/marked.esm.js
-function _getDefaults() {
-  return {
-    async: false,
-    breaks: false,
-    extensions: null,
-    gfm: true,
-    hooks: null,
-    pedantic: false,
-    renderer: null,
-    silent: false,
-    tokenizer: null,
-    walkTokens: null
-  };
+// node_modules/marked/lib/marked.esm.js
+function L() {
+  return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
 }
-var _defaults = _getDefaults();
-function changeDefaults(newDefaults) {
-  _defaults = newDefaults;
+var T = L();
+function Z(u3) {
+  T = u3;
 }
-var noopTest = { exec: () => null };
-function edit(regex, opt = "") {
-  let source = typeof regex === "string" ? regex : regex.source;
-  const obj = {
-    replace: (name, val) => {
-      let valSource = typeof val === "string" ? val : val.source;
-      valSource = valSource.replace(other.caret, "$1");
-      source = source.replace(name, valSource);
-      return obj;
-    },
-    getRegex: () => {
-      return new RegExp(source, opt);
-    }
-  };
-  return obj;
+var C = { exec: () => null };
+function k(u3, e = "") {
+  let t = typeof u3 == "string" ? u3 : u3.source, n = { replace: (r, i) => {
+    let s = typeof i == "string" ? i : i.source;
+    return s = s.replace(m.caret, "$1"), t = t.replace(r, s), n;
+  }, getRegex: () => new RegExp(t, e) };
+  return n;
 }
-var other = {
-  codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm,
-  outputLinkReplace: /\\([\[\]])/g,
-  indentCodeCompensation: /^(\s+)(?:```)/,
-  beginningSpace: /^\s+/,
-  endingHash: /#$/,
-  startingSpaceChar: /^ /,
-  endingSpaceChar: / $/,
-  nonSpaceChar: /[^ ]/,
-  newLineCharGlobal: /\n/g,
-  tabCharGlobal: /\t/g,
-  multipleSpaceGlobal: /\s+/g,
-  blankLine: /^[ \t]*$/,
-  doubleBlankLine: /\n[ \t]*\n[ \t]*$/,
-  blockquoteStart: /^ {0,3}>/,
-  blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g,
-  blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm,
-  listReplaceTabs: /^\t+/,
-  listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g,
-  listIsTask: /^\[[ xX]\] /,
-  listReplaceTask: /^\[[ xX]\] +/,
-  anyLine: /\n.*\n/,
-  hrefBrackets: /^<(.*)>$/,
-  tableDelimiter: /[:|]/,
-  tableAlignChars: /^\||\| *$/g,
-  tableRowBlankLine: /\n[ \t]*$/,
-  tableAlignRight: /^ *-+: *$/,
-  tableAlignCenter: /^ *:-+: *$/,
-  tableAlignLeft: /^ *:-+ *$/,
-  startATag: /^<a /i,
-  endATag: /^<\/a>/i,
-  startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i,
-  endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i,
-  startAngleBracket: /^</,
-  endAngleBracket: />$/,
-  pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/,
-  unicodeAlphaNumeric: /[\p{L}\p{N}]/u,
-  escapeTest: /[&<>"']/,
-  escapeReplace: /[&<>"']/g,
-  escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/,
-  escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g,
-  unescapeTest: /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig,
-  caret: /(^|[^\[])\^/g,
-  percentDecode: /%25/g,
-  findPipe: /\|/g,
-  splitPipe: / \|/,
-  slashPipe: /\\\|/g,
-  carriageReturn: /\r\n|\r/g,
-  spaceLine: /^ +$/gm,
-  notSpaceStart: /^\S*/,
-  endingNewline: /\n$/,
-  listItemRegex: (bull) => new RegExp(`^( {0,3}${bull})((?:[	 ][^\\n]*)?(?:\\n|$))`),
-  nextBulletRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`),
-  hrRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`),
-  fencesBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:\`\`\`|~~~)`),
-  headingBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}#`),
-  htmlBeginRegex: (indent) => new RegExp(`^ {0,${Math.min(3, indent - 1)}}<(?:[a-z].*>|!--)`, "i")
-};
-var newline = /^(?:[ \t]*(?:\n|$))+/;
-var blockCode = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/;
-var fences = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
-var hr = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
-var heading = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
-var bullet = /(?:[*+-]|\d{1,9}[.)])/;
-var lheadingCore = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/;
-var lheading = edit(lheadingCore).replace(/bull/g, bullet).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex();
-var lheadingGfm = edit(lheadingCore).replace(/bull/g, bullet).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex();
-var _paragraph = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
-var blockText = /^[^\n]+/;
-var _blockLabel = /(?!\s*\])(?:\\.|[^\[\]\\])+/;
-var def = edit(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", _blockLabel).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex();
-var list = edit(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g, bullet).getRegex();
-var _tag = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
-var _comment = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
-var html = edit(
-  "^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))",
-  "i"
-).replace("comment", _comment).replace("tag", _tag).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex();
-var paragraph = edit(_paragraph).replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex();
-var blockquote = edit(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", paragraph).getRegex();
-var blockNormal = {
-  blockquote,
-  code: blockCode,
-  def,
-  fences,
-  heading,
-  hr,
-  html,
-  lheading,
-  list,
-  newline,
-  paragraph,
-  table: noopTest,
-  text: blockText
-};
-var gfmTable = edit(
-  "^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)"
-).replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}	)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex();
-var blockGfm = {
-  ...blockNormal,
-  lheading: lheadingGfm,
-  table: gfmTable,
-  paragraph: edit(_paragraph).replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", gfmTable).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex()
-};
-var blockPedantic = {
-  ...blockNormal,
-  html: edit(
-    `^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`
-  ).replace("comment", _comment).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(),
-  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
-  heading: /^(#{1,6})(.*)(?:\n+|$)/,
-  fences: noopTest,
-  // fences not supported
-  lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,
-  paragraph: edit(_paragraph).replace("hr", hr).replace("heading", " *#{1,6} *[^\n]").replace("lheading", lheading).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex()
-};
-var escape2 = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
-var inlineCode = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
-var br = /^( {2,}|\\)\n(?!\s*$)/;
-var inlineText = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
-var _punctuation = /[\p{P}\p{S}]/u;
-var _punctuationOrSpace = /[\s\p{P}\p{S}]/u;
-var _notPunctuationOrSpace = /[^\s\p{P}\p{S}]/u;
-var punctuation = edit(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, _punctuationOrSpace).getRegex();
-var _punctuationGfmStrongEm = /(?!~)[\p{P}\p{S}]/u;
-var _punctuationOrSpaceGfmStrongEm = /(?!~)[\s\p{P}\p{S}]/u;
-var _notPunctuationOrSpaceGfmStrongEm = /(?:[^\s\p{P}\p{S}]|~)/u;
-var blockSkip = /\[[^[\]]*?\]\((?:\\.|[^\\\(\)]|\((?:\\.|[^\\\(\)])*\))*\)|`[^`]*?`|<[^<>]*?>/g;
-var emStrongLDelimCore = /^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/;
-var emStrongLDelim = edit(emStrongLDelimCore, "u").replace(/punct/g, _punctuation).getRegex();
-var emStrongLDelimGfm = edit(emStrongLDelimCore, "u").replace(/punct/g, _punctuationGfmStrongEm).getRegex();
-var emStrongRDelimAstCore = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)";
-var emStrongRDelimAst = edit(emStrongRDelimAstCore, "gu").replace(/notPunctSpace/g, _notPunctuationOrSpace).replace(/punctSpace/g, _punctuationOrSpace).replace(/punct/g, _punctuation).getRegex();
-var emStrongRDelimAstGfm = edit(emStrongRDelimAstCore, "gu").replace(/notPunctSpace/g, _notPunctuationOrSpaceGfmStrongEm).replace(/punctSpace/g, _punctuationOrSpaceGfmStrongEm).replace(/punct/g, _punctuationGfmStrongEm).getRegex();
-var emStrongRDelimUnd = edit(
-  "^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)",
-  "gu"
-).replace(/notPunctSpace/g, _notPunctuationOrSpace).replace(/punctSpace/g, _punctuationOrSpace).replace(/punct/g, _punctuation).getRegex();
-var anyPunctuation = edit(/\\(punct)/, "gu").replace(/punct/g, _punctuation).getRegex();
-var autolink = edit(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
-var _inlineComment = edit(_comment).replace("(?:-->|$)", "-->").getRegex();
-var tag = edit(
-  "^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>"
-).replace("comment", _inlineComment).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
-var _inlineLabel = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
-var link = edit(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]*(?:\n[ \t]*)?)(title))?\s*\)/).replace("label", _inlineLabel).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
-var reflink = edit(/^!?\[(label)\]\[(ref)\]/).replace("label", _inlineLabel).replace("ref", _blockLabel).getRegex();
-var nolink = edit(/^!?\[(ref)\](?:\[\])?/).replace("ref", _blockLabel).getRegex();
-var reflinkSearch = edit("reflink|nolink(?!\\()", "g").replace("reflink", reflink).replace("nolink", nolink).getRegex();
-var inlineNormal = {
-  _backpedal: noopTest,
-  // only used for GFM url
-  anyPunctuation,
-  autolink,
-  blockSkip,
-  br,
-  code: inlineCode,
-  del: noopTest,
-  emStrongLDelim,
-  emStrongRDelimAst,
-  emStrongRDelimUnd,
-  escape: escape2,
-  link,
-  nolink,
-  punctuation,
-  reflink,
-  reflinkSearch,
-  tag,
-  text: inlineText,
-  url: noopTest
-};
-var inlinePedantic = {
-  ...inlineNormal,
-  link: edit(/^!?\[(label)\]\((.*?)\)/).replace("label", _inlineLabel).getRegex(),
-  reflink: edit(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", _inlineLabel).getRegex()
-};
-var inlineGfm = {
-  ...inlineNormal,
-  emStrongRDelimAst: emStrongRDelimAstGfm,
-  emStrongLDelim: emStrongLDelimGfm,
-  url: edit(/^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/, "i").replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(),
-  _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/,
-  del: /^(~~?)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/,
-  text: /^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/
-};
-var inlineBreaks = {
-  ...inlineGfm,
-  br: edit(br).replace("{2,}", "*").getRegex(),
-  text: edit(inlineGfm.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex()
-};
-var block = {
-  normal: blockNormal,
-  gfm: blockGfm,
-  pedantic: blockPedantic
-};
-var inline = {
-  normal: inlineNormal,
-  gfm: inlineGfm,
-  breaks: inlineBreaks,
-  pedantic: inlinePedantic
-};
-var escapeReplacements = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;"
-};
-var getEscapeReplacement = (ch) => escapeReplacements[ch];
-function escape22(html2, encode) {
-  if (encode) {
-    if (other.escapeTest.test(html2)) {
-      return html2.replace(other.escapeReplace, getEscapeReplacement);
-    }
-  } else {
-    if (other.escapeTestNoEncode.test(html2)) {
-      return html2.replace(other.escapeReplaceNoEncode, getEscapeReplacement);
-    }
-  }
-  return html2;
-}
-function cleanUrl(href) {
+var me = (() => {
   try {
-    href = encodeURI(href).replace(other.percentDecode, "%");
+    return !!new RegExp("(?<=1)(?<!1)");
+  } catch {
+    return false;
+  }
+})();
+var m = { codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm, outputLinkReplace: /\\([\[\]])/g, indentCodeCompensation: /^(\s+)(?:```)/, beginningSpace: /^\s+/, endingHash: /#$/, startingSpaceChar: /^ /, endingSpaceChar: / $/, nonSpaceChar: /[^ ]/, newLineCharGlobal: /\n/g, tabCharGlobal: /\t/g, multipleSpaceGlobal: /\s+/g, blankLine: /^[ \t]*$/, doubleBlankLine: /\n[ \t]*\n[ \t]*$/, blockquoteStart: /^ {0,3}>/, blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g, blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm, listReplaceTabs: /^\t+/, listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g, listIsTask: /^\[[ xX]\] +\S/, listReplaceTask: /^\[[ xX]\] +/, listTaskCheckbox: /\[[ xX]\]/, anyLine: /\n.*\n/, hrefBrackets: /^<(.*)>$/, tableDelimiter: /[:|]/, tableAlignChars: /^\||\| *$/g, tableRowBlankLine: /\n[ \t]*$/, tableAlignRight: /^ *-+: *$/, tableAlignCenter: /^ *:-+: *$/, tableAlignLeft: /^ *:-+ *$/, startATag: /^<a /i, endATag: /^<\/a>/i, startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i, endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i, startAngleBracket: /^</, endAngleBracket: />$/, pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/, unicodeAlphaNumeric: /[\p{L}\p{N}]/u, escapeTest: /[&<>"']/, escapeReplace: /[&<>"']/g, escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/, escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g, unescapeTest: /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig, caret: /(^|[^\[])\^/g, percentDecode: /%25/g, findPipe: /\|/g, splitPipe: / \|/, slashPipe: /\\\|/g, carriageReturn: /\r\n|\r/g, spaceLine: /^ +$/gm, notSpaceStart: /^\S*/, endingNewline: /\n$/, listItemRegex: (u3) => new RegExp(`^( {0,3}${u3})((?:[	 ][^\\n]*)?(?:\\n|$))`), nextBulletRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`), hrRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`), fencesBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}(?:\`\`\`|~~~)`), headingBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}#`), htmlBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}<(?:[a-z].*>|!--)`, "i") };
+var xe = /^(?:[ \t]*(?:\n|$))+/;
+var be = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/;
+var Re = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
+var I = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
+var Te = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
+var N = /(?:[*+-]|\d{1,9}[.)])/;
+var re = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/;
+var se = k(re).replace(/bull/g, N).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex();
+var Oe = k(re).replace(/bull/g, N).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex();
+var Q = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
+var we = /^[^\n]+/;
+var F = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/;
+var ye = k(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", F).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex();
+var Pe = k(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g, N).getRegex();
+var v = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+var j = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
+var Se = k("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))", "i").replace("comment", j).replace("tag", v).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex();
+var ie = k(Q).replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex();
+var $e = k(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", ie).getRegex();
+var U = { blockquote: $e, code: be, def: ye, fences: Re, heading: Te, hr: I, html: Se, lheading: se, list: Pe, newline: xe, paragraph: ie, table: C, text: we };
+var te = k("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}	)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex();
+var _e = { ...U, lheading: Oe, table: te, paragraph: k(Q).replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", te).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex() };
+var Le = { ...U, html: k(`^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`).replace("comment", j).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(), def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/, heading: /^(#{1,6})(.*)(?:\n+|$)/, fences: C, lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/, paragraph: k(Q).replace("hr", I).replace("heading", ` *#{1,6} *[^
+]`).replace("lheading", se).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex() };
+var Me = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
+var ze = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
+var oe = /^( {2,}|\\)\n(?!\s*$)/;
+var Ae = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
+var D = /[\p{P}\p{S}]/u;
+var K = /[\s\p{P}\p{S}]/u;
+var ae = /[^\s\p{P}\p{S}]/u;
+var Ce = k(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, K).getRegex();
+var le = /(?!~)[\p{P}\p{S}]/u;
+var Ie = /(?!~)[\s\p{P}\p{S}]/u;
+var Ee = /(?:[^\s\p{P}\p{S}]|~)/u;
+var Be = k(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", me ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex();
+var ue = /^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/;
+var qe = k(ue, "u").replace(/punct/g, D).getRegex();
+var ve = k(ue, "u").replace(/punct/g, le).getRegex();
+var pe = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)";
+var De = k(pe, "gu").replace(/notPunctSpace/g, ae).replace(/punctSpace/g, K).replace(/punct/g, D).getRegex();
+var He = k(pe, "gu").replace(/notPunctSpace/g, Ee).replace(/punctSpace/g, Ie).replace(/punct/g, le).getRegex();
+var Ze = k("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, ae).replace(/punctSpace/g, K).replace(/punct/g, D).getRegex();
+var Ge = k(/\\(punct)/, "gu").replace(/punct/g, D).getRegex();
+var Ne = k(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
+var Qe = k(j).replace("(?:-->|$)", "-->").getRegex();
+var Fe = k("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Qe).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
+var q = /(?:\[(?:\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+[^`]*?`+(?!`)|[^\[\]\\`])*?/;
+var je = k(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]*(?:\n[ \t]*)?)(title))?\s*\)/).replace("label", q).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
+var ce = k(/^!?\[(label)\]\[(ref)\]/).replace("label", q).replace("ref", F).getRegex();
+var he = k(/^!?\[(ref)\](?:\[\])?/).replace("ref", F).getRegex();
+var Ue = k("reflink|nolink(?!\\()", "g").replace("reflink", ce).replace("nolink", he).getRegex();
+var ne = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/;
+var W = { _backpedal: C, anyPunctuation: Ge, autolink: Ne, blockSkip: Be, br: oe, code: ze, del: C, emStrongLDelim: qe, emStrongRDelimAst: De, emStrongRDelimUnd: Ze, escape: Me, link: je, nolink: he, punctuation: Ce, reflink: ce, reflinkSearch: Ue, tag: Fe, text: Ae, url: C };
+var Ke = { ...W, link: k(/^!?\[(label)\]\((.*?)\)/).replace("label", q).getRegex(), reflink: k(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", q).getRegex() };
+var G = { ...W, emStrongRDelimAst: He, emStrongLDelim: ve, url: k(/^((?:protocol):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/).replace("protocol", ne).replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(), _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/, del: /^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)/, text: k(/^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|protocol:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/).replace("protocol", ne).getRegex() };
+var We = { ...G, br: k(oe).replace("{2,}", "*").getRegex(), text: k(G.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex() };
+var E = { normal: U, gfm: _e, pedantic: Le };
+var M = { normal: W, gfm: G, breaks: We, pedantic: Ke };
+var Xe = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+var ke = (u3) => Xe[u3];
+function w(u3, e) {
+  if (e) {
+    if (m.escapeTest.test(u3))
+      return u3.replace(m.escapeReplace, ke);
+  } else if (m.escapeTestNoEncode.test(u3))
+    return u3.replace(m.escapeReplaceNoEncode, ke);
+  return u3;
+}
+function X(u3) {
+  try {
+    u3 = encodeURI(u3).replace(m.percentDecode, "%");
   } catch {
     return null;
   }
-  return href;
+  return u3;
 }
-function splitCells(tableRow, count) {
-  const row = tableRow.replace(other.findPipe, (match, offset, str) => {
-    let escaped = false;
-    let curr = offset;
-    while (--curr >= 0 && str[curr] === "\\")
-      escaped = !escaped;
-    if (escaped) {
-      return "|";
-    } else {
-      return " |";
-    }
-  }), cells = row.split(other.splitPipe);
-  let i = 0;
-  if (!cells[0].trim()) {
-    cells.shift();
-  }
-  if (cells.length > 0 && !cells.at(-1)?.trim()) {
-    cells.pop();
-  }
-  if (count) {
-    if (cells.length > count) {
-      cells.splice(count);
-    } else {
-      while (cells.length < count)
-        cells.push("");
-    }
-  }
-  for (; i < cells.length; i++) {
-    cells[i] = cells[i].trim().replace(other.slashPipe, "|");
-  }
-  return cells;
+function J(u3, e) {
+  let t = u3.replace(m.findPipe, (i, s, a) => {
+    let o = false, l = s;
+    for (; --l >= 0 && a[l] === "\\"; )
+      o = !o;
+    return o ? "|" : " |";
+  }), n = t.split(m.splitPipe), r = 0;
+  if (n[0].trim() || n.shift(), n.length > 0 && !n.at(-1)?.trim() && n.pop(), e)
+    if (n.length > e)
+      n.splice(e);
+    else
+      for (; n.length < e; )
+        n.push("");
+  for (; r < n.length; r++)
+    n[r] = n[r].trim().replace(m.slashPipe, "|");
+  return n;
 }
-function rtrim(str, c, invert) {
-  const l = str.length;
-  if (l === 0) {
+function z(u3, e, t) {
+  let n = u3.length;
+  if (n === 0)
     return "";
-  }
-  let suffLen = 0;
-  while (suffLen < l) {
-    const currChar = str.charAt(l - suffLen - 1);
-    if (currChar === c && !invert) {
-      suffLen++;
-    } else if (currChar !== c && invert) {
-      suffLen++;
-    } else {
+  let r = 0;
+  for (; r < n; ) {
+    let i = u3.charAt(n - r - 1);
+    if (i === e && !t)
+      r++;
+    else if (i !== e && t)
+      r++;
+    else
       break;
-    }
   }
-  return str.slice(0, l - suffLen);
+  return u3.slice(0, n - r);
 }
-function findClosingBracket(str, b) {
-  if (str.indexOf(b[1]) === -1) {
+function de(u3, e) {
+  if (u3.indexOf(e[1]) === -1)
     return -1;
-  }
-  let level = 0;
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === "\\") {
-      i++;
-    } else if (str[i] === b[0]) {
-      level++;
-    } else if (str[i] === b[1]) {
-      level--;
-      if (level < 0) {
-        return i;
-      }
-    }
-  }
-  if (level > 0) {
-    return -2;
-  }
-  return -1;
+  let t = 0;
+  for (let n = 0; n < u3.length; n++)
+    if (u3[n] === "\\")
+      n++;
+    else if (u3[n] === e[0])
+      t++;
+    else if (u3[n] === e[1] && (t--, t < 0))
+      return n;
+  return t > 0 ? -2 : -1;
 }
-function outputLink(cap, link2, raw, lexer2, rules) {
-  const href = link2.href;
-  const title = link2.title || null;
-  const text = cap[1].replace(rules.other.outputLinkReplace, "$1");
-  lexer2.state.inLink = true;
-  const token = {
-    type: cap[0].charAt(0) === "!" ? "image" : "link",
-    raw,
-    href,
-    title,
-    text,
-    tokens: lexer2.inlineTokens(text)
-  };
-  lexer2.state.inLink = false;
-  return token;
+function ge(u3, e, t, n, r) {
+  let i = e.href, s = e.title || null, a = u3[1].replace(r.other.outputLinkReplace, "$1");
+  n.state.inLink = true;
+  let o = { type: u3[0].charAt(0) === "!" ? "image" : "link", raw: t, href: i, title: s, text: a, tokens: n.inlineTokens(a) };
+  return n.state.inLink = false, o;
 }
-function indentCodeCompensation(raw, text, rules) {
-  const matchIndentToCode = raw.match(rules.other.indentCodeCompensation);
-  if (matchIndentToCode === null) {
-    return text;
-  }
-  const indentToCode = matchIndentToCode[1];
-  return text.split("\n").map((node) => {
-    const matchIndentInNode = node.match(rules.other.beginningSpace);
-    if (matchIndentInNode === null) {
-      return node;
-    }
-    const [indentInNode] = matchIndentInNode;
-    if (indentInNode.length >= indentToCode.length) {
-      return node.slice(indentToCode.length);
-    }
-    return node;
-  }).join("\n");
+function Je(u3, e, t) {
+  let n = u3.match(t.other.indentCodeCompensation);
+  if (n === null)
+    return e;
+  let r = n[1];
+  return e.split(`
+`).map((i) => {
+    let s = i.match(t.other.beginningSpace);
+    if (s === null)
+      return i;
+    let [a] = s;
+    return a.length >= r.length ? i.slice(r.length) : i;
+  }).join(`
+`);
 }
-var _Tokenizer = class {
+var y = class {
   options;
   rules;
-  // set by the lexer
   lexer;
-  // set by the lexer
-  constructor(options2) {
-    this.options = options2 || _defaults;
+  constructor(e) {
+    this.options = e || T;
   }
-  space(src) {
-    const cap = this.rules.block.newline.exec(src);
-    if (cap && cap[0].length > 0) {
-      return {
-        type: "space",
-        raw: cap[0]
-      };
+  space(e) {
+    let t = this.rules.block.newline.exec(e);
+    if (t && t[0].length > 0)
+      return { type: "space", raw: t[0] };
+  }
+  code(e) {
+    let t = this.rules.block.code.exec(e);
+    if (t) {
+      let n = t[0].replace(this.rules.other.codeRemoveIndent, "");
+      return { type: "code", raw: t[0], codeBlockStyle: "indented", text: this.options.pedantic ? n : z(n, `
+`) };
     }
   }
-  code(src) {
-    const cap = this.rules.block.code.exec(src);
-    if (cap) {
-      const text = cap[0].replace(this.rules.other.codeRemoveIndent, "");
-      return {
-        type: "code",
-        raw: cap[0],
-        codeBlockStyle: "indented",
-        text: !this.options.pedantic ? rtrim(text, "\n") : text
-      };
+  fences(e) {
+    let t = this.rules.block.fences.exec(e);
+    if (t) {
+      let n = t[0], r = Je(n, t[3] || "", this.rules);
+      return { type: "code", raw: n, lang: t[2] ? t[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : t[2], text: r };
     }
   }
-  fences(src) {
-    const cap = this.rules.block.fences.exec(src);
-    if (cap) {
-      const raw = cap[0];
-      const text = indentCodeCompensation(raw, cap[3] || "", this.rules);
-      return {
-        type: "code",
-        raw,
-        lang: cap[2] ? cap[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : cap[2],
-        text
-      };
-    }
-  }
-  heading(src) {
-    const cap = this.rules.block.heading.exec(src);
-    if (cap) {
-      let text = cap[2].trim();
-      if (this.rules.other.endingHash.test(text)) {
-        const trimmed = rtrim(text, "#");
-        if (this.options.pedantic) {
-          text = trimmed.trim();
-        } else if (!trimmed || this.rules.other.endingSpaceChar.test(trimmed)) {
-          text = trimmed.trim();
-        }
+  heading(e) {
+    let t = this.rules.block.heading.exec(e);
+    if (t) {
+      let n = t[2].trim();
+      if (this.rules.other.endingHash.test(n)) {
+        let r = z(n, "#");
+        (this.options.pedantic || !r || this.rules.other.endingSpaceChar.test(r)) && (n = r.trim());
       }
-      return {
-        type: "heading",
-        raw: cap[0],
-        depth: cap[1].length,
-        text,
-        tokens: this.lexer.inline(text)
-      };
+      return { type: "heading", raw: t[0], depth: t[1].length, text: n, tokens: this.lexer.inline(n) };
     }
   }
-  hr(src) {
-    const cap = this.rules.block.hr.exec(src);
-    if (cap) {
-      return {
-        type: "hr",
-        raw: rtrim(cap[0], "\n")
-      };
-    }
+  hr(e) {
+    let t = this.rules.block.hr.exec(e);
+    if (t)
+      return { type: "hr", raw: z(t[0], `
+`) };
   }
-  blockquote(src) {
-    const cap = this.rules.block.blockquote.exec(src);
-    if (cap) {
-      let lines = rtrim(cap[0], "\n").split("\n");
-      let raw = "";
-      let text = "";
-      const tokens = [];
-      while (lines.length > 0) {
-        let inBlockquote = false;
-        const currentLines = [];
-        let i;
-        for (i = 0; i < lines.length; i++) {
-          if (this.rules.other.blockquoteStart.test(lines[i])) {
-            currentLines.push(lines[i]);
-            inBlockquote = true;
-          } else if (!inBlockquote) {
-            currentLines.push(lines[i]);
-          } else {
+  blockquote(e) {
+    let t = this.rules.block.blockquote.exec(e);
+    if (t) {
+      let n = z(t[0], `
+`).split(`
+`), r = "", i = "", s = [];
+      for (; n.length > 0; ) {
+        let a = false, o = [], l;
+        for (l = 0; l < n.length; l++)
+          if (this.rules.other.blockquoteStart.test(n[l]))
+            o.push(n[l]), a = true;
+          else if (!a)
+            o.push(n[l]);
+          else
             break;
-          }
-        }
-        lines = lines.slice(i);
-        const currentRaw = currentLines.join("\n");
-        const currentText = currentRaw.replace(this.rules.other.blockquoteSetextReplace, "\n    $1").replace(this.rules.other.blockquoteSetextReplace2, "");
-        raw = raw ? `${raw}
-${currentRaw}` : currentRaw;
-        text = text ? `${text}
-${currentText}` : currentText;
-        const top = this.lexer.state.top;
-        this.lexer.state.top = true;
-        this.lexer.blockTokens(currentText, tokens, true);
-        this.lexer.state.top = top;
-        if (lines.length === 0) {
+        n = n.slice(l);
+        let p = o.join(`
+`), c = p.replace(this.rules.other.blockquoteSetextReplace, `
+    $1`).replace(this.rules.other.blockquoteSetextReplace2, "");
+        r = r ? `${r}
+${p}` : p, i = i ? `${i}
+${c}` : c;
+        let g = this.lexer.state.top;
+        if (this.lexer.state.top = true, this.lexer.blockTokens(c, s, true), this.lexer.state.top = g, n.length === 0)
           break;
-        }
-        const lastToken = tokens.at(-1);
-        if (lastToken?.type === "code") {
+        let h = s.at(-1);
+        if (h?.type === "code")
           break;
-        } else if (lastToken?.type === "blockquote") {
-          const oldToken = lastToken;
-          const newText = oldToken.raw + "\n" + lines.join("\n");
-          const newToken = this.blockquote(newText);
-          tokens[tokens.length - 1] = newToken;
-          raw = raw.substring(0, raw.length - oldToken.raw.length) + newToken.raw;
-          text = text.substring(0, text.length - oldToken.text.length) + newToken.text;
+        if (h?.type === "blockquote") {
+          let R = h, f = R.raw + `
+` + n.join(`
+`), O = this.blockquote(f);
+          s[s.length - 1] = O, r = r.substring(0, r.length - R.raw.length) + O.raw, i = i.substring(0, i.length - R.text.length) + O.text;
           break;
-        } else if (lastToken?.type === "list") {
-          const oldToken = lastToken;
-          const newText = oldToken.raw + "\n" + lines.join("\n");
-          const newToken = this.list(newText);
-          tokens[tokens.length - 1] = newToken;
-          raw = raw.substring(0, raw.length - lastToken.raw.length) + newToken.raw;
-          text = text.substring(0, text.length - oldToken.raw.length) + newToken.raw;
-          lines = newText.substring(tokens.at(-1).raw.length).split("\n");
+        } else if (h?.type === "list") {
+          let R = h, f = R.raw + `
+` + n.join(`
+`), O = this.list(f);
+          s[s.length - 1] = O, r = r.substring(0, r.length - h.raw.length) + O.raw, i = i.substring(0, i.length - R.raw.length) + O.raw, n = f.substring(s.at(-1).raw.length).split(`
+`);
           continue;
         }
       }
-      return {
-        type: "blockquote",
-        raw,
-        tokens,
-        text
-      };
+      return { type: "blockquote", raw: r, tokens: s, text: i };
     }
   }
-  list(src) {
-    let cap = this.rules.block.list.exec(src);
-    if (cap) {
-      let bull = cap[1].trim();
-      const isordered = bull.length > 1;
-      const list2 = {
-        type: "list",
-        raw: "",
-        ordered: isordered,
-        start: isordered ? +bull.slice(0, -1) : "",
-        loose: false,
-        items: []
-      };
-      bull = isordered ? `\\d{1,9}\\${bull.slice(-1)}` : `\\${bull}`;
-      if (this.options.pedantic) {
-        bull = isordered ? bull : "[*+-]";
-      }
-      const itemRegex = this.rules.other.listItemRegex(bull);
-      let endsWithBlankLine = false;
-      while (src) {
-        let endEarly = false;
-        let raw = "";
-        let itemContents = "";
-        if (!(cap = itemRegex.exec(src))) {
+  list(e) {
+    let t = this.rules.block.list.exec(e);
+    if (t) {
+      let n = t[1].trim(), r = n.length > 1, i = { type: "list", raw: "", ordered: r, start: r ? +n.slice(0, -1) : "", loose: false, items: [] };
+      n = r ? `\\d{1,9}\\${n.slice(-1)}` : `\\${n}`, this.options.pedantic && (n = r ? n : "[*+-]");
+      let s = this.rules.other.listItemRegex(n), a = false;
+      for (; e; ) {
+        let l = false, p = "", c = "";
+        if (!(t = s.exec(e)) || this.rules.block.hr.test(e))
           break;
-        }
-        if (this.rules.block.hr.test(src)) {
-          break;
-        }
-        raw = cap[0];
-        src = src.substring(raw.length);
-        let line = cap[2].split("\n", 1)[0].replace(this.rules.other.listReplaceTabs, (t) => " ".repeat(3 * t.length));
-        let nextLine = src.split("\n", 1)[0];
-        let blankLine = !line.trim();
-        let indent = 0;
-        if (this.options.pedantic) {
-          indent = 2;
-          itemContents = line.trimStart();
-        } else if (blankLine) {
-          indent = cap[1].length + 1;
-        } else {
-          indent = cap[2].search(this.rules.other.nonSpaceChar);
-          indent = indent > 4 ? 1 : indent;
-          itemContents = line.slice(indent);
-          indent += cap[1].length;
-        }
-        if (blankLine && this.rules.other.blankLine.test(nextLine)) {
-          raw += nextLine + "\n";
-          src = src.substring(nextLine.length + 1);
-          endEarly = true;
-        }
-        if (!endEarly) {
-          const nextBulletRegex = this.rules.other.nextBulletRegex(indent);
-          const hrRegex = this.rules.other.hrRegex(indent);
-          const fencesBeginRegex = this.rules.other.fencesBeginRegex(indent);
-          const headingBeginRegex = this.rules.other.headingBeginRegex(indent);
-          const htmlBeginRegex = this.rules.other.htmlBeginRegex(indent);
-          while (src) {
-            const rawLine = src.split("\n", 1)[0];
-            let nextLineWithoutTabs;
-            nextLine = rawLine;
-            if (this.options.pedantic) {
-              nextLine = nextLine.replace(this.rules.other.listReplaceNesting, "  ");
-              nextLineWithoutTabs = nextLine;
-            } else {
-              nextLineWithoutTabs = nextLine.replace(this.rules.other.tabCharGlobal, "    ");
-            }
-            if (fencesBeginRegex.test(nextLine)) {
+        p = t[0], e = e.substring(p.length);
+        let g = t[2].split(`
+`, 1)[0].replace(this.rules.other.listReplaceTabs, (O) => " ".repeat(3 * O.length)), h = e.split(`
+`, 1)[0], R = !g.trim(), f = 0;
+        if (this.options.pedantic ? (f = 2, c = g.trimStart()) : R ? f = t[1].length + 1 : (f = t[2].search(this.rules.other.nonSpaceChar), f = f > 4 ? 1 : f, c = g.slice(f), f += t[1].length), R && this.rules.other.blankLine.test(h) && (p += h + `
+`, e = e.substring(h.length + 1), l = true), !l) {
+          let O = this.rules.other.nextBulletRegex(f), V = this.rules.other.hrRegex(f), Y = this.rules.other.fencesBeginRegex(f), ee = this.rules.other.headingBeginRegex(f), fe = this.rules.other.htmlBeginRegex(f);
+          for (; e; ) {
+            let H = e.split(`
+`, 1)[0], A;
+            if (h = H, this.options.pedantic ? (h = h.replace(this.rules.other.listReplaceNesting, "  "), A = h) : A = h.replace(this.rules.other.tabCharGlobal, "    "), Y.test(h) || ee.test(h) || fe.test(h) || O.test(h) || V.test(h))
               break;
-            }
-            if (headingBeginRegex.test(nextLine)) {
-              break;
-            }
-            if (htmlBeginRegex.test(nextLine)) {
-              break;
-            }
-            if (nextBulletRegex.test(nextLine)) {
-              break;
-            }
-            if (hrRegex.test(nextLine)) {
-              break;
-            }
-            if (nextLineWithoutTabs.search(this.rules.other.nonSpaceChar) >= indent || !nextLine.trim()) {
-              itemContents += "\n" + nextLineWithoutTabs.slice(indent);
-            } else {
-              if (blankLine) {
+            if (A.search(this.rules.other.nonSpaceChar) >= f || !h.trim())
+              c += `
+` + A.slice(f);
+            else {
+              if (R || g.replace(this.rules.other.tabCharGlobal, "    ").search(this.rules.other.nonSpaceChar) >= 4 || Y.test(g) || ee.test(g) || V.test(g))
                 break;
-              }
-              if (line.replace(this.rules.other.tabCharGlobal, "    ").search(this.rules.other.nonSpaceChar) >= 4) {
-                break;
-              }
-              if (fencesBeginRegex.test(line)) {
-                break;
-              }
-              if (headingBeginRegex.test(line)) {
-                break;
-              }
-              if (hrRegex.test(line)) {
-                break;
-              }
-              itemContents += "\n" + nextLine;
+              c += `
+` + h;
             }
-            if (!blankLine && !nextLine.trim()) {
-              blankLine = true;
-            }
-            raw += rawLine + "\n";
-            src = src.substring(rawLine.length + 1);
-            line = nextLineWithoutTabs.slice(indent);
+            !R && !h.trim() && (R = true), p += H + `
+`, e = e.substring(H.length + 1), g = A.slice(f);
           }
         }
-        if (!list2.loose) {
-          if (endsWithBlankLine) {
-            list2.loose = true;
-          } else if (this.rules.other.doubleBlankLine.test(raw)) {
-            endsWithBlankLine = true;
-          }
-        }
-        let istask = null;
-        let ischecked;
-        if (this.options.gfm) {
-          istask = this.rules.other.listIsTask.exec(itemContents);
-          if (istask) {
-            ischecked = istask[0] !== "[ ] ";
-            itemContents = itemContents.replace(this.rules.other.listReplaceTask, "");
-          }
-        }
-        list2.items.push({
-          type: "list_item",
-          raw,
-          task: !!istask,
-          checked: ischecked,
-          loose: false,
-          text: itemContents,
-          tokens: []
-        });
-        list2.raw += raw;
+        i.loose || (a ? i.loose = true : this.rules.other.doubleBlankLine.test(p) && (a = true)), i.items.push({ type: "list_item", raw: p, task: !!this.options.gfm && this.rules.other.listIsTask.test(c), loose: false, text: c, tokens: [] }), i.raw += p;
       }
-      const lastItem = list2.items.at(-1);
-      if (lastItem) {
-        lastItem.raw = lastItem.raw.trimEnd();
-        lastItem.text = lastItem.text.trimEnd();
-      } else {
+      let o = i.items.at(-1);
+      if (o)
+        o.raw = o.raw.trimEnd(), o.text = o.text.trimEnd();
+      else
         return;
-      }
-      list2.raw = list2.raw.trimEnd();
-      for (let i = 0; i < list2.items.length; i++) {
-        this.lexer.state.top = false;
-        list2.items[i].tokens = this.lexer.blockTokens(list2.items[i].text, []);
-        if (!list2.loose) {
-          const spacers = list2.items[i].tokens.filter((t) => t.type === "space");
-          const hasMultipleLineBreaks = spacers.length > 0 && spacers.some((t) => this.rules.other.anyLine.test(t.raw));
-          list2.loose = hasMultipleLineBreaks;
+      i.raw = i.raw.trimEnd();
+      for (let l of i.items) {
+        if (this.lexer.state.top = false, l.tokens = this.lexer.blockTokens(l.text, []), l.task) {
+          if (l.text = l.text.replace(this.rules.other.listReplaceTask, ""), l.tokens[0]?.type === "text" || l.tokens[0]?.type === "paragraph") {
+            l.tokens[0].raw = l.tokens[0].raw.replace(this.rules.other.listReplaceTask, ""), l.tokens[0].text = l.tokens[0].text.replace(this.rules.other.listReplaceTask, "");
+            for (let c = this.lexer.inlineQueue.length - 1; c >= 0; c--)
+              if (this.rules.other.listIsTask.test(this.lexer.inlineQueue[c].src)) {
+                this.lexer.inlineQueue[c].src = this.lexer.inlineQueue[c].src.replace(this.rules.other.listReplaceTask, "");
+                break;
+              }
+          }
+          let p = this.rules.other.listTaskCheckbox.exec(l.raw);
+          if (p) {
+            let c = { type: "checkbox", raw: p[0] + " ", checked: p[0] !== "[ ]" };
+            l.checked = c.checked, i.loose ? l.tokens[0] && ["paragraph", "text"].includes(l.tokens[0].type) && "tokens" in l.tokens[0] && l.tokens[0].tokens ? (l.tokens[0].raw = c.raw + l.tokens[0].raw, l.tokens[0].text = c.raw + l.tokens[0].text, l.tokens[0].tokens.unshift(c)) : l.tokens.unshift({ type: "paragraph", raw: c.raw, text: c.raw, tokens: [c] }) : l.tokens.unshift(c);
+          }
+        }
+        if (!i.loose) {
+          let p = l.tokens.filter((g) => g.type === "space"), c = p.length > 0 && p.some((g) => this.rules.other.anyLine.test(g.raw));
+          i.loose = c;
         }
       }
-      if (list2.loose) {
-        for (let i = 0; i < list2.items.length; i++) {
-          list2.items[i].loose = true;
+      if (i.loose)
+        for (let l of i.items) {
+          l.loose = true;
+          for (let p of l.tokens)
+            p.type === "text" && (p.type = "paragraph");
         }
-      }
-      return list2;
+      return i;
     }
   }
-  html(src) {
-    const cap = this.rules.block.html.exec(src);
-    if (cap) {
-      const token = {
-        type: "html",
-        block: true,
-        raw: cap[0],
-        pre: cap[1] === "pre" || cap[1] === "script" || cap[1] === "style",
-        text: cap[0]
-      };
-      return token;
+  html(e) {
+    let t = this.rules.block.html.exec(e);
+    if (t)
+      return { type: "html", block: true, raw: t[0], pre: t[1] === "pre" || t[1] === "script" || t[1] === "style", text: t[0] };
+  }
+  def(e) {
+    let t = this.rules.block.def.exec(e);
+    if (t) {
+      let n = t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, " "), r = t[2] ? t[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "", i = t[3] ? t[3].substring(1, t[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : t[3];
+      return { type: "def", tag: n, raw: t[0], href: r, title: i };
     }
   }
-  def(src) {
-    const cap = this.rules.block.def.exec(src);
-    if (cap) {
-      const tag2 = cap[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, " ");
-      const href = cap[2] ? cap[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "";
-      const title = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : cap[3];
-      return {
-        type: "def",
-        tag: tag2,
-        raw: cap[0],
-        href,
-        title
-      };
+  table(e) {
+    let t = this.rules.block.table.exec(e);
+    if (!t || !this.rules.other.tableDelimiter.test(t[2]))
+      return;
+    let n = J(t[1]), r = t[2].replace(this.rules.other.tableAlignChars, "").split("|"), i = t[3]?.trim() ? t[3].replace(this.rules.other.tableRowBlankLine, "").split(`
+`) : [], s = { type: "table", raw: t[0], header: [], align: [], rows: [] };
+    if (n.length === r.length) {
+      for (let a of r)
+        this.rules.other.tableAlignRight.test(a) ? s.align.push("right") : this.rules.other.tableAlignCenter.test(a) ? s.align.push("center") : this.rules.other.tableAlignLeft.test(a) ? s.align.push("left") : s.align.push(null);
+      for (let a = 0; a < n.length; a++)
+        s.header.push({ text: n[a], tokens: this.lexer.inline(n[a]), header: true, align: s.align[a] });
+      for (let a of i)
+        s.rows.push(J(a, s.header.length).map((o, l) => ({ text: o, tokens: this.lexer.inline(o), header: false, align: s.align[l] })));
+      return s;
     }
   }
-  table(src) {
-    const cap = this.rules.block.table.exec(src);
-    if (!cap) {
-      return;
+  lheading(e) {
+    let t = this.rules.block.lheading.exec(e);
+    if (t)
+      return { type: "heading", raw: t[0], depth: t[2].charAt(0) === "=" ? 1 : 2, text: t[1], tokens: this.lexer.inline(t[1]) };
+  }
+  paragraph(e) {
+    let t = this.rules.block.paragraph.exec(e);
+    if (t) {
+      let n = t[1].charAt(t[1].length - 1) === `
+` ? t[1].slice(0, -1) : t[1];
+      return { type: "paragraph", raw: t[0], text: n, tokens: this.lexer.inline(n) };
     }
-    if (!this.rules.other.tableDelimiter.test(cap[2])) {
-      return;
-    }
-    const headers = splitCells(cap[1]);
-    const aligns = cap[2].replace(this.rules.other.tableAlignChars, "").split("|");
-    const rows = cap[3]?.trim() ? cap[3].replace(this.rules.other.tableRowBlankLine, "").split("\n") : [];
-    const item = {
-      type: "table",
-      raw: cap[0],
-      header: [],
-      align: [],
-      rows: []
-    };
-    if (headers.length !== aligns.length) {
-      return;
-    }
-    for (const align of aligns) {
-      if (this.rules.other.tableAlignRight.test(align)) {
-        item.align.push("right");
-      } else if (this.rules.other.tableAlignCenter.test(align)) {
-        item.align.push("center");
-      } else if (this.rules.other.tableAlignLeft.test(align)) {
-        item.align.push("left");
+  }
+  text(e) {
+    let t = this.rules.block.text.exec(e);
+    if (t)
+      return { type: "text", raw: t[0], text: t[0], tokens: this.lexer.inline(t[0]) };
+  }
+  escape(e) {
+    let t = this.rules.inline.escape.exec(e);
+    if (t)
+      return { type: "escape", raw: t[0], text: t[1] };
+  }
+  tag(e) {
+    let t = this.rules.inline.tag.exec(e);
+    if (t)
+      return !this.lexer.state.inLink && this.rules.other.startATag.test(t[0]) ? this.lexer.state.inLink = true : this.lexer.state.inLink && this.rules.other.endATag.test(t[0]) && (this.lexer.state.inLink = false), !this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(t[0]) ? this.lexer.state.inRawBlock = true : this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(t[0]) && (this.lexer.state.inRawBlock = false), { type: "html", raw: t[0], inLink: this.lexer.state.inLink, inRawBlock: this.lexer.state.inRawBlock, block: false, text: t[0] };
+  }
+  link(e) {
+    let t = this.rules.inline.link.exec(e);
+    if (t) {
+      let n = t[2].trim();
+      if (!this.options.pedantic && this.rules.other.startAngleBracket.test(n)) {
+        if (!this.rules.other.endAngleBracket.test(n))
+          return;
+        let s = z(n.slice(0, -1), "\\");
+        if ((n.length - s.length) % 2 === 0)
+          return;
       } else {
-        item.align.push(null);
-      }
-    }
-    for (let i = 0; i < headers.length; i++) {
-      item.header.push({
-        text: headers[i],
-        tokens: this.lexer.inline(headers[i]),
-        header: true,
-        align: item.align[i]
-      });
-    }
-    for (const row of rows) {
-      item.rows.push(splitCells(row, item.header.length).map((cell, i) => {
-        return {
-          text: cell,
-          tokens: this.lexer.inline(cell),
-          header: false,
-          align: item.align[i]
-        };
-      }));
-    }
-    return item;
-  }
-  lheading(src) {
-    const cap = this.rules.block.lheading.exec(src);
-    if (cap) {
-      return {
-        type: "heading",
-        raw: cap[0],
-        depth: cap[2].charAt(0) === "=" ? 1 : 2,
-        text: cap[1],
-        tokens: this.lexer.inline(cap[1])
-      };
-    }
-  }
-  paragraph(src) {
-    const cap = this.rules.block.paragraph.exec(src);
-    if (cap) {
-      const text = cap[1].charAt(cap[1].length - 1) === "\n" ? cap[1].slice(0, -1) : cap[1];
-      return {
-        type: "paragraph",
-        raw: cap[0],
-        text,
-        tokens: this.lexer.inline(text)
-      };
-    }
-  }
-  text(src) {
-    const cap = this.rules.block.text.exec(src);
-    if (cap) {
-      return {
-        type: "text",
-        raw: cap[0],
-        text: cap[0],
-        tokens: this.lexer.inline(cap[0])
-      };
-    }
-  }
-  escape(src) {
-    const cap = this.rules.inline.escape.exec(src);
-    if (cap) {
-      return {
-        type: "escape",
-        raw: cap[0],
-        text: cap[1]
-      };
-    }
-  }
-  tag(src) {
-    const cap = this.rules.inline.tag.exec(src);
-    if (cap) {
-      if (!this.lexer.state.inLink && this.rules.other.startATag.test(cap[0])) {
-        this.lexer.state.inLink = true;
-      } else if (this.lexer.state.inLink && this.rules.other.endATag.test(cap[0])) {
-        this.lexer.state.inLink = false;
-      }
-      if (!this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(cap[0])) {
-        this.lexer.state.inRawBlock = true;
-      } else if (this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(cap[0])) {
-        this.lexer.state.inRawBlock = false;
-      }
-      return {
-        type: "html",
-        raw: cap[0],
-        inLink: this.lexer.state.inLink,
-        inRawBlock: this.lexer.state.inRawBlock,
-        block: false,
-        text: cap[0]
-      };
-    }
-  }
-  link(src) {
-    const cap = this.rules.inline.link.exec(src);
-    if (cap) {
-      const trimmedUrl = cap[2].trim();
-      if (!this.options.pedantic && this.rules.other.startAngleBracket.test(trimmedUrl)) {
-        if (!this.rules.other.endAngleBracket.test(trimmedUrl)) {
+        let s = de(t[2], "()");
+        if (s === -2)
           return;
-        }
-        const rtrimSlash = rtrim(trimmedUrl.slice(0, -1), "\\");
-        if ((trimmedUrl.length - rtrimSlash.length) % 2 === 0) {
-          return;
-        }
-      } else {
-        const lastParenIndex = findClosingBracket(cap[2], "()");
-        if (lastParenIndex === -2) {
-          return;
-        }
-        if (lastParenIndex > -1) {
-          const start = cap[0].indexOf("!") === 0 ? 5 : 4;
-          const linkLen = start + cap[1].length + lastParenIndex;
-          cap[2] = cap[2].substring(0, lastParenIndex);
-          cap[0] = cap[0].substring(0, linkLen).trim();
-          cap[3] = "";
+        if (s > -1) {
+          let o = (t[0].indexOf("!") === 0 ? 5 : 4) + t[1].length + s;
+          t[2] = t[2].substring(0, s), t[0] = t[0].substring(0, o).trim(), t[3] = "";
         }
       }
-      let href = cap[2];
-      let title = "";
+      let r = t[2], i = "";
       if (this.options.pedantic) {
-        const link2 = this.rules.other.pedanticHrefTitle.exec(href);
-        if (link2) {
-          href = link2[1];
-          title = link2[3];
-        }
-      } else {
-        title = cap[3] ? cap[3].slice(1, -1) : "";
-      }
-      href = href.trim();
-      if (this.rules.other.startAngleBracket.test(href)) {
-        if (this.options.pedantic && !this.rules.other.endAngleBracket.test(trimmedUrl)) {
-          href = href.slice(1);
-        } else {
-          href = href.slice(1, -1);
-        }
-      }
-      return outputLink(cap, {
-        href: href ? href.replace(this.rules.inline.anyPunctuation, "$1") : href,
-        title: title ? title.replace(this.rules.inline.anyPunctuation, "$1") : title
-      }, cap[0], this.lexer, this.rules);
+        let s = this.rules.other.pedanticHrefTitle.exec(r);
+        s && (r = s[1], i = s[3]);
+      } else
+        i = t[3] ? t[3].slice(1, -1) : "";
+      return r = r.trim(), this.rules.other.startAngleBracket.test(r) && (this.options.pedantic && !this.rules.other.endAngleBracket.test(n) ? r = r.slice(1) : r = r.slice(1, -1)), ge(t, { href: r && r.replace(this.rules.inline.anyPunctuation, "$1"), title: i && i.replace(this.rules.inline.anyPunctuation, "$1") }, t[0], this.lexer, this.rules);
     }
   }
-  reflink(src, links) {
-    let cap;
-    if ((cap = this.rules.inline.reflink.exec(src)) || (cap = this.rules.inline.nolink.exec(src))) {
-      const linkString = (cap[2] || cap[1]).replace(this.rules.other.multipleSpaceGlobal, " ");
-      const link2 = links[linkString.toLowerCase()];
-      if (!link2) {
-        const text = cap[0].charAt(0);
-        return {
-          type: "text",
-          raw: text,
-          text
-        };
+  reflink(e, t) {
+    let n;
+    if ((n = this.rules.inline.reflink.exec(e)) || (n = this.rules.inline.nolink.exec(e))) {
+      let r = (n[2] || n[1]).replace(this.rules.other.multipleSpaceGlobal, " "), i = t[r.toLowerCase()];
+      if (!i) {
+        let s = n[0].charAt(0);
+        return { type: "text", raw: s, text: s };
       }
-      return outputLink(cap, link2, cap[0], this.lexer, this.rules);
+      return ge(n, i, n[0], this.lexer, this.rules);
     }
   }
-  emStrong(src, maskedSrc, prevChar = "") {
-    let match = this.rules.inline.emStrongLDelim.exec(src);
-    if (!match)
+  emStrong(e, t, n = "") {
+    let r = this.rules.inline.emStrongLDelim.exec(e);
+    if (!r || r[3] && n.match(this.rules.other.unicodeAlphaNumeric))
       return;
-    if (match[3] && prevChar.match(this.rules.other.unicodeAlphaNumeric))
-      return;
-    const nextChar = match[1] || match[2] || "";
-    if (!nextChar || !prevChar || this.rules.inline.punctuation.exec(prevChar)) {
-      const lLength = [...match[0]].length - 1;
-      let rDelim, rLength, delimTotal = lLength, midDelimTotal = 0;
-      const endReg = match[0][0] === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
-      endReg.lastIndex = 0;
-      maskedSrc = maskedSrc.slice(-1 * src.length + lLength);
-      while ((match = endReg.exec(maskedSrc)) != null) {
-        rDelim = match[1] || match[2] || match[3] || match[4] || match[5] || match[6];
-        if (!rDelim)
+    if (!(r[1] || r[2] || "") || !n || this.rules.inline.punctuation.exec(n)) {
+      let s = [...r[0]].length - 1, a, o, l = s, p = 0, c = r[0][0] === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
+      for (c.lastIndex = 0, t = t.slice(-1 * e.length + s); (r = c.exec(t)) != null; ) {
+        if (a = r[1] || r[2] || r[3] || r[4] || r[5] || r[6], !a)
           continue;
-        rLength = [...rDelim].length;
-        if (match[3] || match[4]) {
-          delimTotal += rLength;
+        if (o = [...a].length, r[3] || r[4]) {
+          l += o;
           continue;
-        } else if (match[5] || match[6]) {
-          if (lLength % 3 && !((lLength + rLength) % 3)) {
-            midDelimTotal += rLength;
-            continue;
-          }
-        }
-        delimTotal -= rLength;
-        if (delimTotal > 0)
+        } else if ((r[5] || r[6]) && s % 3 && !((s + o) % 3)) {
+          p += o;
           continue;
-        rLength = Math.min(rLength, rLength + delimTotal + midDelimTotal);
-        const lastCharLength = [...match[0]][0].length;
-        const raw = src.slice(0, lLength + match.index + lastCharLength + rLength);
-        if (Math.min(lLength, rLength) % 2) {
-          const text2 = raw.slice(1, -1);
-          return {
-            type: "em",
-            raw,
-            text: text2,
-            tokens: this.lexer.inlineTokens(text2)
-          };
         }
-        const text = raw.slice(2, -2);
-        return {
-          type: "strong",
-          raw,
-          text,
-          tokens: this.lexer.inlineTokens(text)
-        };
-      }
-    }
-  }
-  codespan(src) {
-    const cap = this.rules.inline.code.exec(src);
-    if (cap) {
-      let text = cap[2].replace(this.rules.other.newLineCharGlobal, " ");
-      const hasNonSpaceChars = this.rules.other.nonSpaceChar.test(text);
-      const hasSpaceCharsOnBothEnds = this.rules.other.startingSpaceChar.test(text) && this.rules.other.endingSpaceChar.test(text);
-      if (hasNonSpaceChars && hasSpaceCharsOnBothEnds) {
-        text = text.substring(1, text.length - 1);
-      }
-      return {
-        type: "codespan",
-        raw: cap[0],
-        text
-      };
-    }
-  }
-  br(src) {
-    const cap = this.rules.inline.br.exec(src);
-    if (cap) {
-      return {
-        type: "br",
-        raw: cap[0]
-      };
-    }
-  }
-  del(src) {
-    const cap = this.rules.inline.del.exec(src);
-    if (cap) {
-      return {
-        type: "del",
-        raw: cap[0],
-        text: cap[2],
-        tokens: this.lexer.inlineTokens(cap[2])
-      };
-    }
-  }
-  autolink(src) {
-    const cap = this.rules.inline.autolink.exec(src);
-    if (cap) {
-      let text, href;
-      if (cap[2] === "@") {
-        text = cap[1];
-        href = "mailto:" + text;
-      } else {
-        text = cap[1];
-        href = text;
-      }
-      return {
-        type: "link",
-        raw: cap[0],
-        text,
-        href,
-        tokens: [
-          {
-            type: "text",
-            raw: text,
-            text
-          }
-        ]
-      };
-    }
-  }
-  url(src) {
-    let cap;
-    if (cap = this.rules.inline.url.exec(src)) {
-      let text, href;
-      if (cap[2] === "@") {
-        text = cap[0];
-        href = "mailto:" + text;
-      } else {
-        let prevCapZero;
-        do {
-          prevCapZero = cap[0];
-          cap[0] = this.rules.inline._backpedal.exec(cap[0])?.[0] ?? "";
-        } while (prevCapZero !== cap[0]);
-        text = cap[0];
-        if (cap[1] === "www.") {
-          href = "http://" + cap[0];
-        } else {
-          href = cap[0];
+        if (l -= o, l > 0)
+          continue;
+        o = Math.min(o, o + l + p);
+        let g = [...r[0]][0].length, h = e.slice(0, s + r.index + g + o);
+        if (Math.min(s, o) % 2) {
+          let f = h.slice(1, -1);
+          return { type: "em", raw: h, text: f, tokens: this.lexer.inlineTokens(f) };
         }
+        let R = h.slice(2, -2);
+        return { type: "strong", raw: h, text: R, tokens: this.lexer.inlineTokens(R) };
       }
-      return {
-        type: "link",
-        raw: cap[0],
-        text,
-        href,
-        tokens: [
-          {
-            type: "text",
-            raw: text,
-            text
-          }
-        ]
-      };
     }
   }
-  inlineText(src) {
-    const cap = this.rules.inline.text.exec(src);
-    if (cap) {
-      const escaped = this.lexer.state.inRawBlock;
-      return {
-        type: "text",
-        raw: cap[0],
-        text: cap[0],
-        escaped
-      };
+  codespan(e) {
+    let t = this.rules.inline.code.exec(e);
+    if (t) {
+      let n = t[2].replace(this.rules.other.newLineCharGlobal, " "), r = this.rules.other.nonSpaceChar.test(n), i = this.rules.other.startingSpaceChar.test(n) && this.rules.other.endingSpaceChar.test(n);
+      return r && i && (n = n.substring(1, n.length - 1)), { type: "codespan", raw: t[0], text: n };
+    }
+  }
+  br(e) {
+    let t = this.rules.inline.br.exec(e);
+    if (t)
+      return { type: "br", raw: t[0] };
+  }
+  del(e) {
+    let t = this.rules.inline.del.exec(e);
+    if (t)
+      return { type: "del", raw: t[0], text: t[2], tokens: this.lexer.inlineTokens(t[2]) };
+  }
+  autolink(e) {
+    let t = this.rules.inline.autolink.exec(e);
+    if (t) {
+      let n, r;
+      return t[2] === "@" ? (n = t[1], r = "mailto:" + n) : (n = t[1], r = n), { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
+    }
+  }
+  url(e) {
+    let t;
+    if (t = this.rules.inline.url.exec(e)) {
+      let n, r;
+      if (t[2] === "@")
+        n = t[0], r = "mailto:" + n;
+      else {
+        let i;
+        do
+          i = t[0], t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? "";
+        while (i !== t[0]);
+        n = t[0], t[1] === "www." ? r = "http://" + t[0] : r = t[0];
+      }
+      return { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
+    }
+  }
+  inlineText(e) {
+    let t = this.rules.inline.text.exec(e);
+    if (t) {
+      let n = this.lexer.state.inRawBlock;
+      return { type: "text", raw: t[0], text: t[0], escaped: n };
     }
   }
 };
-var _Lexer = class __Lexer {
+var x = class u {
   tokens;
   options;
   state;
-  tokenizer;
   inlineQueue;
-  constructor(options2) {
-    this.tokens = [];
-    this.tokens.links = /* @__PURE__ */ Object.create(null);
-    this.options = options2 || _defaults;
-    this.options.tokenizer = this.options.tokenizer || new _Tokenizer();
-    this.tokenizer = this.options.tokenizer;
-    this.tokenizer.options = this.options;
-    this.tokenizer.lexer = this;
-    this.inlineQueue = [];
-    this.state = {
-      inLink: false,
-      inRawBlock: false,
-      top: true
-    };
-    const rules = {
-      other,
-      block: block.normal,
-      inline: inline.normal
-    };
-    if (this.options.pedantic) {
-      rules.block = block.pedantic;
-      rules.inline = inline.pedantic;
-    } else if (this.options.gfm) {
-      rules.block = block.gfm;
-      if (this.options.breaks) {
-        rules.inline = inline.breaks;
-      } else {
-        rules.inline = inline.gfm;
-      }
-    }
-    this.tokenizer.rules = rules;
+  tokenizer;
+  constructor(e) {
+    this.tokens = [], this.tokens.links = /* @__PURE__ */ Object.create(null), this.options = e || T, this.options.tokenizer = this.options.tokenizer || new y(), this.tokenizer = this.options.tokenizer, this.tokenizer.options = this.options, this.tokenizer.lexer = this, this.inlineQueue = [], this.state = { inLink: false, inRawBlock: false, top: true };
+    let t = { other: m, block: E.normal, inline: M.normal };
+    this.options.pedantic ? (t.block = E.pedantic, t.inline = M.pedantic) : this.options.gfm && (t.block = E.gfm, this.options.breaks ? t.inline = M.breaks : t.inline = M.gfm), this.tokenizer.rules = t;
   }
-  /**
-   * Expose Rules
-   */
   static get rules() {
-    return {
-      block,
-      inline
-    };
+    return { block: E, inline: M };
   }
-  /**
-   * Static Lex Method
-   */
-  static lex(src, options2) {
-    const lexer2 = new __Lexer(options2);
-    return lexer2.lex(src);
+  static lex(e, t) {
+    return new u(t).lex(e);
   }
-  /**
-   * Static Lex Inline Method
-   */
-  static lexInline(src, options2) {
-    const lexer2 = new __Lexer(options2);
-    return lexer2.inlineTokens(src);
+  static lexInline(e, t) {
+    return new u(t).inlineTokens(e);
   }
-  /**
-   * Preprocessing
-   */
-  lex(src) {
-    src = src.replace(other.carriageReturn, "\n");
-    this.blockTokens(src, this.tokens);
-    for (let i = 0; i < this.inlineQueue.length; i++) {
-      const next = this.inlineQueue[i];
-      this.inlineTokens(next.src, next.tokens);
+  lex(e) {
+    e = e.replace(m.carriageReturn, `
+`), this.blockTokens(e, this.tokens);
+    for (let t = 0; t < this.inlineQueue.length; t++) {
+      let n = this.inlineQueue[t];
+      this.inlineTokens(n.src, n.tokens);
     }
-    this.inlineQueue = [];
-    return this.tokens;
+    return this.inlineQueue = [], this.tokens;
   }
-  blockTokens(src, tokens = [], lastParagraphClipped = false) {
-    if (this.options.pedantic) {
-      src = src.replace(other.tabCharGlobal, "    ").replace(other.spaceLine, "");
-    }
-    while (src) {
-      let token;
-      if (this.options.extensions?.block?.some((extTokenizer) => {
-        if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
-          src = src.substring(token.raw.length);
-          tokens.push(token);
-          return true;
-        }
-        return false;
-      })) {
+  blockTokens(e, t = [], n = false) {
+    for (this.options.pedantic && (e = e.replace(m.tabCharGlobal, "    ").replace(m.spaceLine, "")); e; ) {
+      let r;
+      if (this.options.extensions?.block?.some((s) => (r = s.call({ lexer: this }, e, t)) ? (e = e.substring(r.raw.length), t.push(r), true) : false))
+        continue;
+      if (r = this.tokenizer.space(e)) {
+        e = e.substring(r.raw.length);
+        let s = t.at(-1);
+        r.raw.length === 1 && s !== void 0 ? s.raw += `
+` : t.push(r);
         continue;
       }
-      if (token = this.tokenizer.space(src)) {
-        src = src.substring(token.raw.length);
-        const lastToken = tokens.at(-1);
-        if (token.raw.length === 1 && lastToken !== void 0) {
-          lastToken.raw += "\n";
-        } else {
-          tokens.push(token);
-        }
+      if (r = this.tokenizer.code(e)) {
+        e = e.substring(r.raw.length);
+        let s = t.at(-1);
+        s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.at(-1).src = s.text) : t.push(r);
         continue;
       }
-      if (token = this.tokenizer.code(src)) {
-        src = src.substring(token.raw.length);
-        const lastToken = tokens.at(-1);
-        if (lastToken?.type === "paragraph" || lastToken?.type === "text") {
-          lastToken.raw += "\n" + token.raw;
-          lastToken.text += "\n" + token.text;
-          this.inlineQueue.at(-1).src = lastToken.text;
-        } else {
-          tokens.push(token);
-        }
+      if (r = this.tokenizer.fences(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.fences(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.heading(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.heading(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.hr(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.hr(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.blockquote(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.blockquote(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.list(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.list(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.html(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.html(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.def(e)) {
+        e = e.substring(r.raw.length);
+        let s = t.at(-1);
+        s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.raw, this.inlineQueue.at(-1).src = s.text) : this.tokens.links[r.tag] || (this.tokens.links[r.tag] = { href: r.href, title: r.title }, t.push(r));
         continue;
       }
-      if (token = this.tokenizer.def(src)) {
-        src = src.substring(token.raw.length);
-        const lastToken = tokens.at(-1);
-        if (lastToken?.type === "paragraph" || lastToken?.type === "text") {
-          lastToken.raw += "\n" + token.raw;
-          lastToken.text += "\n" + token.raw;
-          this.inlineQueue.at(-1).src = lastToken.text;
-        } else if (!this.tokens.links[token.tag]) {
-          this.tokens.links[token.tag] = {
-            href: token.href,
-            title: token.title
-          };
-        }
+      if (r = this.tokenizer.table(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.table(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (r = this.tokenizer.lheading(e)) {
+        e = e.substring(r.raw.length), t.push(r);
         continue;
       }
-      if (token = this.tokenizer.lheading(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
-        continue;
-      }
-      let cutSrc = src;
+      let i = e;
       if (this.options.extensions?.startBlock) {
-        let startIndex = Infinity;
-        const tempSrc = src.slice(1);
-        let tempStart;
-        this.options.extensions.startBlock.forEach((getStartIndex) => {
-          tempStart = getStartIndex.call({ lexer: this }, tempSrc);
-          if (typeof tempStart === "number" && tempStart >= 0) {
-            startIndex = Math.min(startIndex, tempStart);
-          }
-        });
-        if (startIndex < Infinity && startIndex >= 0) {
-          cutSrc = src.substring(0, startIndex + 1);
-        }
+        let s = 1 / 0, a = e.slice(1), o;
+        this.options.extensions.startBlock.forEach((l) => {
+          o = l.call({ lexer: this }, a), typeof o == "number" && o >= 0 && (s = Math.min(s, o));
+        }), s < 1 / 0 && s >= 0 && (i = e.substring(0, s + 1));
       }
-      if (this.state.top && (token = this.tokenizer.paragraph(cutSrc))) {
-        const lastToken = tokens.at(-1);
-        if (lastParagraphClipped && lastToken?.type === "paragraph") {
-          lastToken.raw += "\n" + token.raw;
-          lastToken.text += "\n" + token.text;
-          this.inlineQueue.pop();
-          this.inlineQueue.at(-1).src = lastToken.text;
-        } else {
-          tokens.push(token);
-        }
-        lastParagraphClipped = cutSrc.length !== src.length;
-        src = src.substring(token.raw.length);
+      if (this.state.top && (r = this.tokenizer.paragraph(i))) {
+        let s = t.at(-1);
+        n && s?.type === "paragraph" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r), n = i.length !== e.length, e = e.substring(r.raw.length);
         continue;
       }
-      if (token = this.tokenizer.text(src)) {
-        src = src.substring(token.raw.length);
-        const lastToken = tokens.at(-1);
-        if (lastToken?.type === "text") {
-          lastToken.raw += "\n" + token.raw;
-          lastToken.text += "\n" + token.text;
-          this.inlineQueue.pop();
-          this.inlineQueue.at(-1).src = lastToken.text;
-        } else {
-          tokens.push(token);
-        }
+      if (r = this.tokenizer.text(e)) {
+        e = e.substring(r.raw.length);
+        let s = t.at(-1);
+        s?.type === "text" ? (s.raw += (s.raw.endsWith(`
+`) ? "" : `
+`) + r.raw, s.text += `
+` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r);
         continue;
       }
-      if (src) {
-        const errMsg = "Infinite loop on byte: " + src.charCodeAt(0);
+      if (e) {
+        let s = "Infinite loop on byte: " + e.charCodeAt(0);
         if (this.options.silent) {
-          console.error(errMsg);
+          console.error(s);
           break;
-        } else {
-          throw new Error(errMsg);
-        }
+        } else
+          throw new Error(s);
       }
     }
-    this.state.top = true;
-    return tokens;
+    return this.state.top = true, t;
   }
-  inline(src, tokens = []) {
-    this.inlineQueue.push({ src, tokens });
-    return tokens;
+  inline(e, t = []) {
+    return this.inlineQueue.push({ src: e, tokens: t }), t;
   }
-  /**
-   * Lexing/Compiling
-   */
-  inlineTokens(src, tokens = []) {
-    let maskedSrc = src;
-    let match = null;
+  inlineTokens(e, t = []) {
+    let n = e, r = null;
     if (this.tokens.links) {
-      const links = Object.keys(this.tokens.links);
-      if (links.length > 0) {
-        while ((match = this.tokenizer.rules.inline.reflinkSearch.exec(maskedSrc)) != null) {
-          if (links.includes(match[0].slice(match[0].lastIndexOf("[") + 1, -1))) {
-            maskedSrc = maskedSrc.slice(0, match.index) + "[" + "a".repeat(match[0].length - 2) + "]" + maskedSrc.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex);
-          }
-        }
-      }
+      let o = Object.keys(this.tokens.links);
+      if (o.length > 0)
+        for (; (r = this.tokenizer.rules.inline.reflinkSearch.exec(n)) != null; )
+          o.includes(r[0].slice(r[0].lastIndexOf("[") + 1, -1)) && (n = n.slice(0, r.index) + "[" + "a".repeat(r[0].length - 2) + "]" + n.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex));
     }
-    while ((match = this.tokenizer.rules.inline.anyPunctuation.exec(maskedSrc)) != null) {
-      maskedSrc = maskedSrc.slice(0, match.index) + "++" + maskedSrc.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
-    }
-    while ((match = this.tokenizer.rules.inline.blockSkip.exec(maskedSrc)) != null) {
-      maskedSrc = maskedSrc.slice(0, match.index) + "[" + "a".repeat(match[0].length - 2) + "]" + maskedSrc.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
-    }
-    let keepPrevChar = false;
-    let prevChar = "";
-    while (src) {
-      if (!keepPrevChar) {
-        prevChar = "";
-      }
-      keepPrevChar = false;
-      let token;
-      if (this.options.extensions?.inline?.some((extTokenizer) => {
-        if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
-          src = src.substring(token.raw.length);
-          tokens.push(token);
-          return true;
-        }
-        return false;
-      })) {
+    for (; (r = this.tokenizer.rules.inline.anyPunctuation.exec(n)) != null; )
+      n = n.slice(0, r.index) + "++" + n.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
+    let i;
+    for (; (r = this.tokenizer.rules.inline.blockSkip.exec(n)) != null; )
+      i = r[2] ? r[2].length : 0, n = n.slice(0, r.index + i) + "[" + "a".repeat(r[0].length - i - 2) + "]" + n.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
+    n = this.options.hooks?.emStrongMask?.call({ lexer: this }, n) ?? n;
+    let s = false, a = "";
+    for (; e; ) {
+      s || (a = ""), s = false;
+      let o;
+      if (this.options.extensions?.inline?.some((p) => (o = p.call({ lexer: this }, e, t)) ? (e = e.substring(o.raw.length), t.push(o), true) : false))
+        continue;
+      if (o = this.tokenizer.escape(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.escape(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.tag(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.tag(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.link(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.link(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.reflink(e, this.tokens.links)) {
+        e = e.substring(o.raw.length);
+        let p = t.at(-1);
+        o.type === "text" && p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
         continue;
       }
-      if (token = this.tokenizer.reflink(src, this.tokens.links)) {
-        src = src.substring(token.raw.length);
-        const lastToken = tokens.at(-1);
-        if (token.type === "text" && lastToken?.type === "text") {
-          lastToken.raw += token.raw;
-          lastToken.text += token.text;
-        } else {
-          tokens.push(token);
-        }
+      if (o = this.tokenizer.emStrong(e, n, a)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.emStrong(src, maskedSrc, prevChar)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.codespan(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.codespan(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.br(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.br(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.del(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.del(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (o = this.tokenizer.autolink(e)) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (token = this.tokenizer.autolink(src)) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
+      if (!this.state.inLink && (o = this.tokenizer.url(e))) {
+        e = e.substring(o.raw.length), t.push(o);
         continue;
       }
-      if (!this.state.inLink && (token = this.tokenizer.url(src))) {
-        src = src.substring(token.raw.length);
-        tokens.push(token);
-        continue;
-      }
-      let cutSrc = src;
+      let l = e;
       if (this.options.extensions?.startInline) {
-        let startIndex = Infinity;
-        const tempSrc = src.slice(1);
-        let tempStart;
-        this.options.extensions.startInline.forEach((getStartIndex) => {
-          tempStart = getStartIndex.call({ lexer: this }, tempSrc);
-          if (typeof tempStart === "number" && tempStart >= 0) {
-            startIndex = Math.min(startIndex, tempStart);
-          }
-        });
-        if (startIndex < Infinity && startIndex >= 0) {
-          cutSrc = src.substring(0, startIndex + 1);
-        }
+        let p = 1 / 0, c = e.slice(1), g;
+        this.options.extensions.startInline.forEach((h) => {
+          g = h.call({ lexer: this }, c), typeof g == "number" && g >= 0 && (p = Math.min(p, g));
+        }), p < 1 / 0 && p >= 0 && (l = e.substring(0, p + 1));
       }
-      if (token = this.tokenizer.inlineText(cutSrc)) {
-        src = src.substring(token.raw.length);
-        if (token.raw.slice(-1) !== "_") {
-          prevChar = token.raw.slice(-1);
-        }
-        keepPrevChar = true;
-        const lastToken = tokens.at(-1);
-        if (lastToken?.type === "text") {
-          lastToken.raw += token.raw;
-          lastToken.text += token.text;
-        } else {
-          tokens.push(token);
-        }
+      if (o = this.tokenizer.inlineText(l)) {
+        e = e.substring(o.raw.length), o.raw.slice(-1) !== "_" && (a = o.raw.slice(-1)), s = true;
+        let p = t.at(-1);
+        p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
         continue;
       }
-      if (src) {
-        const errMsg = "Infinite loop on byte: " + src.charCodeAt(0);
+      if (e) {
+        let p = "Infinite loop on byte: " + e.charCodeAt(0);
         if (this.options.silent) {
-          console.error(errMsg);
+          console.error(p);
           break;
-        } else {
-          throw new Error(errMsg);
-        }
+        } else
+          throw new Error(p);
       }
     }
-    return tokens;
+    return t;
   }
 };
-var _Renderer = class {
+var P = class {
   options;
   parser;
-  // set by the parser
-  constructor(options2) {
-    this.options = options2 || _defaults;
+  constructor(e) {
+    this.options = e || T;
   }
-  space(token) {
+  space(e) {
     return "";
   }
-  code({ text, lang, escaped }) {
-    const langString = (lang || "").match(other.notSpaceStart)?.[0];
-    const code = text.replace(other.endingNewline, "") + "\n";
-    if (!langString) {
-      return "<pre><code>" + (escaped ? code : escape22(code, true)) + "</code></pre>\n";
-    }
-    return '<pre><code class="language-' + escape22(langString) + '">' + (escaped ? code : escape22(code, true)) + "</code></pre>\n";
+  code({ text: e, lang: t, escaped: n }) {
+    let r = (t || "").match(m.notSpaceStart)?.[0], i = e.replace(m.endingNewline, "") + `
+`;
+    return r ? '<pre><code class="language-' + w(r) + '">' + (n ? i : w(i, true)) + `</code></pre>
+` : "<pre><code>" + (n ? i : w(i, true)) + `</code></pre>
+`;
   }
-  blockquote({ tokens }) {
-    const body = this.parser.parse(tokens);
+  blockquote({ tokens: e }) {
     return `<blockquote>
-${body}</blockquote>
+${this.parser.parse(e)}</blockquote>
 `;
   }
-  html({ text }) {
-    return text;
+  html({ text: e }) {
+    return e;
   }
-  heading({ tokens, depth }) {
-    return `<h${depth}>${this.parser.parseInline(tokens)}</h${depth}>
+  def(e) {
+    return "";
+  }
+  heading({ tokens: e, depth: t }) {
+    return `<h${t}>${this.parser.parseInline(e)}</h${t}>
 `;
   }
-  hr(token) {
-    return "<hr>\n";
-  }
-  list(token) {
-    const ordered = token.ordered;
-    const start = token.start;
-    let body = "";
-    for (let j = 0; j < token.items.length; j++) {
-      const item = token.items[j];
-      body += this.listitem(item);
-    }
-    const type = ordered ? "ol" : "ul";
-    const startAttr = ordered && start !== 1 ? ' start="' + start + '"' : "";
-    return "<" + type + startAttr + ">\n" + body + "</" + type + ">\n";
-  }
-  listitem(item) {
-    let itemBody = "";
-    if (item.task) {
-      const checkbox = this.checkbox({ checked: !!item.checked });
-      if (item.loose) {
-        if (item.tokens[0]?.type === "paragraph") {
-          item.tokens[0].text = checkbox + " " + item.tokens[0].text;
-          if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === "text") {
-            item.tokens[0].tokens[0].text = checkbox + " " + escape22(item.tokens[0].tokens[0].text);
-            item.tokens[0].tokens[0].escaped = true;
-          }
-        } else {
-          item.tokens.unshift({
-            type: "text",
-            raw: checkbox + " ",
-            text: checkbox + " ",
-            escaped: true
-          });
-        }
-      } else {
-        itemBody += checkbox + " ";
-      }
-    }
-    itemBody += this.parser.parse(item.tokens, !!item.loose);
-    return `<li>${itemBody}</li>
+  hr(e) {
+    return `<hr>
 `;
   }
-  checkbox({ checked }) {
-    return "<input " + (checked ? 'checked="" ' : "") + 'disabled="" type="checkbox">';
-  }
-  paragraph({ tokens }) {
-    return `<p>${this.parser.parseInline(tokens)}</p>
+  list(e) {
+    let t = e.ordered, n = e.start, r = "";
+    for (let a = 0; a < e.items.length; a++) {
+      let o = e.items[a];
+      r += this.listitem(o);
+    }
+    let i = t ? "ol" : "ul", s = t && n !== 1 ? ' start="' + n + '"' : "";
+    return "<" + i + s + `>
+` + r + "</" + i + `>
 `;
   }
-  table(token) {
-    let header = "";
-    let cell = "";
-    for (let j = 0; j < token.header.length; j++) {
-      cell += this.tablecell(token.header[j]);
-    }
-    header += this.tablerow({ text: cell });
-    let body = "";
-    for (let j = 0; j < token.rows.length; j++) {
-      const row = token.rows[j];
-      cell = "";
-      for (let k = 0; k < row.length; k++) {
-        cell += this.tablecell(row[k]);
-      }
-      body += this.tablerow({ text: cell });
-    }
-    if (body)
-      body = `<tbody>${body}</tbody>`;
-    return "<table>\n<thead>\n" + header + "</thead>\n" + body + "</table>\n";
+  listitem(e) {
+    return `<li>${this.parser.parse(e.tokens)}</li>
+`;
   }
-  tablerow({ text }) {
+  checkbox({ checked: e }) {
+    return "<input " + (e ? 'checked="" ' : "") + 'disabled="" type="checkbox"> ';
+  }
+  paragraph({ tokens: e }) {
+    return `<p>${this.parser.parseInline(e)}</p>
+`;
+  }
+  table(e) {
+    let t = "", n = "";
+    for (let i = 0; i < e.header.length; i++)
+      n += this.tablecell(e.header[i]);
+    t += this.tablerow({ text: n });
+    let r = "";
+    for (let i = 0; i < e.rows.length; i++) {
+      let s = e.rows[i];
+      n = "";
+      for (let a = 0; a < s.length; a++)
+        n += this.tablecell(s[a]);
+      r += this.tablerow({ text: n });
+    }
+    return r && (r = `<tbody>${r}</tbody>`), `<table>
+<thead>
+` + t + `</thead>
+` + r + `</table>
+`;
+  }
+  tablerow({ text: e }) {
     return `<tr>
-${text}</tr>
+${e}</tr>
 `;
   }
-  tablecell(token) {
-    const content = this.parser.parseInline(token.tokens);
-    const type = token.header ? "th" : "td";
-    const tag2 = token.align ? `<${type} align="${token.align}">` : `<${type}>`;
-    return tag2 + content + `</${type}>
+  tablecell(e) {
+    let t = this.parser.parseInline(e.tokens), n = e.header ? "th" : "td";
+    return (e.align ? `<${n} align="${e.align}">` : `<${n}>`) + t + `</${n}>
 `;
   }
-  /**
-   * span level renderer
-   */
-  strong({ tokens }) {
-    return `<strong>${this.parser.parseInline(tokens)}</strong>`;
+  strong({ tokens: e }) {
+    return `<strong>${this.parser.parseInline(e)}</strong>`;
   }
-  em({ tokens }) {
-    return `<em>${this.parser.parseInline(tokens)}</em>`;
+  em({ tokens: e }) {
+    return `<em>${this.parser.parseInline(e)}</em>`;
   }
-  codespan({ text }) {
-    return `<code>${escape22(text, true)}</code>`;
+  codespan({ text: e }) {
+    return `<code>${w(e, true)}</code>`;
   }
-  br(token) {
+  br(e) {
     return "<br>";
   }
-  del({ tokens }) {
-    return `<del>${this.parser.parseInline(tokens)}</del>`;
+  del({ tokens: e }) {
+    return `<del>${this.parser.parseInline(e)}</del>`;
   }
-  link({ href, title, tokens }) {
-    const text = this.parser.parseInline(tokens);
-    const cleanHref = cleanUrl(href);
-    if (cleanHref === null) {
-      return text;
-    }
-    href = cleanHref;
-    let out = '<a href="' + href + '"';
-    if (title) {
-      out += ' title="' + escape22(title) + '"';
-    }
-    out += ">" + text + "</a>";
-    return out;
+  link({ href: e, title: t, tokens: n }) {
+    let r = this.parser.parseInline(n), i = X(e);
+    if (i === null)
+      return r;
+    e = i;
+    let s = '<a href="' + e + '"';
+    return t && (s += ' title="' + w(t) + '"'), s += ">" + r + "</a>", s;
   }
-  image({ href, title, text, tokens }) {
-    if (tokens) {
-      text = this.parser.parseInline(tokens, this.parser.textRenderer);
-    }
-    const cleanHref = cleanUrl(href);
-    if (cleanHref === null) {
-      return escape22(text);
-    }
-    href = cleanHref;
-    let out = `<img src="${href}" alt="${text}"`;
-    if (title) {
-      out += ` title="${escape22(title)}"`;
-    }
-    out += ">";
-    return out;
+  image({ href: e, title: t, text: n, tokens: r }) {
+    r && (n = this.parser.parseInline(r, this.parser.textRenderer));
+    let i = X(e);
+    if (i === null)
+      return w(n);
+    e = i;
+    let s = `<img src="${e}" alt="${n}"`;
+    return t && (s += ` title="${w(t)}"`), s += ">", s;
   }
-  text(token) {
-    return "tokens" in token && token.tokens ? this.parser.parseInline(token.tokens) : "escaped" in token && token.escaped ? token.text : escape22(token.text);
+  text(e) {
+    return "tokens" in e && e.tokens ? this.parser.parseInline(e.tokens) : "escaped" in e && e.escaped ? e.text : w(e.text);
   }
 };
-var _TextRenderer = class {
-  // no need for block level renderers
-  strong({ text }) {
-    return text;
+var $ = class {
+  strong({ text: e }) {
+    return e;
   }
-  em({ text }) {
-    return text;
+  em({ text: e }) {
+    return e;
   }
-  codespan({ text }) {
-    return text;
+  codespan({ text: e }) {
+    return e;
   }
-  del({ text }) {
-    return text;
+  del({ text: e }) {
+    return e;
   }
-  html({ text }) {
-    return text;
+  html({ text: e }) {
+    return e;
   }
-  text({ text }) {
-    return text;
+  text({ text: e }) {
+    return e;
   }
-  link({ text }) {
-    return "" + text;
+  link({ text: e }) {
+    return "" + e;
   }
-  image({ text }) {
-    return "" + text;
+  image({ text: e }) {
+    return "" + e;
   }
   br() {
     return "";
   }
+  checkbox({ raw: e }) {
+    return e;
+  }
 };
-var _Parser = class __Parser {
+var b = class u2 {
   options;
   renderer;
   textRenderer;
-  constructor(options2) {
-    this.options = options2 || _defaults;
-    this.options.renderer = this.options.renderer || new _Renderer();
-    this.renderer = this.options.renderer;
-    this.renderer.options = this.options;
-    this.renderer.parser = this;
-    this.textRenderer = new _TextRenderer();
+  constructor(e) {
+    this.options = e || T, this.options.renderer = this.options.renderer || new P(), this.renderer = this.options.renderer, this.renderer.options = this.options, this.renderer.parser = this, this.textRenderer = new $();
   }
-  /**
-   * Static Parse Method
-   */
-  static parse(tokens, options2) {
-    const parser2 = new __Parser(options2);
-    return parser2.parse(tokens);
+  static parse(e, t) {
+    return new u2(t).parse(e);
   }
-  /**
-   * Static Parse Inline Method
-   */
-  static parseInline(tokens, options2) {
-    const parser2 = new __Parser(options2);
-    return parser2.parseInline(tokens);
+  static parseInline(e, t) {
+    return new u2(t).parseInline(e);
   }
-  /**
-   * Parse Loop
-   */
-  parse(tokens, top = true) {
-    let out = "";
-    for (let i = 0; i < tokens.length; i++) {
-      const anyToken = tokens[i];
-      if (this.options.extensions?.renderers?.[anyToken.type]) {
-        const genericToken = anyToken;
-        const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);
-        if (ret !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "html", "paragraph", "text"].includes(genericToken.type)) {
-          out += ret || "";
+  parse(e) {
+    let t = "";
+    for (let n = 0; n < e.length; n++) {
+      let r = e[n];
+      if (this.options.extensions?.renderers?.[r.type]) {
+        let s = r, a = this.options.extensions.renderers[s.type].call({ parser: this }, s);
+        if (a !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "html", "def", "paragraph", "text"].includes(s.type)) {
+          t += a || "";
           continue;
         }
       }
-      const token = anyToken;
-      switch (token.type) {
+      let i = r;
+      switch (i.type) {
         case "space": {
-          out += this.renderer.space(token);
-          continue;
+          t += this.renderer.space(i);
+          break;
         }
         case "hr": {
-          out += this.renderer.hr(token);
-          continue;
+          t += this.renderer.hr(i);
+          break;
         }
         case "heading": {
-          out += this.renderer.heading(token);
-          continue;
+          t += this.renderer.heading(i);
+          break;
         }
         case "code": {
-          out += this.renderer.code(token);
-          continue;
+          t += this.renderer.code(i);
+          break;
         }
         case "table": {
-          out += this.renderer.table(token);
-          continue;
+          t += this.renderer.table(i);
+          break;
         }
         case "blockquote": {
-          out += this.renderer.blockquote(token);
-          continue;
+          t += this.renderer.blockquote(i);
+          break;
         }
         case "list": {
-          out += this.renderer.list(token);
-          continue;
+          t += this.renderer.list(i);
+          break;
         }
-        case "html": {
-          out += this.renderer.html(token);
-          continue;
-        }
-        case "paragraph": {
-          out += this.renderer.paragraph(token);
-          continue;
-        }
-        case "text": {
-          let textToken = token;
-          let body = this.renderer.text(textToken);
-          while (i + 1 < tokens.length && tokens[i + 1].type === "text") {
-            textToken = tokens[++i];
-            body += "\n" + this.renderer.text(textToken);
-          }
-          if (top) {
-            out += this.renderer.paragraph({
-              type: "paragraph",
-              raw: body,
-              text: body,
-              tokens: [{ type: "text", raw: body, text: body, escaped: true }]
-            });
-          } else {
-            out += body;
-          }
-          continue;
-        }
-        default: {
-          const errMsg = 'Token with "' + token.type + '" type was not found.';
-          if (this.options.silent) {
-            console.error(errMsg);
-            return "";
-          } else {
-            throw new Error(errMsg);
-          }
-        }
-      }
-    }
-    return out;
-  }
-  /**
-   * Parse Inline Tokens
-   */
-  parseInline(tokens, renderer = this.renderer) {
-    let out = "";
-    for (let i = 0; i < tokens.length; i++) {
-      const anyToken = tokens[i];
-      if (this.options.extensions?.renderers?.[anyToken.type]) {
-        const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);
-        if (ret !== false || !["escape", "html", "link", "image", "strong", "em", "codespan", "br", "del", "text"].includes(anyToken.type)) {
-          out += ret || "";
-          continue;
-        }
-      }
-      const token = anyToken;
-      switch (token.type) {
-        case "escape": {
-          out += renderer.text(token);
+        case "checkbox": {
+          t += this.renderer.checkbox(i);
           break;
         }
         case "html": {
-          out += renderer.html(token);
+          t += this.renderer.html(i);
+          break;
+        }
+        case "def": {
+          t += this.renderer.def(i);
+          break;
+        }
+        case "paragraph": {
+          t += this.renderer.paragraph(i);
+          break;
+        }
+        case "text": {
+          t += this.renderer.text(i);
+          break;
+        }
+        default: {
+          let s = 'Token with "' + i.type + '" type was not found.';
+          if (this.options.silent)
+            return console.error(s), "";
+          throw new Error(s);
+        }
+      }
+    }
+    return t;
+  }
+  parseInline(e, t = this.renderer) {
+    let n = "";
+    for (let r = 0; r < e.length; r++) {
+      let i = e[r];
+      if (this.options.extensions?.renderers?.[i.type]) {
+        let a = this.options.extensions.renderers[i.type].call({ parser: this }, i);
+        if (a !== false || !["escape", "html", "link", "image", "strong", "em", "codespan", "br", "del", "text"].includes(i.type)) {
+          n += a || "";
+          continue;
+        }
+      }
+      let s = i;
+      switch (s.type) {
+        case "escape": {
+          n += t.text(s);
+          break;
+        }
+        case "html": {
+          n += t.html(s);
           break;
         }
         case "link": {
-          out += renderer.link(token);
+          n += t.link(s);
           break;
         }
         case "image": {
-          out += renderer.image(token);
+          n += t.image(s);
+          break;
+        }
+        case "checkbox": {
+          n += t.checkbox(s);
           break;
         }
         case "strong": {
-          out += renderer.strong(token);
+          n += t.strong(s);
           break;
         }
         case "em": {
-          out += renderer.em(token);
+          n += t.em(s);
           break;
         }
         case "codespan": {
-          out += renderer.codespan(token);
+          n += t.codespan(s);
           break;
         }
         case "br": {
-          out += renderer.br(token);
+          n += t.br(s);
           break;
         }
         case "del": {
-          out += renderer.del(token);
+          n += t.del(s);
           break;
         }
         case "text": {
-          out += renderer.text(token);
+          n += t.text(s);
           break;
         }
         default: {
-          const errMsg = 'Token with "' + token.type + '" type was not found.';
-          if (this.options.silent) {
-            console.error(errMsg);
-            return "";
-          } else {
-            throw new Error(errMsg);
-          }
+          let a = 'Token with "' + s.type + '" type was not found.';
+          if (this.options.silent)
+            return console.error(a), "";
+          throw new Error(a);
         }
       }
     }
-    return out;
+    return n;
   }
 };
-var _Hooks = class {
+var S = class {
   options;
   block;
-  constructor(options2) {
-    this.options = options2 || _defaults;
+  constructor(e) {
+    this.options = e || T;
   }
-  static passThroughHooks = /* @__PURE__ */ new Set([
-    "preprocess",
-    "postprocess",
-    "processAllTokens"
-  ]);
-  /**
-   * Process markdown before marked
-   */
-  preprocess(markdown) {
-    return markdown;
+  static passThroughHooks = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens", "emStrongMask"]);
+  static passThroughHooksRespectAsync = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens"]);
+  preprocess(e) {
+    return e;
   }
-  /**
-   * Process HTML after marked is finished
-   */
-  postprocess(html2) {
-    return html2;
+  postprocess(e) {
+    return e;
   }
-  /**
-   * Process all tokens before walk tokens
-   */
-  processAllTokens(tokens) {
-    return tokens;
+  processAllTokens(e) {
+    return e;
   }
-  /**
-   * Provide function to tokenize markdown
-   */
+  emStrongMask(e) {
+    return e;
+  }
   provideLexer() {
-    return this.block ? _Lexer.lex : _Lexer.lexInline;
+    return this.block ? x.lex : x.lexInline;
   }
-  /**
-   * Provide function to parse tokens
-   */
   provideParser() {
-    return this.block ? _Parser.parse : _Parser.parseInline;
+    return this.block ? b.parse : b.parseInline;
   }
 };
-var Marked = class {
-  defaults = _getDefaults();
+var B = class {
+  defaults = L();
   options = this.setOptions;
   parse = this.parseMarkdown(true);
   parseInline = this.parseMarkdown(false);
-  Parser = _Parser;
-  Renderer = _Renderer;
-  TextRenderer = _TextRenderer;
-  Lexer = _Lexer;
-  Tokenizer = _Tokenizer;
-  Hooks = _Hooks;
-  constructor(...args) {
-    this.use(...args);
+  Parser = b;
+  Renderer = P;
+  TextRenderer = $;
+  Lexer = x;
+  Tokenizer = y;
+  Hooks = S;
+  constructor(...e) {
+    this.use(...e);
   }
-  /**
-   * Run callback for every token
-   */
-  walkTokens(tokens, callback) {
-    let values = [];
-    for (const token of tokens) {
-      values = values.concat(callback.call(this, token));
-      switch (token.type) {
+  walkTokens(e, t) {
+    let n = [];
+    for (let r of e)
+      switch (n = n.concat(t.call(this, r)), r.type) {
         case "table": {
-          const tableToken = token;
-          for (const cell of tableToken.header) {
-            values = values.concat(this.walkTokens(cell.tokens, callback));
-          }
-          for (const row of tableToken.rows) {
-            for (const cell of row) {
-              values = values.concat(this.walkTokens(cell.tokens, callback));
-            }
-          }
+          let i = r;
+          for (let s of i.header)
+            n = n.concat(this.walkTokens(s.tokens, t));
+          for (let s of i.rows)
+            for (let a of s)
+              n = n.concat(this.walkTokens(a.tokens, t));
           break;
         }
         case "list": {
-          const listToken = token;
-          values = values.concat(this.walkTokens(listToken.items, callback));
+          let i = r;
+          n = n.concat(this.walkTokens(i.items, t));
           break;
         }
         default: {
-          const genericToken = token;
-          if (this.defaults.extensions?.childTokens?.[genericToken.type]) {
-            this.defaults.extensions.childTokens[genericToken.type].forEach((childTokens) => {
-              const tokens2 = genericToken[childTokens].flat(Infinity);
-              values = values.concat(this.walkTokens(tokens2, callback));
-            });
-          } else if (genericToken.tokens) {
-            values = values.concat(this.walkTokens(genericToken.tokens, callback));
-          }
+          let i = r;
+          this.defaults.extensions?.childTokens?.[i.type] ? this.defaults.extensions.childTokens[i.type].forEach((s) => {
+            let a = i[s].flat(1 / 0);
+            n = n.concat(this.walkTokens(a, t));
+          }) : i.tokens && (n = n.concat(this.walkTokens(i.tokens, t)));
         }
       }
-    }
-    return values;
+    return n;
   }
-  use(...args) {
-    const extensions = this.defaults.extensions || { renderers: {}, childTokens: {} };
-    args.forEach((pack) => {
-      const opts = { ...pack };
-      opts.async = this.defaults.async || opts.async || false;
-      if (pack.extensions) {
-        pack.extensions.forEach((ext) => {
-          if (!ext.name) {
-            throw new Error("extension name required");
-          }
-          if ("renderer" in ext) {
-            const prevRenderer = extensions.renderers[ext.name];
-            if (prevRenderer) {
-              extensions.renderers[ext.name] = function(...args2) {
-                let ret = ext.renderer.apply(this, args2);
-                if (ret === false) {
-                  ret = prevRenderer.apply(this, args2);
-                }
-                return ret;
-              };
-            } else {
-              extensions.renderers[ext.name] = ext.renderer;
-            }
-          }
-          if ("tokenizer" in ext) {
-            if (!ext.level || ext.level !== "block" && ext.level !== "inline") {
-              throw new Error("extension level must be 'block' or 'inline'");
-            }
-            const extLevel = extensions[ext.level];
-            if (extLevel) {
-              extLevel.unshift(ext.tokenizer);
-            } else {
-              extensions[ext.level] = [ext.tokenizer];
-            }
-            if (ext.start) {
-              if (ext.level === "block") {
-                if (extensions.startBlock) {
-                  extensions.startBlock.push(ext.start);
-                } else {
-                  extensions.startBlock = [ext.start];
-                }
-              } else if (ext.level === "inline") {
-                if (extensions.startInline) {
-                  extensions.startInline.push(ext.start);
-                } else {
-                  extensions.startInline = [ext.start];
-                }
-              }
-            }
-          }
-          if ("childTokens" in ext && ext.childTokens) {
-            extensions.childTokens[ext.name] = ext.childTokens;
-          }
-        });
-        opts.extensions = extensions;
-      }
-      if (pack.renderer) {
-        const renderer = this.defaults.renderer || new _Renderer(this.defaults);
-        for (const prop in pack.renderer) {
-          if (!(prop in renderer)) {
-            throw new Error(`renderer '${prop}' does not exist`);
-          }
-          if (["options", "parser"].includes(prop)) {
+  use(...e) {
+    let t = this.defaults.extensions || { renderers: {}, childTokens: {} };
+    return e.forEach((n) => {
+      let r = { ...n };
+      if (r.async = this.defaults.async || r.async || false, n.extensions && (n.extensions.forEach((i) => {
+        if (!i.name)
+          throw new Error("extension name required");
+        if ("renderer" in i) {
+          let s = t.renderers[i.name];
+          s ? t.renderers[i.name] = function(...a) {
+            let o = i.renderer.apply(this, a);
+            return o === false && (o = s.apply(this, a)), o;
+          } : t.renderers[i.name] = i.renderer;
+        }
+        if ("tokenizer" in i) {
+          if (!i.level || i.level !== "block" && i.level !== "inline")
+            throw new Error("extension level must be 'block' or 'inline'");
+          let s = t[i.level];
+          s ? s.unshift(i.tokenizer) : t[i.level] = [i.tokenizer], i.start && (i.level === "block" ? t.startBlock ? t.startBlock.push(i.start) : t.startBlock = [i.start] : i.level === "inline" && (t.startInline ? t.startInline.push(i.start) : t.startInline = [i.start]));
+        }
+        "childTokens" in i && i.childTokens && (t.childTokens[i.name] = i.childTokens);
+      }), r.extensions = t), n.renderer) {
+        let i = this.defaults.renderer || new P(this.defaults);
+        for (let s in n.renderer) {
+          if (!(s in i))
+            throw new Error(`renderer '${s}' does not exist`);
+          if (["options", "parser"].includes(s))
             continue;
-          }
-          const rendererProp = prop;
-          const rendererFunc = pack.renderer[rendererProp];
-          const prevRenderer = renderer[rendererProp];
-          renderer[rendererProp] = (...args2) => {
-            let ret = rendererFunc.apply(renderer, args2);
-            if (ret === false) {
-              ret = prevRenderer.apply(renderer, args2);
-            }
-            return ret || "";
+          let a = s, o = n.renderer[a], l = i[a];
+          i[a] = (...p) => {
+            let c = o.apply(i, p);
+            return c === false && (c = l.apply(i, p)), c || "";
           };
         }
-        opts.renderer = renderer;
+        r.renderer = i;
       }
-      if (pack.tokenizer) {
-        const tokenizer = this.defaults.tokenizer || new _Tokenizer(this.defaults);
-        for (const prop in pack.tokenizer) {
-          if (!(prop in tokenizer)) {
-            throw new Error(`tokenizer '${prop}' does not exist`);
-          }
-          if (["options", "rules", "lexer"].includes(prop)) {
+      if (n.tokenizer) {
+        let i = this.defaults.tokenizer || new y(this.defaults);
+        for (let s in n.tokenizer) {
+          if (!(s in i))
+            throw new Error(`tokenizer '${s}' does not exist`);
+          if (["options", "rules", "lexer"].includes(s))
             continue;
-          }
-          const tokenizerProp = prop;
-          const tokenizerFunc = pack.tokenizer[tokenizerProp];
-          const prevTokenizer = tokenizer[tokenizerProp];
-          tokenizer[tokenizerProp] = (...args2) => {
-            let ret = tokenizerFunc.apply(tokenizer, args2);
-            if (ret === false) {
-              ret = prevTokenizer.apply(tokenizer, args2);
-            }
-            return ret;
+          let a = s, o = n.tokenizer[a], l = i[a];
+          i[a] = (...p) => {
+            let c = o.apply(i, p);
+            return c === false && (c = l.apply(i, p)), c;
           };
         }
-        opts.tokenizer = tokenizer;
+        r.tokenizer = i;
       }
-      if (pack.hooks) {
-        const hooks = this.defaults.hooks || new _Hooks();
-        for (const prop in pack.hooks) {
-          if (!(prop in hooks)) {
-            throw new Error(`hook '${prop}' does not exist`);
-          }
-          if (["options", "block"].includes(prop)) {
+      if (n.hooks) {
+        let i = this.defaults.hooks || new S();
+        for (let s in n.hooks) {
+          if (!(s in i))
+            throw new Error(`hook '${s}' does not exist`);
+          if (["options", "block"].includes(s))
             continue;
-          }
-          const hooksProp = prop;
-          const hooksFunc = pack.hooks[hooksProp];
-          const prevHook = hooks[hooksProp];
-          if (_Hooks.passThroughHooks.has(prop)) {
-            hooks[hooksProp] = (arg) => {
-              if (this.defaults.async) {
-                return Promise.resolve(hooksFunc.call(hooks, arg)).then((ret2) => {
-                  return prevHook.call(hooks, ret2);
-                });
-              }
-              const ret = hooksFunc.call(hooks, arg);
-              return prevHook.call(hooks, ret);
-            };
-          } else {
-            hooks[hooksProp] = (...args2) => {
-              let ret = hooksFunc.apply(hooks, args2);
-              if (ret === false) {
-                ret = prevHook.apply(hooks, args2);
-              }
-              return ret;
-            };
-          }
+          let a = s, o = n.hooks[a], l = i[a];
+          S.passThroughHooks.has(s) ? i[a] = (p) => {
+            if (this.defaults.async && S.passThroughHooksRespectAsync.has(s))
+              return (async () => {
+                let g = await o.call(i, p);
+                return l.call(i, g);
+              })();
+            let c = o.call(i, p);
+            return l.call(i, c);
+          } : i[a] = (...p) => {
+            if (this.defaults.async)
+              return (async () => {
+                let g = await o.apply(i, p);
+                return g === false && (g = await l.apply(i, p)), g;
+              })();
+            let c = o.apply(i, p);
+            return c === false && (c = l.apply(i, p)), c;
+          };
         }
-        opts.hooks = hooks;
+        r.hooks = i;
       }
-      if (pack.walkTokens) {
-        const walkTokens2 = this.defaults.walkTokens;
-        const packWalktokens = pack.walkTokens;
-        opts.walkTokens = function(token) {
-          let values = [];
-          values.push(packWalktokens.call(this, token));
-          if (walkTokens2) {
-            values = values.concat(walkTokens2.call(this, token));
-          }
-          return values;
+      if (n.walkTokens) {
+        let i = this.defaults.walkTokens, s = n.walkTokens;
+        r.walkTokens = function(a) {
+          let o = [];
+          return o.push(s.call(this, a)), i && (o = o.concat(i.call(this, a))), o;
         };
       }
-      this.defaults = { ...this.defaults, ...opts };
-    });
-    return this;
+      this.defaults = { ...this.defaults, ...r };
+    }), this;
   }
-  setOptions(opt) {
-    this.defaults = { ...this.defaults, ...opt };
-    return this;
+  setOptions(e) {
+    return this.defaults = { ...this.defaults, ...e }, this;
   }
-  lexer(src, options2) {
-    return _Lexer.lex(src, options2 ?? this.defaults);
+  lexer(e, t) {
+    return x.lex(e, t ?? this.defaults);
   }
-  parser(tokens, options2) {
-    return _Parser.parse(tokens, options2 ?? this.defaults);
+  parser(e, t) {
+    return b.parse(e, t ?? this.defaults);
   }
-  parseMarkdown(blockType) {
-    const parse22 = (src, options2) => {
-      const origOpt = { ...options2 };
-      const opt = { ...this.defaults, ...origOpt };
-      const throwError = this.onError(!!opt.silent, !!opt.async);
-      if (this.defaults.async === true && origOpt.async === false) {
-        return throwError(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));
-      }
-      if (typeof src === "undefined" || src === null) {
-        return throwError(new Error("marked(): input parameter is undefined or null"));
-      }
-      if (typeof src !== "string") {
-        return throwError(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(src) + ", string expected"));
-      }
-      if (opt.hooks) {
-        opt.hooks.options = opt;
-        opt.hooks.block = blockType;
-      }
-      const lexer2 = opt.hooks ? opt.hooks.provideLexer() : blockType ? _Lexer.lex : _Lexer.lexInline;
-      const parser2 = opt.hooks ? opt.hooks.provideParser() : blockType ? _Parser.parse : _Parser.parseInline;
-      if (opt.async) {
-        return Promise.resolve(opt.hooks ? opt.hooks.preprocess(src) : src).then((src2) => lexer2(src2, opt)).then((tokens) => opt.hooks ? opt.hooks.processAllTokens(tokens) : tokens).then((tokens) => opt.walkTokens ? Promise.all(this.walkTokens(tokens, opt.walkTokens)).then(() => tokens) : tokens).then((tokens) => parser2(tokens, opt)).then((html2) => opt.hooks ? opt.hooks.postprocess(html2) : html2).catch(throwError);
-      }
+  parseMarkdown(e) {
+    return (n, r) => {
+      let i = { ...r }, s = { ...this.defaults, ...i }, a = this.onError(!!s.silent, !!s.async);
+      if (this.defaults.async === true && i.async === false)
+        return a(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));
+      if (typeof n > "u" || n === null)
+        return a(new Error("marked(): input parameter is undefined or null"));
+      if (typeof n != "string")
+        return a(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(n) + ", string expected"));
+      if (s.hooks && (s.hooks.options = s, s.hooks.block = e), s.async)
+        return (async () => {
+          let o = s.hooks ? await s.hooks.preprocess(n) : n, p = await (s.hooks ? await s.hooks.provideLexer() : e ? x.lex : x.lexInline)(o, s), c = s.hooks ? await s.hooks.processAllTokens(p) : p;
+          s.walkTokens && await Promise.all(this.walkTokens(c, s.walkTokens));
+          let h = await (s.hooks ? await s.hooks.provideParser() : e ? b.parse : b.parseInline)(c, s);
+          return s.hooks ? await s.hooks.postprocess(h) : h;
+        })().catch(a);
       try {
-        if (opt.hooks) {
-          src = opt.hooks.preprocess(src);
-        }
-        let tokens = lexer2(src, opt);
-        if (opt.hooks) {
-          tokens = opt.hooks.processAllTokens(tokens);
-        }
-        if (opt.walkTokens) {
-          this.walkTokens(tokens, opt.walkTokens);
-        }
-        let html2 = parser2(tokens, opt);
-        if (opt.hooks) {
-          html2 = opt.hooks.postprocess(html2);
-        }
-        return html2;
-      } catch (e) {
-        return throwError(e);
+        s.hooks && (n = s.hooks.preprocess(n));
+        let l = (s.hooks ? s.hooks.provideLexer() : e ? x.lex : x.lexInline)(n, s);
+        s.hooks && (l = s.hooks.processAllTokens(l)), s.walkTokens && this.walkTokens(l, s.walkTokens);
+        let c = (s.hooks ? s.hooks.provideParser() : e ? b.parse : b.parseInline)(l, s);
+        return s.hooks && (c = s.hooks.postprocess(c)), c;
+      } catch (o) {
+        return a(o);
       }
     };
-    return parse22;
   }
-  onError(silent, async) {
-    return (e) => {
-      e.message += "\nPlease report this to https://github.com/markedjs/marked.";
-      if (silent) {
-        const msg = "<p>An error occurred:</p><pre>" + escape22(e.message + "", true) + "</pre>";
-        if (async) {
-          return Promise.resolve(msg);
-        }
-        return msg;
+  onError(e, t) {
+    return (n) => {
+      if (n.message += `
+Please report this to https://github.com/markedjs/marked.`, e) {
+        let r = "<p>An error occurred:</p><pre>" + w(n.message + "", true) + "</pre>";
+        return t ? Promise.resolve(r) : r;
       }
-      if (async) {
-        return Promise.reject(e);
-      }
-      throw e;
+      if (t)
+        return Promise.reject(n);
+      throw n;
     };
   }
 };
-var markedInstance = new Marked();
-function marked(src, opt) {
-  return markedInstance.parse(src, opt);
+var _ = new B();
+function d(u3, e) {
+  return _.parse(u3, e);
 }
-marked.options = marked.setOptions = function(options2) {
-  markedInstance.setOptions(options2);
-  marked.defaults = markedInstance.defaults;
-  changeDefaults(marked.defaults);
-  return marked;
+d.options = d.setOptions = function(u3) {
+  return _.setOptions(u3), d.defaults = _.defaults, Z(d.defaults), d;
 };
-marked.getDefaults = _getDefaults;
-marked.defaults = _defaults;
-marked.use = function(...args) {
-  markedInstance.use(...args);
-  marked.defaults = markedInstance.defaults;
-  changeDefaults(marked.defaults);
-  return marked;
+d.getDefaults = L;
+d.defaults = T;
+d.use = function(...u3) {
+  return _.use(...u3), d.defaults = _.defaults, Z(d.defaults), d;
 };
-marked.walkTokens = function(tokens, callback) {
-  return markedInstance.walkTokens(tokens, callback);
+d.walkTokens = function(u3, e) {
+  return _.walkTokens(u3, e);
 };
-marked.parseInline = markedInstance.parseInline;
-marked.Parser = _Parser;
-marked.parser = _Parser.parse;
-marked.Renderer = _Renderer;
-marked.TextRenderer = _TextRenderer;
-marked.Lexer = _Lexer;
-marked.lexer = _Lexer.lex;
-marked.Tokenizer = _Tokenizer;
-marked.Hooks = _Hooks;
-marked.parse = marked;
-var options = marked.options;
-var setOptions = marked.setOptions;
-var use = marked.use;
-var walkTokens = marked.walkTokens;
-var parseInline = marked.parseInline;
-var parser = _Parser.parse;
-var lexer = _Lexer.lex;
+d.parseInline = _.parseInline;
+d.Parser = b;
+d.parser = b.parse;
+d.Renderer = P;
+d.TextRenderer = $;
+d.Lexer = x;
+d.lexer = x.lex;
+d.Tokenizer = y;
+d.Hooks = S;
+d.parse = d;
+var Dt = d.options;
+var Ht = d.setOptions;
+var Zt = d.use;
+var Gt = d.walkTokens;
+var Nt = d.parseInline;
+var Ft = b.parse;
+var jt = x.lex;
 
 // src/core/show.ts
 function formatConversationAsMarkdown(jsonl, startLine, endLine) {
@@ -58237,7 +57359,7 @@ function formatConversationAsMarkdown(jsonl, startLine, endLine) {
     const timestamp = new Date(msg.timestamp).toLocaleString();
     const messageId = msg.uuid || `msg-${i}`;
     if (msg.type === "user" && Array.isArray(msg.message.content)) {
-      const hasOnlyToolResults = msg.message.content.every((block2) => block2.type === "tool_result");
+      const hasOnlyToolResults = msg.message.content.every((block) => block.type === "tool_result");
       if (hasOnlyToolResults) {
         continue;
       }
@@ -58281,9 +57403,9 @@ function formatConversationAsMarkdown(jsonl, startLine, endLine) {
 
 `;
       } else if (Array.isArray(msg.message.content)) {
-        for (const block2 of msg.message.content) {
-          if (block2.type === "text" && block2.text) {
-            output += `${block2.text}
+        for (const block of msg.message.content) {
+          if (block.type === "text" && block.text) {
+            output += `${block.text}
 
 `;
           }
@@ -58296,16 +57418,16 @@ function formatConversationAsMarkdown(jsonl, startLine, endLine) {
 
 `;
       } else if (Array.isArray(content)) {
-        for (const block2 of content) {
-          if (block2.type === "text" && block2.text) {
-            output += `${block2.text}
+        for (const block of content) {
+          if (block.type === "text" && block.text) {
+            output += `${block.text}
 
 `;
-          } else if (block2.type === "tool_use") {
-            output += `**Tool Use:** \`${block2.name}\`
+          } else if (block.type === "tool_use") {
+            output += `**Tool Use:** \`${block.name}\`
 
 `;
-            const input = block2.input;
+            const input = block.input;
             if (input && typeof input === "object") {
               for (const [key, value] of Object.entries(input)) {
                 if (typeof value === "string" && value.includes("\n")) {
@@ -58327,11 +57449,11 @@ ${JSON.stringify(value, null, 2)}
               }
               output += "\n";
             }
-            const toolUseId = block2.id;
+            const toolUseId = block.id;
             if (toolUseId) {
               let foundResult = false;
-              for (let j = i + 1; j < Math.min(i + 6, messages.length) && !foundResult; j++) {
-                const laterMsg = messages[j];
+              for (let j2 = i + 1; j2 < Math.min(i + 6, messages.length) && !foundResult; j2++) {
+                const laterMsg = messages[j2];
                 if (laterMsg.type === "user" && Array.isArray(laterMsg.message.content)) {
                   for (const resultBlock of laterMsg.message.content) {
                     if (resultBlock.type === "tool_result" && resultBlock.tool_use_id === toolUseId) {
@@ -58491,12 +57613,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const params = SearchInputSchema.parse(args);
       let resultText;
       if (Array.isArray(params.query)) {
-        const options2 = {
+        const options = {
           limit: params.limit,
           after: params.after,
           before: params.before
         };
-        const results = await searchMultipleConcepts(params.query, options2);
+        const results = await searchMultipleConcepts(params.query, options);
         if (params.response_format === "json") {
           resultText = JSON.stringify(
             {
@@ -58511,13 +57633,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           resultText = await formatMultiConceptResults(results, params.query);
         }
       } else {
-        const options2 = {
+        const options = {
           mode: params.mode,
           limit: params.limit,
           after: params.after,
           before: params.before
         };
-        const results = await searchConversations(params.query, options2);
+        const results = await searchConversations(params.query, options);
         if (params.response_format === "json") {
           resultText = JSON.stringify(
             {
