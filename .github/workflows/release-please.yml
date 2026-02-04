@@ -18,3 +18,19 @@ jobs:
         with:
           # Use GitHub App token for better permissions
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Enable auto-merge for release PRs when CI passes
+      - name: Enable auto-merge for release PR
+        if: steps.release.outputs.release_created != 'true'
+        run: |
+          # Find release-please PRs
+          PRS=$(gh pr list --search "release-please" --state open --json number,title --jq '.[] | select(.title | startswith("chore(main): release")) | .number')
+
+          if [ -n "$PRS" ]; then
+            for PR in $PRS; do
+              echo "Enabling auto-merge for PR #$PR"
+              gh pr merge --auto --merge "$PR" || true
+            done
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
