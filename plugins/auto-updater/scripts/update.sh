@@ -67,6 +67,77 @@ get_installed_plugins() {
     fi
 }
 
+# Check and update a single plugin (common logic)
+# Args:
+#   $1 - plugin_name
+#   $2 - marketplace_plugins (JSON)
+#   $3 - installed_plugins (JSON)
+#   $4 - org
+#   $5 - repo
+#   $6 - marketplace_name
+#   $7 - show_not_found_warning (true/false, optional, default: true)
+# Returns:
+#   0 - Update successful
+#   1 - No update needed or update failed
+check_and_update_plugin() {
+    local plugin_name="$1"
+    local marketplace_plugins="$2"
+    local installed_plugins="$3"
+    local org="$4"
+    local repo="$5"
+    local marketplace_name="$6"
+    local show_warning="${7:-true}"
+
+    # Find plugin in marketplace
+    local plugin_data
+    plugin_data=$(echo "${marketplace_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name)')
+
+    if [[ -z "${plugin_data}" ]]; then
+        if [[ "${show_warning}" == "true" ]]; then
+            log_warning "Plugin ${plugin_name} not found in ${marketplace_name}"
+        fi
+        return 1
+    fi
+
+    # Extract versions
+    local remote_version local_version
+    remote_version=$(echo "${plugin_data}" | jq -r '.version // "unknown"')
+    local_version=$(echo "${installed_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name) | .version // "unknown"')
+
+    if [[ "${local_version}" == "unknown" ]]; then
+        log_info "Plugin ${plugin_name} is not installed"
+        return 1
+    fi
+
+    # Compare versions
+    if version_lt "${local_version}" "${remote_version}"; then
+        log_info "Updating ${plugin_name}: ${local_version} -> ${remote_version}"
+
+        # Attempt update
+        if claude plugin install "${org}/${repo}/${plugin_name}"; then
+            # Verify: check actual installed version
+            local new_version
+            new_version=$(get_installed_plugins | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name) | .version // "unknown"')
+
+            if [[ "${new_version}" == "${remote_version}" ]]; then
+                log_success "Updated ${plugin_name} to ${remote_version}"
+                return 0
+            else
+                log_warning "Version mismatch: expected ${remote_version}, got ${new_version}"
+                log_error "Update verification failed for ${plugin_name}"
+                return 1
+            fi
+        else
+            log_error "Failed to update ${plugin_name}"
+            log_error "Plugin remains at version ${local_version}"
+            return 1
+        fi
+    else
+        log_info "${plugin_name} is up to date (${local_version})"
+        return 1
+    fi
+}
+
 # Main update function
 main() {
     local config
@@ -152,39 +223,9 @@ main() {
 
             # Create a filtered list of plugins
             while IFS= read -r plugin_name; do
-                local plugin_data
-                local remote_version
-                local local_version
-
-                # Find plugin in marketplace
-                plugin_data=$(echo "${marketplace_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name)')
-
-                if [[ -z "${plugin_data}" ]]; then
-                    log_warning "Plugin ${plugin_name} not found in ${marketplace_name}"
-                    continue
-                fi
-
-                # Get versions
-                remote_version=$(echo "${plugin_data}" | jq -r '.version // "unknown"')
-                local_version=$(echo "${installed_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name) | .version // "unknown"')
-
-                if [[ "${local_version}" == "unknown" ]]; then
-                    log_info "Plugin ${plugin_name} is not installed"
-                    continue
-                fi
-
-                # Compare versions
-                if version_lt "${local_version}" "${remote_version}"; then
-                    log_info "Updating ${plugin_name}: ${local_version} -> ${remote_version}"
-
-                    if claude plugin install "${org}/${repo}/${plugin_name}"; then
-                        log_success "Updated ${plugin_name} to ${remote_version}"
-                        ((updated_count++)) || true
-                    else
-                        log_error "Failed to update ${plugin_name}"
-                    fi
-                else
-                    log_info "${plugin_name} is up to date (${local_version})"
+                if check_and_update_plugin "${plugin_name}" "${marketplace_plugins}" \
+                    "${installed_plugins}" "${org}" "${repo}" "${marketplace_name}" "true"; then
+                    ((updated_count++)) || true
                 fi
             done < <(echo "${plugins_to_check}" | jq -r '.[]')
         else
@@ -192,35 +233,9 @@ main() {
             log_info "Checking all plugins from ${marketplace_name}..."
 
             while IFS= read -r plugin_name; do
-                local plugin_data
-                local remote_version
-                local local_version
-
-                # Find plugin in marketplace
-                plugin_data=$(echo "${marketplace_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name)')
-
-                if [[ -z "${plugin_data}" ]]; then
-                    continue
-                fi
-
-                # Get versions
-                remote_version=$(echo "${plugin_data}" | jq -r '.version // "unknown"')
-                local_version=$(echo "${installed_plugins}" | jq -r --arg name "${plugin_name}" '.[] | select(.name == $name) | .version // "unknown"')
-
-                if [[ "${local_version}" == "unknown" ]]; then
-                    continue
-                fi
-
-                # Compare versions
-                if version_lt "${local_version}" "${remote_version}"; then
-                    log_info "Updating ${plugin_name}: ${local_version} -> ${remote_version}"
-
-                    if claude plugin install "${org}/${repo}/${plugin_name}"; then
-                        log_success "Updated ${plugin_name} to ${remote_version}"
-                        ((updated_count++)) || true
-                    else
-                        log_error "Failed to update ${plugin_name}"
-                    fi
+                if check_and_update_plugin "${plugin_name}" "${marketplace_plugins}" \
+                    "${installed_plugins}" "${org}" "${repo}" "${marketplace_name}" "false"; then
+                    ((updated_count++)) || true
                 fi
             done < <(echo "${installed_plugins}" | jq -r '.[].name')
         fi

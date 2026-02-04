@@ -19,6 +19,7 @@ Complete git workflow: commit → push → PR → verify merge-ready.
 - Stop at PR creation → not verified merge-ready
 - `git add` without `git status` → adds unintended files
 - Proceed from main/master → violates protection
+- **No changes to commit** → inform user, don't proceed
 
 **Rationalizations (all wrong):**
 - "Push/CI will catch it" → You verify, no assumptions
@@ -32,6 +33,7 @@ Complete git workflow: commit → push → PR → verify merge-ready.
 ### 1. Pre-flight
 - Check state: `git status`, `git log`, current branch
 - **Block if on main/master** - create feature branch first
+- **Block if no changes** - inform user working tree is clean
 
 ### 2. Commit
 - Review: `git status`, `git diff --stat`
@@ -82,6 +84,10 @@ Does NOT handle:
 **Pairs with:**
 - **verification-before-completion** - REQUIRED before this workflow
 - **finishing-a-development-branch** - REQUIRED after PR merged
+
+## Additional Resources
+
+For detailed step-by-step workflow with examples, see **`references/workflow.md`**.
 
 ## Notes
 

@@ -30,6 +30,60 @@ function discoverPlugins() {
  */
 function updatePluginJsons() {
   return {
+    async verifyConditions(_pluginContext, { lastRelease }) {
+      // First release - skip verification
+      if (!lastRelease || !lastRelease.version) {
+        console.log('First release - skipping version verification');
+        return;
+      }
+
+      const plugins = discoverPlugins();
+      const mismatches = [];
+      const lastVersion = lastRelease.version;
+
+      // Check each plugin.json
+      for (const plugin of plugins) {
+        const pluginJsonPath = resolve(
+          process.cwd(),
+          `plugins/${plugin}/.claude-plugin/plugin.json`
+        );
+        const pluginJson = JSON.parse(readFileSync(pluginJsonPath, 'utf8'));
+
+        if (pluginJson.version !== lastVersion) {
+          mismatches.push({
+            plugin,
+            current: pluginJson.version,
+            expected: lastVersion,
+          });
+        }
+      }
+
+      // Check marketplace.json
+      const marketplacePath = resolve(process.cwd(), '.claude-plugin/marketplace.json');
+      const marketplace = JSON.parse(readFileSync(marketplacePath, 'utf8'));
+
+      const marketplaceMismatches = marketplace.plugins.filter(
+        (p) => p.version !== lastVersion
+      );
+
+      // Log warnings but don't fail the release
+      if (mismatches.length > 0) {
+        console.warn('\n⚠️  Plugin version mismatches detected:');
+        mismatches.forEach(({ plugin, current, expected }) => {
+          console.warn(`  ${plugin}: ${current} (expected ${expected})`);
+        });
+        console.warn('These will be synchronized to the next version.\n');
+      }
+
+      if (marketplaceMismatches.length > 0) {
+        console.warn('⚠️  Marketplace version mismatches:');
+        marketplaceMismatches.forEach((p) => {
+          console.warn(`  ${p.name}: ${p.version} (expected ${lastVersion})`);
+        });
+        console.warn('These will be synchronized to the next version.\n');
+      }
+    },
+
     async prepare(_pluginContext, { nextRelease: { version } }) {
       const plugins = discoverPlugins();
 
