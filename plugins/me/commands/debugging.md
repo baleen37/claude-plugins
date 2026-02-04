@@ -1,0 +1,8 @@
+---
+name: debugging
+description: Use and follow the systematic-debugging skill exactly as written
+argument-hint: [<issue>]
+---
+
+Use the systematic-debugging skill to debug this issue properly, following the
+four-phase process to find the root cause before attempting any fixes.
