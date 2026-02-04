@@ -98,4 +98,3 @@ if (queries.length > 1) {
       process.exit(1);
     });
 }
-
