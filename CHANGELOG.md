@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.1.0...claude-plugins-v5.2.0) (2026-02-04)
+
+
+### Features
+
+* **test-helpers:** extract shared BATS helpers to @baleen/bats-helpers package ([19f2a62](https://github.com/baleen37/claude-plugins/commit/19f2a62dfbae28db0fc36a16aa9a61c1d8227235))
+* **tests:** run plugin tests in parallel using background processes ([04be773](https://github.com/baleen37/claude-plugins/commit/04be773452fe635158f38a7a1323034c79ac56a4))
+
 ## [5.1.0](https://github.com/baleen37/claude-plugins/compare/claude-plugins-v5.0.0...claude-plugins-v5.1.0) (2026-02-04)
 
 
