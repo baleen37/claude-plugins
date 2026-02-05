@@ -1,11 +1,12 @@
-# Test semantic-release workflow
 
-Testing if GitHub App can successfully create releases.
+# Test Release Workflow - Round 3
 
-## Created
+Testing GitHub App after reinstallation with 'All repositories' access.
 
-$(date)
+## Test Details
 
-## Purpose
-
-This commit tests if the GitHub App 'baleen Release app' can successfully authenticate and create releases via semantic-release.
+- Round: 3
+- Purpose: Verify GitHub App user-level installation
+- GitHub App reinstalled: YES
+- Access level: All repositories (user-level)
+- App ID: 2439184
