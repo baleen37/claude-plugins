@@ -11,8 +11,8 @@ The Handoff plugin enables you to:
 
 ## Features
 
-- **/handoff**: Save current session context to a handoff file
-- **/pickup**: Load a handoff (default: most recent, or specify UUID)
+- **/handoff command**: Save current session context to a handoff file
+- **/pickup [uuid]**: Load a handoff (default: most recent, or specify UUID)
 - **/handoff-list**: List all handoffs for the current project
 - **Automatic notification**: SessionStart hook notifies you of recent handoffs (within 5 minutes)
 
