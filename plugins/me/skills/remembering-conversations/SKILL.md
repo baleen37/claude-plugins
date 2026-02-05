@@ -1,7 +1,6 @@
 ---
 name: remembering-conversations
-description: This skill should be used when the user asks "how should I...", "what's the best approach...", "do you remember...", "why did we...", mentions "last time", "before", "we discussed", or when stuck after investigation. Searches conversation history using claude-mem 3-layer workflow.
-version: 0.3.0
+description: Use when user asks "how should I...", "what's the best approach...", "do you remember...", "why did we...", mentions "last time", "before", "we discussed", or when stuck after investigation
 ---
 
 # Remembering Conversations
@@ -76,3 +75,12 @@ Search conversation history to find past decisions, patterns, and failed approac
 - Failed approaches and why
 - Successful patterns
 - Gotchas and edge cases
+
+## Common Mistakes
+
+| Mistake | Reality |
+|---------|---------|
+| "I know this topic, I'll just answer" | General knowledge ≠ project-specific context. Search first. |
+| "One search failed, no history exists" | Try different queries, date ranges, broader terms before giving up. |
+| "Quick question, skip the search" | Searching takes seconds. Reinventing wastes minutes. |
+| "I need the skill to search" | MCP search tools are always available. Skill teaches WHEN to use them. |
