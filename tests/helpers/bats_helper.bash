@@ -137,7 +137,7 @@ count_files() {
 # shellcheck disable=SC2076
 json_field_is_allowed() {
     local field="$1"
-    local allowed_fields="name description author version license homepage repository keywords"
+    local allowed_fields="name description author version license homepage repository keywords lspServers"
     [[ " $allowed_fields " =~ " $field " ]]
 }
 
@@ -158,7 +158,7 @@ validate_plugin_manifest_fields() {
     while IFS= read -r field; do
         if ! json_field_is_allowed "$field"; then
             echo "Error: Invalid field '$field' in $file"
-            echo "Allowed fields: name, description, author, version, license, homepage, repository, keywords"
+            echo "Allowed fields: name, description, author, version, license, homepage, repository, keywords, lspServers"
             return 1
         fi
     done <<< "$all_fields"
