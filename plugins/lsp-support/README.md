@@ -1,6 +1,6 @@
 # LSP Support
 
-Language Server Protocol support for multiple programming languages. Provides code completion, diagnostics, go-to-definition, and other IDE features for supported languages.
+Language Server Protocol support for multiple programming languages. Provides code completion, diagnostics, go-to-definition, and other IDE features for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix.
 
 ## Supported Languages
 
@@ -8,6 +8,9 @@ Language Server Protocol support for multiple programming languages. Provides co
 - **TypeScript/JavaScript** - via [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)
 - **Python** - via [Pyright](https://github.com/microsoft/pyright)
 - **Go** - via [gopls](https://github.com/golang/tools/tree/master/gopls)
+- **Kotlin** - via [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)
+- **Lua** - via [lua-language-server](https://github.com/LuaLS/lua-language-server)
+- **Nix** - via [nil](https://github.com/oxalica/nil)
 
 ---
 
@@ -122,6 +125,71 @@ go mod init your/module
 
 ---
 
+## Kotlin LSP
+
+### Installation
+
+```bash
+brew install kotlin-language-server
+```
+
+### Requirements
+
+- Homebrew
+- Java runtime
+
+### Supported File Types
+
+`.kt`, `.kts`
+
+---
+
+## Lua LSP
+
+### Installation
+
+```bash
+brew install lua-language-server
+```
+
+### Requirements
+
+- Homebrew
+- Lua 5.1+
+
+### Supported File Types
+
+`.lua`
+
+---
+
+## Nix LSP
+
+### Installation
+
+```bash
+cargo install --git https://github.com/oxalica/nil nil
+```
+
+### Requirements
+
+- Rust toolchain (cargo)
+- Nix 2.4+
+
+### Supported File Types
+
+`.nix`
+
+### Alternative: nixd
+
+An alternative is **nixd** (more features, less stable):
+
+```bash
+cargo install --git https://github.com/nix-community/nixd nixd
+```
+
+---
+
 ## Usage
 
 Once the LSP server is installed, Claude Code will automatically use it when editing files in the supported languages.
@@ -153,6 +221,15 @@ which pyright
 
 # Go
 which gopls
+
+# Kotlin
+which kotlin-language-server
+
+# Lua
+which lua-language-server
+
+# Nix
+which nil
 ```
 
 ### Diagnostics not working

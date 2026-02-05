@@ -47,7 +47,7 @@
     },
     {
       "name": "lsp-support",
-      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, and Go",
+      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix",
       "source": "./plugins/lsp-support",
       "category": "development",
       "tags": [
@@ -57,6 +57,9 @@
         "javascript",
         "python",
         "go",
+        "kotlin",
+        "lua",
+        "nix",
         "autocomplete",
         "diagnostics"
       ],
@@ -128,20 +131,6 @@
         "session",
         "context",
         "pickup"
-      ],
-      "version": "5.0.0"
-    },
-    {
-      "name": "bash-lsp",
-      "description": "Bash Language Server integration - autocomplete, diagnostics, and navigation for Bash scripts",
-      "source": "./plugins/bash-lsp",
-      "category": "development",
-      "tags": [
-        "bash",
-        "lsp",
-        "shell",
-        "autocomplete",
-        "diagnostics"
       ],
       "version": "5.0.0"
     }
