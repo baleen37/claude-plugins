@@ -91,20 +91,6 @@
       "version": "5.0.0"
     },
     {
-      "name": "ast-tools",
-      "description": "AST-based code search and transformation tools using ast-grep",
-      "source": "./plugins/ast-tools",
-      "category": "development",
-      "tags": [
-        "ast",
-        "refactoring",
-        "code-analysis",
-        "mcp",
-        "ast-grep"
-      ],
-      "version": "5.0.0"
-    },
-    {
       "name": "conversation-memory",
       "description": "Conversation memory plugin with semantic search across Claude Code sessions",
       "source": "./plugins/conversation-memory",
