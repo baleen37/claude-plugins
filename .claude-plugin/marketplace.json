@@ -133,6 +133,20 @@
         "pickup"
       ],
       "version": "5.0.0"
+    },
+    {
+      "name": "databricks-devtools",
+      "description": "Databricks CLI wrapper for workspace management and SQL execution",
+      "source": "./plugins/databricks-devtools",
+      "category": "development",
+      "tags": [
+        "databricks",
+        "sql",
+        "workspace",
+        "mcp",
+        "cli"
+      ],
+      "version": "1.0.0"
     }
   ]
 }
