@@ -38,7 +38,7 @@ Complete git workflow: commit → push → PR → verify merge-ready.
 ### 2. Commit
 - Review: `git status`, `git diff --stat`
 - Stage specific files only (never `-A`)
-- Conventional commits + Co-Authored-By
+- Conventional commits
 
 ### 3. Pre-push
 - Detect base: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`

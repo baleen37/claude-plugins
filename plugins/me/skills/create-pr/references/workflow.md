@@ -93,8 +93,6 @@ git commit -m "$(cat <<'EOF'
 type(scope): description
 
 Optional body explaining why this change was made.
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```

@@ -50,5 +50,4 @@ Based on the above changes, create a single git commit.
 - Review the changes to create an appropriate commit message
 - Follow the project's commit message style (check recent commits for patterns)
 - Stage specific files - avoid `git add -A` unless intentional
-- Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>` in commit message
 - Always use `git status` before staging to ensure correct files are selected
