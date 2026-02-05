@@ -7,6 +7,7 @@ import { initEmbeddings, generateExchangeEmbedding } from './embeddings.js';
 import { summarizeConversation } from './summarizer.js';
 import { ConversationExchange } from './types.js';
 import { getArchiveDir, getExcludedProjects } from './paths.js';
+import { logInfo, logError, logWarn } from './logger.js';
 
 // Set max output tokens for Claude SDK (used by summarizer)
 process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS = '20000';
@@ -135,13 +136,14 @@ export async function indexConversations(
 
         await processBatch(needsSummary, async (conv) => {
           try {
-            const summary = await summarizeConversation(conv.exchanges);
+            const summary = await summarizeConversation(conv.exchanges, undefined, conv.file);
             fs.writeFileSync(conv.summaryPath, summary, 'utf-8');
             const wordCount = summary.split(/\s+/).length;
             console.log(`  ✓ ${conv.file}: ${wordCount} words`);
             return summary;
           } catch (error) {
             console.log(`  ✗ ${conv.file}: ${error}`);
+            logError(`Summary failed for ${conv.file}`, error);
             return null;
           }
         }, concurrency);
@@ -223,7 +225,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
         // Generate summary (unless --no-summaries)
         const summaryPath = archivePath.replace('.jsonl', '-summary.txt');
         if (!noSummaries && !fs.existsSync(summaryPath)) {
-          const summary = await summarizeConversation(exchanges);
+          const summary = await summarizeConversation(exchanges, undefined, file);
           fs.writeFileSync(summaryPath, summary, 'utf-8');
           console.log(`Summary: ${summary.split(/\s+/).length} words`);
         }
@@ -328,13 +330,14 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
 
       await processBatch(needsSummary, async (conv) => {
         try {
-          const summary = await summarizeConversation(conv.exchanges);
+          const summary = await summarizeConversation(conv.exchanges, undefined, `${conv.project}/${conv.file}`);
           fs.writeFileSync(conv.summaryPath, summary, 'utf-8');
           const wordCount = summary.split(/\s+/).length;
           console.log(`  ✓ ${conv.project}/${conv.file}: ${wordCount} words`);
           return summary;
         } catch (error) {
           console.log(`  ✗ ${conv.project}/${conv.file}: ${error}`);
+          logError(`Summary failed for ${conv.project}/${conv.file}`, error);
           return null;
         }
       }, concurrency);

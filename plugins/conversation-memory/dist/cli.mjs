@@ -212,6 +212,13 @@ function getExcludedProjects() {
   }
   return [];
 }
+function getLogDir() {
+  return ensureDir(path.join(getSuperpowersDir(), "logs"));
+}
+function getLogFilePath() {
+  const date = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  return path.join(getLogDir(), `${date}.log`);
+}
 var init_paths = __esm({
   "src/core/paths.ts"() {
     "use strict";
@@ -38460,6 +38467,48 @@ var init_constants = __esm({
   }
 });
 
+// src/core/logger.ts
+import fs4 from "fs";
+function formatLogEntry(entry) {
+  const dataStr = entry.data ? ` ${JSON.stringify(entry.data)}` : "";
+  return `[${entry.timestamp}] [${entry.level}] ${entry.message}${dataStr}`;
+}
+function writeLog(entry) {
+  const logPath = getLogFilePath();
+  const line = formatLogEntry(entry) + "\n";
+  fs4.appendFileSync(logPath, line, "utf-8");
+}
+function logInfo(message, data) {
+  const entry = {
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    level: "INFO" /* INFO */,
+    message,
+    data
+  };
+  writeLog(entry);
+  console.log(`[INFO] ${message}`);
+}
+function logError(message, error, data) {
+  const errorData = error instanceof Error ? {
+    name: error.name,
+    message: error.message,
+    stack: error.stack
+  } : error;
+  const entry = {
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    level: "ERROR" /* ERROR */,
+    message,
+    data: data ? { ...data, error: errorData } : { error: errorData }
+  };
+  writeLog(entry);
+}
+var init_logger = __esm({
+  "src/core/logger.ts"() {
+    "use strict";
+    init_paths();
+  }
+});
+
 // src/core/summarizer.ts
 var summarizer_exports = {};
 __export(summarizer_exports, {
@@ -38535,6 +38584,7 @@ async function callClaude(prompt, sessionId) {
   const apiEnv = getApiEnv();
   const apiUrl = apiEnv?.ANTHROPIC_BASE_URL || "default";
   const hasToken = !!apiEnv?.ANTHROPIC_AUTH_TOKEN;
+  logInfo("API call started", { model, apiUrl, hasToken, sessionId });
   console.log(`[CONVERSATION_MEMORY] API: ${model} @ ${apiUrl} (token: ${hasToken})`);
   for await (const message of query({
     prompt,
@@ -38560,12 +38610,19 @@ async function callClaude(prompt, sessionId) {
         cache_creation_input_tokens: usage.cache_creation_input_tokens
       };
       trackTokenUsage(tokenUsage);
+      logInfo("API call completed", {
+        inputTokens: tokenUsage.input_tokens,
+        outputTokens: tokenUsage.output_tokens,
+        cacheReadTokens: tokenUsage.cache_read_input_tokens,
+        cacheCreationTokens: tokenUsage.cache_creation_input_tokens
+      });
       return {
         summary: result,
         tokens: tokenUsage
       };
     }
   }
+  logError("API call failed: No result returned");
   return {
     summary: "",
     tokens: { input_tokens: 0, output_tokens: 0 }
@@ -38595,10 +38652,12 @@ function isTrivialConversation(exchanges) {
   }
   return false;
 }
-async function summarizeConversation(exchanges, sessionId) {
+async function summarizeConversation(exchanges, sessionId, filename) {
   if (isTrivialConversation(exchanges)) {
+    logInfo("Skipped trivial conversation", { filename, sessionId });
     return "Trivial conversation with no substantive content.";
   }
+  logInfo("Summarization started", { exchangeCount: exchanges.length, filename, sessionId });
   const allTokenUsages = [];
   if (exchanges.length <= 15) {
     const conversationText = sessionId ? "" : formatConversationText(exchanges);
@@ -38627,8 +38686,16 @@ Bad:
 ${conversationText}`;
     const result = await callClaude(prompt, sessionId);
     allTokenUsages.push(result.tokens);
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
     console.log(`  Tokens: ${formatTokenUsage(result.tokens)}`);
-    return extractSummaryFromResult(result);
+    logInfo("Summarization completed (direct)", {
+      filename,
+      wordCount,
+      inputTokens: result.tokens.input_tokens,
+      outputTokens: result.tokens.output_tokens
+    });
+    return summary;
   }
   console.log(`  Long conversation (${exchanges.length} exchanges) - using hierarchical summarization`);
   const chunks = chunkExchanges(exchanges, 32);
@@ -38648,12 +38715,15 @@ Example: <summary>Implemented HID keyboard functionality for ESP32. Hit Bluetoot
       allTokenUsages.push(result.tokens);
       const extracted = extractSummaryFromResult(result);
       chunkSummaries.push(extracted);
-      console.log(`  Chunk ${i + 1}/${chunks.length}: ${extracted.split(/\s+/).length} words (${formatTokenUsage(result.tokens)})`);
+      const wordCount = extracted.split(/\s+/).length;
+      console.log(`  Chunk ${i + 1}/${chunks.length}: ${wordCount} words (${formatTokenUsage(result.tokens)})`);
     } catch (error) {
       console.log(`  Chunk ${i + 1} failed, skipping`);
+      logError(`Chunk ${i + 1}/${chunks.length} failed`, error, { filename });
     }
   }
   if (chunkSummaries.length === 0) {
+    logError("All chunks failed", void 0, { filename, chunkCount: chunks.length });
     return "Error: Unable to summarize conversation.";
   }
   const synthesisPrompt = `${SUMMARIZER_CONTEXT_MARKER}.
@@ -38676,9 +38746,20 @@ Your summary (max 200 words):`;
     allTokenUsages.push(result.tokens);
     const totalUsage = sumTokenUsage(allTokenUsages);
     console.log(`  Total tokens: ${formatTokenUsage(totalUsage)}`);
-    return extractSummaryFromResult(result);
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
+    logInfo("Summarization completed (hierarchical)", {
+      filename,
+      exchangeCount: exchanges.length,
+      chunkCount: chunks.length,
+      wordCount,
+      totalInputTokens: totalUsage.input_tokens,
+      totalOutputTokens: totalUsage.output_tokens
+    });
+    return summary;
   } catch (error) {
     console.log(`  Synthesis failed, using chunk summaries`);
+    logError("Synthesis failed, using chunk summaries as fallback", error, { filename });
     return chunkSummaries.join(" ");
   }
 }
@@ -38687,6 +38768,7 @@ var init_summarizer = __esm({
   "src/core/summarizer.ts"() {
     "use strict";
     init_constants();
+    init_logger();
     currentRunTokenUsages = [];
   }
 });
@@ -38695,7 +38777,7 @@ var init_summarizer = __esm({
 init_parser();
 init_db();
 init_paths();
-import fs4 from "fs";
+import fs5 from "fs";
 import path3 from "path";
 async function verifyIndex() {
   const result = {
@@ -38706,11 +38788,11 @@ async function verifyIndex() {
   };
   const archiveDir = getArchiveDir();
   const foundFiles = /* @__PURE__ */ new Set();
-  if (!fs4.existsSync(archiveDir)) {
+  if (!fs5.existsSync(archiveDir)) {
     return result;
   }
   const db = initDatabase();
-  const projects = fs4.readdirSync(archiveDir);
+  const projects = fs5.readdirSync(archiveDir);
   const excludedProjects = getExcludedProjects();
   let totalChecked = 0;
   for (const project of projects) {
@@ -38719,10 +38801,10 @@ async function verifyIndex() {
       continue;
     }
     const projectPath = path3.join(archiveDir, project);
-    const stat = fs4.statSync(projectPath);
+    const stat = fs5.statSync(projectPath);
     if (!stat.isDirectory())
       continue;
-    const files = fs4.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl"));
+    const files = fs5.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl"));
     for (const file of files) {
       totalChecked++;
       if (totalChecked % 100 === 0) {
@@ -38731,13 +38813,13 @@ async function verifyIndex() {
       const conversationPath = path3.join(projectPath, file);
       foundFiles.add(conversationPath);
       const summaryPath = conversationPath.replace(".jsonl", "-summary.txt");
-      if (!fs4.existsSync(summaryPath)) {
+      if (!fs5.existsSync(summaryPath)) {
         result.missing.push({ path: conversationPath, reason: "No summary file" });
         continue;
       }
       const lastIndexed = getFileLastIndexed(db, conversationPath);
       if (lastIndexed !== null) {
-        const fileStat = fs4.statSync(conversationPath);
+        const fileStat = fs5.statSync(conversationPath);
         if (fileStat.mtimeMs > lastIndexed) {
           result.outdated.push({
             path: conversationPath,
@@ -38798,7 +38880,7 @@ async function repairIndex(issues) {
       }
       const summaryPath = conversationPath.replace(".jsonl", "-summary.txt");
       const summary = await summarizeConversation2(exchanges);
-      fs4.writeFileSync(summaryPath, summary, "utf-8");
+      fs5.writeFileSync(summaryPath, summary, "utf-8");
       console.log(`  Created summary: ${summary.split(/\s+/).length} words`);
       for (const exchange of exchanges) {
         const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
@@ -38828,7 +38910,8 @@ init_parser();
 init_embeddings();
 init_summarizer();
 init_paths();
-import fs5 from "fs";
+init_logger();
+import fs6 from "fs";
 import path4 from "path";
 import os2 from "os";
 import { EventEmitter } from "events";
@@ -38857,7 +38940,7 @@ async function indexConversations(limitToProject, maxConversations, concurrency2
   console.log("Scanning for conversation files...");
   const PROJECTS_DIR = getProjectsDir();
   const ARCHIVE_DIR = getArchiveDir();
-  const projects = fs5.readdirSync(PROJECTS_DIR);
+  const projects = fs6.readdirSync(PROJECTS_DIR);
   let totalExchanges = 0;
   let conversationsProcessed = 0;
   const excludedProjects = getExcludedProjects();
@@ -38870,10 +38953,10 @@ Skipping excluded project: ${project}`);
     if (limitToProject && project !== limitToProject)
       continue;
     const projectPath = path4.join(PROJECTS_DIR, project);
-    const stat = fs5.statSync(projectPath);
+    const stat = fs6.statSync(projectPath);
     if (!stat.isDirectory())
       continue;
-    const files = fs5.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl") && !f.startsWith("agent-"));
+    const files = fs6.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl") && !f.startsWith("agent-"));
     if (files.length === 0)
       continue;
     console.log(`
@@ -38881,13 +38964,13 @@ Processing project: ${project} (${files.length} conversations)`);
     if (concurrency2 > 1)
       console.log(`  Concurrency: ${concurrency2}`);
     const projectArchive = path4.join(ARCHIVE_DIR, project);
-    fs5.mkdirSync(projectArchive, { recursive: true });
+    fs6.mkdirSync(projectArchive, { recursive: true });
     const toProcess = [];
     for (const file of files) {
       const sourcePath = path4.join(projectPath, file);
       const archivePath = path4.join(projectArchive, file);
-      if (!fs5.existsSync(archivePath)) {
-        fs5.copyFileSync(sourcePath, archivePath);
+      if (!fs6.existsSync(archivePath)) {
+        fs6.copyFileSync(sourcePath, archivePath);
         console.log(`  Archived: ${file}`);
       }
       const exchanges = await parseConversation(sourcePath, project, archivePath);
@@ -38904,18 +38987,19 @@ Processing project: ${project} (${files.length} conversations)`);
       });
     }
     if (!noSummaries2) {
-      const needsSummary = toProcess.filter((c) => !fs5.existsSync(c.summaryPath));
+      const needsSummary = toProcess.filter((c) => !fs6.existsSync(c.summaryPath));
       if (needsSummary.length > 0) {
         console.log(`  Generating ${needsSummary.length} summaries (concurrency: ${concurrency2})...`);
         await processBatch(needsSummary, async (conv) => {
           try {
-            const summary = await summarizeConversation(conv.exchanges);
-            fs5.writeFileSync(conv.summaryPath, summary, "utf-8");
+            const summary = await summarizeConversation(conv.exchanges, void 0, conv.file);
+            fs6.writeFileSync(conv.summaryPath, summary, "utf-8");
             const wordCount = summary.split(/\s+/).length;
             console.log(`  \u2713 ${conv.file}: ${wordCount} words`);
             return summary;
           } catch (error) {
             console.log(`  \u2717 ${conv.file}: ${error}`);
+            logError(`Summary failed for ${conv.file}`, error);
             return null;
           }
         }, concurrency2);
@@ -38952,16 +39036,16 @@ async function indexSession(sessionId, concurrency2 = 1, noSummaries2 = false) {
   console.log(`Indexing session: ${sessionId}`);
   const PROJECTS_DIR = getProjectsDir();
   const ARCHIVE_DIR = getArchiveDir();
-  const projects = fs5.readdirSync(PROJECTS_DIR);
+  const projects = fs6.readdirSync(PROJECTS_DIR);
   const excludedProjects = getExcludedProjects();
   let found = false;
   for (const project of projects) {
     if (excludedProjects.includes(project))
       continue;
     const projectPath = path4.join(PROJECTS_DIR, project);
-    if (!fs5.statSync(projectPath).isDirectory())
+    if (!fs6.statSync(projectPath).isDirectory())
       continue;
-    const files = fs5.readdirSync(projectPath).filter((f) => f.includes(sessionId) && f.endsWith(".jsonl") && !f.startsWith("agent-"));
+    const files = fs6.readdirSync(projectPath).filter((f) => f.includes(sessionId) && f.endsWith(".jsonl") && !f.startsWith("agent-"));
     if (files.length > 0) {
       found = true;
       const file = files[0];
@@ -38969,17 +39053,17 @@ async function indexSession(sessionId, concurrency2 = 1, noSummaries2 = false) {
       const db = initDatabase();
       await initEmbeddings();
       const projectArchive = path4.join(ARCHIVE_DIR, project);
-      fs5.mkdirSync(projectArchive, { recursive: true });
+      fs6.mkdirSync(projectArchive, { recursive: true });
       const archivePath = path4.join(projectArchive, file);
-      if (!fs5.existsSync(archivePath)) {
-        fs5.copyFileSync(sourcePath, archivePath);
+      if (!fs6.existsSync(archivePath)) {
+        fs6.copyFileSync(sourcePath, archivePath);
       }
       const exchanges = await parseConversation(sourcePath, project, archivePath);
       if (exchanges.length > 0) {
         const summaryPath = archivePath.replace(".jsonl", "-summary.txt");
-        if (!noSummaries2 && !fs5.existsSync(summaryPath)) {
-          const summary = await summarizeConversation(exchanges);
-          fs5.writeFileSync(summaryPath, summary, "utf-8");
+        if (!noSummaries2 && !fs6.existsSync(summaryPath)) {
+          const summary = await summarizeConversation(exchanges, void 0, file);
+          fs6.writeFileSync(summaryPath, summary, "utf-8");
           console.log(`Summary: ${summary.split(/\s+/).length} words`);
         }
         for (const exchange of exchanges) {
@@ -39011,16 +39095,16 @@ async function indexUnprocessed(concurrency2 = 1, noSummaries2 = false) {
   await initEmbeddings();
   const PROJECTS_DIR = getProjectsDir();
   const ARCHIVE_DIR = getArchiveDir();
-  const projects = fs5.readdirSync(PROJECTS_DIR);
+  const projects = fs6.readdirSync(PROJECTS_DIR);
   const excludedProjects = getExcludedProjects();
   const unprocessed = [];
   for (const project of projects) {
     if (excludedProjects.includes(project))
       continue;
     const projectPath = path4.join(PROJECTS_DIR, project);
-    if (!fs5.statSync(projectPath).isDirectory())
+    if (!fs6.statSync(projectPath).isDirectory())
       continue;
-    const files = fs5.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl") && !f.startsWith("agent-"));
+    const files = fs6.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl") && !f.startsWith("agent-"));
     for (const file of files) {
       const sourcePath = path4.join(projectPath, file);
       const projectArchive = path4.join(ARCHIVE_DIR, project);
@@ -39029,9 +39113,9 @@ async function indexUnprocessed(concurrency2 = 1, noSummaries2 = false) {
       const alreadyIndexed = db.prepare("SELECT COUNT(*) as count FROM exchanges WHERE archive_path = ?").get(archivePath);
       if (alreadyIndexed.count > 0)
         continue;
-      fs5.mkdirSync(projectArchive, { recursive: true });
-      if (!fs5.existsSync(archivePath)) {
-        fs5.copyFileSync(sourcePath, archivePath);
+      fs6.mkdirSync(projectArchive, { recursive: true });
+      if (!fs6.existsSync(archivePath)) {
+        fs6.copyFileSync(sourcePath, archivePath);
       }
       const exchanges = await parseConversation(sourcePath, project, archivePath);
       if (exchanges.length === 0)
@@ -39046,19 +39130,20 @@ async function indexUnprocessed(concurrency2 = 1, noSummaries2 = false) {
   }
   console.log(`Found ${unprocessed.length} unprocessed conversations`);
   if (!noSummaries2) {
-    const needsSummary = unprocessed.filter((c) => !fs5.existsSync(c.summaryPath));
+    const needsSummary = unprocessed.filter((c) => !fs6.existsSync(c.summaryPath));
     if (needsSummary.length > 0) {
       console.log(`Generating ${needsSummary.length} summaries (concurrency: ${concurrency2})...
 `);
       await processBatch(needsSummary, async (conv) => {
         try {
-          const summary = await summarizeConversation(conv.exchanges);
-          fs5.writeFileSync(conv.summaryPath, summary, "utf-8");
+          const summary = await summarizeConversation(conv.exchanges, void 0, `${conv.project}/${conv.file}`);
+          fs6.writeFileSync(conv.summaryPath, summary, "utf-8");
           const wordCount = summary.split(/\s+/).length;
           console.log(`  \u2713 ${conv.project}/${conv.file}: ${wordCount} words`);
           return summary;
         } catch (error) {
           console.log(`  \u2717 ${conv.project}/${conv.file}: ${error}`);
+          logError(`Summary failed for ${conv.project}/${conv.file}`, error);
           return null;
         }
       }, concurrency2);
@@ -39087,14 +39172,14 @@ Indexing embeddings...`);
 
 // src/cli/index-cli.ts
 init_paths();
-import fs6 from "fs";
+import fs7 from "fs";
 import path5 from "path";
 import { execSync } from "child_process";
 var command = process.argv[2];
 async function ensureDependencies() {
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();
   const nodeModulesPath = path5.join(pluginRoot, "node_modules");
-  if (!fs6.existsSync(nodeModulesPath)) {
+  if (!fs7.existsSync(nodeModulesPath)) {
     console.error("[conversation-memory] Installing dependencies...");
     try {
       execSync("npm install --legacy-peer-deps --silent", {
@@ -39168,20 +39253,20 @@ async function main() {
       case "rebuild":
         console.log("Rebuilding entire index...");
         const dbPath = getDbPath();
-        if (fs6.existsSync(dbPath)) {
-          fs6.unlinkSync(dbPath);
+        if (fs7.existsSync(dbPath)) {
+          fs7.unlinkSync(dbPath);
           console.log("Deleted existing database");
         }
         const archiveDir = getArchiveDir();
-        if (fs6.existsSync(archiveDir)) {
-          const projects = fs6.readdirSync(archiveDir);
+        if (fs7.existsSync(archiveDir)) {
+          const projects = fs7.readdirSync(archiveDir);
           for (const project of projects) {
             const projectPath = path5.join(archiveDir, project);
-            if (!fs6.statSync(projectPath).isDirectory())
+            if (!fs7.statSync(projectPath).isDirectory())
               continue;
-            const summaries = fs6.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
+            const summaries = fs7.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
             for (const summary of summaries) {
-              fs6.unlinkSync(path5.join(projectPath, summary));
+              fs7.unlinkSync(path5.join(projectPath, summary));
             }
           }
           console.log("Deleted all summary files");

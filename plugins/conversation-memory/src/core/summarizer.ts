@@ -1,6 +1,7 @@
 import { ConversationExchange } from './types.js';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { SUMMARIZER_CONTEXT_MARKER } from './constants.js';
+import { logInfo, logError, logWarn } from './logger.js';
 
 // Global token usage accumulator for the current sync run
 let currentRunTokenUsages: TokenUsage[] = [];
@@ -104,6 +105,8 @@ async function callClaude(prompt: string, sessionId?: string): Promise<SummaryWi
   const apiEnv = getApiEnv();
   const apiUrl = apiEnv?.ANTHROPIC_BASE_URL || 'default';
   const hasToken = !!apiEnv?.ANTHROPIC_AUTH_TOKEN;
+
+  logInfo('API call started', { model, apiUrl, hasToken, sessionId });
   console.log(`[CONVERSATION_MEMORY] API: ${model} @ ${apiUrl} (token: ${hasToken})`);
 
   for await (const message of query({
@@ -135,12 +138,21 @@ async function callClaude(prompt: string, sessionId?: string): Promise<SummaryWi
       // Track token usage for current run
       trackTokenUsage(tokenUsage);
 
+      logInfo('API call completed', {
+        inputTokens: tokenUsage.input_tokens,
+        outputTokens: tokenUsage.output_tokens,
+        cacheReadTokens: tokenUsage.cache_read_input_tokens,
+        cacheCreationTokens: tokenUsage.cache_creation_input_tokens
+      });
+
       return {
         summary: result,
         tokens: tokenUsage,
       };
     }
   }
+
+  logError('API call failed: No result returned');
   return {
     summary: '',
     tokens: { input_tokens: 0, output_tokens: 0 }
@@ -188,12 +200,18 @@ function isTrivialConversation(exchanges: ConversationExchange[]): boolean {
   return false;
 }
 
-export async function summarizeConversation(exchanges: ConversationExchange[], sessionId?: string): Promise<string> {
+export async function summarizeConversation(
+  exchanges: ConversationExchange[],
+  sessionId?: string,
+  filename?: string
+): Promise<string> {
   // Handle trivial conversations
   if (isTrivialConversation(exchanges)) {
+    logInfo('Skipped trivial conversation', { filename, sessionId });
     return 'Trivial conversation with no substantive content.';
   }
 
+  logInfo('Summarization started', { exchangeCount: exchanges.length, filename, sessionId });
   const allTokenUsages: TokenUsage[] = [];
 
   // For short conversations (≤15 exchanges), summarize directly
@@ -229,10 +247,19 @@ ${conversationText}`;
     const result = await callClaude(prompt, sessionId);
     allTokenUsages.push(result.tokens);
 
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
+
     // Log token usage
     console.log(`  Tokens: ${formatTokenUsage(result.tokens)}`);
+    logInfo('Summarization completed (direct)', {
+      filename,
+      wordCount,
+      inputTokens: result.tokens.input_tokens,
+      outputTokens: result.tokens.output_tokens
+    });
 
-    return extractSummaryFromResult(result);
+    return summary;
   }
 
   // For long conversations, use hierarchical summarization
@@ -262,13 +289,16 @@ Example: <summary>Implemented HID keyboard functionality for ESP32. Hit Bluetoot
       allTokenUsages.push(result.tokens);
       const extracted = extractSummaryFromResult(result);
       chunkSummaries.push(extracted);
-      console.log(`  Chunk ${i + 1}/${chunks.length}: ${extracted.split(/\s+/).length} words (${formatTokenUsage(result.tokens)})`);
+      const wordCount = extracted.split(/\s+/).length;
+      console.log(`  Chunk ${i + 1}/${chunks.length}: ${wordCount} words (${formatTokenUsage(result.tokens)})`);
     } catch (error) {
       console.log(`  Chunk ${i + 1} failed, skipping`);
+      logError(`Chunk ${i + 1}/${chunks.length} failed`, error, { filename });
     }
   }
 
   if (chunkSummaries.length === 0) {
+    logError('All chunks failed', undefined, { filename, chunkCount: chunks.length });
     return 'Error: Unable to summarize conversation.';
   }
 
@@ -297,9 +327,22 @@ Your summary (max 200 words):`;
     const totalUsage = sumTokenUsage(allTokenUsages);
     console.log(`  Total tokens: ${formatTokenUsage(totalUsage)}`);
 
-    return extractSummaryFromResult(result);
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
+
+    logInfo('Summarization completed (hierarchical)', {
+      filename,
+      exchangeCount: exchanges.length,
+      chunkCount: chunks.length,
+      wordCount,
+      totalInputTokens: totalUsage.input_tokens,
+      totalOutputTokens: totalUsage.output_tokens
+    });
+
+    return summary;
   } catch (error) {
     console.log(`  Synthesis failed, using chunk summaries`);
+    logError('Synthesis failed, using chunk summaries as fallback', error, { filename });
     return chunkSummaries.join(' ');
   }
 }
