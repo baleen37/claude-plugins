@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "git-guard",
@@ -43,11 +43,11 @@
         "pr",
         "security"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "lsp-support",
-      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, and Go",
+      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix",
       "source": "./plugins/lsp-support",
       "category": "development",
       "tags": [
@@ -57,10 +57,13 @@
         "javascript",
         "python",
         "go",
+        "kotlin",
+        "lua",
+        "nix",
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "me",
@@ -75,7 +78,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "ralph-loop",
@@ -88,21 +91,7 @@
         "loop",
         "ai"
       ],
-      "version": "5.3.0"
-    },
-    {
-      "name": "ast-tools",
-      "description": "AST-based code search and transformation tools using ast-grep",
-      "source": "./plugins/ast-tools",
-      "category": "development",
-      "tags": [
-        "ast",
-        "refactoring",
-        "code-analysis",
-        "mcp",
-        "ast-grep"
-      ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "conversation-memory",
@@ -116,7 +105,7 @@
         "mcp",
         "sessions"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
     },
     {
       "name": "handoff",
@@ -129,7 +118,21 @@
         "context",
         "pickup"
       ],
-      "version": "5.3.0"
+      "version": "5.1.0"
+    },
+    {
+      "name": "databricks-devtools",
+      "description": "Databricks CLI wrapper for workspace management and SQL execution",
+      "source": "./plugins/databricks-devtools",
+      "category": "development",
+      "tags": [
+        "databricks",
+        "sql",
+        "workspace",
+        "mcp",
+        "cli"
+      ],
+      "version": "5.1.0"
     }
   ]
 }

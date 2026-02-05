@@ -1,13 +1,12 @@
 ---
-description: "Load a handoff session to restore context from a previous session with automatic reference resolution"
+name: pickup
+description: Load a handoff session to restore context from a previous session with automatic reference resolution
 argument-hint: "[uuid]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/pickup.sh ${PASS_THROUGH_ARGS})"]
-hide-from-slash-command-tool: "true"
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/pickup.sh)"]
 ---
+
 # Pickup Handoff
 
-Execute the pickup script:
-
 ```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/pickup.sh" ${PASS_THROUGH_ARGS}
+"${CLAUDE_PLUGIN_ROOT}/scripts/pickup.sh" ${ARGUMENTS}
 ```

@@ -89,3 +89,18 @@ export function getExcludedProjects(): string[] {
   // Default: no exclusions
   return [];
 }
+
+/**
+ * Get log directory
+ */
+export function getLogDir(): string {
+  return ensureDir(path.join(getSuperpowersDir(), 'logs'));
+}
+
+/**
+ * Get log file path for current date
+ */
+export function getLogFilePath(): string {
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  return path.join(getLogDir(), `${date}.log`);
+}

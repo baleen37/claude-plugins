@@ -11,8 +11,8 @@ The Handoff plugin enables you to:
 
 ## Features
 
-- **/handoff**: Save current session context to a handoff file
-- **/pickup**: Load a handoff (default: most recent, or specify UUID)
+- **/handoff command**: Save current session context to a handoff file
+- **/pickup [uuid]**: Load a handoff (default: most recent, or specify UUID)
 - **/handoff-list**: List all handoffs for the current project
 - **Automatic notification**: SessionStart hook notifies you of recent handoffs (within 5 minutes)
 
@@ -31,8 +31,6 @@ The plugin is automatically discovered when placed in the `plugins/` directory.
 This analyzes your current session and creates a handoff file with:
 
 - Session summary
-- Next steps
-- Key decisions
 - References (plans, tasks, session IDs)
 
 ### Loading a Handoff
@@ -70,18 +68,15 @@ Handoff files are stored as JSON in `~/.claude/handoffs/{UUID}.json`:
 ```json
 {
   "id": "uuid-v4",
-  "created_at": "2026-02-04T16:30:00Z",
+  "created_at": "2026-02-05T00:00:00Z",
   "loaded_at": null,
-  "project_name": "claude-plugins",
-  "project_path": "/Users/jito.hello/dev/wooto/claude-plugins",
-  "branch": "feat/create-handoff",
+  "project_name": "project-name",
+  "project_path": "/path/to/project",
+  "branch": "feature-branch",
   "summary": "Brief summary of current work",
-  "next_steps": ["Step 1", "Step 2"],
-  "decisions": ["Decision 1", "Decision 2"],
   "references": {
     "plan_path": "~/.claude/plans/plan-name.md",
-    "tasks_session_id": "session-uuid",
-    "session_id": "current-session-uuid"
+    "tasks_session_id": "session-uuid"
   },
   "source_session_id": "current-session-uuid"
 }
@@ -122,15 +117,11 @@ Handoff: Recent handoff found. Use /pickup to resume: [summary]
 # Loading handoff session: Implementing handoff plugin
 #
 # Handoff ID: 550e8400-e29b-41d4-a716-446655440000
-# Created: 2026-02-04 16:30:00 UTC
+# Created: 2026-02-05 00:00:00 UTC
 # Project: claude-plugins (feat/create-handoff)
 #
 # Summary:
 # Implementing handoff plugin for session context transfer
-#
-# Next Steps:
-#   - [ ] Complete /pickup command implementation
-#   - [ ] Add tests
 #
 # ---
 #
@@ -162,7 +153,7 @@ Handoff: Recent handoff found. Use /pickup to resume: [summary]
 # Developer B picks up the work
 /handoff-list  # See available handoffs
 /pickup 550e8400-e29b-41d4-a716-446655440000  # Load specific handoff
-# Output: Full context restored with plan, tasks, and decisions
+# Output: Full context restored with plan and tasks
 ```
 
 ## Testing

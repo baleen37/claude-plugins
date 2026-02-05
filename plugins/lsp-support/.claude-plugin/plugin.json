@@ -1,9 +1,87 @@
 {
   "name": "lsp-support",
-  "version": "5.3.0",
-  "description": "Language Server Protocol support for multiple languages - bash, TypeScript, JavaScript, Python, Go",
+  "version": "5.1.0",
+  "description": "Language Server Protocol support for multiple languages - Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, Nix",
   "author": {
     "name": "baleen37",
     "email": "git@baleen.me"
+  },
+  "keywords": [
+    "lsp",
+    "bash",
+    "typescript",
+    "javascript",
+    "python",
+    "go",
+    "kotlin",
+    "lua",
+    "nix",
+    "autocomplete",
+    "diagnostics"
+  ],
+  "lspServers": {
+    "bash": {
+      "command": "bash-language-server",
+      "args": [
+        "start"
+      ],
+      "extensionToLanguage": {
+        ".sh": "bash",
+        ".bash": "bash",
+        ".bats": "bash"
+      }
+    },
+    "python": {
+      "command": "pyright",
+      "args": [
+        "--stdio"
+      ],
+      "extensionToLanguage": {
+        ".py": "python",
+        ".pyi": "python"
+      }
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".mjs": "javascript",
+        ".cjs": "javascript"
+      }
+    },
+    "go": {
+      "command": "gopls",
+      "args": [
+        "serve"
+      ],
+      "extensionToLanguage": {
+        ".go": "go"
+      }
+    },
+    "kotlin": {
+      "command": "kotlin-language-server",
+      "extensionToLanguage": {
+        ".kt": "kotlin",
+        ".kts": "kotlin"
+      }
+    },
+    "lua": {
+      "command": "lua-language-server",
+      "extensionToLanguage": {
+        ".lua": "lua"
+      }
+    },
+    "nix": {
+      "command": "nil",
+      "extensionToLanguage": {
+        ".nix": "nix"
+      }
+    }
   }
 }

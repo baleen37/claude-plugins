@@ -39,12 +39,9 @@ teardown() {
   "project_path": "$TEST_PROJECT_PATH",
   "branch": "main",
   "summary": "Test handoff summary",
-  "next_steps": ["Step 1", "Step 2"],
-  "decisions": ["Decision 1"],
   "references": {
     "plan_path": null,
-    "tasks_session_id": null,
-    "session_id": "test-session-123"
+    "tasks_session_id": null
   },
   "source_session_id": "test-session-123"
 }

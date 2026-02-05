@@ -41,31 +41,6 @@ display_handoff() {
   echo "$summary"
   echo ""
 
-  # Display next steps
-  local next_steps
-  next_steps=$(jq -r '.next_steps[]? // empty' "$handoff_file")
-  if [ -n "$next_steps" ]; then
-    echo "Next Steps:"
-    jq -r '.next_steps[]? // empty' "$handoff_file" | while read -r step; do
-      if [ -n "$step" ]; then
-        echo "  - $step"
-      fi
-    done
-    echo ""
-  fi
-
-  # Display decisions
-  local decisions
-  decisions=$(jq -r '.decisions[]? // empty' "$handoff_file")
-  if [ -n "$decisions" ]; then
-    echo "Decisions:"
-    jq -r '.decisions[]? // empty' "$handoff_file" | while read -r decision; do
-      if [ -n "$decision" ]; then
-        echo "  - $decision"
-      fi
-    done
-    echo ""
-  fi
 
   # Display references
   local plan_path

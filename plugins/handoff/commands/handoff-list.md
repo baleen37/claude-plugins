@@ -1,11 +1,11 @@
 ---
-description: "List all handoffs for the current project"
+name: handoff-list
+description: List all handoffs for the current project
+argument-hint: ""
 allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/handoff-list.sh)"]
-hide-from-slash-command-tool: "true"
 ---
-# List Handoffs
 
-Execute the handoff list script:
+# List Handoffs
 
 ```!
 "${CLAUDE_PLUGIN_ROOT}/scripts/handoff-list.sh"

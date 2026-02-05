@@ -125,7 +125,7 @@ export async function syncConversations(
 
     if (!stat.isDirectory()) continue;
 
-    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl'));
+    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl') && !f.startsWith('agent-'));
 
     for (const file of files) {
       const srcFile = path.join(projectPath, file);
