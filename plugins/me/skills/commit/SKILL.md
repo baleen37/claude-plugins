@@ -52,3 +52,4 @@ Based on the above changes, create a single git commit.
 - Stage specific files - avoid `git add -A` unless intentional
 - Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>` in commit message
 - Always use `git status` before staging to ensure correct files are selected
+test change for skill
