@@ -4,4 +4,4 @@ description: Execute commands using subagent-driven development approach
 argument-hint: [<command>]
 ---
 
-For executing implementation plans with independent tasks, dispatch parallel agents with @superpowers:dispatching-parallel-agents.
+Use @superpowers:subagent-driven-development to execute implementation plans with independent tasks in the current session.
