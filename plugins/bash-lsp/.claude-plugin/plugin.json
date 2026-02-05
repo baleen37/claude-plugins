@@ -11,5 +11,16 @@
     "language-server",
     "shell",
     "shellscript"
-  ]
+  ],
+  "lspServers": {
+    "bash": {
+      "command": "bash-language-server",
+      "args": ["start"],
+      "extensionToLanguage": {
+        ".sh": "bash",
+        ".bash": "bash",
+        ".bats": "bash"
+      }
+    }
+  }
 }
