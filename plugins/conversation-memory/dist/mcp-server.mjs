@@ -22060,17 +22060,17 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the feature extractor classes of the library from a pretrained model.
-         *
+         * 
          * The feature extractor class to instantiate is selected based on the `feature_extractor_type` property of
          * the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         *
+         * 
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained feature_extractor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing feature_extractor files, e.g., `./my_model_directory/`.
          * @param {import('../utils/hub.js').PretrainedOptions} options Additional options for loading the feature_extractor.
-         *
+         * 
          * @returns {Promise<FeatureExtractor>} A new instance of the Feature Extractor class.
          */
         static async from_pretrained(pretrained_model_name_or_path, options = {}) {
@@ -22616,7 +22616,7 @@ var __webpack_modules__ = {
          * Find the target (width, height) dimension of the output image after
          * resizing given the input image and the desired size.
          * @param {RawImage} image The image to resize.
-         * @param {any} size The size to use for resizing the image.
+         * @param {any} size The size to use for resizing the image. 
          * @returns {[number, number]} The target (width, height) dimension of the output image after resizing.
          */
         get_resize_output_image_size(image, size) {
@@ -22801,17 +22801,17 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the processor classes of the library from a pretrained model.
-         *
+         * 
          * The processor class to instantiate is selected based on the `image_processor_type` (or `feature_extractor_type`; legacy)
          * property of the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         *
+         * 
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained processor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing processor files, e.g., `./my_model_directory/`.
          * @param {import('../utils/hub.js').PretrainedOptions} options Additional options for loading the processor.
-         *
+         * 
          * @returns {Promise<ImageProcessor>} A new instance of the Processor class.
          */
         static async from_pretrained(pretrained_model_name_or_path, options = {}) {
@@ -22859,8 +22859,8 @@ var __webpack_modules__ = {
         static uses_chat_template_file = false;
         /**
          * Creates a new Processor with the given components
-         * @param {Object} config
-         * @param {Record<string, Object>} components
+         * @param {Object} config 
+         * @param {Record<string, Object>} components 
          * @param {string} chat_template
          */
         constructor(config2, components, chat_template) {
@@ -22939,17 +22939,17 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the processor classes of the library from a pretrained model.
-         *
+         * 
          * The processor class to instantiate is selected based on the `image_processor_type` (or `feature_extractor_type`; legacy)
          * property of the config object (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         *
+         * 
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained processor hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing processor files, e.g., `./my_model_directory/`.
          * @param {PretrainedProcessorOptions} options Additional options for loading the processor.
-         *
+         * 
          * @returns {Promise<Processor>} A new instance of the Processor class.
          */
         static async from_pretrained(pretrained_model_name_or_path, options = {}) {
@@ -23293,12 +23293,12 @@ var __webpack_modules__ = {
           this.normalized_config = getNormalizedConfig(this);
         }
         /**
-         * Loads a pre-trained config from the given `pretrained_model_name_or_path`.
-         *
+         * Loads a pre-trained config from the given `pretrained_model_name_or_path`. 
+         * 
          * @param {string} pretrained_model_name_or_path The path to the pre-trained config.
          * @param {PretrainedOptions} options Additional options for loading the config.
          * @throws {Error} Throws an error if the config.json is not found in the `pretrained_model_name_or_path`.
-         *
+         * 
          * @returns {Promise<PretrainedConfig>} A new instance of the `PretrainedConfig` class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -23779,8 +23779,8 @@ var __webpack_modules__ = {
          */
         generation_kwargs = {};
         /**
-         *
-         * @param {GenerationConfig|import('../configs.js').PretrainedConfig} config
+         * 
+         * @param {GenerationConfig|import('../configs.js').PretrainedConfig} config 
          */
         constructor(config2) {
           Object.assign(this, (0, _utils_core_js__WEBPACK_IMPORTED_MODULE_0__.pick)(config2, Object.getOwnPropertyNames(this)));
@@ -24000,7 +24000,7 @@ var __webpack_modules__ = {
         }
         /**
          * Apply the processor to input_ids and logits.
-         *
+         * 
          * @param {bigint[][]} input_ids The input ids.
          * @param {Tensor} logits The logits tensor.
          */
@@ -24678,7 +24678,7 @@ var __webpack_modules__ = {
       );
       class StoppingCriteria extends _utils_generic_js__WEBPACK_IMPORTED_MODULE_0__.Callable {
         /**
-         *
+         * 
          * @param {number[][]} input_ids (`number[][]` of shape `(batch_size, sequence_length)`):
          * Indices of input sequence tokens in the vocabulary.
          * @param {number[][]} scores scores (`number[][]` of shape `(batch_size, config.vocab_size)`):
@@ -24735,7 +24735,7 @@ var __webpack_modules__ = {
       }
       class MaxLengthCriteria extends StoppingCriteria {
         /**
-         *
+         * 
          * @param {number} max_length The maximum length that the output sequence can have in number of tokens.
          * @param {number} [max_position_embeddings=null] The maximum model length, as defined by the model's `config.max_position_embeddings` attribute.
          */
@@ -24750,7 +24750,7 @@ var __webpack_modules__ = {
       }
       class EosTokenCriteria extends StoppingCriteria {
         /**
-         *
+         * 
          * @param {number|number[]} eos_token_id The id of the *end-of-sequence* token.
          * Optionally, use a list to set multiple *end-of-sequence* tokens.
          */
@@ -24762,9 +24762,9 @@ var __webpack_modules__ = {
           this.eos_token_id = eos_token_id;
         }
         /**
-         *
-         * @param {number[][]} input_ids
-         * @param {number[][]} scores
+         * 
+         * @param {number[][]} input_ids 
+         * @param {number[][]} scores 
          * @returns {boolean[]}
          */
         _call(input_ids, scores) {
@@ -24832,7 +24832,7 @@ var __webpack_modules__ = {
       class BaseStreamer {
         /**
          * Function that is called by `.generate()` to push new tokens
-         * @param {bigint[][]} value
+         * @param {bigint[][]} value 
          */
         put(value) {
           throw Error("Not implemented");
@@ -24847,7 +24847,7 @@ var __webpack_modules__ = {
       const stdout_write = _env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_PROCESS_AVAILABLE ? (x2) => process.stdout.write(x2) : (x2) => console.log(x2);
       class TextStreamer extends BaseStreamer {
         /**
-         *
+         * 
          * @param {import('../tokenizers.js').PreTrainedTokenizer} tokenizer
          * @param {Object} options
          * @param {boolean} [options.skip_prompt=false] Whether to skip the prompt tokens
@@ -24876,7 +24876,7 @@ var __webpack_modules__ = {
         }
         /**
          * Receives tokens, decodes them, and prints them to stdout as soon as they form entire words.
-         * @param {bigint[][]} value
+         * @param {bigint[][]} value 
          */
         put(value) {
           if (value.length > 1) {
@@ -24924,8 +24924,8 @@ var __webpack_modules__ = {
         }
         /**
          * Prints the new text to stdout. If the stream is ending, also prints a newline.
-         * @param {string} text
-         * @param {boolean} stream_end
+         * @param {string} text 
+         * @param {boolean} stream_end 
          */
         on_finalized_text(text, stream_end) {
           if (text.length > 0) {
@@ -24976,7 +24976,7 @@ var __webpack_modules__ = {
           this.waiting_for_timestamp = false;
         }
         /**
-         * @param {bigint[][]} value
+         * @param {bigint[][]} value 
          */
         put(value) {
           if (value.length > 1) {
@@ -28710,17 +28710,17 @@ var __webpack_modules__ = {
         }
         /**
          * Instantiate one of the model classes of the library from a pretrained model.
-         *
+         * 
          * The model class to instantiate is selected based on the `model_type` property of the config object
          * (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         *
+         * 
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing model weights, e.g., `./my_model_directory/`.
          * @param {import('./utils/hub.js').PretrainedModelOptions} options Additional options for loading the model.
-         *
+         * 
          * @returns {Promise<PreTrainedModel>} A new instance of the `PreTrainedModel` class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -28918,7 +28918,7 @@ var __webpack_modules__ = {
           return this.configs?.generation_config ?? null;
         }
         /**
-         * @param {GenerationConfig} generation_config
+         * @param {GenerationConfig} generation_config 
          * @param {number} input_ids_seq_length The starting sequence length for the input ids.
          * @returns {LogitsProcessorList}
          * @private
@@ -28999,9 +28999,9 @@ var __webpack_modules__ = {
           return gen_config;
         }
         /**
-         *
-         * @param {GenerationConfig} generation_config
-         * @param {StoppingCriteriaList} [stopping_criteria=null]
+         * 
+         * @param {GenerationConfig} generation_config 
+         * @param {StoppingCriteriaList} [stopping_criteria=null] 
          */
         _get_stopping_criteria(generation_config, stopping_criteria = null) {
           const criteria = new _generation_stopping_criteria_js__WEBPACK_IMPORTED_MODULE_12__.StoppingCriteriaList();
@@ -29052,7 +29052,7 @@ var __webpack_modules__ = {
           return this._prepare_inputs_for_generation(this, ...args);
         }
         /**
-         *
+         * 
          * @param {Object} inputs
          * @param {bigint[][]} inputs.generated_input_ids
          * @param {Object} inputs.outputs
@@ -29136,7 +29136,7 @@ var __webpack_modules__ = {
         }
         /**
          * Prepares `decoder_input_ids` for generation with encoder-decoder models
-         * @param {*} param0
+         * @param {*} param0 
          */
         _prepare_decoder_input_ids_for_generation({ batch_size, model_input_name, model_kwargs, decoder_start_token_id, bos_token_id, generation_config }) {
           let { decoder_input_ids, ...model_inputs } = model_kwargs;
@@ -30319,8 +30319,8 @@ var __webpack_modules__ = {
           );
         }
         /**
-         *
-         * @param {WhisperGenerationConfig} generation_config
+         * 
+         * @param {WhisperGenerationConfig} generation_config 
          */
         _retrieve_init_tokens(generation_config) {
           const init_tokens = [generation_config.decoder_start_token_id];
@@ -31192,7 +31192,7 @@ var __webpack_modules__ = {
          *         text height position_ids: [3, 4, 5, 6, 7]
          *         text width position_ids: [3, 4, 5, 6, 7]
          *         Here we calculate the text start position_ids as the max vision position_ids plus 1.
-         *
+         * 
          * @param {Tensor} input_ids Indices of input sequence tokens in the vocabulary. Tensor of shape `(batch_size, sequence_length)`.
          * @param {Tensor} image_grid_thw (Optional) The temporal, height and width of feature shape of each image in LLM. Tensor of shape `(num_images, 3)`.
          * @param {Tensor} video_grid_thw (Optional) The temporal, height and width of feature shape of each video in LLM. Tensor of shape `(num_videos, 3)`.
@@ -32909,7 +32909,7 @@ var __webpack_modules__ = {
          */
         static MODEL_CLASS_MAPPINGS = null;
         /**
-         * Whether to attempt to instantiate the base class (`PretrainedModel`) if
+         * Whether to attempt to instantiate the base class (`PretrainedModel`) if 
          * the model type is not found in the mapping.
          */
         static BASE_IF_FAIL = false;
@@ -34132,7 +34132,7 @@ var __webpack_modules__ = {
         }
         /**
          * Extracts the mel spectrogram and prepares it for the mode based on the `truncation` and `padding` arguments.
-         *
+         * 
          * Four different path are possible:
          *   - `truncation="fusion"` and the length of the waveform is greater than the max length: the mel spectrogram
          *     will be computed on the entire audio. 3 random crops and a dowsampled version of the full mel spectrogram
@@ -34143,7 +34143,7 @@ var __webpack_modules__ = {
          *     based on `padding`, and is repeated `4` times.
          *   - `truncation="rand_trunc"` and the length of the waveform is greater than the max length: the mel
          *     spectrogram will be computed on a random crop of the waveform.
-         *
+         * 
          * @param {Float32Array|Float64Array} waveform The input waveform.
          * @param {number} max_length The maximum length of the waveform.
          * @param {string} truncation The truncation strategy to use.
@@ -34195,7 +34195,7 @@ var __webpack_modules__ = {
          *  - `self.mel_filteres_slaney` : they correspond to the default parameters of `librosa` which used
          *    `librosa.filters.mel` when computing the mel spectrogram. These filters were only used in the original
          *    implementation when the truncation mode is not `"fusion"`.
-         *
+         * 
          * @param {Float32Array|Float64Array} waveform The audio waveform to process.
          * @param {number[][]} mel_filters The mel filters to use.
          * @param {number} [max_length=null] The maximum number of frames to return.
@@ -35125,8 +35125,8 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
 `;
         }
         /**
-         *
-         * @param {string|string[]} text
+         * 
+         * @param {string|string[]} text 
          * @param {RawImage|RawImage[]|RawImage[][]} images
          * @param {RawAudio|RawAudio[]|RawAudio[][]} audio
          * @returns {Promise<any>}
@@ -35267,9 +35267,9 @@ ${boi_token}${image_tokens_expanded}${eoi_token}
          * @typedef {import('../../utils/image.js').RawImage} RawImage
          */
         /**
-         *
-         * @param {RawImage|RawImage[]|RawImage[][]} images
-         * @param {string|string[]} text
+         * 
+         * @param {RawImage|RawImage[]|RawImage[][]} images  
+         * @param {string|string[]} text 
          * @returns {Promise<any>}
          */
         async _call(images, text, options = {}) {
@@ -35595,9 +35595,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         image_token = "<image>";
         global_img_token = "<global-img>";
         /**
-         *
-         * @param {string|string[]} text
-         * @param {RawImage|RawImage[]|RawImage[][]} images
+         * 
+         * @param {string|string[]} text 
+         * @param {RawImage|RawImage[]|RawImage[][]} images  
          * @returns {Promise<any>}
          */
         async _call(text, images = null, options = {}) {
@@ -37489,9 +37489,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         static image_processor_class = _auto_image_processing_auto_js__WEBPACK_IMPORTED_MODULE_1__.AutoImageProcessor;
         static tokenizer_class = _tokenizers_js__WEBPACK_IMPORTED_MODULE_2__.AutoTokenizer;
         /**
-         *
-         * @param {string|string[]} text
-         * @param {RawImage|RawImage[]} images
+         * 
+         * @param {string|string[]} text 
+         * @param {RawImage|RawImage[]} images 
          * @param  { { padding?: boolean, truncation?: boolean, num_crops?: number } | undefined } options
          * @returns {Promise<any>}
          */
@@ -38135,10 +38135,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         static image_processor_class = _auto_image_processing_auto_js__WEBPACK_IMPORTED_MODULE_1__.AutoImageProcessor;
         static tokenizer_class = _tokenizers_js__WEBPACK_IMPORTED_MODULE_2__.AutoTokenizer;
         /**
-         *
-         * @param {string|string[]} text
-         * @param {RawImage|RawImage[]} images
-         * @param  {...any} args
+         * 
+         * @param {string|string[]} text 
+         * @param {RawImage|RawImage[]} images 
+         * @param  {...any} args 
          * @returns {Promise<any>}
          */
         async _call(text, images = null, ...args) {
@@ -38230,10 +38230,10 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       );
       class SamImageProcessor extends _base_image_processors_utils_js__WEBPACK_IMPORTED_MODULE_0__.ImageProcessor {
         /**
-         *
-         * @param {any} input_points
-         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} original_sizes
-         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} reshaped_input_sizes
+         * 
+         * @param {any} input_points 
+         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} original_sizes 
+         * @param {import("../../base/image_processors_utils.js").HeightWidth[]} reshaped_input_sizes 
          * @returns {Tensor}
          */
         reshape_input_points(input_points, original_sizes, reshaped_input_sizes, is_bounding_box = false) {
@@ -38269,9 +38269,9 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           );
         }
         /**
-         *
-         * @param {any} input_labels
-         * @param {Tensor} input_points
+         * 
+         * @param {any} input_labels 
+         * @param {Tensor} input_points 
          * @returns {Tensor}
          */
         add_input_labels(input_labels, input_points) {
@@ -38395,7 +38395,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Generates a list of crop boxes of different sizes. Each layer has (2**i)**2 boxes for the ith layer.
          * @param {import("../../utils/image.js").RawImage} image Input original image
          * @param {number} target_size Target size of the resized image
-         * @param {Object} options Options for generating crop boxes
+         * @param {Object} options Options for generating crop boxes 
          * @param {number} [options.crop_n_layers] If >0, mask prediction will be run again on crops of the image.
          * Sets the number of layers to run, where each layer has 2**i_layer number of image crops.
          * @param {number} [options.overlap_ratio] Sets the degree to which crops overlap. In the first crop layer,
@@ -39324,8 +39324,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
       );
       class Wav2Vec2FeatureExtractor extends _base_feature_extraction_utils_js__WEBPACK_IMPORTED_MODULE_0__.FeatureExtractor {
         /**
-         * @param {Float32Array} input_values
-         * @returns {Float32Array}
+         * @param {Float32Array} input_values 
+         * @returns {Float32Array} 
          */
         _zero_mean_unit_var_norm(input_values) {
           const sum = input_values.reduce((a, b2) => a + b2, 0);
@@ -42945,7 +42945,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Helper function to add a node to the priority queue.
-         * @param {PriorityQueue} queue
+         * @param {PriorityQueue} queue 
          * @param {BPENode} node
          * @private
          */
@@ -43359,7 +43359,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /**
          * A PreTokenizer that splits text into wordpieces using a basic tokenization scheme
          * similar to that used in the original implementation of BERT.
-         *
+         * 
          * @param {Object} config The configuration object.
          */
         constructor(config2) {
@@ -43368,7 +43368,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Tokenizes a single text using the BERT pre-tokenization scheme.
-         *
+         * 
          * @param {string} text The text to tokenize.
          * @param {Object} [options] Additional options for the pre-tokenization logic.
          * @returns {string[]} An array of tokens.
@@ -43730,7 +43730,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Apply the decoder to a list of tokens.
-         *
+         * 
          * @param {string[]} tokens The list of tokens.
          * @returns {string[]} The decoded list of tokens.
          * @throws {Error} If the `decode_chain` method is not implemented in the subclass.
@@ -44281,11 +44281,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           return null;
         }
         /**
-         * Loads a pre-trained tokenizer from the given `pretrained_model_name_or_path`.
-         *
+         * Loads a pre-trained tokenizer from the given `pretrained_model_name_or_path`. 
+         * 
          * @param {string} pretrained_model_name_or_path The path to the pre-trained tokenizer.
          * @param {PretrainedTokenizerOptions} options Additional options for loading the tokenizer.
-         *
+         * 
          * @throws {Error} Throws an error if the tokenizer.json or tokenizer_config.json files are not found in the `pretrained_model_name_or_path`.
          * @returns {Promise<PreTrainedTokenizer>} A new instance of the `PreTrainedTokenizer` class.
          */
@@ -44309,7 +44309,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * @typedef {number[]|number[][]|Tensor} BatchEncodingItem
-         *
+         * 
          * @typedef {Object} BatchEncoding Holds the output of the tokenizer's call function.
          * @property {BatchEncodingItem} input_ids List of token ids to be fed to a model.
          * @property {BatchEncodingItem} attention_mask List of indices specifying which tokens should be attended to by the model.
@@ -44630,7 +44630,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Retrieve the chat template string used for tokenizing chat messages. This template is used
          * internally by the `apply_chat_template` method and can also be used externally to retrieve the model's chat
          * template for better generation tracking.
-         *
+         * 
          * @param {Object} options An optional object containing the following properties:
          * @param {string} [options.chat_template=null]
          * A Jinja template or the name of a template to use for this conversion.
@@ -44678,29 +44678,29 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Converts a list of message objects with `"role"` and `"content"` keys to a list of token
          * ids. This method is intended for use with chat models, and will read the tokenizer's chat_template attribute to
          * determine the format and control tokens to use when converting.
-         *
+         * 
          * See [here](https://huggingface.co/docs/transformers/chat_templating) for more information.
-         *
+         * 
          * **Example:** Applying a chat template to a conversation.
-         *
+         * 
          * ```javascript
          * import { AutoTokenizer } from "@huggingface/transformers";
-         *
+         * 
          * const tokenizer = await AutoTokenizer.from_pretrained("Xenova/mistral-tokenizer-v1");
-         *
+         * 
          * const chat = [
          *   { "role": "user", "content": "Hello, how are you?" },
          *   { "role": "assistant", "content": "I'm doing great. How can I help you today?" },
          *   { "role": "user", "content": "I'd like to show off how chat templating works!" },
          * ]
-         *
+         * 
          * const text = tokenizer.apply_chat_template(chat, { tokenize: false });
          * // "<s>[INST] Hello, how are you? [/INST]I'm doing great. How can I help you today?</s> [INST] I'd like to show off how chat templating works! [/INST]"
-         *
+         * 
          * const input_ids = tokenizer.apply_chat_template(chat, { tokenize: true, return_tensor: false });
          * // [1, 733, 16289, 28793, 22557, 28725, 910, 460, 368, 28804, 733, 28748, 16289, 28793, 28737, 28742, 28719, 2548, 1598, 28723, 1602, 541, 315, 1316, 368, 3154, 28804, 2, 28705, 733, 16289, 28793, 315, 28742, 28715, 737, 298, 1347, 805, 910, 10706, 5752, 1077, 3791, 28808, 733, 28748, 16289, 28793]
          * ```
-         *
+         * 
          * @param {Message[]} conversation A list of message objects with `"role"` and `"content"` keys,
          * representing the chat history so far.
          * @param {Object} options An optional object containing the following properties:
@@ -45248,11 +45248,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /**
          * Groups tokens by word. Returns a tuple containing a list of strings with the words,
          * and a list of `token_id` sequences with the tokens making up each word.
-         * @param {number[]} tokens
-         * @param {string} [language]
-         * @param {string} prepend_punctionations
-         * @param {string} append_punctuations
-         *
+         * @param {number[]} tokens 
+         * @param {string} [language] 
+         * @param {string} prepend_punctionations 
+         * @param {string} append_punctuations 
+         * 
          * @private
          */
         combineTokensIntoWords(tokens, language, prepend_punctionations = `"'\u201C\xA1\xBF([{-`, append_punctuations = `"'.\u3002,\uFF0C!\uFF01?\uFF1F:\uFF1A\u201D)]}\u3001`) {
@@ -45304,7 +45304,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Combine tokens into words by splitting at any position where the tokens are decoded as valid unicode points.
-         * @param {number[]} tokens
+         * @param {number[]} tokens 
          * @returns {*}
          * @private
          */
@@ -45341,7 +45341,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Combine tokens into words by splitting at whitespace and punctuation tokens.
-         * @param {number[]} tokens
+         * @param {number[]} tokens 
          * @private
          */
         splitTokensOnSpaces(tokens) {
@@ -45373,11 +45373,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Merges punctuation tokens with neighboring words.
-         * @param {string[]} words
-         * @param {number[][]} tokens
-         * @param {number[][]} indices
-         * @param {string} prepended
-         * @param {string} appended
+         * @param {string[]} words 
+         * @param {number[][]} tokens 
+         * @param {number[][]} indices 
+         * @param {string} prepended 
+         * @param {string} appended 
          * @private
          */
         mergePunctuations(words, tokens, indices, prepended, appended) {
@@ -45536,17 +45536,17 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         };
         /**
          * Instantiate one of the tokenizer classes of the library from a pretrained model.
-         *
+         * 
          * The tokenizer class to instantiate is selected based on the `tokenizer_class` property of the config object
          * (either passed as an argument or loaded from `pretrained_model_name_or_path` if possible)
-         *
+         * 
          * @param {string} pretrained_model_name_or_path The name or path of the pretrained model. Can be either:
          * - A string, the *model id* of a pretrained tokenizer hosted inside a model repo on huggingface.co.
          *   Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
          *   user or organization name, like `dbmdz/bert-base-german-cased`.
          * - A path to a *directory* containing tokenizer files, e.g., `./my_model_directory/`.
          * @param {PretrainedTokenizerOptions} options Additional options for loading the tokenizer.
-         *
+         * 
          * @returns {Promise<PreTrainedTokenizer>} A new instance of the PreTrainedTokenizer class.
          */
         static async from_pretrained(pretrained_model_name_or_path, {
@@ -48147,7 +48147,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         /**
          * Split this image into individual bands. This method returns an array of individual image bands from an image.
          * For example, splitting an "RGB" image creates three new images each containing a copy of one of the original bands (red, green, blue).
-         *
+         * 
          * Inspired by PIL's `Image.split()` [function](https://pillow.readthedocs.io/en/latest/reference/Image.html#PIL.Image.Image.split).
          * @returns {RawImage[]} An array containing bands.
          */
@@ -48505,7 +48505,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Converts a complex number representation stored in a Float64Array to an array of real numbers.
-         *
+         * 
          * @param {Float64Array} complex The complex number representation to be converted.
          * @param {number[]} [storage] An optional array to store the result in.
          * @returns {number[]} An array of real numbers representing the input complex number representation.
@@ -48532,12 +48532,12 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Performs a Fast Fourier Transform (FFT) on the given input data and stores the result in the output buffer.
-         *
+         * 
          * @param {Float64Array} out The output buffer to store the result.
          * @param {Float64Array} data The input data to transform.
-         *
+         * 
          * @throws {Error} Input and output buffers must be different.
-         *
+         * 
          * @returns {void}
          */
         transform(out, data) {
@@ -48574,7 +48574,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * Performs an inverse FFT transformation on the given `data` array, and stores the result in `out`.
          * The `out` array must be a different buffer than the `data` array. The `out` array will contain the
          * result of the transformation. The `data` array will not be modified.
-         *
+         * 
          * @param {Float64Array} out The output buffer for the transformed data.
          * @param {Float64Array} data The input data to transform.
          * @throws {Error} If `out` and `data` refer to the same buffer.
@@ -48699,7 +48699,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
          * @param {number} off Index of input array to start reading from
          * @param {number} step Step size between elements in input array
          * @param {number} inv Scaling factor for inverse transform
-         *
+         * 
          * @returns {void}
          */
         _singleTransform4(data, out, outOff, off, step, inv) {
@@ -48825,13 +48825,13 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
         }
         /**
          * Performs a single real input radix-2 transformation on the provided data
-         *
+         * 
          * @param {Float64Array} data The input data array
          * @param {Float64Array} out The output data array
          * @param {number} outOff The output offset
          * @param {number} off The input offset
          * @param {number} step The step
-         *
+         * 
          * @returns {void}
          */
         _singleRealTransform2(data, out, outOff, off, step) {

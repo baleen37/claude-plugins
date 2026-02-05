@@ -241,8 +241,8 @@ ${conversationText}`;
   // Note: Hierarchical summarization doesn't support resume mode (needs fresh session for each chunk)
   // This is fine since we only use resume for the main session-end hook
 
-  // Chunk into groups of 8 exchanges
-  const chunks = chunkExchanges(exchanges, 8);
+  // Chunk into groups of 32 exchanges (reduced from 8 for ~75% fewer API calls)
+  const chunks = chunkExchanges(exchanges, 32);
   console.log(`  Split into ${chunks.length} chunks`);
 
   // Summarize each chunk

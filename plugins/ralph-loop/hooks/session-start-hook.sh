@@ -7,8 +7,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../scripts/lib/state.sh"
 
-# Extract session_id from stdin (remove useless use of cat)
-SESSION_ID=$(jq -r '.session_id')
+# Extract session_id from stdin
+SESSION_ID=$(jq -r '.session_id' </dev/stdin)
 
 # Validate session_id exists
 if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
@@ -57,9 +57,16 @@ if [[ -z "$ENV_FILE" ]]; then
     ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
 fi
 
+# Write SESSION_ID to ENV_FILE
+# If file exists and is writable, append to it
+# Otherwise (including just-created file), write to it directly
 if [[ -f "$ENV_FILE" ]] && [[ -w "$ENV_FILE" ]]; then
     # Safe to use unquoted since we validated SESSION_ID contains only safe characters
     echo "export RALPH_SESSION_ID=$SESSION_ID" >> "$ENV_FILE"
+elif [[ ! -f "$ENV_FILE" ]]; then
+    # File doesn't exist (just created above), create it with content
+    # Safe to use unquoted since we validated SESSION_ID contains only safe characters
+    echo "export RALPH_SESSION_ID=$SESSION_ID" > "$ENV_FILE"
 fi
 
 exit 0

@@ -77,7 +77,7 @@ export async function indexConversations(
 
     if (!stat.isDirectory()) continue;
 
-    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl'));
+    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl') && !f.startsWith('agent-'));
 
     if (files.length === 0) continue;
 
@@ -196,7 +196,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
     const projectPath = path.join(PROJECTS_DIR, project);
     if (!fs.statSync(projectPath).isDirectory()) continue;
 
-    const files = fs.readdirSync(projectPath).filter(f => f.includes(sessionId) && f.endsWith('.jsonl'));
+    const files = fs.readdirSync(projectPath).filter(f => f.includes(sessionId) && f.endsWith('.jsonl') && !f.startsWith('agent-'));
 
     if (files.length > 0) {
       found = true;
@@ -283,7 +283,7 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
     const projectPath = path.join(PROJECTS_DIR, project);
     if (!fs.statSync(projectPath).isDirectory()) continue;
 
-    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl'));
+    const files = fs.readdirSync(projectPath).filter(f => f.endsWith('.jsonl') && !f.startsWith('agent-'));
 
     for (const file of files) {
       const sourcePath = path.join(projectPath, file);
