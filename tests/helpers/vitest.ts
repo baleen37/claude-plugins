@@ -6,6 +6,7 @@
 import { readFileSync, existsSync, readdirSync } from 'fs'
 import { join, dirname, relative } from 'path'
 import { fileURLToPath } from 'url'
+import { glob } from 'glob'
 
 // Get the current file path and resolve project root
 const __filename = fileURLToPath(import.meta.url)
