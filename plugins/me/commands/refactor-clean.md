@@ -13,9 +13,7 @@ Safely identify and remove dead code with test verification:
    - Identify unreferenced files and assets
    - Look for dead code patterns specific to the project's language
 
-2. Generate comprehensive report in .reports/dead-code-analysis.md
-
-3. Categorize findings by severity:
+2. Categorize findings by severity:
    - SAFE: Test files, unused utilities, commented code
    - CAUTION: API routes, components, modules that might be used dynamically
    - DANGER: Config files, main entry points, framework-specific files
