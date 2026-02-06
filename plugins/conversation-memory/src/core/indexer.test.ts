@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 
 describe('File filtering for agent conversations', () => {
   test('filters out files starting with agent-', () => {

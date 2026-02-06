@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from 'vitest';
 
 // Since bun:test doesn't have built-in mocking and we can't easily mock
 // @huggingface/transformers, we'll test the logic that can be tested
