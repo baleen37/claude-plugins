@@ -81,6 +81,19 @@
       "version": "5.2.0"
     },
     {
+      "name": "notify-user-input",
+      "description": "macOS desktop notifications when Claude Code asks for user input",
+      "source": "./plugins/notify-user-input",
+      "category": "productivity",
+      "tags": [
+        "notification",
+        "macos",
+        "desktop",
+        "hooks"
+      ],
+      "version": "5.2.0"
+    },
+    {
       "name": "ralph-loop",
       "description": "Continuous self-referential AI loops for interactive iterative development, implementing the Ralph Wiggum technique",
       "source": "./plugins/ralph-loop",
