@@ -11,23 +11,18 @@ const lspServers = [
   { name: 'nil', check: 'nil', install: 'cargo install --git https://github.com/oxalica/nil nil' },
 ]
 
-const failures: string[] = []
-
 for (const server of lspServers) {
   const exists = await $`command -v ${server.check}`.quiet().nothrow()
   if (exists.exitCode === 0) continue
 
-  const result = await $`${server.install}`.quiet().nothrow()
-  if (result.exitCode === 0) {
-    console.error(`✓ ${server.name} installed`)
-  } else {
-    console.error(`✗ ${server.name} failed`)
-    failures.push(server.name)
-  }
-}
-
-if (failures.length > 0) {
-  console.error(`\nFailed to install: ${failures.join(', ')}`)
+  // Spawn install in background, don't wait
+  $`${server.install}`.quiet().nothrow().then((result) => {
+    if (result.exitCode === 0) {
+      console.error(`✓ ${server.name} installed`)
+    } else {
+      console.error(`✗ ${server.name} failed`)
+    }
+  })
 }
 
 process.exit(0)
