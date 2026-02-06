@@ -4,7 +4,7 @@ import {
   LLMOptions,
   LLMResult,
   TokenUsage,
-} from './types';
+} from './types.js';
 
 describe('LLM Types', () => {
   describe('TokenUsage', () => {
