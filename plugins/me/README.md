@@ -5,6 +5,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 ## Components
 
 ### Commands (11)
+
 - **brainstorm**: Brainstorming and planning
 - **claude-isolated-test**: Run isolated tests in a controlled environment
 - **create-pr**: Commit, push, and create/update pull requests
@@ -18,9 +19,11 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 - **verify**: Comprehensive codebase verification
 
 ### Agents
+
 - **code-reviewer**: Review code against plans and standards
 
 ### Skills (3)
+
 - **ci-troubleshooting**: Systematic CI debugging approach
 - **spawn-worktree**: Isolated feature work with git worktrees
 - **test-driven-development**: TDD methodology and workflow
@@ -35,6 +38,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 ## Usage
 
 This plugin provides a comprehensive set of tools for:
+
 - Git workflow automation (commit, PR, worktree management)
 - CI/CD troubleshooting and debugging
 - Nix flakes development environment setup
