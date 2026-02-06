@@ -1,6 +1,6 @@
 {
   "name": "conversation-memory",
-  "version": "5.2.2",
+  "version": "5.3.0",
   "description": "Conversation memory plugin with semantic search across Claude Code sessions",
   "author": {
     "name": "Baleen"
