@@ -44,4 +44,17 @@ ITERATION=$(get_iteration "$FRONTMATTER")
 # Remove state file
 rm "$STATE_FILE"
 
+# Remove RALPH_SESSION_ID from session-env.sh to prevent stale session IDs
+SESSION_ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
+if [[ -f "$SESSION_ENV_FILE" ]]; then
+    # Remove the export line for RALPH_SESSION_ID from the env file
+    sed -i.tmp '/^export RALPH_SESSION_ID=/d' "$SESSION_ENV_FILE" 2>/dev/null || true
+    rm -f "${SESSION_ENV_FILE}.tmp" 2>/dev/null || true
+
+    # If file is now empty, remove it entirely
+    if [[ ! -s "$SESSION_ENV_FILE" ]]; then
+        rm -f "$SESSION_ENV_FILE"
+    fi
+fi
+
 echo "Cancelled Ralph loop for session $RALPH_SESSION_ID (was at iteration $ITERATION)"

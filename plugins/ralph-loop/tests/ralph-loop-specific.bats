@@ -577,10 +577,10 @@ EOF
     [ -f "$hook" ]
 
     # The hook should write RALPH_SESSION_ID to ENV_FILE
-    # The bug was that it checked if file exists BEFORE writing, but creates it right before
-    # The fix handles both cases: existing file and newly-created file
-    grep -q 'echo.*RALPH_SESSION_ID.*>>.*ENV_FILE' "$hook"
+    # The fix always overwrites (>) rather than appends (>>) to prevent stale session IDs
     grep -q 'echo.*RALPH_SESSION_ID.*>.*ENV_FILE' "$hook"
+    # Should NOT append - that's the bug we fixed
+    ! grep -q 'echo.*RALPH_SESSION_ID.*>>.*ENV_FILE' "$hook"
 }
 
 # ============================================================================
