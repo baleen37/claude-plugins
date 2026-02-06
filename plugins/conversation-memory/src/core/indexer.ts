@@ -236,7 +236,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
         // Generate summary (unless --no-summaries)
         const summaryPath = archivePath.replace('.jsonl', '-summary.txt');
         if (!noSummaries && !fs.existsSync(summaryPath)) {
-          const summary = await summarizeConversation(exchanges, undefined, file);
+          const summary = await summarizeConversation(parseResult.exchanges, undefined, file);
           fs.writeFileSync(summaryPath, summary, 'utf-8');
           console.log(`Summary: ${summary.split(/\s+/).length} words`);
         }

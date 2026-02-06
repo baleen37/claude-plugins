@@ -17,7 +17,6 @@
     "conversation-memory": "dist/cli.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.1.9",
     "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.0.4",

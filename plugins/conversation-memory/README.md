@@ -185,36 +185,48 @@ Include one of these markers anywhere in the conversation content:
 
 The entire conversation will be excluded from indexing when any of these markers are detected.
 
-### Environment Variables (Optional)
+### LLM Configuration (Required for Summarization)
 
-The plugin supports optional environment variables for customizing the summarization API:
+Summarization requires an LLM provider configuration. Create a config file at `~/.config/conversation-memory/config.json`:
 
-- **`CONVERSATION_MEMORY_API_MODEL`**: Model to use for summarization (default: `haiku`)
+```json
+{
+  "provider": "gemini",
+  "gemini": {
+    "apiKeys": ["your-gemini-api-key-1", "your-gemini-api-key-2"],
+    "model": "gemini-2.0-flash"
+  }
+}
+```
 
-  ```bash
-  export CONVERSATION_MEMORY_API_MODEL="sonnet"
-  ```
+**Configuration options:**
 
-- **`CONVERSATION_MEMORY_API_BASE_URL`**: Custom Anthropic API endpoint
+- **`provider`**: LLM provider name (currently only `gemini` is supported)
+- **`gemini.apiKeys`**: Array of Gemini API keys for round-robin load distribution
+- **`gemini.model`**: Optional model name (defaults to `gemini-2.0-flash`)
 
-  ```bash
-  export CONVERSATION_MEMORY_API_BASE_URL="https://api.anthropic.com"
-  ```
+**Note**: If no config file is found, conversations will still be indexed but not summarized.
+You'll see `[Not summarized - no LLM config found]` placeholders instead of summaries.
 
-- **`CONVERSATION_MEMORY_API_TOKEN`**: Authentication token for custom API endpoint
+**Getting a Gemini API key:**
 
-  ```bash
-  export CONVERSATION_MEMORY_API_TOKEN="sk-ant-..."
-  ```
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to your config.json
 
-- **`CONVERSATION_MEMORY_API_TIMEOUT_MS`**: API call timeout in milliseconds (default: SDK default)
+**Using multiple API keys:**
 
-  ```bash
-  export CONVERSATION_MEMORY_API_TIMEOUT_MS="30000"
-  ```
+For high-volume indexing, add multiple API keys to distribute load:
 
-**Note**: If these variables are not set, the plugin uses Claude Code's default Anthropic API
-configuration (subscription-based or `ANTHROPIC_API_KEY`).
+```json
+{
+  "provider": "gemini",
+  "gemini": {
+    "apiKeys": ["key1", "key2", "key3"],
+    "model": "gemini-2.0-flash"
+  }
+}
+```
 
 ## Development
 
@@ -300,7 +312,7 @@ plugins/conversation-memory/
 
 ### Runtime
 
-- `@anthropic-ai/claude-agent-sdk`: ^0.1.9 - For conversation summarization
+- `@google/generative-ai`: ^0.24.1 - For conversation summarization (Gemini API)
 - `@modelcontextprotocol/sdk`: ^1.0.4 - MCP protocol implementation
 - `@huggingface/transformers`: ^3.8.1 - ML embeddings (Transformers.js v3)
 - `better-sqlite3`: ^9.6.0 - SQLite database

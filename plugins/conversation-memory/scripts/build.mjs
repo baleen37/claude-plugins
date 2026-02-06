@@ -15,7 +15,6 @@ const commonConfig = {
   minify: false,
   // External dependencies that should not be bundled
   external: [
-    "@anthropic-ai/claude-agent-sdk",
     "@huggingface/transformers",
     "better-sqlite3",
     "sharp",
