@@ -1,8 +1,7 @@
 ---
 name: create-pr
-description: Complete git workflow: commit → push → PR → verify merge-ready. Handles conflicts, protected branches, and merge-ready verification
-argument-hint: ""
-allowed-tools: Bash(*)
+description: "Complete git workflow: commit → push → PR → verify merge-ready"
+allowed-tools: Bash(git:*,gh:*,bash:*)
 ---
 
 # Create PR
