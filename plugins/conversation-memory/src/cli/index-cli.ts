@@ -67,7 +67,7 @@ async function ensureDependencies() {
   if (!fs.existsSync(nodeModulesPath)) {
     console.error('[conversation-memory] Installing dependencies...');
     try {
-      execSync('bun install --silent', {
+      execSync('npm install --silent', {
         cwd: pluginRoot,
         stdio: 'inherit'
       });

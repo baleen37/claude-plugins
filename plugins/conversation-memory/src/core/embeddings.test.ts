@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 
-// Since bun:test doesn't have built-in mocking and we can't easily mock
+// Since bun:test (deprecated) doesn't have built-in mocking and we can't easily mock
 // @huggingface/transformers, we'll test the logic that can be tested
 // without the actual model loading. This follows the characterization test
 // pattern used in other test files in this project.
@@ -81,11 +81,11 @@ describe('embeddings - text formatting and logic', () => {
   describe('generateExchangeEmbedding text formatting', () => {
     test('combines user and assistant messages with labels', () => {
       const userMessage = 'How do I create a test?';
-      const assistantMessage = 'Use bun:test framework';
+      const assistantMessage = 'Use vitest framework';
 
       const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
 
-      expect(formatted).toBe('User: How do I create a test?\n\nAssistant: Use bun:test framework');
+      expect(formatted).toBe('User: How do I create a test?\n\nAssistant: Use vitest framework');
     });
 
     test('includes tools section when tools are provided', () => {

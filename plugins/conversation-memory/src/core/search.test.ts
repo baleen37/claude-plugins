@@ -651,14 +651,14 @@ describe('formatResults', () => {
 
 describe('searchMultipleConcepts', () => {
   // Note: These tests use the actual implementation but with text mode
-  // since vector mode requires sqlite-vec which doesn't work with bun:sqlite
+  // since vector mode requires sqlite-vec which doesn't work with bun:sqlite (deprecated)
   test('should return empty array for empty concepts', async () => {
     const results = await searchMultipleConcepts([], {});
     expect(results).toEqual([]);
   });
 
-  // The remaining searchMultipleConcepts tests are skipped for bun testing
-  // because vector search requires sqlite-vec which doesn't work with bun:sqlite
+  // The remaining searchMultipleConcepts tests are skipped for bun testing (deprecated)
+  // because vector search requires sqlite-vec which doesn't work with bun:sqlite (deprecated)
   // These tests should be run with Node.js and better-sqlite3 instead
 
   test.skip('should find conversations matching all concepts', async () => {

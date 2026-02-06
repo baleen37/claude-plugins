@@ -125,10 +125,10 @@ understanding complete rationale, evolution, and gotchas behind past decisions.
 ```bash
 # Install dependencies
 cd plugins/conversation-memory
-bun install
+npm install
 
 # Build the plugin
-bun run build
+npm run build
 ```
 
 The plugin automatically:
@@ -144,7 +144,7 @@ The plugin automatically:
 When each Claude Code session starts (startup or resume), the hook (`hooks/hooks.json`) runs:
 
 ```bash
-bun dist/cli.mjs sync
+node dist/cli.mjs sync
 ```
 
 This:
@@ -233,7 +233,7 @@ For high-volume indexing, add multiple API keys to distribute load:
 ### Build
 
 ```bash
-bun run build
+npm run build
 ```
 
 Bundles:
@@ -244,7 +244,7 @@ Bundles:
 ### Type Check
 
 ```bash
-bun run typecheck
+npm run typecheck
 ```
 
 ### CLI Usage
@@ -322,7 +322,7 @@ plugins/conversation-memory/
 ### Development Dependencies
 
 - `typescript`: ^5.3.3
-- `bun`: For build and test runtime (Node.js 18+ also supported)
+- `node`: For build and test runtime (Node.js 18+)
 
 ## Upgrading from v1.x (multilingual-e5-small)
 
@@ -341,10 +341,10 @@ rm ~/.config/conversation-memory/conversations.db
 
 # 3. Reinstall plugin dependencies
 cd plugins/conversation-memory
-bun install
+npm install
 
 # 4. Rebuild plugin
-bun run build
+npm run build
 
 # 5. Reindex all conversations (downloads ~197MB model on first run)
 node dist/cli.mjs index-all
@@ -377,7 +377,7 @@ The plugin automatically installs dependencies on first run. If you encounter er
 **Fix:**
 
 ```bash
-sudo chown -R $(whoami) ~/.bun
+sudo chown -R $(whoami) ~/.npm
 ```
 
 Then restart Claude Code.
@@ -392,15 +392,15 @@ Then restart Claude Code.
 2. If behind a corporate firewall, configure npm proxy:
 
    ```bash
-   bun config set proxy http://your-proxy:port
-   bun config set https-proxy http://your-proxy:port
+   npm config set proxy http://your-proxy:port
+   npm config set https-proxy http://your-proxy:port
    ```
 
 3. Try installing manually:
 
    ```bash
    cd plugins/conversation-memory
-   bun install
+   npm install
    ```
 
 #### Disk Space Full (ENOSPC)
@@ -410,10 +410,10 @@ Then restart Claude Code.
 **Fix:**
 
 1. Check available disk space: `df -h`
-2. Free up space by cleaning bun cache:
+2. Free up space by cleaning npm cache:
 
    ```bash
-   bun pm cache rm
+   npm cache clean --force
    ```
 
 3. Remove old node_modules:
@@ -421,7 +421,7 @@ Then restart Claude Code.
    ```bash
    cd plugins/conversation-memory
    rm -rf node_modules
-   bun install
+   npm install
    ```
 
 ### Manual Installation
@@ -430,8 +430,8 @@ If automatic installation fails repeatedly, install dependencies manually:
 
 ```bash
 cd plugins/conversation-memory
-bun install
-bun run build
+npm install
+npm run build
 ```
 
 ## Architecture Notes
