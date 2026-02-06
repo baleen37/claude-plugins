@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "conversation-memory": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/mcp-wrapper.mjs"]
+    }
+  }
+}

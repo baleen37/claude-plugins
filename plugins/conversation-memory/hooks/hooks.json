@@ -1,0 +1,16 @@
+{
+  "$schema": "../../schemas/hooks-schema.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs sync"
+          }
+        ]
+      }
+    ]
+  }
+}
