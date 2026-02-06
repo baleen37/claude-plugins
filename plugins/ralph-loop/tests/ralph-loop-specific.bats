@@ -563,13 +563,13 @@ EOF
     [ "$matcher" = "*" ]
 }
 
-@test "ralph-loop: session-start-hook.sh reads SESSION_ID from stdin" {
+@test "ralph-loop: session-start-hook.sh reads SESSION_ID from CLAUDE_SESSION_ID env var" {
     local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
     [ -f "$hook" ]
 
-    # The hook must read from stdin (</dev/stdin or similar)
-    # to get the JSON input from Claude Code
-    grep -q 'jq.*session_id.*</dev/stdin' "$hook"
+    # The hook must read from CLAUDE_SESSION_ID environment variable
+    # (stdin is not available in hook context)
+    grep -q 'CLAUDE_SESSION_ID' "$hook"
 }
 
 @test "ralph-loop: session-start-hook.sh writes RALPH_SESSION_ID to ENV_FILE" {
@@ -588,12 +588,13 @@ EOF
 # These tests verify the core integration scenarios work correctly
 # ============================================================================
 
-@test "ralph-loop: session-start-hook.sh reads session_id from stdin" {
+@test "ralph-loop: session-start-hook.sh reads session_id from CLAUDE_SESSION_ID env var" {
     local hook="${PLUGIN_DIR}/hooks/session-start-hook.sh"
     [ -f "$hook" ]
 
-    # Verify the hook reads from stdin using </dev/stdin or similar
-    grep -q 'jq.*session_id.*</dev/stdin' "$hook"
+    # Verify the hook reads from CLAUDE_SESSION_ID environment variable
+    # (stdin is not available in hook context, causing permission errors)
+    grep -q 'CLAUDE_SESSION_ID' "$hook"
 }
 
 @test "ralph-loop: stop-hook.sh reads hook input from stdin" {
