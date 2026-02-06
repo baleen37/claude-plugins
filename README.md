@@ -1,17 +1,25 @@
 # Baleen Claude Plugins
 
-Claude Code plugin collection by baleen, featuring useful tools for AI-assisted development.
+Claude Code plugin collection by baleen, featuring useful tools for AI-assisted
+development.
 
 ## Available Plugins
 
-Plugins are automatically discovered from the `plugins/` directory. For detailed information about each plugin, see the respective plugin's README.md file.
+Plugins are automatically discovered from the `plugins/` directory. For detailed
+information about each plugin, see the respective plugin's README.md file.
 
-- **ralph-loop**: Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops
-- **git-guard**: Git workflow protection hooks that prevent commit and PR bypasses (automatic, no commands needed)
-- **me**: Personal development workflow automation with 8 commands, 1 agent, and 7 skills (TDD, debugging, git, code review, research, orchestration)
-- **jira**: Jira integration for issue tracking and project management (requires MCP server setup)
-- **auto-updater**: Automatic plugin updates from marketplace (includes `/update-all-plugins` command)
-- **strategic-compact**: Strategic content compaction and organization tools (automatic PreToolUse hook)
+- **ralph-loop**: Implementation of the Ralph Wiggum technique for iterative,
+  self-referential AI development loops
+- **git-guard**: Git workflow protection hooks that prevent commit and PR
+  bypasses (automatic, no commands needed)
+- **me**: Personal development workflow automation with 8 commands, 1 agent,
+  and 7 skills (TDD, debugging, git, code review, research, orchestration)
+- **jira**: Jira integration for issue tracking and project management
+  (requires MCP server setup)
+- **auto-updater**: Automatic plugin updates from marketplace (includes
+  `/update-all-plugins` command)
+- **strategic-compact**: Strategic content compaction and organization tools
+  (automatic PreToolUse hook)
 
 ## Quick Start
 
@@ -52,6 +60,7 @@ Git Guard operates automatically via PreToolUse hooks - no commands needed:
 The "me" plugin provides comprehensive development workflow automation:
 
 **Commands (8):**
+
 - `/brainstorm` - Brainstorming and feature planning
 - `/create-pr` - Full git workflow (commit → push → PR)
 - `/debug` - Systematic debugging process
@@ -62,9 +71,11 @@ The "me" plugin provides comprehensive development workflow automation:
 - `/verify` - Comprehensive codebase verification
 
 **Agents (1):**
+
 - `code-reviewer` - Code review against plans and standards
 
 **Skills (7):**
+
 - `ci-troubleshooting` - Systematic CI debugging
 - `test-driven-development` - TDD methodology
 - `systematic-debugging` - Root cause analysis
@@ -76,15 +87,18 @@ The "me" plugin provides comprehensive development workflow automation:
 ### Using Auto Updater
 
 Auto-update runs automatically:
+
 - Checks for updates every 6 hours on SessionStart
-- Manual update available:
+
+Manual update available:
+
 ```bash
 /update-all-plugins
 ```
 
 ## Project Structure
 
-```
+```text
 claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json          # Marketplace configuration (baleen-plugins)
@@ -121,19 +135,19 @@ claude-plugins/
 
 ### Creating Your Own Plugin
 
-1. Reference existing plugins (e.g., `git-guard`) for structure:
-
+1. Reference existing plugins (e.g., `git-guard`) for structure
 2. Create plugin directories:
+
 ```bash
 mkdir -p plugins/my-plugin/.claude-plugin
 mkdir -p plugins/my-plugin/commands
 mkdir -p plugins/my-plugin/hooks
 ```
 
-3. Create `plugins/my-plugin/.claude-plugin/plugin.json`
-4. Add your commands, agents, skills, or hooks
-5. Update `plugins/my-plugin/README.md`
-6. Add to `.claude-plugin/marketplace.json`
+1. Create `plugins/my-plugin/.claude-plugin/plugin.json`
+2. Add your commands, agents, skills, or hooks
+3. Update `plugins/my-plugin/README.md`
+4. Add to `.claude-plugin/marketplace.json`
 
 ### Running Tests
 
@@ -150,19 +164,21 @@ pre-commit run --all-files
 
 ### Version Management & Release
 
-This project uses **semantic-release** with **Conventional Commits** for automated version management.
+This project uses **semantic-release** with **Conventional Commits** for
+automated version management.
 
 #### Commit Message Format (Conventional Commits)
 
 ```bash
 # Interactive commit (recommended)
-npm run commit
+bun run commit
 
 # Or write manually
 git commit -m "type(scope): description"
 ```
 
 **Types:**
+
 - `feat`: New feature (minor version bump)
 - `fix`: Bug fix (patch version bump)
 - `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`: No version bump
@@ -170,7 +186,8 @@ git commit -m "type(scope): description"
 **Scope:** Plugin name (`ralph-loop`, `git-guard`, etc.)
 
 **Examples:**
-```
+
+```text
 feat(ralph-loop): add iteration progress tracking
 fix(git-guard): prevent --no-verify bypass
 docs(me): update skill documentation
@@ -220,6 +237,7 @@ pre-commit run --all-files
 ```
 
 **Validations:**
+
 - YAML syntax validation
 - JSON schema validation
 - ShellCheck (shell script linting)

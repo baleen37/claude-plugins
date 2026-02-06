@@ -1,9 +1,9 @@
 /**
  * Test: plugin.json validation
- * Vitest equivalent of tests/plugin_json.bats
+ * Bun test equivalent of tests/plugin_json.bats
  */
 
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll } from 'bun:test'
 import {
   validateJson,
   getAllPluginManifests,
@@ -12,7 +12,7 @@ import {
   assertNotEmpty,
   validatePluginManifestFields,
   type PluginManifest,
-} from './helpers/vitest'
+} from './helpers/bun'
 
 let manifests: string[]
 
