@@ -11,6 +11,7 @@ bash tests/run-all-tests.sh
 ```
 
 This script runs:
+
 1. Root tests in `tests/`
 2. All plugin tests in `plugins/*/tests/`
 
@@ -38,7 +39,6 @@ bats plugins/git-guard/tests/
 bats plugins/me/tests/
 bats plugins/ralph-loop/tests/
 bats plugins/strategic-compact/tests/
-bats plugins/auto-updater/tests/
 ```
 
 ### Verbose Output
@@ -53,6 +53,7 @@ bats --print-output-on-failure tests/
 ### directory_structure.bats
 
 Validates the overall plugin structure:
+
 - Required directories exist (`.claude-plugin/`, `plugins/`, `tests/`)
 - Each plugin has required subdirectories
 - Marketplace configuration exists
@@ -60,6 +61,7 @@ Validates the overall plugin structure:
 ### marketplace_json.bats
 
 Validates `.claude-plugin/marketplace.json`:
+
 - File exists and is valid JSON
 - Contains required `marketplace` object
 - Contains `plugins` array
@@ -68,6 +70,7 @@ Validates `.claude-plugin/marketplace.json`:
 ### plugin_json.bats
 
 Validates individual `.claude-plugin/plugin.json` files:
+
 - File exists for each plugin
 - Valid JSON format
 - Required fields present (`name`, `description`, `version`)
@@ -76,6 +79,7 @@ Validates individual `.claude-plugin/plugin.json` files:
 ### command_files.bats
 
 Validates command markdown files:
+
 - Files exist for registered commands
 - Valid YAML frontmatter
 - Required frontmatter fields (`description`)
@@ -84,6 +88,7 @@ Validates command markdown files:
 ### agent_files.bats
 
 Validates agent markdown files:
+
 - Files exist for registered agents
 - Valid YAML frontmatter
 - Required frontmatter fields (`name`, `description`)
@@ -92,6 +97,7 @@ Validates agent markdown files:
 ### skill_files.bats
 
 Validates skill markdown files:
+
 - Files exist for registered skills
 - Valid YAML frontmatter
 - Required frontmatter fields (`name`, `description`)
@@ -100,6 +106,7 @@ Validates skill markdown files:
 ## Test Helpers
 
 Tests use `tests/bats_helper.bash` which provides:
+
 - `get_plugins_list()`: Returns list of all plugins
 - `get_plugin_json()`: Gets plugin.json content for a plugin
 - `get_marketplace_json()`: Gets marketplace.json content
@@ -108,6 +115,7 @@ Tests use `tests/bats_helper.bash` which provides:
 ## CI/CD
 
 Tests run automatically on:
+
 - Pull requests
 - Push to main branch
 - Releases
@@ -117,6 +125,7 @@ See `.github/workflows/` for workflow definitions.
 ## Pre-commit Hooks
 
 Pre-commit hooks run additional checks:
+
 - YAML validation
 - JSON validation
 - ShellCheck (shell script linting)
@@ -150,8 +159,8 @@ load bats_helper.bash
 }
 ```
 
-4. Run the new test to verify it works
-5. Update this documentation if needed
+1. Run the new test to verify it works
+2. Update this documentation if needed
 
 ## Troubleshooting
 
@@ -179,7 +188,7 @@ load bats_helper.bash
 
 All plugins should follow this test structure:
 
-```
+```text
 plugins/{plugin-name}/
 ├── tests/                    # Required: Test files directory
 │   ├── {plugin-name}.bats   # Main plugin test file

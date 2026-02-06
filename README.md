@@ -16,8 +16,6 @@ information about each plugin, see the respective plugin's README.md file.
   and 7 skills (TDD, debugging, git, code review, research, orchestration)
 - **jira**: Jira integration for issue tracking and project management
   (requires MCP server setup)
-- **auto-updater**: Automatic plugin updates from marketplace (includes
-  `/update-all-plugins` command)
 - **strategic-compact**: Strategic content compaction and organization tools
   (automatic PreToolUse hook)
 
@@ -84,18 +82,6 @@ The "me" plugin provides comprehensive development workflow automation:
 - `nix-direnv-setup` - Nix flake direnv integration
 - `writing-claude-code` - Creating Claude Code components
 
-### Using Auto Updater
-
-Auto-update runs automatically:
-
-- Checks for updates every 6 hours on SessionStart
-
-Manual update available:
-
-```bash
-/update-all-plugins
-```
-
 ## Project Structure
 
 ```text
@@ -118,10 +104,6 @@ claude-plugins/
 │   │   └── tests/                # BATS tests
 │   ├── jira/                    # Jira integration
 │   │   └── agents/               # Jira MCP agents
-│   ├── auto-updater/            # Plugin update automation
-│   │   ├── commands/             # /update-all-plugins command
-│   │   ├── hooks/                # SessionStart hook (6hr auto-update check)
-│   │   └── scripts/              # Update checker scripts
 │   └── strategic-compact/       # Content compaction
 │       └── hooks/                # PreToolUse hook (suggests compaction)
 ├── .github/workflows/            # CI/CD workflows
