@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// Resolve PROJECT_ROOT: tests/helpers/vitest.ts -> tests/ -> project_root
+// Resolve PROJECT_ROOT: tests/helpers/bun.ts -> tests/ -> project_root
 export const PROJECT_ROOT = dirname(dirname(__dirname))
 
 // Export common paths
