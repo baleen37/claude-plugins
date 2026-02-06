@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/hooks-schema.json",
+  "$schema": "../../../schemas/hooks-schema.json",
   "description": "Notify when Claude asks for user input",
   "hooks": {
     "PreToolUse": [
