@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Cross-platform wrapper script for MCP server that ensures dependencies are installed
  * This runs before the MCP server starts and works on Windows, macOS, and Linux
@@ -15,18 +15,18 @@ const __dirname = dirname(__filename);
 // Determine plugin root directory
 const PLUGIN_ROOT = process.env.CLAUDE_PLUGIN_ROOT || join(__dirname, '..');
 
-// Helper function to run npm install
-function runNpmInstall() {
+// Helper function to run bun install
+function runBunInstall() {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
-    const npmCommand = isWindows ? 'npm.cmd' : 'npm';
+    const bunCommand = isWindows ? 'bun.exe' : 'bun';
 
     console.error('[conversation-memory] Installing dependencies (first run only)...');
     console.error('This may take 30-60 seconds...');
 
     let stderrOutput = '';
 
-    const child = spawn(npmCommand, ['install', '--prefer-offline', '--no-audit', '--no-fund'], {
+    const child = spawn(bunCommand, ['install', '--silent'], {
       cwd: PLUGIN_ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: isWindows
@@ -51,7 +51,7 @@ function runNpmInstall() {
         // Analyze error cause
         if (stderrOutput.includes('EACCES') || stderrOutput.includes('permission denied')) {
           console.error('Cause: Permission denied');
-          console.error('Fix: sudo chown -R $(whoami) ~/.npm');
+          console.error('Fix: sudo chown -R $(whoami) ~/.bun');
         } else if (stderrOutput.includes('ENOSPC')) {
           console.error('Cause: Disk space full');
           console.error('Fix: Free up disk space');
@@ -60,13 +60,13 @@ function runNpmInstall() {
           console.error('Fix: Check internet connection and retry');
         }
 
-        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && npm install`);
-        reject(new Error(`npm install failed with exit code ${code}`));
+        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && bun install`);
+        reject(new Error(`bun install failed with exit code ${code}`));
       }
     });
 
     child.on('error', (err) => {
-      console.error(`[conversation-memory] ERROR: Failed to run npm install: ${err.message}`);
+      console.error(`[conversation-memory] ERROR: Failed to run bun install: ${err.message}`);
       reject(err);
     });
   });
@@ -76,13 +76,13 @@ function runNpmInstall() {
 function runBuild() {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
-    const npmCommand = isWindows ? 'npm.cmd' : 'npm';
+    const bunCommand = isWindows ? 'bun.exe' : 'bun';
 
     console.error('[conversation-memory] Building plugin...');
 
     let stderrOutput = '';
 
-    const child = spawn(npmCommand, ['run', 'build', '--silent'], {
+    const child = spawn(bunCommand, ['run', 'build', '--silent'], {
       cwd: PLUGIN_ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: isWindows
@@ -107,7 +107,7 @@ function runBuild() {
         // Analyze error cause
         if (stderrOutput.includes('EACCES') || stderrOutput.includes('permission denied')) {
           console.error('Cause: Permission denied');
-          console.error('Fix: sudo chown -R $(whoami) ~/.npm');
+          console.error('Fix: sudo chown -R $(whoami) ~/.bun');
         } else if (stderrOutput.includes('ENOSPC')) {
           console.error('Cause: Disk space full');
           console.error('Fix: Free up disk space');
@@ -116,8 +116,8 @@ function runBuild() {
           console.error('Fix: Check internet connection and retry');
         }
 
-        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && npm run build`);
-        reject(new Error(`npm run build failed with exit code ${code}`));
+        console.error(`Manual fallback: cd "${PLUGIN_ROOT}" && bun run build`);
+        reject(new Error(`bun run build failed with exit code ${code}`));
       }
     });
 
@@ -135,7 +135,7 @@ async function ensureDependenciesAndBuild() {
 
   // Check if node_modules exists
   if (!existsSync(nodeModulesPath)) {
-    await runNpmInstall();
+    await runBunInstall();
   }
 
   // Check if we need to build or rebuild
@@ -166,7 +166,7 @@ async function main() {
 
     if (!existsSync(mcpServerPath)) {
       console.error(`[conversation-memory] ERROR: MCP server not found at ${mcpServerPath}`);
-      console.error('Please run: npm run build');
+      console.error('Please run: bun run build');
       process.exit(1);
     }
 

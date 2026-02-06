@@ -7,19 +7,12 @@ allowed-tools: Bash(*)
 
 # Save Handoff
 
-Analyze the conversation and extract:
+Analyze the conversation and extract a brief summary (2-3 sentences) of what was being worked on.
 
-- A brief summary (2-3 sentences) of what was being worked on
-- Next steps (JSON array of actionable items)
-- Key decisions made (JSON array of decisions)
-
-Then execute the handoff script with the generated information:
+Then execute the handoff script with the generated summary:
 
 ```bash
-SUMMARY="..." \
-NEXT_STEPS='[...]' \
-DECISIONS='[...]' \
-"${CLAUDE_PLUGIN_ROOT}/scripts/handoff.sh" "$SUMMARY" "$NEXT_STEPS" "$DECISIONS"
+"${CLAUDE_PLUGIN_ROOT}/scripts/handoff.sh" "Summary of what was being worked on..."
 ```
 
 Inform the user of the handoff ID and how to restore it.

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "prepare": "npm run build"
+    "prepare": "bun run build"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

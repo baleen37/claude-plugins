@@ -104,8 +104,8 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
+# Node.js/Bun
+if [ -f package.json ]; then bun install; fi
 
 # Rust
 if [ -f Cargo.toml ]; then cargo build; fi
@@ -124,6 +124,7 @@ Run tests to ensure worktree starts clean:
 
 ```bash
 # Examples - use project-appropriate command
+bun test
 npm test
 cargo test
 pytest
@@ -184,8 +185,8 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 [Check .worktrees/ - exists]
 [Verify .gitignore - contains .worktrees/]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
+[Run bun install]
+[Run bun test - 47 passing]
 
 Worktree ready at /Users/jesse/myproject/.worktrees/auth
 Tests passing (47 tests, 0 failures)

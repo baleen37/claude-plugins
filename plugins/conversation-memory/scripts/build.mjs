@@ -35,7 +35,7 @@ async function buildCli() {
       entrypoints: ["src/cli/index-cli.ts"],
       outfile: "dist/cli.mjs",
       banner: {
-        js: "#!/usr/bin/env node\n",
+        js: "#!/usr/bin/env bun\n",
       },
     });
     console.log("✓ Built dist/cli.mjs");
@@ -46,7 +46,7 @@ async function buildCli() {
       entrypoints: ["src/mcp/server.ts"],
       outfile: "dist/mcp-server.mjs",
       banner: {
-        js: "#!/usr/bin/env node\n",
+        js: "#!/usr/bin/env bun\n",
       },
     });
     console.log("✓ Built dist/mcp-server.mjs");

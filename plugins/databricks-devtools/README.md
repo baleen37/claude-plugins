@@ -77,8 +77,8 @@ warehouse_id = 0987654321fedcba
 
 ```bash
 cd plugins/databricks-devtools
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 The plugin automatically:
@@ -340,7 +340,7 @@ plugins/databricks-devtools/
 ### Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 Bundles `src/mcp/server.ts` → `dist/mcp-server.mjs`
@@ -348,7 +348,7 @@ Bundles `src/mcp/server.ts` → `dist/mcp-server.mjs`
 ### Type Check
 
 ```bash
-npm run typecheck
+bun run typecheck
 ```
 
 ## Troubleshooting
@@ -393,6 +393,12 @@ which databricks
 sudo chown -R $(whoami) ~/.npm
 ```
 
+Note: If using Bun, you may also need to fix Bun's cache directory:
+
+```bash
+sudo chown -R $(whoami) ~/.bun
+```
+
 ### Network Errors
 
 **Symptoms:** ETIMEDOUT, ECONNRESET during installation
@@ -400,11 +406,16 @@ sudo chown -R $(whoami) ~/.npm
 **Fix:**
 
 1. Check internet connection
-2. Configure npm proxy if behind firewall:
+2. Configure package manager proxy if behind firewall:
 
 ```bash
+# If using npm
 npm config set proxy http://your-proxy:port
 npm config set https-proxy http://your-proxy:port
+
+# If using Bun
+bun config set proxy http://your-proxy:port
+bun config set https-proxy http://your-proxy:port
 ```
 
 ### Manual Installation
@@ -413,8 +424,8 @@ If automatic installation fails:
 
 ```bash
 cd plugins/databricks-devtools
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ## Architecture Notes

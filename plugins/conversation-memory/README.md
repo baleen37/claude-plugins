@@ -125,10 +125,10 @@ understanding complete rationale, evolution, and gotchas behind past decisions.
 ```bash
 # Install dependencies
 cd plugins/conversation-memory
-npm install
+bun install
 
 # Build the plugin
-npm run build
+bun run build
 ```
 
 The plugin automatically:
@@ -221,11 +221,7 @@ configuration (subscription-based or `ANTHROPIC_API_KEY`).
 ### Build
 
 ```bash
-# Using Bun (recommended)
 bun run build
-
-# Or using npm
-npm run build
 ```
 
 Bundles:
@@ -333,10 +329,10 @@ rm ~/.config/conversation-memory/conversations.db
 
 # 3. Reinstall plugin dependencies
 cd plugins/conversation-memory
-npm install
+bun install
 
 # 4. Rebuild plugin
-npm run build
+bun run build
 
 # 5. Reindex all conversations (downloads ~197MB model on first run)
 node dist/cli.mjs index-all
@@ -384,15 +380,15 @@ Then restart Claude Code.
 2. If behind a corporate firewall, configure npm proxy:
 
    ```bash
-   npm config set proxy http://your-proxy:port
-   npm config set https-proxy http://your-proxy:port
+   bun config set proxy http://your-proxy:port
+   bun config set https-proxy http://your-proxy:port
    ```
 
 3. Try installing manually:
 
    ```bash
    cd plugins/conversation-memory
-   npm install
+   bun install
    ```
 
 #### Disk Space Full (ENOSPC)
@@ -402,10 +398,10 @@ Then restart Claude Code.
 **Fix:**
 
 1. Check available disk space: `df -h`
-2. Free up space by cleaning npm cache:
+2. Free up space by cleaning bun cache:
 
    ```bash
-   npm cache clean --force
+   bun pm cache rm
    ```
 
 3. Remove old node_modules:
@@ -413,7 +409,7 @@ Then restart Claude Code.
    ```bash
    cd plugins/conversation-memory
    rm -rf node_modules
-   npm install
+   bun install
    ```
 
 ### Manual Installation
@@ -422,8 +418,8 @@ If automatic installation fails repeatedly, install dependencies manually:
 
 ```bash
 cd plugins/conversation-memory
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ## Architecture Notes
