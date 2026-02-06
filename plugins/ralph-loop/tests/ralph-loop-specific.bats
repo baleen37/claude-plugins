@@ -619,7 +619,7 @@ EOF
 
     # Verify iteration increment logic
     grep -q 'NEXT_ITERATION=.*ITERATION.*+.*1' "$hook"
-    grep -q 'sed.*iteration.*NEXT_ITERATION' "$hook"
+    grep -q 'awk.*in_fm.*iteration' "$hook"
 }
 
 @test "ralph-loop: stop-hook.sh detects completion promise in assistant output" {
@@ -655,4 +655,270 @@ EOF
 
     # Verify state file removal logic
     grep -q 'rm.*STATE_FILE' "$script"
+}
+
+# ============================================================================
+# CRITICAL BUG TESTS - These tests validate that the awk replacement in
+# stop-hook.sh ONLY modifies the frontmatter iteration field, NOT iteration:
+# text in the prompt content
+# ============================================================================
+
+@test "ralph-loop: stop-hook.sh awk replacement does NOT corrupt prompt with iteration: text" {
+    # This test validates the fix for the CRITICAL BUG
+    # The awk command should only modify the frontmatter iteration field
+    # NOT any "iteration:" text that appears in the prompt content
+
+    local state_file
+    state_file=$(mktemp)
+
+    # Create a state file with "iteration:" text in the prompt content
+    cat > "$state_file" <<'EOF'
+---
+iteration: 5
+max_iterations: 10
+completion_promise: "DONE"
+session_id: test-session-123
+---
+The current iteration: 3 shows progress
+We need to check the iteration: value carefully
+Another line with iteration: at the start
+EOF
+
+    # Run the awk command exactly as it appears in stop-hook.sh
+    local next_iteration=6
+    local temp_file
+    temp_file=$(mktemp "${state_file}.tmp.XXXXXX") || exit 1
+
+    # This is the EXACT awk command from stop-hook.sh
+    awk 'BEGIN{in_fm=0} /^---$/{if(in_fm){in_fm=0} else{in_fm=1} next} /^iteration: / && in_fm{$0="iteration: '"$next_iteration"'"} 1' "$state_file" > "$temp_file"
+    mv "$temp_file" "$state_file"
+    rm -f "$temp_file"
+
+    # Verify the frontmatter iteration was updated
+    grep '^iteration: 6' "$state_file"
+
+    # CRITICAL: Verify the prompt content was NOT corrupted
+    grep 'The current iteration: 3 shows progress' "$state_file"
+    grep 'We need to check the iteration: value carefully' "$state_file"
+    grep 'Another line with iteration: at the start' "$state_file"
+
+    # Verify only ONE iteration: line was changed (the frontmatter one)
+    # Count lines with "iteration: 6" - should be exactly 1
+    local count
+    count=$(grep -c "^iteration: 6" "$state_file" || true)
+    [ "$count" -eq 1 ]
+
+    rm -f "$state_file"
+}
+
+@test "ralph-loop: stop-hook.sh awk handles multiple iteration: patterns in prompt" {
+    # Test with a more complex prompt containing multiple iteration: references
+    local state_file
+    state_file=$(mktemp)
+
+    cat > "$state_file" <<'EOF'
+---
+iteration: 9
+max_iterations: 20
+completion_promise: null
+session_id: test-session-456
+---
+Review the code:
+- iteration: 1 had bugs
+- iteration: 2 had more bugs
+- Current iteration: 9 needs review
+Final check: is iteration: 10 the last one?
+EOF
+
+    # Run the awk command
+    local next_iteration=10
+    local temp_file
+    temp_file=$(mktemp "${state_file}.tmp.XXXXXX") || exit 1
+    awk 'BEGIN{in_fm=0} /^---$/{if(in_fm){in_fm=0} else{in_fm=1} next} /^iteration: / && in_fm{$0="iteration: '"$next_iteration"'"} 1' "$state_file" > "$temp_file"
+    mv "$temp_file" "$state_file"
+    rm -f "$temp_file"
+
+    # Frontmatter should be updated
+    grep '^iteration: 10' "$state_file"
+
+    # ALL prompt content with iteration: should remain UNCHANGED
+    grep 'iteration: 1 had bugs' "$state_file"
+    grep 'iteration: 2 had more bugs' "$state_file"
+    grep 'Current iteration: 9 needs review' "$state_file"
+    grep 'is iteration: 10 the last one?' "$state_file"
+
+    rm -f "$state_file"
+}
+
+@test "ralph-loop: stop-hook.sh awk handles iteration: text at start of prompt line" {
+    # Test the exact case from the bug report
+    local state_file
+    state_file=$(mktemp)
+
+    cat > "$state_file" <<'EOF'
+---
+iteration: 5
+max_iterations: 10
+completion_promise: "DONE"
+session_id: test-session-789
+---
+iteration: 3 shows the current state
+More content here
+EOF
+
+    # Run the awk command
+    local next_iteration=6
+    local temp_file
+    temp_file=$(mktemp "${state_file}.tmp.XXXXXX") || exit 1
+    awk 'BEGIN{in_fm=0} /^---$/{if(in_fm){in_fm=0} else{in_fm=1} next} /^iteration: / && in_fm{$0="iteration: '"$next_iteration"'"} 1' "$state_file" > "$temp_file"
+    mv "$temp_file" "$state_file"
+    rm -f "$temp_file"
+
+    # The prompt line should remain unchanged
+    grep 'iteration: 3 shows the current state' "$state_file"
+
+    rm -f "$state_file"
+}
+
+# ============================================================================
+# PROMISE EXTRACTION EDGE CASE TESTS
+# These tests validate the Perl regex for extracting promise tags
+# ============================================================================
+
+@test "ralph-loop: stop-hook.sh promise extraction handles empty tags" {
+    # Test that <promise></promise> returns empty string
+    local output="<promise></promise> Some text after"
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Should extract empty string (not the entire text)
+    [ "$result" = "" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles nested-looking tags" {
+    # Test with text that looks like nested tags
+    local output="Here is <promise>the task is done with <promise>fake</promise> ignored</promise> status"
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Non-greedy .*? should match FIRST closing tag
+    # So result should be "the task is done with <promise>fake"
+    [ "$result" = "the task is done with <promise>fake" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles multiline with newlines" {
+    # Test multiline promise content
+    local output=$'Some text before\n<promise>This is\na\nmultiline\npromise</promise>\nText after'
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Whitespace should be normalized to single spaces
+    [ "$result" = "This is a multiline promise" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles special regex characters" {
+    # Test with special regex characters in promise
+    local output='<promise>Task [DONE] with (parens) and $dollars</promise>'
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    [ "$result" = 'Task [DONE] with (parens) and $dollars' ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles unicode whitespace" {
+    # Test with various whitespace types (tabs, multiple spaces)
+    local output=$'Text before<promise>\t  spaced   \t  out  \t</promise>after'
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Should normalize all whitespace to single spaces
+    [ "$result" = "spaced out" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction returns original when no tags" {
+    # Test when there are no promise tags at all
+    local output="Just some text without any promise tags"
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # When no tags found, the regex doesn't match and returns original text
+    # This test documents the current behavior (not necessarily desired)
+    [ "$result" = "Just some text without any promise tags" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles only opening tag" {
+    # Test with only opening tag (malformed)
+    local output="Text with <promise>but no closing tag"
+
+    local result
+    result=$(echo "$output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Should return original text when no closing tag
+    [ -z "$result" ] || [ "$result" = "$output" ]
+}
+
+# ============================================================================
+# GREP MULTIPLE MATCHES TESTS
+# These tests validate that grep handles duplicate frontmatter fields
+# ============================================================================
+
+@test "ralph-loop: state.sh get_iteration handles duplicate iteration fields" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    # Create frontmatter with duplicate iteration fields (shouldn't happen, but test robustness)
+    local frontmatter=$'iteration: 5\niteration: 10\niteration: 15'
+
+    local result
+    result=$(get_iteration "$frontmatter")
+
+    # Current implementation returns ALL matches
+    # This test documents the current behavior
+    # The fix should use grep -m 1 to only get the first match
+    echo "Result: '$result'"
+    # Will FAIL until fixed - should return just "5" not "5\n10\n15"
+    [ "$result" = "5" ]
+}
+
+@test "ralph-loop: state.sh get_max_iterations handles duplicate max_iterations fields" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter=$'max_iterations: 50\nmax_iterations: 100'
+
+    local result
+    result=$(get_max_iterations "$frontmatter")
+
+    # Should return only the first match
+    echo "Result: '$result'"
+    [ "$result" = "50" ]
+}
+
+@test "ralph-loop: state.sh get_completion_promise handles duplicate completion_promise fields" {
+    local state_lib="${PLUGIN_DIR}/scripts/lib/state.sh"
+    [ -f "$state_lib" ]
+
+    # Source the library
+    source "$state_lib"
+
+    local frontmatter=$'completion_promise: "FIRST"\ncompletion_promise: "SECOND"'
+
+    local result
+    result=$(get_completion_promise "$frontmatter")
+
+    # Should return only the first match
+    echo "Result: '$result'"
+    [ "$result" = "FIRST" ]
 }

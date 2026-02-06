@@ -160,10 +160,11 @@ if [[ -z "$PROMPT_TEXT" ]]; then
 fi
 
 # Update iteration in frontmatter (portable across macOS and Linux)
+# Only modify iteration: in frontmatter section (between first two --- lines)
 # Create temp file securely with mktemp, then atomically replace
 TEMP_FILE=$(mktemp "${STATE_FILE}.tmp.XXXXXX") || exit 1
 trap 'rm -f "$TEMP_FILE"' EXIT
-sed "s/^iteration: .*/iteration: $NEXT_ITERATION/" "$STATE_FILE" > "$TEMP_FILE"
+awk 'BEGIN{in_fm=0} /^---$/{if(in_fm){in_fm=0} else{in_fm=1} next} /^iteration: / && in_fm{$0="iteration: '"$NEXT_ITERATION"'"} 1' "$STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$STATE_FILE"
 trap - EXIT  # Disable trap after successful mv
 

@@ -19,15 +19,15 @@ parse_frontmatter() {
 
 get_iteration() {
     local frontmatter="$1"
-    echo "$frontmatter" | grep '^iteration:' | sed 's/iteration: *//'
+    echo "$frontmatter" | grep -m 1 '^iteration:' | sed 's/iteration: *//'
 }
 
 get_max_iterations() {
     local frontmatter="$1"
-    echo "$frontmatter" | grep '^max_iterations:' | sed 's/max_iterations: *//'
+    echo "$frontmatter" | grep -m 1 '^max_iterations:' | sed 's/max_iterations: *//'
 }
 
 get_completion_promise() {
     local frontmatter="$1"
-    echo "$frontmatter" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/'
+    echo "$frontmatter" | grep -m 1 '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/'
 }
