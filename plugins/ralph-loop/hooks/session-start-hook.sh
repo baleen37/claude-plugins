@@ -7,9 +7,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../scripts/lib/state.sh"
 
-# Extract session_id and cwd from stdin
-SESSION_ID=$(jq -r '.session_id' </dev/stdin)
-CWD=$(jq -r '.cwd' </dev/stdin)
+# Extract session_id and cwd from environment variables
+SESSION_ID="${CLAUDE_SESSION_ID:-}"
+CWD="${CLAUDE_CWD:-$(pwd)}"
 
 # Validate session_id exists
 if [[ -z "$SESSION_ID" ]] || [[ "$SESSION_ID" == "null" ]]; then
