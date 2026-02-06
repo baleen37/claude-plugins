@@ -8,37 +8,37 @@
  * - Error handling for invalid configs
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, readFileSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { loadConfig, createProvider, type LLMConfig } from './config.js';
+
+// Mock the fs module
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    readFileSync: vi.fn(),
+  };
+});
 
 // Test config directory path
 const testConfigDir = join(process.env.HOME ?? '', '.config', 'conversation-memory');
 const testConfigPath = join(testConfigDir, 'config.json');
 
 describe('loadConfig', () => {
-  let originalExistsSync: typeof existsSync;
-  let originalReadFileSync: typeof readFileSync;
-
   beforeEach(() => {
-    // Save original functions
-    originalExistsSync = existsSync;
-    originalReadFileSync = readFileSync;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Restore original functions
-    globalThis.process = process;
+    vi.restoreAllMocks();
   });
 
   describe('when config file does not exist', () => {
     it('should return null', () => {
-      // Mock existsSync to return false
-      mock.module('fs', () => ({
-        existsSync: mock(() => false),
-        readFileSync: originalReadFileSync,
-      }));
+      vi.mocked(existsSync).mockReturnValue(false);
 
       const config = loadConfig();
       expect(config).toBeNull();
@@ -55,10 +55,8 @@ describe('loadConfig', () => {
         },
       };
 
-      mock.module('fs', () => ({
-        existsSync: mock(() => true),
-        readFileSync: mock(() => JSON.stringify(validConfig)),
-      }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
 
       const config = loadConfig();
       expect(config).toEqual(validConfig);
@@ -72,10 +70,8 @@ describe('loadConfig', () => {
         },
       };
 
-      mock.module('fs', () => ({
-        existsSync: mock(() => true),
-        readFileSync: mock(() => JSON.stringify(validConfig)),
-      }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
 
       const config = loadConfig();
       expect(config).toEqual(validConfig);
@@ -89,10 +85,8 @@ describe('loadConfig', () => {
         },
       };
 
-      mock.module('fs', () => ({
-        existsSync: mock(() => true),
-        readFileSync: mock(() => JSON.stringify(validConfig)),
-      }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
 
       const config = loadConfig();
       expect(config).toEqual(validConfig);
@@ -101,12 +95,10 @@ describe('loadConfig', () => {
 
   describe('when config file exists but is invalid', () => {
     it('should return null and log warning for invalid JSON', () => {
-      mock.module('fs', () => ({
-        existsSync: mock(() => true),
-        readFileSync: mock(() => 'invalid json{'),
-      }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue('invalid json{');
 
-      const consoleWarnSpy = mock(() => {});
+      const consoleWarnSpy = vi.fn();
       globalThis.console = { ...console, warn: consoleWarnSpy };
 
       const config = loadConfig();
@@ -120,12 +112,10 @@ describe('loadConfig', () => {
         },
       };
 
-      mock.module('fs', () => ({
-        existsSync: mock(() => true),
-        readFileSync: mock(() => JSON.stringify(invalidConfig)),
-      }));
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(invalidConfig));
 
-      const consoleWarnSpy = mock(() => {});
+      const consoleWarnSpy = vi.fn();
       globalThis.console = { ...console, warn: consoleWarnSpy };
 
       const config = loadConfig();

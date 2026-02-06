@@ -4,38 +4,54 @@
  * These tests use mocking to avoid actual API calls while verifying correct behavior.
  */
 
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiProvider } from './gemini-provider.js';
 import type { LLMOptions } from './types.js';
 
-// Helper to create a mock successful response
-function mockSuccessResponse(text = 'Test response', promptTokens = 10, outputTokens = 5) {
-  const response = {
-    text: mock(() => text),
-    usageMetadata: {
-      promptTokenCount: promptTokens,
-      candidatesTokenCount: outputTokens,
-      totalTokenCount: promptTokens + outputTokens,
-    },
-  };
-  return { response };
-}
-
 // Mock the @google/generative-ai module
-const mockGetGenerativeModel = mock(() => ({
-  generateContent: mock(() => Promise.resolve(mockSuccessResponse())),
-}));
+// NOTE: vi.mock() is hoisted to the top of the file before any other code runs.
+// The factory function must be self-contained and cannot reference external variables.
+vi.mock('@google/generative-ai', () => {
+  // Helper function to create a mock successful response
+  const mockSuccessResponse = (text = 'Test response', promptTokens = 10, outputTokens = 5) => ({
+    response: {
+      text: vi.fn(() => text),
+      usageMetadata: {
+        promptTokenCount: promptTokens,
+        candidatesTokenCount: outputTokens,
+        totalTokenCount: promptTokens + outputTokens,
+      },
+    },
+  });
 
-const mockGoogleGenerativeAI = mock(() => ({
-  getGenerativeModel: mockGetGenerativeModel,
-}));
+  const mockGetGenerativeModel = vi.fn(() => ({
+    generateContent: vi.fn(() => Promise.resolve(mockSuccessResponse())),
+  }));
 
-// Mock the module
-mock.module('@google/generative-ai', () => ({
-  GoogleGenerativeAI: mockGoogleGenerativeAI,
-}));
+  const mockGoogleGenerativeAI = vi.fn(() => ({
+    getGenerativeModel: mockGetGenerativeModel,
+  }));
+
+  return {
+    GoogleGenerativeAI: mockGoogleGenerativeAI,
+    // Export the mocks for use in tests
+    _mockGetGenerativeModel: mockGetGenerativeModel,
+    _mockGoogleGenerativeAI: mockGoogleGenerativeAI,
+  };
+});
+
+// Import the mocked module to get reference to the mocks
+import { GoogleGenerativeAI, _mockGoogleGenerativeAI, _mockGetGenerativeModel } from '@google/generative-ai';
+
+const mockGoogleGenerativeAI = _mockGoogleGenerativeAI as ReturnType<typeof _mockGoogleGenerativeAI>;
+const mockGetGenerativeModel = _mockGetGenerativeModel as ReturnType<typeof _mockGetGenerativeModel>;
 
 describe('GeminiProvider', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks();
+  });
+
   describe('constructor', () => {
     it('should create a provider with API key', () => {
       const provider = new GeminiProvider('test-api-key');
@@ -137,7 +153,7 @@ describe('GeminiProvider', () => {
     it('should throw error when API call fails', async () => {
       // Mock a failed API call
       mockGetGenerativeModel.mockImplementationOnce(() => ({
-        generateContent: mock(() => Promise.reject(new Error('API error'))),
+        generateContent: vi.fn(() => Promise.reject(new Error('API error'))),
       }));
 
       const provider = new GeminiProvider('test-api-key');

@@ -5,7 +5,7 @@
  * Covers argument parsing, getIndexStats call, and stats output formatting.
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

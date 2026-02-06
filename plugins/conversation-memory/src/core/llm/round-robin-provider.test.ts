@@ -4,14 +4,14 @@
  * These tests verify the round-robin distribution behavior across multiple LLM providers.
  */
 
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, it, expect, vi } from 'vitest';
 import { RoundRobinProvider } from './round-robin-provider.js';
 import type { LLMProvider, LLMResult } from './types.js';
 
 // Helper to create a mock provider
 function createMockProvider(name: string): LLMProvider {
   return {
-    complete: mock((prompt: string) =>
+    complete: vi.fn((prompt: string) =>
       Promise.resolve<LLMResult>({
         text: `Response from ${name}`,
         usage: {
@@ -26,7 +26,7 @@ function createMockProvider(name: string): LLMProvider {
 // Helper to create a mock provider that fails
 function createFailingMockProvider(name: string): LLMProvider {
   return {
-    complete: mock(() => Promise.reject(new Error(`Failed from ${name}`))),
+    complete: vi.fn(() => Promise.reject(new Error(`Failed from ${name}`))),
   };
 }
 
