@@ -5,19 +5,17 @@
   "type": "module",
   "description": "Conversation memory plugin with semantic search across Claude Code sessions",
   "scripts": {
-    "build": "bun scripts/build.mjs",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "test:all": "./test-all.sh all",
-    "test:bun": "./test-all.sh bun-only",
-    "test:vitest": "./test-all.sh vitest-only",
-    "cli": "bun dist/cli.mjs"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cli": "node dist/cli.mjs"
   },
   "bin": {
     "conversation-memory": "dist/cli.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.1.9",
+    "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^3.8.1",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "better-sqlite3": "^9.6.0",
@@ -27,9 +25,11 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.0",
     "typescript": "^5.3.3"
   },
   "engines": {
-    "bun": ">=1.0.0"
+    "node": ">=18.0.0"
   }
 }

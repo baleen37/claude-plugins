@@ -5,7 +5,7 @@
  * Covers argument parsing, getIndexStats call, and stats output formatting.
  */
 
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -226,7 +226,7 @@ describe('stats-cli formatStats output', () => {
         projectCount: 1,
         dateRange: {
           earliest: '2025-01-01T00:00:00Z',
-          latest: '2025-01-31T23:59:59Z'
+          latest: '2025-01-30T23:59:59Z'
         }
       };
 

@@ -4,7 +4,7 @@
 setup() {
   # Ensure build artifacts exist
   if [ ! -f "${BATS_TEST_DIRNAME}/../dist/mcp-server.mjs" ]; then
-    skip "MCP server not built - run 'bun run build' first"
+    skip "MCP server not built - run 'npm run build' first"
   fi
 }
 

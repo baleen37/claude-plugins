@@ -37,7 +37,7 @@
  * In production, these are defined in server.ts and should be kept in sync.
  */
 
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { z } from 'zod';
 
 // Re-define schemas for testing (in production these would be imported from server.ts)

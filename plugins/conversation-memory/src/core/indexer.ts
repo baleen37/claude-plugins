@@ -9,9 +9,6 @@ import { ConversationExchange } from './types.js';
 import { getArchiveDir, getExcludedProjects } from './paths.js';
 import { logInfo, logError, logWarn } from './logger.js';
 
-// Set max output tokens for Claude SDK (used by summarizer)
-process.env.CLAUDE_CODE_MAX_OUTPUT_TOKENS = '20000';
-
 // Increase max listeners for concurrent API calls
 import { EventEmitter } from 'events';
 EventEmitter.defaultMaxListeners = 20;
@@ -236,7 +233,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
         // Generate summary (unless --no-summaries)
         const summaryPath = archivePath.replace('.jsonl', '-summary.txt');
         if (!noSummaries && !fs.existsSync(summaryPath)) {
-          const summary = await summarizeConversation(exchanges, undefined, file);
+          const summary = await summarizeConversation(parseResult.exchanges, undefined, file);
           fs.writeFileSync(summaryPath, summary, 'utf-8');
           console.log(`Summary: ${summary.split(/\s+/).length} words`);
         }

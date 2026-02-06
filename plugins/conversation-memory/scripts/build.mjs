@@ -1,21 +1,21 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Build script for conversation-memory plugin
- * Bundles the MCP server and CLI into standalone files using Bun
+ * Bundles the MCP server and CLI into standalone files using esbuild
  */
 
 import { mkdir, copyFile } from "fs/promises";
 import { join } from "path";
-import { build } from "bun";
+import { build } from "esbuild";
 
 const commonConfig = {
-  target: "node",
+  platform: "node",
   format: "esm",
   sourcemap: false,
   minify: false,
+  bundle: true,
   // External dependencies that should not be bundled
   external: [
-    "@anthropic-ai/claude-agent-sdk",
     "@huggingface/transformers",
     "better-sqlite3",
     "sharp",
@@ -32,18 +32,18 @@ async function buildCli() {
     // Build CLI
     await build({
       ...commonConfig,
-      entrypoints: ["src/cli/index-cli.ts"],
+      entryPoints: ["src/cli/index-cli.ts"],
       outfile: "dist/cli.mjs",
-      banner: "#!/usr/bin/env bun\n",
+      banner: { js: "#!/usr/bin/env node" },
     });
     console.log("✓ Built dist/cli.mjs");
 
     // Build MCP server
     await build({
       ...commonConfig,
-      entrypoints: ["src/mcp/server.ts"],
+      entryPoints: ["src/mcp/server.ts"],
       outfile: "dist/mcp-server.mjs",
-      banner: "#!/usr/bin/env bun\n",
+      banner: { js: "#!/usr/bin/env node" },
     });
     console.log("✓ Built dist/mcp-server.mjs");
 
