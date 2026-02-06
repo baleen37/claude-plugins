@@ -144,7 +144,7 @@ The plugin automatically:
 When each Claude Code session starts (startup or resume), the hook (`hooks/hooks.json`) runs:
 
 ```bash
-node dist/cli.mjs sync
+bun dist/cli.mjs sync
 ```
 
 This:
@@ -365,7 +365,7 @@ The plugin automatically installs dependencies on first run. If you encounter er
 **Fix:**
 
 ```bash
-sudo chown -R $(whoami) ~/.npm
+sudo chown -R $(whoami) ~/.bun
 ```
 
 Then restart Claude Code.

@@ -1,16 +1,23 @@
 # Databricks DevTools Plugin
 
-Databricks CLI wrapper plugin for Claude Code enabling workspace management and SQL execution.
+Databricks CLI wrapper plugin for Claude Code enabling workspace management
+and SQL execution.
 
 ## Purpose
 
-This plugin provides Claude Code with direct access to Databricks workspaces through the Databricks CLI. It enables workspace management, SQL execution, and profile-based multi-environment support for data engineering and analytics workflows.
+This plugin provides Claude Code with direct access to Databricks workspaces through
+the Databricks CLI. It enables workspace management, SQL execution, and
+profile-based
+multi-environment support for data engineering and analytics workflows.
 
 ## Features
 
-- **Workspace Management**: List workspaces, browse directories, manage notebooks and files
-- **SQL Execution**: Run queries against Databricks SQL warehouses with result streaming
-- **Profile-Based Configuration**: Support for multiple Databricks profiles/environments
+- **Workspace Management**: List workspaces, browse directories, manage notebooks
+  and files
+- **SQL Execution**: Run queries against Databricks SQL warehouses with result
+  streaming
+- **Profile-Based Configuration**: Support for multiple Databricks
+  profiles/environments
 - **CLI Wrapper**: Direct access to Databricks CLI commands through MCP tools
 
 ## Prerequisites
@@ -40,7 +47,8 @@ databricks --version
 
 ### Configuration File
 
-The plugin reads credentials from `~/.databrickscfg`. Create this file with your workspace profiles:
+The plugin reads credentials from `~/.databrickscfg`. Create this file with your
+workspace profiles:
 
 ```ini
 [default]
@@ -61,9 +69,11 @@ warehouse_id = 0987654321fedcba
 
 **Required fields per profile:**
 
-- `host`: Databricks workspace URL (e.g., `https://your-workspace.cloud.databricks.com`)
+- `host`: Databricks workspace URL (e.g.,
+  `https://your-workspace.cloud.databricks.com`)
 - `token`: Personal access token (generate from Databricks workspace settings)
-- `cluster_id` OR `warehouse_id`: Cluster for workspace operations, warehouse for SQL
+- `cluster_id` OR `warehouse_id`: Cluster for workspace operations,
+  warehouse for SQL
 
 **Generate a personal access token:**
 
@@ -103,7 +113,7 @@ Main command for Databricks workspace operations.
 
 **Examples:**
 
-```
+```bash
 # List workspace root
 /databricks workspace ls /
 
@@ -125,7 +135,7 @@ Execute SQL queries against Databricks SQL warehouse.
 
 **Examples:**
 
-```
+```bash
 # Simple query
 /databricks:sql "SELECT * FROM schema.table LIMIT 10"
 
@@ -237,11 +247,11 @@ Array of profile names with their configuration (host, cluster_id, warehouse_id)
 
 For multi-environment workflows, profiles can map to Git branches:
 
-| Profile | Environment | Git Branch | Use Case |
-|---------|-------------|------------|----------|
-| `default` | Development | `main` / `feat/*` | Local development |
-| `staging` | Staging | `staging` | Pre-production testing |
-| `production` | Production | `main` / `release/*` | Production workloads |
+| Profile     | Environment | Git Branch             | Use Case               |
+|-------------|-------------|------------------------|------------------------|
+| `default`   | Development | `main` / `feat/*`      | Local development      |
+| `staging`   | Staging     | `staging`              | Pre-production testing |
+| `production`| Production  | `main` / `release/*`   | Production workloads   |
 
 **Example workflow:**
 
@@ -359,19 +369,9 @@ bun run typecheck
 
 **Fix:**
 
-1. Verify Databricks CLI installation:
-
-```bash
-databricks --version
-```
-
+1. Verify Databricks CLI installation: `databricks --version`
 2. If not installed, follow the installation instructions above
-
-3. Ensure the CLI is in your PATH:
-
-```bash
-which databricks
-```
+3. Ensure the CLI is in your PATH: `which databricks`
 
 ### Authentication Errors
 
@@ -390,13 +390,13 @@ which databricks
 **Fix:**
 
 ```bash
-sudo chown -R $(whoami) ~/.npm
+sudo chown -R $(whoami) ~/.bun
 ```
 
-Note: If using Bun, you may also need to fix Bun's cache directory:
+Note: If using npm, you may also need to fix npm's cache directory:
 
 ```bash
-sudo chown -R $(whoami) ~/.bun
+sudo chown -R $(whoami) ~/.npm
 ```
 
 ### Network Errors
@@ -409,13 +409,13 @@ sudo chown -R $(whoami) ~/.bun
 2. Configure package manager proxy if behind firewall:
 
 ```bash
-# If using npm
-npm config set proxy http://your-proxy:port
-npm config set https-proxy http://your-proxy:port
-
 # If using Bun
 bun config set proxy http://your-proxy:port
 bun config set https-proxy http://your-proxy:port
+
+# If using npm
+npm config set proxy http://your-proxy:port
+npm config set https-proxy http://your-proxy:port
 ```
 
 ### Manual Installation
@@ -443,7 +443,7 @@ bun run build
 - `@modelcontextprotocol/sdk`: ^1.0.4 - MCP protocol implementation
 - `zod`: ^3.23.8 - Schema validation
 
-### Development
+### Build Dependencies
 
 - `typescript`: ^5.3.3
 - `esbuild`: ^0.20.0
@@ -451,9 +451,9 @@ bun run build
 
 ## References
 
-- Databricks CLI: https://github.com/databricks/cli
-- Databricks REST API: https://docs.databricks.com/dev-tools/api/latest/
-- MCP Protocol: https://modelcontextprotocol.io
+- [Databricks CLI](https://github.com/databricks/cli)
+- [Databricks REST API](https://docs.databricks.com/dev-tools/api/latest/)
+- [MCP Protocol](https://modelcontextprotocol.io)
 
 ## License
 

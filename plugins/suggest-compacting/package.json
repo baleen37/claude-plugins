@@ -9,8 +9,6 @@
     "prepare": "bun run build"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }
 }

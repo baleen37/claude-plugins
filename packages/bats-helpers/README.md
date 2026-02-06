@@ -5,7 +5,7 @@ Shared BATS (Bash Automated Testing System) test helpers for Baleen Claude Plugi
 ## Installation
 
 ```bash
-npm install --save-dev @baleen/bats-helpers
+bun add --dev @baleen/bats-helpers
 ```
 
 ## Usage

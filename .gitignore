@@ -1,8 +1,5 @@
-# Node
+# Bun / Package managers
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Python
 __pycache__/

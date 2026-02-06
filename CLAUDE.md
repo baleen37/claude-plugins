@@ -43,7 +43,7 @@ AI 보조 개발을 위한 도구들을 제공하며, 반복적 자기 참조 AI
 
 - Always run `bun install` after modifying package.json
 - Use Conventional Commits format: `type(scope): description`
-- Use `npm run commit` for interactive commit creation (works via Bun's npm compatibility)
+- Use `bun run commit` for interactive commit creation (works via Bun's npm compatibility)
 - Never bypass pre-commit hooks with `--no-verify` (blocked by git-guard)
 - Follow semantic-release workflow for version management
 
