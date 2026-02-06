@@ -47,9 +47,9 @@ git commit -m "type(scope): description"
 ### 3. Pre-push
 
 ```bash
-BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name || echo "main")
 # Conflict check (REQUIRED)
-"${CLAUDE_PLUGIN_ROOT}/scripts/check-conflicts.sh" "$BASE"
+bash scripts/check-conflicts.sh "$BASE"
 ```
 
 ### 4. Push
@@ -68,7 +68,10 @@ gh pr create --base "$BASE" --title "$(git log -1 --pretty=%s)"
 ### 6. Verify Merge-Ready (CRITICAL)
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/verify-pr-status.sh" "$BASE"
+# Run in bash subshell to ensure proper argument passing
+bash -c "bash scripts/verify-pr-status.sh \"$BASE\""
 ```
 
 Handles: CLEAN+CI checks, BEHIND (auto-update, max 3 retries), DIRTY (conflict detection)
+
+**Note**: Default base branch is `main` if gh repo view fails.
