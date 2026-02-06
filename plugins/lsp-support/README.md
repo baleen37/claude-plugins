@@ -1,6 +1,8 @@
 # LSP Support
 
-Language Server Protocol support for multiple programming languages. Provides code completion, diagnostics, go-to-definition, and other IDE features for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix.
+Language Server Protocol support for multiple programming languages. Provides code
+completion, diagnostics, go-to-definition, and other IDE features for Bash,
+TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix.
 
 ## Supported Languages
 
@@ -16,20 +18,21 @@ Language Server Protocol support for multiple programming languages. Provides co
 
 ## Bash/Shell LSP
 
-### Installation
+### Bash Installation
 
 ```bash
-npm install -g bash-language-server
+bun install -g bash-language-server
 ```
 
-Note: `npm install -g` is used because bash-language-server is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+Note: `bun install -g` is used because bash-language-server is distributed as an
+npm package. You can also use `npm install -g` if you prefer npm.
 
-### Requirements
+### Bash Requirements
 
 - Node.js 14+ (for bash-language-server)
 - ShellCheck (optional, for enhanced diagnostics): `brew install shellcheck`
 
-### Supported File Types
+### Bash Supported File Types
 
 `.bash`, `.sh`, `.zsh`, and shell scripts with shebang (`#!/bin/bash`, `#!/bin/sh`)
 
@@ -37,24 +40,25 @@ Note: `npm install -g` is used because bash-language-server is distributed as an
 
 ## TypeScript/JavaScript LSP
 
-### Installation
+### TypeScript Installation
 
 ```bash
-npm install -g typescript-language-server typescript
+bun install -g typescript-language-server typescript
 ```
 
-Note: `npm install -g` is used because typescript-language-server is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+Note: `bun install -g` is used because typescript-language-server is
+distributed as an npm package. You can also use `npm install -g` if you prefer npm.
 
-### Requirements
+### TypeScript Requirements
 
 - Node.js 16+ (for typescript-language-server)
-- TypeScript (for TS files): `npm install -g typescript` or `bun install -g typescript`
+- TypeScript (for TS files): `bun install -g typescript` or `npm install -g typescript`
 
-### Supported File Types
+### TypeScript Supported File Types
 
 `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`
 
-### Configuration
+### TypeScript Configuration
 
 Create `tsconfig.json` in your project root for proper type checking:
 
@@ -72,24 +76,25 @@ Create `tsconfig.json` in your project root for proper type checking:
 
 ## Python LSP
 
-### Installation
+### Python Installation
 
 ```bash
-npm install -g pyright
+bun install -g pyright
 ```
 
-Note: `npm install -g` is used because Pyright is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+Note: `bun install -g` is used because Pyright is distributed as an npm package.
+You can also use `npm install -g` if you prefer npm.
 
-### Requirements
+### Python Requirements
 
 - Node.js 14+ (for Pyright)
 - Python 3.7+ (system installation)
 
-### Supported File Types
+### Python Supported File Types
 
 `.py`, `.pyi`
 
-### Configuration
+### Python Configuration
 
 Create `pyrightconfig.json` in your project root:
 
@@ -105,17 +110,17 @@ Create `pyrightconfig.json` in your project root:
 
 ## Go LSP
 
-### Installation
+### Go Installation
 
 ```bash
 go install golang.org/x/tools/gopls@latest
 ```
 
-### Requirements
+### Go Requirements
 
 - Go 1.18+
 
-### Supported File Types
+### Go Supported File Types
 
 `.go`
 
@@ -133,18 +138,18 @@ go mod init your/module
 
 ## Kotlin LSP
 
-### Installation
+### Kotlin Installation
 
 ```bash
 brew install kotlin-language-server
 ```
 
-### Requirements
+### Kotlin Requirements
 
 - Homebrew
 - Java runtime
 
-### Supported File Types
+### Kotlin Supported File Types
 
 `.kt`, `.kts`
 
@@ -152,18 +157,18 @@ brew install kotlin-language-server
 
 ## Lua LSP
 
-### Installation
+### Lua Installation
 
 ```bash
 brew install lua-language-server
 ```
 
-### Requirements
+### Lua Requirements
 
 - Homebrew
 - Lua 5.1+
 
-### Supported File Types
+### Lua Supported File Types
 
 `.lua`
 
@@ -171,18 +176,18 @@ brew install lua-language-server
 
 ## Nix LSP
 
-### Installation
+### Nix Installation
 
 ```bash
 cargo install --git https://github.com/oxalica/nil nil
 ```
 
-### Requirements
+### Nix Requirements
 
 - Rust toolchain (cargo)
 - Nix 2.4+
 
-### Supported File Types
+### Nix Supported File Types
 
 `.nix`
 
@@ -198,7 +203,8 @@ cargo install --git https://github.com/nix-community/nixd nixd
 
 ## Usage
 
-Once the LSP server is installed, Claude Code will automatically use it when editing files in the supported languages.
+Once the LSP server is installed, Claude Code will automatically use it when editing
+files in the supported languages.
 
 ### Examples
 
