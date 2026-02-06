@@ -119,6 +119,20 @@
         "cli"
       ],
       "version": "5.1.2"
+    },
+    {
+      "name": "conversation-memory",
+      "description": "Persistent semantic memory for Claude Code conversations - search, index, and retrieve past sessions using embeddings",
+      "source": "./plugins/conversation-memory",
+      "category": "productivity",
+      "tags": [
+        "memory",
+        "search",
+        "embeddings",
+        "semantic",
+        "mcp"
+      ],
+      "version": "5.1.2"
     }
   ]
 }
