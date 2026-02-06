@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "auto-updater",
@@ -29,7 +29,7 @@
         "updates",
         "marketplace"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "git-guard",
@@ -43,7 +43,7 @@
         "pr",
         "security"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "lsp-support",
@@ -63,7 +63,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "me",
@@ -78,7 +78,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "notify-user-input",
@@ -91,7 +91,7 @@
         "desktop",
         "hooks"
       ],
-      "version": "5.2.0"
+      "version": "5.3.0"
     },
     {
       "name": "ralph-loop",
@@ -104,7 +104,7 @@
         "loop",
         "ai"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "handoff",
@@ -117,7 +117,7 @@
         "context",
         "pickup"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "databricks-devtools",
@@ -131,7 +131,7 @@
         "mcp",
         "cli"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     },
     {
       "name": "conversation-memory",
@@ -145,7 +145,7 @@
         "semantic",
         "mcp"
       ],
-      "version": "5.2.2"
+      "version": "5.3.0"
     }
   ]
 }
