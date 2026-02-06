@@ -70,7 +70,7 @@ const SearchInputSchema = z
   })
   .strict();
 
-type SearchInput = z.infer<typeof SearchInputSchema>;
+export type SearchInput = z.infer<typeof SearchInputSchema>;
 
 const ShowConversationInputSchema = z
   .object({
@@ -93,7 +93,10 @@ const ShowConversationInputSchema = z
   })
   .strict();
 
-type ShowConversationInput = z.infer<typeof ShowConversationInputSchema>;
+export type ShowConversationInput = z.infer<typeof ShowConversationInputSchema>;
+
+// Export schemas for testing
+export { SearchInputSchema, ShowConversationInputSchema };
 
 // Error Handling Utility
 

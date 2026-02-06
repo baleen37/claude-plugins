@@ -8,6 +8,9 @@
     "build": "bun scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
+    "test:all": "./test-all.sh all",
+    "test:bun": "./test-all.sh bun-only",
+    "test:vitest": "./test-all.sh vitest-only",
     "cli": "bun dist/cli.mjs"
   },
   "bin": {

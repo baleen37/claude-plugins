@@ -754,7 +754,7 @@ ${bodyContent}
 </html>`;
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   const map: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
@@ -765,7 +765,7 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-function isMarkdown(text: string): boolean {
+export function isMarkdown(text: string): boolean {
   // Detect common markdown patterns
   const markdownPatterns = [
     /^#{1,6}\s/m,           // Headers
@@ -784,7 +784,7 @@ function isMarkdown(text: string): boolean {
   return matchCount >= 2;
 }
 
-function renderMarkdownSafely(text: string): string {
+export function renderMarkdownSafely(text: string): string {
   try {
     return marked.parse(text, { async: false }) as string;
   } catch (error) {
