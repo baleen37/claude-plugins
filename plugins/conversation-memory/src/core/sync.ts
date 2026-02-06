@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { SUMMARIZER_CONTEXT_MARKER } from './constants.js';
 import { getExcludedProjects } from './paths.js';
-import type { TokenUsage } from './summarizer.js';
+import type { TokenUsage } from './llm/types.js';
 
 const EXCLUSION_MARKERS = [
   '<INSTRUCTIONS-TO-EPISODIC-MEMORY>DO NOT INDEX THIS CHAT</INSTRUCTIONS-TO-EPISODIC-MEMORY>',
