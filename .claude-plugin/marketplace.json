@@ -46,19 +46,91 @@
       "version": "5.3.0"
     },
     {
-      "name": "lsp-support",
-      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix",
-      "source": "./plugins/lsp-support",
+      "name": "lsp-bash",
+      "description": "Language Server Protocol support for Bash - bash-language-server",
+      "source": "./plugins/lsp-bash",
       "category": "development",
       "tags": [
         "lsp",
         "bash",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-typescript",
+      "description": "Language Server Protocol support for TypeScript and JavaScript - typescript-language-server",
+      "source": "./plugins/lsp-typescript",
+      "category": "development",
+      "tags": [
+        "lsp",
         "typescript",
         "javascript",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-python",
+      "description": "Language Server Protocol support for Python - pyright",
+      "source": "./plugins/lsp-python",
+      "category": "development",
+      "tags": [
+        "lsp",
         "python",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-go",
+      "description": "Language Server Protocol support for Go - gopls",
+      "source": "./plugins/lsp-go",
+      "category": "development",
+      "tags": [
+        "lsp",
         "go",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-kotlin",
+      "description": "Language Server Protocol support for Kotlin - kotlin-language-server",
+      "source": "./plugins/lsp-kotlin",
+      "category": "development",
+      "tags": [
+        "lsp",
         "kotlin",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-lua",
+      "description": "Language Server Protocol support for Lua - lua-language-server",
+      "source": "./plugins/lsp-lua",
+      "category": "development",
+      "tags": [
+        "lsp",
         "lua",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.2.2"
+    },
+    {
+      "name": "lsp-nix",
+      "description": "Language Server Protocol support for Nix - nil",
+      "source": "./plugins/lsp-nix",
+      "category": "development",
+      "tags": [
+        "lsp",
         "nix",
         "autocomplete",
         "diagnostics"
