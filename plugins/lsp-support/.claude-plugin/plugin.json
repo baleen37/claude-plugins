@@ -1,6 +1,6 @@
 {
   "name": "lsp-support",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "description": "Language Server Protocol support for multiple languages - Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, Nix",
   "author": {
     "name": "baleen37",
