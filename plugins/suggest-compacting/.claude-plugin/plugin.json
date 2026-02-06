@@ -1,6 +1,7 @@
 {
   "name": "suggest-compacting",
   "version": "2.24.9",
+  "runtime": "bash",
   "description": "Suggests when to manually compact context during long sessions",
   "author": {
     "name": "baleen37",

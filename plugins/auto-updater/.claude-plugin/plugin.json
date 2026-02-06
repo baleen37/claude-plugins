@@ -1,6 +1,7 @@
 {
   "name": "auto-updater",
   "version": "2.24.9",
+  "runtime": "bash",
   "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
   "author": {
     "name": "baleen",

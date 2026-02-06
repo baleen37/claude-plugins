@@ -38,6 +38,12 @@
     "keywords": {
       "type": "array",
       "items": {"type": "string"}
+    },
+    "runtime": {
+      "type": "string",
+      "enum": ["bash", "bun"],
+      "default": "bash",
+      "description": "Runtime environment for the plugin tests"
     }
   }
 }

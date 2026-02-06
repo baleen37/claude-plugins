@@ -1,6 +1,7 @@
 {
   "name": "databricks",
   "version": "2.24.9",
+  "runtime": "bash",
   "description": "Databricks integration via MCP server - execute SQL, manage clusters, query Unity Catalog",
   "author": {
     "name": "baleen",

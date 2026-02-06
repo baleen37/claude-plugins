@@ -1,6 +1,7 @@
 {
   "name": "jira",
   "version": "2.24.9",
+  "runtime": "bash",
   "description": "Jira integration via Atlassian MCP server. Create issues, search projects, update statuses, manage workflows, and integrate development with Jira's project management platform.",
   "author": {
     "name": "baleen",

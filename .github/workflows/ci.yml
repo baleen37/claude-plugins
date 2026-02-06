@@ -24,6 +24,9 @@ jobs:
         id: setup-bats
         uses: bats-core/bats-action@3.0.1
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
       - name: Run all tests
         shell: bash
         env:
