@@ -1,6 +1,6 @@
 {
   "name": "notify-user-input",
-  "version": "5.6.1",
+  "version": "5.7.0",
   "description": "macOS notification when Claude waits for user input",
   "author": {
     "name": "jito",
