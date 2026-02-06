@@ -731,7 +731,7 @@ describe('Database Operations', () => {
       expect(lastIndexed).toBeLessThanOrEqual(Date.now());
     });
 
-    test('returns correct timestamp for specific file among multiple files', () => {
+    test('returns correct timestamp for specific file among multiple files', async () => {
       const exchange1: ConversationExchange = {
         id: 'test-13',
         project: 'test-project',
@@ -759,6 +759,9 @@ describe('Database Operations', () => {
       insertExchange(db, exchange1, embedding);
 
       const timestamp1 = getFileLastIndexed(db, '/path/to/archive1.jsonl');
+
+      // Add small delay to ensure different timestamp
+      await new Promise(resolve => setTimeout(resolve, 2));
 
       insertExchange(db, exchange2, embedding);
 
