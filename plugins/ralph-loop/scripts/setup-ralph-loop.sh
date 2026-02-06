@@ -128,6 +128,7 @@ fi
 # Source session env file to get RALPH_SESSION_ID
 SESSION_ENV_FILE="$HOME/.claude/ralph-loop/session-env.sh"
 if [[ -f "$SESSION_ENV_FILE" ]]; then
+    # shellcheck disable=SC1090
     source "$SESSION_ENV_FILE"
 fi
 
@@ -140,8 +141,18 @@ if [[ -z "${RALPH_SESSION_ID:-}" ]]; then
     exit 1
 fi
 
-# Create state directory
-STATE_DIR="$HOME/.claude/ralph-loop"
+# Get current working directory
+CWD="$(pwd)"
+
+# Source state library for get_or_create_project_uuid function
+# shellcheck source=lib/state.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/state.sh"
+
+# Get or create project UUID
+PROJECT_UUID=$(get_or_create_project_uuid "$CWD")
+
+# Create state directory with project UUID
+STATE_DIR="$HOME/.claude/ralph-loop/$PROJECT_UUID"
 mkdir -p "$STATE_DIR"
 
 # State file with session_id
