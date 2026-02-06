@@ -7,6 +7,6 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
 if [ ! -d "${PLUGIN_ROOT}/node_modules" ]; then
   echo "[conversation-memory] Installing dependencies..." >&2
   cd "${PLUGIN_ROOT}"
-  npm install --legacy-peer-deps --silent
+  bun install --silent
   echo "[conversation-memory] Dependencies installed." >&2
 fi

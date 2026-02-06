@@ -56,20 +56,3 @@ get_plugins_for_marketplace() {
 
   echo "$plugins"
 }
-
-# Get marketplace ID from org/repo (reverse of get_org_repo_for_marketplace)
-# Args: org/repo
-# Returns: marketplace name (e.g., "baleen-plugins") or empty string
-get_marketplace_from_org_repo() {
-  local org_repo="$1"
-
-  case "$org_repo" in
-    "baleen37/claude-plugins")
-      echo "baleen-plugins"
-      ;;
-    *)
-      # Unknown org/repo, use it as-is
-      echo "$org_repo"
-      ;;
-  esac
-}

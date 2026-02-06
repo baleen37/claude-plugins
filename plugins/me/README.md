@@ -4,29 +4,29 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ## Components
 
-### Commands (8)
+### Commands (11)
+
 - **brainstorm**: Brainstorming and planning
+- **claude-isolated-test**: Run isolated tests in a controlled environment
 - **create-pr**: Commit, push, and create/update pull requests
 - **debug**: Systematic debugging process
 - **orchestrate**: Execute sequential agent workflows
 - **refactor-clean**: Code refactoring and cleanup
 - **research**: Web research with citations
 - **sdd**: Subagent-driven development approach
+- **spawn**: Create new git worktree for isolated feature work
+- **tdd**: Test-driven development workflow
 - **verify**: Comprehensive codebase verification
 
 ### Agents
+
 - **code-reviewer**: Review code against plans and standards
 
-### Skills (5)
-- **ci-troubleshooting**: Systematic CI debugging approach
-- **nix-direnv-setup**: Direnv integration for Nix flakes
-- **setup-precommit-and-ci**: Pre-commit hooks and CI setup
-- **using-git-worktrees**: Isolated feature work with worktrees
-- **writing-claude-commands**: Command creation workflow
+### Skills (3)
 
-### Hooks
-- **auto-install-plugins**: Automatically installs all plugins from the baleen-plugins marketplace on session start
-- **git-command-validator**: Prevents --no-verify and hook bypasses in git commands
+- **ci-troubleshooting**: Systematic CI debugging approach
+- **spawn-worktree**: Isolated feature work with git worktrees
+- **test-driven-development**: TDD methodology and workflow
 
 ## Installation
 
@@ -38,6 +38,7 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 ## Usage
 
 This plugin provides a comprehensive set of tools for:
+
 - Git workflow automation (commit, PR, worktree management)
 - CI/CD troubleshooting and debugging
 - Nix flakes development environment setup

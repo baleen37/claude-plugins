@@ -1,7 +1,6 @@
 import { verifyIndex, repairIndex } from '../core/verify.js';
 import { indexSession, indexUnprocessed, indexConversations } from '../core/indexer.js';
 import { syncConversations } from '../core/sync.js';
-import { initDatabase } from '../core/db.js';
 import { getDbPath, getArchiveDir } from '../core/paths.js';
 import fs from 'fs';
 import path from 'path';
@@ -68,7 +67,7 @@ async function ensureDependencies() {
   if (!fs.existsSync(nodeModulesPath)) {
     console.error('[conversation-memory] Installing dependencies...');
     try {
-      execSync('npm install --legacy-peer-deps --silent', {
+      execSync('bun install --silent', {
         cwd: pluginRoot,
         stdio: 'inherit'
       });

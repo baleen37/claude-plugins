@@ -151,21 +151,15 @@ run_vitest_tests() {
     fi
 
     # Check if vitest is available
-    if ! command_exists vitest && ! command_exists npx; then
-        print_error "Neither vitest nor npx is available"
+    if ! command_exists vitest; then
+        print_error "vitest is not available"
         return 1
     fi
 
     local vitest_start_time
     vitest_start_time=$(date +%s)
 
-    # Run vitest and capture output
-    local vitest_cmd="vitest"
-    if ! command_exists vitest; then
-        vitest_cmd="npx vitest"
-    fi
-
-    if $vitest_cmd run "${vitest_args[@]}" 2>&1 | tee /tmp/vitest-test-output.log; then
+    if vitest run "${vitest_args[@]}" 2>&1 | tee /tmp/vitest-test-output.log; then
         VITEST_EXIT_CODE=0
     else
         VITEST_EXIT_CODE=$?

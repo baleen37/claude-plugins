@@ -161,7 +161,7 @@ export async function repairIndex(issues: VerificationResult): Promise<void> {
 
       // Generate/update summary
       const summaryPath = conversationPath.replace('.jsonl', '-summary.txt');
-      const summary = await summarizeConversation(exchanges);
+      const summary = await summarizeConversation(parseResult.exchanges);
       fs.writeFileSync(summaryPath, summary, 'utf-8');
       console.log(`  Created summary: ${summary.split(/\s+/).length} words`);
 

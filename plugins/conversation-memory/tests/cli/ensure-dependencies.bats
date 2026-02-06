@@ -4,7 +4,7 @@
 setup() {
   # Ensure build artifacts exist
   if [ ! -f "${BATS_TEST_DIRNAME}/../../dist/cli.mjs" ]; then
-    skip "CLI not built - run 'npm run build' first"
+    skip "CLI not built - run 'bun run build' first"
   fi
 
   # Create temp directory for testing
@@ -31,27 +31,27 @@ teardown() {
   [ -d "$TEST_DIR/node_modules" ]
 }
 
-@test "cli.mjs: ensureDependencies does not run npm install when node_modules exists" {
+@test "cli.mjs: ensureDependencies does not run bun install when node_modules exists" {
   # Create node_modules directory
   mkdir -p "$TEST_DIR/node_modules"
 
   # Verify node_modules exists
   [ -d "$TEST_DIR/node_modules" ]
 
-  # When node_modules exists, ensureDependencies should skip npm install
+  # When node_modules exists, ensureDependencies should skip bun install
   # We verify this by checking that the timestamp of node_modules doesn't change
 
   # Get the initial timestamp
   before=$(stat -f "%m" "$TEST_DIR/node_modules" 2>/dev/null || stat -c "%Y" "$TEST_DIR/node_modules" 2>/dev/null || echo "0")
   sleep 1
 
-  # The ensureDependencies logic would skip npm install here
+  # The ensureDependencies logic would skip bun install here
   # We simulate this by doing nothing
 
   # Get the timestamp after
   after=$(stat -f "%m" "$TEST_DIR/node_modules" 2>/dev/null || stat -c "%Y" "$TEST_DIR/node_modules" 2>/dev/null || echo "0")
 
-  # Timestamps should be the same (no npm install ran)
+  # Timestamps should be the same (no bun install ran)
   [ "$before" -eq "$after" ]
 
   # node_modules should still exist
@@ -74,6 +74,6 @@ teardown() {
   run grep -q "node_modules" "${BATS_TEST_DIRNAME}/../../dist/cli.mjs"
   [ "$status" -eq 0 ]
 
-  run grep -q "npm install" "${BATS_TEST_DIRNAME}/../../dist/cli.mjs"
+  run grep -q "bun install" "${BATS_TEST_DIRNAME}/../../dist/cli.mjs"
   [ "$status" -eq 0 ]
 }

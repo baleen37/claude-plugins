@@ -182,7 +182,7 @@ Common lint commands:
 ### Finding Test Commands
 
 Common test commands:
-- JavaScript: `npm test`, `jest`, `vitest`
+- JavaScript: `bun test`, `npm test`, `jest`, `vitest`
 - Python: `pytest`, `python -m unittest`
 - Package.json: `test` script
 
@@ -193,6 +193,8 @@ Use grep or similar to find console.log:
 # Exclude test files and node_modules
 grep -r "console\.log" src/ --exclude-dir=node_modules
 ```
+
+Note: In Bun projects, `node_modules` may be less relevant as Bun uses a different module resolution and caching system.
 
 ## Best Practices
 

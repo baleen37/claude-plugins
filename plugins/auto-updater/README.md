@@ -26,12 +26,6 @@ marketplace.json에 정의된 플러그인들을 자동으로 설치하고 업�
 "${CLAUDE_PLUGIN_ROOT}/plugins/auto-updater/scripts/check.sh"
 ```
 
-## 로그 확인
-
-```bash
-cat ~/.claude/auto-updater/update.log
-```
-
 ## 초기화
 
 ```bash

@@ -22,9 +22,11 @@ Language Server Protocol support for multiple programming languages. Provides co
 npm install -g bash-language-server
 ```
 
+Note: `npm install -g` is used because bash-language-server is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+
 ### Requirements
 
-- Node.js 14+
+- Node.js 14+ (for bash-language-server)
 - ShellCheck (optional, for enhanced diagnostics): `brew install shellcheck`
 
 ### Supported File Types
@@ -41,10 +43,12 @@ npm install -g bash-language-server
 npm install -g typescript-language-server typescript
 ```
 
+Note: `npm install -g` is used because typescript-language-server is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+
 ### Requirements
 
-- Node.js 16+
-- TypeScript (for TS files): `npm install -g typescript`
+- Node.js 16+ (for typescript-language-server)
+- TypeScript (for TS files): `npm install -g typescript` or `bun install -g typescript`
 
 ### Supported File Types
 
@@ -74,9 +78,11 @@ Create `tsconfig.json` in your project root for proper type checking:
 npm install -g pyright
 ```
 
+Note: `npm install -g` is used because Pyright is distributed as an npm package. You can also use `bun install -g` if you prefer Bun.
+
 ### Requirements
 
-- Node.js 14+
+- Node.js 14+ (for Pyright)
 - Python 3.7+ (system installation)
 
 ### Supported File Types
