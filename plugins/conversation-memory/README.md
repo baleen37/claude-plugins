@@ -116,7 +116,7 @@ understanding complete rationale, evolution, and gotchas behind past decisions.
 
 ```bash
 # Install dependencies
-cd plugins/memory
+cd plugins/conversation-memory
 npm install
 
 # Build the plugin

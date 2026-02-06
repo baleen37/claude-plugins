@@ -1,9 +1,11 @@
 import { verifyIndex, repairIndex } from '../core/verify.js';
 import { indexSession, indexUnprocessed, indexConversations } from '../core/indexer.js';
+import { syncConversations } from '../core/sync.js';
 import { initDatabase } from '../core/db.js';
 import { getDbPath, getArchiveDir } from '../core/paths.js';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { execSync } from 'child_process';
 
 const command = process.argv[2];
@@ -63,6 +65,22 @@ async function main() {
 
       case 'index-cleanup':
         await indexUnprocessed(concurrency, noSummaries);
+        break;
+
+      case 'sync':
+        const syncSourceDir = path.join(os.homedir(), '.claude', 'projects');
+        const syncDestDir = getArchiveDir();
+        console.log('Syncing conversations...');
+        const syncResult = await syncConversations(syncSourceDir, syncDestDir, { skipSummaries: noSummaries });
+        console.log(`\nSync complete!`);
+        console.log(`  Copied: ${syncResult.copied}`);
+        console.log(`  Skipped: ${syncResult.skipped}`);
+        console.log(`  Indexed: ${syncResult.indexed}`);
+        console.log(`  Summarized: ${syncResult.summarized}`);
+        if (syncResult.errors.length > 0) {
+          console.log(`\nErrors: ${syncResult.errors.length}`);
+          syncResult.errors.forEach(err => console.log(`  ${err.file}: ${err.error}`));
+        }
         break;
 
       case 'verify':

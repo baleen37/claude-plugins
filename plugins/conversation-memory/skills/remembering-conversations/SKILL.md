@@ -1,6 +1,7 @@
 ---
 name: remembering-conversations
 description: Use when user asks 'how should I...' or 'what's the best approach...' after exploring code, OR when you've tried to solve something and are stuck, OR for unfamiliar workflows, OR when user references past work. Searches conversation history.
+version: 1.0.0
 ---
 
 # Remembering Conversations
