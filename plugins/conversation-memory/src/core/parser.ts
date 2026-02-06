@@ -3,6 +3,14 @@ import readline from 'readline';
 import { ConversationExchange, ToolCall } from './types.js';
 import crypto from 'crypto';
 
+// Exclusion markers that prevent a conversation from being indexed
+const EXCLUSION_MARKERS = [
+  'DO NOT INDEX THIS CHAT',
+  'DO NOT INDEX THIS CONVERSATION',
+  '이 대화는 인덱싱하지 마세요',  // Korean: "Don't index this conversation"
+  '이 대화는 검색에서 제외하세요',  // Korean: "Exclude this conversation from search"
+];
+
 interface JSONLMessage {
   type: string;
   message?: {
@@ -24,11 +32,37 @@ interface JSONLMessage {
   };
 }
 
+/**
+ * Check if conversation content contains an exclusion marker
+ */
+function hasExclusionMarker(content: string): boolean {
+  const upperContent = content.toUpperCase();
+  return EXCLUSION_MARKERS.some(marker => upperContent.includes(marker.toUpperCase()));
+}
+
+/**
+ * Result type that includes exclusion status
+ */
+export interface ParseResult {
+  exchanges: ConversationExchange[];
+  isExcluded: boolean;
+  exclusionReason?: string;
+}
+
 export async function parseConversation(
   filePath: string,
   projectName: string,
   archivePath: string
 ): Promise<ConversationExchange[]> {
+  const result = await parseConversationWithResult(filePath, projectName, archivePath);
+  return result.exchanges;
+}
+
+export async function parseConversationWithResult(
+  filePath: string,
+  projectName: string,
+  archivePath: string
+): Promise<ParseResult> {
   const exchanges: ConversationExchange[] = [];
   const fileStream = fs.createReadStream(filePath);
   const rl = readline.createInterface({
@@ -208,7 +242,22 @@ export async function parseConversation(
   // Finalize last exchange
   finalizeExchange();
 
-  return exchanges;
+  // Check for exclusion markers in all message content
+  const allContent = exchanges.map(e => `${e.userMessage} ${e.assistantMessage}`).join('\n');
+  const excludedMarker = EXCLUSION_MARKERS.find(marker => allContent.toUpperCase().includes(marker.toUpperCase()));
+
+  if (excludedMarker) {
+    return {
+      exchanges: [],
+      isExcluded: true,
+      exclusionReason: `Found exclusion marker: "${excludedMarker}"`
+    };
+  }
+
+  return {
+    exchanges,
+    isExcluded: false
+  };
 }
 
 /**
@@ -218,6 +267,8 @@ export async function parseConversation(
 export async function parseConversationFile(filePath: string): Promise<{
   project: string;
   exchanges: ConversationExchange[];
+  isExcluded: boolean;
+  exclusionReason?: string;
 }> {
   // Extract project name from path (directory name before the .jsonl file)
   const pathParts = filePath.split('/');
@@ -228,10 +279,12 @@ export async function parseConversationFile(filePath: string): Promise<{
     project = pathParts[pathParts.length - 2];
   }
 
-  const exchanges = await parseConversation(filePath, project, filePath);
+  const result = await parseConversationWithResult(filePath, project, filePath);
 
   return {
     project,
-    exchanges
+    exchanges: result.exchanges,
+    isExcluded: result.isExcluded,
+    exclusionReason: result.exclusionReason
   };
 }

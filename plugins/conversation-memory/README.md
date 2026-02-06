@@ -14,8 +14,12 @@ into the Claude Code plugin ecosystem.
 - **Semantic Search**: Vector embeddings for intelligent similarity matching
 - **Text Search**: Fast exact-text matching for specific terms
 - **Multi-Concept Search**: AND search across 2-5 concepts simultaneously
+- **Project Filtering**: Search within specific projects for more relevant results
 - **Date Filtering**: Search within specific time ranges
 - **Conversation Reading**: Full conversation retrieval with pagination
+- **Inline Exclusion Markers**: Exclude sensitive conversations with `DO NOT INDEX THIS CHAT`
+- **Index Verification**: Check index health and repair issues
+- **CLI Interface**: Direct CLI access for manual operations
 
 ## Agents
 
@@ -81,6 +85,7 @@ recovers decisions, solutions, and avoids reinventing work.
 - `mode` (string, optional): Search mode - "vector", "text", or "both" (default: "both", only for single-concept)
 - `before` (string, optional): Only conversations before this date (YYYY-MM-DD)
 - `after` (string, optional): Only conversations after this date (YYYY-MM-DD)
+- `projects` (string[], optional): Filter results to specific project names
 - `response_format` (string, optional): "markdown" or "json" (default: "markdown")
 
 **Examples:**
@@ -97,6 +102,9 @@ recovers decisions, solutions, and avoids reinventing work.
 
 // Date filtering
 { query: "refactoring", after: "2025-09-01" }
+
+// Project filtering
+{ query: "authentication", projects: ["my-project"] }
 ```
 
 ### `conversation-memory__read`
@@ -156,11 +164,26 @@ This:
 
 ### Exclusion
 
-To exclude specific conversation directories from indexing, create a `.no-conversation-memory` marker file:
+There are two ways to exclude conversations from indexing:
+
+**1. Directory-level exclusion:**
+
+Create a `.no-conversation-memory` marker file in the conversation directory:
 
 ```bash
 touch /path/to/conversation/dir/.no-conversation-memory
 ```
+
+**2. Inline content exclusion:**
+
+Include one of these markers anywhere in the conversation content:
+
+- `DO NOT INDEX THIS CHAT`
+- `DO NOT INDEX THIS CONVERSATION`
+- `이 대화는 인덱싱하지 마세요` (Korean)
+- `이 대화는 검색에서 제외하세요` (Korean)
+
+The entire conversation will be excluded from indexing when any of these markers are detected.
 
 ### Environment Variables (Optional)
 
@@ -198,6 +221,10 @@ configuration (subscription-based or `ANTHROPIC_API_KEY`).
 ### Build
 
 ```bash
+# Using Bun (recommended)
+bun run build
+
+# Or using npm
 npm run build
 ```
 
@@ -209,7 +236,34 @@ Bundles:
 ### Type Check
 
 ```bash
-npm run typecheck
+bun run typecheck
+```
+
+### CLI Usage
+
+The plugin provides a CLI interface for manual operations:
+
+```bash
+# Show help
+conversation-memory --help
+
+# Sync new conversations
+conversation-memory sync
+
+# Sync with parallel summarization
+conversation-memory sync --concurrency 4
+
+# Index a specific session
+conversation-memory index-session 2025-02-06-123456
+
+# Verify index health
+conversation-memory verify
+
+# Repair detected issues
+conversation-memory repair
+
+# Rebuild entire index
+conversation-memory rebuild --concurrency 8
 ```
 
 ### Project Structure
@@ -260,9 +314,7 @@ plugins/conversation-memory/
 ### Development Dependencies
 
 - `typescript`: ^5.3.3
-- `esbuild`: ^0.20.0
-- `@types/node`: ^20.0.0
-- `@types/better-sqlite3`: ^7.6.11
+- `bun`: For build and test runtime (Node.js 18+ also supported)
 
 ## Upgrading from v1.x (multilingual-e5-small)
 

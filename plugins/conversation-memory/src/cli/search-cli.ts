@@ -7,6 +7,7 @@ let mode: 'vector' | 'text' | 'both' = 'both';
 let after: string | undefined;
 let before: string | undefined;
 let limit = 10;
+let projects: string[] | undefined;
 const queries: string[] = [];
 
 for (let i = 0; i < args.length; i++) {
@@ -26,6 +27,7 @@ MODES:
 OPTIONS:
   --after DATE   Only conversations after YYYY-MM-DD
   --before DATE  Only conversations before YYYY-MM-DD
+  --project P    Filter to specific project (can be used multiple times)
   --limit N      Max results (default: 10)
   --help, -h     Show this help
 
@@ -38,6 +40,12 @@ EXAMPLES:
 
   # Time filtering
   conversation-memory search --after 2025-09-01 "refactoring"
+
+  # Project filtering
+  conversation-memory search --project my-project "authentication"
+
+  # Multi-project filtering
+  conversation-memory search --project my-project --project other-project "API"
 
   # Combine modes
   conversation-memory search --both "React Router data loading"
@@ -54,6 +62,9 @@ EXAMPLES:
     after = args[++i];
   } else if (arg === '--before') {
     before = args[++i];
+  } else if (arg === '--project') {
+    if (!projects) projects = [];
+    projects.push(args[++i]);
   } else if (arg === '--limit') {
     limit = parseInt(args[++i]);
   } else {
@@ -70,7 +81,7 @@ if (queries.length === 0) {
 
 // Multi-concept search if multiple queries provided
 if (queries.length > 1) {
-  const options = { limit, after, before };
+  const options = { limit, after, before, projects };
 
   searchMultipleConcepts(queries, options)
     .then(async results => {
@@ -86,7 +97,8 @@ if (queries.length > 1) {
     mode,
     limit,
     after,
-    before
+    before,
+    projects
   };
 
   searchConversations(queries[0], options)

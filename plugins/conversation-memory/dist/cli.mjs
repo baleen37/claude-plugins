@@ -10851,11 +10851,11 @@ var init_transformers_node = __esm({
                 throw new Error(`The number of external data chunks (${num_chunks}) exceeds the maximum allowed value (${_utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.MAX_EXTERNAL_DATA_CHUNKS}).`);
               }
               for (let i = 0; i < num_chunks; ++i) {
-                const path6 = `${baseName}_data${i === 0 ? "" : "_" + i}`;
-                const fullPath = `${options.subfolder ?? ""}/${path6}`;
+                const path7 = `${baseName}_data${i === 0 ? "" : "_" + i}`;
+                const fullPath = `${options.subfolder ?? ""}/${path7}`;
                 externalDataPromises.push(new Promise(async (resolve, reject) => {
                   const data = await (0, _utils_hub_js__WEBPACK_IMPORTED_MODULE_5__.getModelFile)(pretrained_model_name_or_path, fullPath, true, options, return_path);
-                  resolve(data instanceof Uint8Array ? { path: path6, data } : path6);
+                  resolve(data instanceof Uint8Array ? { path: path7, data } : path7);
                 }));
               }
             } else if (session_options.externalData !== void 0) {
@@ -28748,7 +28748,7 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
              * Save the audio to a wav file.
              * @param {string} path
              */
-            async save(path6) {
+            async save(path7) {
               let fn;
               if (_env_js__WEBPACK_IMPORTED_MODULE_3__.apis.IS_BROWSER_ENV) {
                 if (_env_js__WEBPACK_IMPORTED_MODULE_3__.apis.IS_WEBWORKER_ENV) {
@@ -28756,14 +28756,14 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
                 }
                 fn = _core_js__WEBPACK_IMPORTED_MODULE_2__.saveBlob;
               } else if (_env_js__WEBPACK_IMPORTED_MODULE_3__.apis.IS_FS_AVAILABLE) {
-                fn = async (path7, blob) => {
+                fn = async (path8, blob) => {
                   let buffer = await blob.arrayBuffer();
-                  node_fs__WEBPACK_IMPORTED_MODULE_5__["default"].writeFileSync(path7, Buffer.from(buffer));
+                  node_fs__WEBPACK_IMPORTED_MODULE_5__["default"].writeFileSync(path8, Buffer.from(buffer));
                 };
               } else {
                 throw new Error("Unable to save because filesystem is disabled in this environment.");
               }
-              await fn(path6, this.toBlob());
+              await fn(path7, this.toBlob());
             }
           }
         }
@@ -28957,11 +28957,11 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
           function calculateReflectOffset(i, w) {
             return Math.abs((i + w) % (2 * w) - w);
           }
-          function saveBlob(path6, blob) {
+          function saveBlob(path7, blob) {
             const dataURL = URL.createObjectURL(blob);
             const downloadLink = document.createElement("a");
             downloadLink.href = dataURL;
-            downloadLink.download = path6;
+            downloadLink.download = path7;
             downloadLink.click();
             downloadLink.remove();
             URL.revokeObjectURL(dataURL);
@@ -29914,8 +29914,8 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
              * Instantiate a `FileCache` object.
              * @param {string} path
              */
-            constructor(path6) {
-              this.path = path6;
+            constructor(path7) {
+              this.path = path7;
             }
             /**
              * Checks whether the given request is in the cache.
@@ -30886,20 +30886,20 @@ ${fake_token_around_image}${global_img_token}` + image_token.repeat(image_seq_le
              * Save the image to the given path.
              * @param {string} path The path to save the image to.
              */
-            async save(path6) {
+            async save(path7) {
               if (IS_BROWSER_OR_WEBWORKER) {
                 if (_env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_WEBWORKER_ENV) {
                   throw new Error("Unable to save an image from a Web Worker.");
                 }
-                const extension = path6.split(".").pop().toLowerCase();
+                const extension = path7.split(".").pop().toLowerCase();
                 const mime = CONTENT_TYPE_MAP.get(extension) ?? "image/png";
                 const blob = await this.toBlob(mime);
-                (0, _core_js__WEBPACK_IMPORTED_MODULE_0__.saveBlob)(path6, blob);
+                (0, _core_js__WEBPACK_IMPORTED_MODULE_0__.saveBlob)(path7, blob);
               } else if (!_env_js__WEBPACK_IMPORTED_MODULE_2__.apis.IS_FS_AVAILABLE) {
                 throw new Error("Unable to save the image because filesystem is disabled in this environment.");
               } else {
                 const img = this.toSharp();
-                return await img.toFile(path6);
+                return await img.toFile(path7);
               }
             }
             toSharp() {
@@ -39170,16 +39170,180 @@ Indexing embeddings...`);
 \u2705 Processed ${unprocessed.length} conversations`);
 }
 
-// src/cli/index-cli.ts
+// src/core/sync.ts
+init_constants();
 init_paths();
 import fs7 from "fs";
 import path5 from "path";
+var EXCLUSION_MARKERS = [
+  "<INSTRUCTIONS-TO-EPISODIC-MEMORY>DO NOT INDEX THIS CHAT</INSTRUCTIONS-TO-EPISODIC-MEMORY>",
+  "Only use NO_INSIGHTS_FOUND",
+  SUMMARIZER_CONTEXT_MARKER
+];
+function shouldSkipConversation(filePath) {
+  try {
+    const content = fs7.readFileSync(filePath, "utf-8");
+    return EXCLUSION_MARKERS.some((marker) => content.includes(marker));
+  } catch (error) {
+    return false;
+  }
+}
+function copyIfNewer(src, dest) {
+  const destDir = path5.dirname(dest);
+  if (!fs7.existsSync(destDir)) {
+    fs7.mkdirSync(destDir, { recursive: true });
+  }
+  if (fs7.existsSync(dest)) {
+    const srcStat = fs7.statSync(src);
+    const destStat = fs7.statSync(dest);
+    if (destStat.mtimeMs >= srcStat.mtimeMs) {
+      return false;
+    }
+  }
+  const tempDest = dest + ".tmp." + process.pid;
+  fs7.copyFileSync(src, tempDest);
+  fs7.renameSync(tempDest, dest);
+  return true;
+}
+function extractSessionIdFromPath(filePath) {
+  const basename = path5.basename(filePath, ".jsonl");
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(basename)) {
+    return basename;
+  }
+  return null;
+}
+async function syncConversations(sourceDir, destDir, options = {}) {
+  const result = {
+    copied: 0,
+    skipped: 0,
+    indexed: 0,
+    summarized: 0,
+    errors: []
+  };
+  const { startTokenTracking: startTokenTracking2, getCurrentRunTokenUsage: getCurrentRunTokenUsage2 } = await Promise.resolve().then(() => (init_summarizer(), summarizer_exports));
+  startTokenTracking2();
+  if (!fs7.existsSync(sourceDir)) {
+    return result;
+  }
+  const filesToIndex = [];
+  const filesToSummarize = [];
+  const projects = fs7.readdirSync(sourceDir);
+  const excludedProjects = getExcludedProjects();
+  for (const project of projects) {
+    if (excludedProjects.includes(project)) {
+      console.log("\nSkipping excluded project: " + project);
+      continue;
+    }
+    const projectPath = path5.join(sourceDir, project);
+    const stat = fs7.statSync(projectPath);
+    if (!stat.isDirectory())
+      continue;
+    const files = fs7.readdirSync(projectPath).filter((f) => f.endsWith(".jsonl") && !f.startsWith("agent-"));
+    for (const file of files) {
+      const srcFile = path5.join(projectPath, file);
+      const destFile = path5.join(destDir, project, file);
+      try {
+        const wasCopied = copyIfNewer(srcFile, destFile);
+        if (wasCopied) {
+          result.copied++;
+          filesToIndex.push(destFile);
+        } else {
+          result.skipped++;
+        }
+        if (!options.skipSummaries) {
+          const summaryPath = destFile.replace(".jsonl", "-summary.txt");
+          if (!fs7.existsSync(summaryPath) && !shouldSkipConversation(destFile)) {
+            const sessionId = extractSessionIdFromPath(destFile);
+            if (sessionId) {
+              filesToSummarize.push({ path: destFile, sessionId });
+            }
+          }
+        }
+      } catch (error) {
+        result.errors.push({
+          file: srcFile,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+  }
+  if (!options.skipIndex && filesToIndex.length > 0) {
+    const { initDatabase: initDatabase2, insertExchange: insertExchange2 } = await Promise.resolve().then(() => (init_db(), db_exports));
+    const { initEmbeddings: initEmbeddings2, generateExchangeEmbedding: generateExchangeEmbedding2 } = await Promise.resolve().then(() => (init_embeddings(), embeddings_exports));
+    const { parseConversation: parseConversation2 } = await Promise.resolve().then(() => (init_parser(), parser_exports));
+    const db = initDatabase2();
+    await initEmbeddings2();
+    for (const file of filesToIndex) {
+      try {
+        if (shouldSkipConversation(file)) {
+          continue;
+        }
+        const project = path5.basename(path5.dirname(file));
+        const exchanges = await parseConversation2(file, project, file);
+        for (const exchange of exchanges) {
+          const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
+          const embedding = await generateExchangeEmbedding2(
+            exchange.userMessage,
+            exchange.assistantMessage,
+            toolNames
+          );
+          insertExchange2(db, exchange, embedding, toolNames);
+        }
+        result.indexed++;
+      } catch (error) {
+        result.errors.push({
+          file,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+    db.close();
+  }
+  if (!options.skipSummaries && filesToSummarize.length > 0) {
+    const { parseConversation: parseConversation2 } = await Promise.resolve().then(() => (init_parser(), parser_exports));
+    const { summarizeConversation: summarizeConversation2 } = await Promise.resolve().then(() => (init_summarizer(), summarizer_exports));
+    const summaryLimit = options.summaryLimit ?? 10;
+    const toSummarize = filesToSummarize.slice(0, summaryLimit);
+    const remaining = filesToSummarize.length - toSummarize.length;
+    console.log(`Generating summaries for ${toSummarize.length} conversation(s)...`);
+    if (remaining > 0) {
+      console.log(`  (${remaining} more need summaries - will process on next sync)`);
+    }
+    for (const { path: filePath, sessionId } of toSummarize) {
+      try {
+        const project = path5.basename(path5.dirname(filePath));
+        const exchanges = await parseConversation2(filePath, project, filePath);
+        if (exchanges.length === 0) {
+          continue;
+        }
+        console.log(`  Summarizing ${path5.basename(filePath)} (${exchanges.length} exchanges)...`);
+        const summary = await summarizeConversation2(exchanges, sessionId);
+        const summaryPath = filePath.replace(".jsonl", "-summary.txt");
+        fs7.writeFileSync(summaryPath, summary, "utf-8");
+        result.summarized++;
+      } catch (error) {
+        result.errors.push({
+          file: filePath,
+          error: `Summary generation failed: ${error instanceof Error ? error.message : String(error)}`
+        });
+      }
+    }
+  }
+  result.tokenUsage = getCurrentRunTokenUsage2();
+  return result;
+}
+
+// src/cli/index-cli.ts
+init_paths();
+import fs8 from "fs";
+import path6 from "path";
+import os3 from "os";
 import { execSync } from "child_process";
 var command = process.argv[2];
 async function ensureDependencies() {
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();
-  const nodeModulesPath = path5.join(pluginRoot, "node_modules");
-  if (!fs7.existsSync(nodeModulesPath)) {
+  const nodeModulesPath = path6.join(pluginRoot, "node_modules");
+  if (!fs8.existsSync(nodeModulesPath)) {
     console.error("[conversation-memory] Installing dependencies...");
     try {
       execSync("npm install --legacy-peer-deps --silent", {
@@ -39222,6 +39386,23 @@ async function main() {
       case "index-cleanup":
         await indexUnprocessed(concurrency, noSummaries);
         break;
+      case "sync":
+        const syncSourceDir = path6.join(os3.homedir(), ".claude", "projects");
+        const syncDestDir = getArchiveDir();
+        console.log("Syncing conversations...");
+        const syncResult = await syncConversations(syncSourceDir, syncDestDir, { skipSummaries: noSummaries });
+        console.log(`
+Sync complete!`);
+        console.log(`  Copied: ${syncResult.copied}`);
+        console.log(`  Skipped: ${syncResult.skipped}`);
+        console.log(`  Indexed: ${syncResult.indexed}`);
+        console.log(`  Summarized: ${syncResult.summarized}`);
+        if (syncResult.errors.length > 0) {
+          console.log(`
+Errors: ${syncResult.errors.length}`);
+          syncResult.errors.forEach((err) => console.log(`  ${err.file}: ${err.error}`));
+        }
+        break;
       case "verify":
         console.log("Verifying conversation index...");
         const issues = await verifyIndex();
@@ -39253,20 +39434,20 @@ async function main() {
       case "rebuild":
         console.log("Rebuilding entire index...");
         const dbPath = getDbPath();
-        if (fs7.existsSync(dbPath)) {
-          fs7.unlinkSync(dbPath);
+        if (fs8.existsSync(dbPath)) {
+          fs8.unlinkSync(dbPath);
           console.log("Deleted existing database");
         }
         const archiveDir = getArchiveDir();
-        if (fs7.existsSync(archiveDir)) {
-          const projects = fs7.readdirSync(archiveDir);
+        if (fs8.existsSync(archiveDir)) {
+          const projects = fs8.readdirSync(archiveDir);
           for (const project of projects) {
-            const projectPath = path5.join(archiveDir, project);
-            if (!fs7.statSync(projectPath).isDirectory())
+            const projectPath = path6.join(archiveDir, project);
+            if (!fs8.statSync(projectPath).isDirectory())
               continue;
-            const summaries = fs7.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
+            const summaries = fs8.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
             for (const summary of summaries) {
-              fs7.unlinkSync(path5.join(projectPath, summary));
+              fs8.unlinkSync(path6.join(projectPath, summary));
             }
           }
           console.log("Deleted all summary files");

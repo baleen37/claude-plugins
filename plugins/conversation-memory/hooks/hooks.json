@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs sync"
+            "command": "bun ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs sync"
           }
         ]
       }

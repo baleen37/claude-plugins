@@ -10,6 +10,56 @@ import { execSync } from 'child_process';
 
 const command = process.argv[2];
 
+// Show help if no command or --help
+if (!command || command === '--help' || command === '-h') {
+  console.log(`
+Conversation Memory CLI - Persistent semantic search for Claude Code sessions
+
+USAGE:
+  conversation-memory <command> [options]
+
+COMMANDS:
+  sync              Copy new conversations from ~/.claude/projects to archive
+  index-all         Re-index all conversations (slow, use with caution)
+  index-session <id> Index a specific session by ID
+  index-cleanup     Index only unprocessed conversations
+  verify            Check index health for issues
+  repair            Fix detected issues from verify
+  rebuild           Delete database and re-index everything
+
+OPTIONS:
+  --concurrency, -c N  Parallelism for summaries/embeddings (1-16, default: 1)
+  --no-summaries       Skip AI summarization
+
+EXAMPLES:
+  # Sync new conversations
+  conversation-memory sync
+
+  # Sync with parallel summarization
+  conversation-memory sync --concurrency 4
+
+  # Index a specific session
+  conversation-memory index-session 2025-02-06-123456
+
+  # Verify index health
+  conversation-memory verify
+
+  # Repair issues
+  conversation-memory repair --repair
+
+  # Rebuild entire index
+  conversation-memory rebuild --concurrency 8
+
+ENVIRONMENT VARIABLES:
+  CONVERSATION_MEMORY_CONFIG_DIR   Override config directory
+  CONVERSATION_MEMORY_DB_PATH      Override database path
+  CONVERSATION_SEARCH_EXCLUDE_PROJECTS  Comma-separated projects to exclude
+
+For more information, visit: https://github.com/wooto/claude-plugins
+`);
+  process.exit(0);
+}
+
 // Ensure dependencies are installed before running any command
 async function ensureDependencies() {
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();

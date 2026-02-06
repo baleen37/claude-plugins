@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { initDatabase, insertExchange } from './db.js';
-import { parseConversation } from './parser.js';
+import { parseConversation, parseConversationWithResult } from './parser.js';
 import { initEmbeddings, generateExchangeEmbedding } from './embeddings.js';
 import { summarizeConversation } from './summarizer.js';
 import { ConversationExchange } from './types.js';
@@ -111,9 +111,14 @@ export async function indexConversations(
       }
 
       // Parse conversation
-      const exchanges = await parseConversation(sourcePath, project, archivePath);
+      const parseResult = await parseConversationWithResult(sourcePath, project, archivePath);
 
-      if (exchanges.length === 0) {
+      if (parseResult.isExcluded) {
+        console.log(`  Skipped ${file} (excluded: ${parseResult.exclusionReason})`);
+        continue;
+      }
+
+      if (parseResult.exchanges.length === 0) {
         console.log(`  Skipped ${file} (no exchanges)`);
         continue;
       }
@@ -123,7 +128,7 @@ export async function indexConversations(
         sourcePath,
         archivePath,
         summaryPath: archivePath.replace('.jsonl', '-summary.txt'),
-        exchanges
+        exchanges: parseResult.exchanges
       });
     }
 
@@ -219,9 +224,15 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
       }
 
       // Parse and summarize
-      const exchanges = await parseConversation(sourcePath, project, archivePath);
+      const parseResult = await parseConversationWithResult(sourcePath, project, archivePath);
 
-      if (exchanges.length > 0) {
+      if (parseResult.isExcluded) {
+        console.log(`Skipped (excluded: ${parseResult.exclusionReason})`);
+        db.close();
+        return;
+      }
+
+      if (parseResult.exchanges.length > 0) {
         // Generate summary (unless --no-summaries)
         const summaryPath = archivePath.replace('.jsonl', '-summary.txt');
         if (!noSummaries && !fs.existsSync(summaryPath)) {
@@ -231,7 +242,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
         }
 
         // Index
-        for (const exchange of exchanges) {
+        for (const exchange of parseResult.exchanges) {
           const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
           const embedding = await generateExchangeEmbedding(
             exchange.userMessage,
@@ -241,7 +252,7 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
           insertExchange(db, exchange, embedding, toolNames);
         }
 
-        console.log(`✅ Indexed session ${sessionId}: ${exchanges.length} exchanges`);
+        console.log(`✅ Indexed session ${sessionId}: ${parseResult.exchanges.length} exchanges`);
       }
 
       db.close();
@@ -307,10 +318,16 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
       }
 
       // Parse and check
-      const exchanges = await parseConversation(sourcePath, project, archivePath);
-      if (exchanges.length === 0) continue;
+      const parseResult = await parseConversationWithResult(sourcePath, project, archivePath);
 
-      unprocessed.push({ project, file, sourcePath, archivePath, summaryPath, exchanges });
+      if (parseResult.isExcluded) {
+        console.log(`Excluding ${project}/${file}: ${parseResult.exclusionReason}`);
+        continue;
+      }
+
+      if (parseResult.exchanges.length === 0) continue;
+
+      unprocessed.push({ project, file, sourcePath, archivePath, summaryPath, exchanges: parseResult.exchanges });
     }
   }
 

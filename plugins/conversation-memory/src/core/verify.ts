@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parseConversation } from './parser.js';
+import { parseConversationWithResult } from './parser.js';
 import { initDatabase, getAllExchanges, getFileLastIndexed } from './db.js';
 import { getArchiveDir, getExcludedProjects } from './paths.js';
 
@@ -80,9 +80,13 @@ export async function verifyIndex(): Promise<VerificationResult> {
         }
       }
 
-      // Try parsing to detect corruption
+      // Try parsing to detect corruption and check exclusion markers
       try {
-        await parseConversation(conversationPath, project, conversationPath);
+        const parseResult = await parseConversationWithResult(conversationPath, project, conversationPath);
+        if (parseResult.isExcluded) {
+          // Excluded conversations are not considered corrupted
+          continue;
+        }
       } catch (error) {
         result.corrupted.push({
           path: conversationPath,
@@ -115,7 +119,7 @@ export async function repairIndex(issues: VerificationResult): Promise<void> {
 
   // To avoid circular dependencies, we import the indexer functions dynamically
   const { initDatabase, insertExchange, deleteExchange } = await import('./db.js');
-  const { parseConversation } = await import('./parser.js');
+  const { parseConversationWithResult } = await import('./parser.js');
   const { initEmbeddings, generateExchangeEmbedding } = await import('./embeddings.js');
   const { summarizeConversation } = await import('./summarizer.js');
 
@@ -143,9 +147,14 @@ export async function repairIndex(issues: VerificationResult): Promise<void> {
       const project = relativePath.split(path.sep)[0];
 
       // Parse conversation
-      const exchanges = await parseConversation(conversationPath, project, conversationPath);
+      const parseResult = await parseConversationWithResult(conversationPath, project, conversationPath);
 
-      if (exchanges.length === 0) {
+      if (parseResult.isExcluded) {
+        console.log(`  Skipped (excluded: ${parseResult.exclusionReason})`);
+        continue;
+      }
+
+      if (parseResult.exchanges.length === 0) {
         console.log(`  Skipped (no exchanges)`);
         continue;
       }
@@ -157,7 +166,7 @@ export async function repairIndex(issues: VerificationResult): Promise<void> {
       console.log(`  Created summary: ${summary.split(/\s+/).length} words`);
 
       // Index exchanges
-      for (const exchange of exchanges) {
+      for (const exchange of parseResult.exchanges) {
         const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
         const embedding = await generateExchangeEmbedding(
           exchange.userMessage,
@@ -167,7 +176,7 @@ export async function repairIndex(issues: VerificationResult): Promise<void> {
         insertExchange(db, exchange, embedding, toolNames);
       }
 
-      console.log(`  Indexed ${exchanges.length} exchanges`);
+      console.log(`  Indexed ${parseResult.exchanges.length} exchanges`);
     } catch (error) {
       console.error(`Failed to re-index ${conversationPath}:`, error);
     }

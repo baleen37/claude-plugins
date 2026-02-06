@@ -10,6 +10,7 @@ export interface SearchOptions {
   mode?: 'vector' | 'text' | 'both';
   after?: string;  // ISO date string
   before?: string; // ISO date string
+  projects?: string[]; // Filter by project names
 }
 
 function validateISODate(dateStr: string, paramName: string): void {
@@ -28,7 +29,7 @@ export async function searchConversations(
   query: string,
   options: SearchOptions = {}
 ): Promise<SearchResult[]> {
-  const { limit = 10, mode = 'both', after, before } = options;
+  const { limit = 10, mode = 'both', after, before, projects } = options;
 
   // Validate date parameters
   if (after) validateISODate(after, '--after');
@@ -43,6 +44,14 @@ export async function searchConversations(
   if (after) timeFilter.push(`e.timestamp >= '${after}'`);
   if (before) timeFilter.push(`e.timestamp <= '${before}'`);
   const timeClause = timeFilter.length > 0 ? `AND ${timeFilter.join(' AND ')}` : '';
+
+  // Build project filter clause
+  const projectFilter = [];
+  if (projects && projects.length > 0) {
+    const projectPlaceholders = projects.map(() => '?').join(',');
+    projectFilter.push(`e.project IN (${projectPlaceholders})`);
+  }
+  const projectClause = projectFilter.length > 0 ? `AND ${projectFilter.join(' AND ')}` : '';
 
   if (mode === 'vector' || mode === 'both') {
     // Vector similarity search
@@ -65,13 +74,17 @@ export async function searchConversations(
       WHERE vec.embedding MATCH ?
         AND k = ?
         ${timeClause}
+        ${projectClause}
       ORDER BY vec.distance ASC
     `);
 
-    results = stmt.all(
+    const vectorParams = [
       Buffer.from(new Float32Array(queryEmbedding).buffer),
-      limit
-    );
+      limit,
+      ...(projects || [])
+    ];
+
+    results = stmt.all(...vectorParams);
   }
 
   if (mode === 'text' || mode === 'both') {
@@ -90,11 +103,19 @@ export async function searchConversations(
       FROM exchanges AS e
       WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
         ${timeClause}
+        ${projectClause}
       ORDER BY e.timestamp DESC
       LIMIT ?
     `);
 
-    const textResults = textStmt.all(`%${query}%`, `%${query}%`, limit);
+    const textParams = [
+      `%${query}%`,
+      `%${query}%`,
+      ...(projects || []),
+      limit
+    ];
+
+    const textResults = textStmt.all(...textParams);
 
     if (mode === 'both') {
       // Merge and deduplicate by ID
@@ -228,7 +249,7 @@ export async function searchMultipleConcepts(
   concepts: string[],
   options: Omit<SearchOptions, 'mode'> = {}
 ): Promise<MultiConceptResult[]> {
-  const { limit = 10 } = options;
+  const { limit = 10, projects } = options;
 
   if (concepts.length === 0) {
     return [];
@@ -236,7 +257,7 @@ export async function searchMultipleConcepts(
 
   // Search for each concept independently
   const conceptResults = await Promise.all(
-    concepts.map(concept => searchConversations(concept, { ...options, limit: limit * 5, mode: 'vector' }))
+    concepts.map(concept => searchConversations(concept, { limit: limit * 5, mode: 'vector', after: options.after, before: options.before, projects }))
   );
 
   // Build map of conversation path -> array of results (one per concept)

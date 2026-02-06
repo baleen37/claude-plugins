@@ -60,6 +60,10 @@ const SearchInputSchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
       .optional()
       .describe('Only return conversations before this date (YYYY-MM-DD format)'),
+    projects: z
+      .array(z.string().min(1))
+      .optional()
+      .describe('Filter results to specific project names (e.g., ["my-project", "another-project"])'),
     response_format: ResponseFormatEnum.default('markdown').describe(
       'Output format: "markdown" for human-readable or "json" for machine-readable (default: "markdown")'
     ),
@@ -135,6 +139,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             limit: { type: 'number', minimum: 1, maximum: 50, default: 10 },
             after: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
             before: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+            projects: { type: 'array', items: { type: 'string' } },
             response_format: { type: 'string', enum: ['markdown', 'json'], default: 'markdown' },
           },
           required: ['query'],
@@ -214,6 +219,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           limit: params.limit,
           after: params.after,
           before: params.before,
+          projects: params.projects,
         };
 
         const results = await searchConversations(params.query, options);
