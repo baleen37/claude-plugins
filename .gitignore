@@ -9,6 +9,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
+dist/
 downloads/
 eggs/
 .eggs/
@@ -20,6 +21,10 @@ lib64/
 !plugins/*/scripts/lib/
 !plugins/*/hooks/lib/
 !skills/*/scripts/lib/
+
+# Exception: Include compiled/built output for specific plugins
+!plugins/conversation-memory/dist/
+!plugins/suggest-compacting/dist/
 
 parts/
 sdist/
