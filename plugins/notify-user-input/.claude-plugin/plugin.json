@@ -1,0 +1,9 @@
+{
+  "name": "notify-user-input",
+  "version": "5.2.0",
+  "description": "macOS notification when Claude waits for user input",
+  "author": {
+    "name": "jito",
+    "email": "git@baleen.me"
+  }
+}
