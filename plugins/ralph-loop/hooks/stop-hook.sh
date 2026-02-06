@@ -11,8 +11,9 @@ source "$SCRIPT_DIR/../scripts/lib/state.sh"
 # Read hook input from stdin (advanced stop hook API)
 HOOK_INPUT=$(</dev/stdin)
 
-# Extract session_id from hook input
+# Extract session_id and cwd from hook input
 SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id')
+CWD=$(echo "$HOOK_INPUT" | jq -r '.cwd')
 
 # Validate session_id format
 if ! validate_session_id "$SESSION_ID"; then
@@ -21,7 +22,9 @@ if ! validate_session_id "$SESSION_ID"; then
 fi
 
 # Check if ralph-loop is active for this session
-STATE_DIR="$HOME/.claude/ralph-loop"
+PROJECT_UUID=$(get_or_create_project_uuid "$CWD")
+STATE_DIR="$HOME/.claude/ralph-loop/$PROJECT_UUID"
+mkdir -p "$STATE_DIR"
 STATE_FILE="$STATE_DIR/ralph-loop-$SESSION_ID.local.md"
 if [[ ! -f "$STATE_FILE" ]]; then
     # No active loop for this session - allow exit
