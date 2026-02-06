@@ -922,3 +922,39 @@ EOF
     echo "Result: '$result'"
     [ "$result" = "FIRST" ]
 }
+
+@test "ralph-loop: ralph-status.sh script exists and is executable" {
+    local script="${PLUGIN_DIR}/scripts/ralph-status.sh"
+    [ -f "$script" ]
+    [ -x "$script" ]
+}
+
+@test "ralph-loop: ralph-status.sh uses proper error handling" {
+    local script="${PLUGIN_DIR}/scripts/ralph-status.sh"
+    [ -f "$script" ]
+
+    # Verify error handling
+    grep -q "set -euo pipefail" "$script"
+}
+
+@test "ralph-loop: ralph-status.sh sources state library" {
+    local script="${PLUGIN_DIR}/scripts/ralph-status.sh"
+    [ -f "$script" ]
+
+    # Verify state library is sourced
+    grep -q 'source.*lib/state.sh' "$script"
+}
+
+@test "ralph-loop: ralph-status.md command exists" {
+    local cmd_file="${PLUGIN_DIR}/commands/ralph-status.md"
+    [ -f "$cmd_file" ]
+    has_frontmatter_delimiter "$cmd_file"
+}
+
+@test "ralph-loop: ralph-status.md references ralph-status.sh script" {
+    local cmd_file="${PLUGIN_DIR}/commands/ralph-status.md"
+    [ -f "$cmd_file" ]
+
+    # Verify command references the status script
+    grep -q 'ralph-status.sh' "$cmd_file"
+}

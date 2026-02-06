@@ -268,3 +268,199 @@ EOF
     echo "$hook_output" | grep -q "Max iterations: 20"
     echo "$hook_output" | grep -q "Completion promise: <promise>ALL TESTS PASS</promise>"
 }
+
+# ============================================================================
+# Test: End-to-end loop iteration
+# ============================================================================
+
+@test "ralph-loop: stop-hook increments iteration and continues loop" {
+    skip_if_no_tmux
+
+    local SESSION_NAME="ralph-e2e-$$-$RANDOM"
+    local TEST_SESSION_ID="e2e-test-session"
+    local TEST_TRANSCRIPT_FILE
+
+    trap "tmux kill-session -t '$SESSION_NAME' 2>/dev/null || true" EXIT
+
+    # Create a temporary transcript file
+    TEST_TRANSCRIPT_FILE=$(mktemp)
+    cat > "$TEST_TRANSCRIPT_FILE" <<'EOF'
+{"role":"user","message":{"content":[{"type":"text","text":"Make the tests pass"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"I'm working on it\n"}]}}
+EOF
+
+    # Create Ralph Loop state file at iteration 0
+    local TEST_STATE_FILE="$HOME/.claude/ralph-loop/ralph-loop-$TEST_SESSION_ID.local.md"
+    cat > "$TEST_STATE_FILE" <<EOF
+---
+iteration: 0
+max_iterations: 5
+completion_promise: "DONE"
+session_id: $TEST_SESSION_ID
+---
+Make the tests pass
+EOF
+
+    # Run Stop hook with transcript input
+    local hook_output
+    hook_output=$(echo "{\"session_id\": \"$TEST_SESSION_ID\", \"transcript_path\": \"$TEST_TRANSCRIPT_FILE\"}" | "$PLUGIN_DIR/hooks/stop-hook.sh" 2>&1)
+
+    # Verify hook returned block decision (loop continues)
+    echo "$hook_output" | grep -q '"decision": "block"'
+
+    # Verify state file iteration was incremented
+    local new_iteration
+    new_iteration=$(grep "^iteration:" "$TEST_STATE_FILE" | awk '{print $2}')
+    [ "$new_iteration" -eq 1 ]
+
+    # Cleanup
+    rm -f "$TEST_TRANSCRIPT_FILE"
+}
+
+@test "ralph-loop: stop-hook completes when promise detected" {
+    skip_if_no_tmux
+
+    local SESSION_NAME="ralph-e2e-complete-$$-$RANDOM"
+    local TEST_SESSION_ID="e2e-complete-test"
+    local TEST_TRANSCRIPT_FILE
+
+    trap "tmux kill-session -t '$SESSION_NAME' 2>/dev/null || true" EXIT
+
+    # Create a temporary transcript file with completion promise
+    # Note: The promise must be wrapped in <promise> tags for detection
+    TEST_TRANSCRIPT_FILE=$(mktemp)
+    cat > "$TEST_TRANSCRIPT_FILE" <<'EOF'
+{"role":"user","message":{"content":[{"type":"text","text":"Make the tests pass"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"All tests are now passing. <promise>DONE</promise>\n"}]}}
+EOF
+
+    # Create Ralph Loop state file at iteration 0
+    local TEST_STATE_FILE="$HOME/.claude/ralph-loop/ralph-loop-$TEST_SESSION_ID.local.md"
+    cat > "$TEST_STATE_FILE" <<EOF
+---
+iteration: 0
+max_iterations: 5
+completion_promise: "DONE"
+session_id: $TEST_SESSION_ID
+---
+Make the tests pass
+EOF
+
+    # Run Stop hook with transcript input
+    local hook_output
+    hook_output=$(echo "{\"session_id\": \"$TEST_SESSION_ID\", \"transcript_path\": \"$TEST_TRANSCRIPT_FILE\"}" | "$PLUGIN_DIR/hooks/stop-hook.sh" 2>&1)
+
+    # Verify hook output shows completion
+    echo "$hook_output" | grep -q "✅ Ralph loop: Detected <promise>DONE</promise>"
+
+    # Verify state file was removed (loop completed)
+    [ ! -f "$TEST_STATE_FILE" ]
+
+    # Cleanup
+    rm -f "$TEST_TRANSCRIPT_FILE"
+}
+
+@test "ralph-loop: stop-hook stops at max iterations" {
+    skip_if_no_tmux
+
+    local SESSION_NAME="ralph-e2e-max-$$-$RANDOM"
+    local TEST_SESSION_ID="e2e-max-test"
+    local TEST_TRANSCRIPT_FILE
+
+    trap "tmux kill-session -t '$SESSION_NAME' 2>/dev/null || true" EXIT
+
+    # Create a temporary transcript file
+    TEST_TRANSCRIPT_FILE=$(mktemp)
+    cat > "$TEST_TRANSCRIPT_FILE" <<'EOF'
+{"role":"user","message":{"content":[{"type":"text","text":"Keep working"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"Still working\n"}]}}
+EOF
+
+    # Create Ralph Loop state file at max_iterations (already at limit)
+    local TEST_STATE_FILE="$HOME/.claude/ralph-loop/ralph-loop-$TEST_SESSION_ID.local.md"
+    cat > "$TEST_STATE_FILE" <<EOF
+---
+iteration: 5
+max_iterations: 5
+completion_promise: "DONE"
+session_id: $TEST_SESSION_ID
+---
+Keep working
+EOF
+
+    # Run Stop hook with transcript input
+    local hook_output
+    hook_output=$(echo "{\"session_id\": \"$TEST_SESSION_ID\", \"transcript_path\": \"$TEST_TRANSCRIPT_FILE\"}" | "$PLUGIN_DIR/hooks/stop-hook.sh" 2>&1)
+
+    # Verify hook output shows max iterations reached
+    echo "$hook_output" | grep -q "🛑 Ralph loop: Max iterations (5) reached"
+
+    # Verify state file was removed (loop stopped)
+    [ ! -f "$TEST_STATE_FILE" ]
+
+    # Cleanup
+    rm -f "$TEST_TRANSCRIPT_FILE"
+}
+
+# ============================================================================
+# Test: /ralph-status command
+# ============================================================================
+
+@test "ralph-loop: ralph-status shows loop status when active" {
+    skip_if_no_tmux
+
+    local SESSION_NAME="ralph-status-display-$$-$RANDOM"
+    local TEST_SESSION_ID="status-display-test"
+
+    trap "tmux kill-session -t '$SESSION_NAME' 2>/dev/null || true" EXIT
+
+    # Create Ralph Loop state file
+    local TEST_STATE_FILE="$HOME/.claude/ralph-loop/ralph-loop-$TEST_SESSION_ID.local.md"
+    cat > "$TEST_STATE_FILE" <<EOF
+---
+iteration: 3
+max_iterations: 10
+completion_promise: "TASK COMPLETE"
+session_id: $TEST_SESSION_ID
+---
+Write comprehensive tests for the feature
+Ensure all edge cases are covered
+EOF
+
+    # Create session env file
+    echo "export RALPH_SESSION_ID=$TEST_SESSION_ID" > "$SESSION_ENV_FILE"
+
+    # Run the status script and capture output
+    local status_output
+    status_output=$("${PLUGIN_DIR}/scripts/ralph-status.sh" 2>&1)
+
+    # Verify status is displayed correctly
+    echo "$status_output" | grep -q "🔄 Ralph Loop Active"
+    echo "$status_output" | grep -q "Session ID: $TEST_SESSION_ID"
+    echo "$status_output" | grep -q "Iteration: 3"
+    echo "$status_output" | grep -q "Max iterations: 10"
+    echo "$status_output" | grep -q "Completion promise: <promise>TASK COMPLETE</promise>"
+    echo "$status_output" | grep -q "State file: $TEST_STATE_FILE"
+    echo "$status_output" | grep -q "Current prompt:"
+    echo "$status_output" | grep -q "Write comprehensive tests"
+}
+
+@test "ralph-loop: ralph-status shows no active loop message" {
+    skip_if_no_tmux
+
+    local SESSION_NAME="ralph-status-none-$$-$RANDOM"
+
+    trap "tmux kill-session -t '$SESSION_NAME' 2>/dev/null || true" EXIT
+
+    # Ensure no session env file exists
+    rm -f "$SESSION_ENV_FILE"
+
+    # Run the status script and capture output
+    local status_output
+    status_output=$("${PLUGIN_DIR}/scripts/ralph-status.sh" 2>&1)
+
+    # Verify "no active loop" message is shown
+    echo "$status_output" | grep -q "No active Ralph Loop found"
+    echo "$status_output" | grep -q "To start a Ralph Loop, use /ralph-loop"
+}
+
