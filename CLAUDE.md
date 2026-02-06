@@ -11,7 +11,7 @@ AI 보조 개발을 위한 도구들을 제공하며, 반복적 자기 참조 AI
 ## Key Files
 
 | File | Description |
-|------|-------------|
+| ---- | ----------- |
 | `package.json` | Project dependencies and scripts (commitizen, husky, semantic-release) |
 | `.releaserc.js` | Semantic-release configuration with automatic plugin discovery |
 | `CLAUDE.md` | Project guidance for Claude Code (architecture, commands, guidelines) |
@@ -24,7 +24,7 @@ AI 보조 개발을 위한 도구들을 제공하며, 반복적 자기 참조 AI
 ## Subdirectories
 
 | Directory | Purpose |
-|-----------|---------|
+| --------- | ------- |
 | `plugins/` | Plugin collection (see `plugins/AGENTS.md`) |
 | `.github/` | GitHub Actions workflows and custom actions (see `.github/AGENTS.md`) |
 | `tests/` | BATS test suites (see `tests/AGENTS.md`) |
@@ -41,9 +41,9 @@ AI 보조 개발을 위한 도구들을 제공하며, 반복적 자기 참조 AI
 
 ### Working In This Directory
 
-- Always run `npm install` after modifying package.json
+- Always run `bun install` after modifying package.json
 - Use Conventional Commits format: `type(scope): description`
-- Use `npm run commit` for interactive commit creation
+- Use `npm run commit` for interactive commit creation (works via Bun's npm compatibility)
 - Never bypass pre-commit hooks with `--no-verify` (blocked by git-guard)
 - Follow semantic-release workflow for version management
 
@@ -64,7 +64,7 @@ AI 보조 개발을 위한 도구들을 제공하며, 반복적 자기 참조 AI
 
 ### External
 
-- **Node.js** - Runtime environment
+- **Bun** - Runtime environment and package manager (>= 1.0.0)
 - **semantic-release** - Automated version management
 - **commitizen/commitlint** - Conventional Commits enforcement
 - **husky** - Git hooks management
