@@ -1,5 +1,5 @@
 /**
- * Vitest test helper for claude-plugins project
+ * Bun test helper for claude-plugins project
  * TypeScript equivalent of bats_helper.bash
  */
 
