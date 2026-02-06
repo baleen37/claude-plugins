@@ -1,10 +1,27 @@
-import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test';
-import Database from 'bun:sqlite';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { tmpdir } from 'os';
 
-// Import functions to test
+// Import types
+import { ConversationExchange, SearchResult, MultiConceptResult } from './types.js';
+
+// Global mock factory that can be controlled per test
+let mockDbInstance: Database | null = null;
+let mockGenerateEmbedding: (() => Promise<number[]>) | null = null;
+
+// Set up top-level mocks
+vi.mock('./db.js', () => ({
+  initDatabase: vi.fn(() => mockDbInstance)
+}));
+
+vi.mock('./embeddings.js', () => ({
+  initEmbeddings: vi.fn(async () => {}),
+  generateEmbedding: vi.fn(async () => mockGenerateEmbedding?.() ?? [])
+}));
+
+// Import functions to test AFTER mocks are set up
 import {
   searchConversations,
   formatResults,
@@ -12,9 +29,6 @@ import {
   formatMultiConceptResults,
   type SearchOptions
 } from './search.js';
-
-// Import types
-import { ConversationExchange, SearchResult, MultiConceptResult } from './types.js';
 
 // Helper to create a test database
 let testDbPath: string;
@@ -110,16 +124,8 @@ describe('validateISODate (via searchConversations)', () => {
   // validateISODate is a private function, tested indirectly through searchConversations
   test('should accept valid ISO date format', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       await searchConversations('test query', { after: '2025-01-15', before: '2025-01-20', mode: 'text' });
@@ -127,23 +133,15 @@ describe('validateISODate (via searchConversations)', () => {
       expect(true).toBe(true);
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 
   test('should reject invalid date format - missing leading zeros', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       await searchConversations('test query', { after: '2025-1-5', mode: 'text' });
@@ -153,23 +151,15 @@ describe('validateISODate (via searchConversations)', () => {
       expect(error.message).toContain('YYYY-MM-DD format');
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 
   test('should reject invalid date format - wrong separator', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       await searchConversations('test query', { after: '2025/01/15', mode: 'text' });
@@ -178,23 +168,15 @@ describe('validateISODate (via searchConversations)', () => {
       expect(error.message).toContain('Invalid --after date');
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 
   test('should reject invalid calendar date - truly invalid date', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       // Test with an invalid date that JS Date will reject (NaN)
@@ -205,23 +187,15 @@ describe('validateISODate (via searchConversations)', () => {
       expect(error.message).toContain('Invalid --after date');
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 
   test('should reject invalid month', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       await searchConversations('test query', { after: '2025-13-01', mode: 'text' });
@@ -230,31 +204,23 @@ describe('validateISODate (via searchConversations)', () => {
       expect(error.message).toContain('Not a valid calendar date');
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 
   test('should accept leap year date', async () => {
     const db = createTestDatabase();
-
-    const initDbMock = mock(() => db);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    mock.module('./embeddings.js', () => ({
-      initEmbeddings: async () => {},
-      generateEmbedding: async () => createTestEmbedding()
-    }));
+    mockDbInstance = db;
+    mockGenerateEmbedding = () => createTestEmbedding();
 
     try {
       await searchConversations('test query', { after: '2024-02-29', mode: 'text' });
       expect(true).toBe(true);
     } finally {
       cleanupTestDatabase();
-      initDbMock.mockRestore();
-      mock.restore();
+      mockDbInstance = null;
+      mockGenerateEmbedding = null;
     }
   });
 });
@@ -262,10 +228,14 @@ describe('validateISODate (via searchConversations)', () => {
 describe('searchConversations - text mode', () => {
   beforeEach(() => {
     testDb = createTestDatabase();
+    mockDbInstance = testDb;
+    mockGenerateEmbedding = () => createTestEmbedding();
   });
 
   afterEach(() => {
     cleanupTestDatabase();
+    mockDbInstance = null;
+    mockGenerateEmbedding = null;
   });
 
   test('should perform text search using LIKE', async () => {
@@ -280,20 +250,10 @@ describe('searchConversations - text mode', () => {
       lineEnd: 10
     });
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      const results = await searchConversations('authentication', { mode: 'text' });
-      expect(results.length).toBe(1);
-      expect(results[0].exchange.userMessage).toContain('authentication');
-      expect(results[0].similarity).toBeUndefined();
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    const results = await searchConversations('authentication', { mode: 'text' });
+    expect(results.length).toBe(1);
+    expect(results[0].exchange.userMessage).toContain('authentication');
+    expect(results[0].similarity).toBeUndefined();
   });
 
   test('should search in both user and assistant messages', async () => {
@@ -319,19 +279,9 @@ describe('searchConversations - text mode', () => {
       lineEnd: 10
     });
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      // Search for "users" which appears in assistant message of first exchange
-      const results = await searchConversations('users', { mode: 'text' });
-      expect(results.length).toBeGreaterThanOrEqual(1);
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    // Search for "users" which appears in assistant message of first exchange
+    const results = await searchConversations('users', { mode: 'text' });
+    expect(results.length).toBeGreaterThanOrEqual(1);
   });
 
   test('should respect limit in text mode', async () => {
@@ -348,18 +298,8 @@ describe('searchConversations - text mode', () => {
       });
     }
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      const results = await searchConversations('test', { mode: 'text', limit: 2 });
-      expect(results.length).toBeLessThanOrEqual(2);
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    const results = await searchConversations('test', { mode: 'text', limit: 2 });
+    expect(results.length).toBeLessThanOrEqual(2);
   });
 
   test('should return empty array for no matches', async () => {
@@ -374,18 +314,8 @@ describe('searchConversations - text mode', () => {
       lineEnd: 10
     });
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      const results = await searchConversations('nonexistentterm12345', { mode: 'text' });
-      expect(results).toEqual([]);
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    const results = await searchConversations('nonexistentterm12345', { mode: 'text' });
+    expect(results).toEqual([]);
   });
 
   test('should filter by project in text mode', async () => {
@@ -411,18 +341,8 @@ describe('searchConversations - text mode', () => {
       lineEnd: 10
     });
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      const results = await searchConversations('test', { mode: 'text', projects: ['project-a'] });
-      expect(results.every(r => r.exchange.project === 'project-a')).toBe(true);
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    const results = await searchConversations('test', { mode: 'text', projects: ['project-a'] });
+    expect(results.every(r => r.exchange.project === 'project-a')).toBe(true);
   });
 
   test('should filter by date range in text mode', async () => {
@@ -448,23 +368,13 @@ describe('searchConversations - text mode', () => {
       lineEnd: 30
     });
 
-    const initDbMock = mock(() => testDb);
-    mock.module('./db.js', () => ({
-      initDatabase: initDbMock
-    }));
-
-    try {
-      const results = await searchConversations('test', {
-        mode: 'text',
-        after: '2025-01-15',
-        before: '2025-01-25'
-      });
-      expect(results.length).toBe(1);
-      expect(results[0].exchange.id).toBe('2');
-    } finally {
-      initDbMock.mockRestore();
-      mock.restore();
-    }
+    const results = await searchConversations('test', {
+      mode: 'text',
+      after: '2025-01-15',
+      before: '2025-01-25'
+    });
+    expect(results.length).toBe(1);
+    expect(results[0].exchange.id).toBe('2');
   });
 });
 
