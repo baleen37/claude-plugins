@@ -1,0 +1,17 @@
+{
+  "$schema": "../../schemas/hooks-schema.json",
+  "description": "Notify when Claude asks for user input",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ask-user-question.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
