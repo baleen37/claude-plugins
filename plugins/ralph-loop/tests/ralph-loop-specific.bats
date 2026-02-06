@@ -362,6 +362,48 @@ EOF
     grep -q 's.*\\s.*+.* /g' "$hook"
 }
 
+@test "ralph-loop: stop-hook.sh promise extraction functional test" {
+    # Functional test of the Perl regex for promise extraction
+    local test_output='Some text before <promise>TASK DONE</promise> some text after'
+
+    # Extract the promise using the same regex as stop-hook.sh
+    local extracted
+    extracted=$(echo "$test_output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Verify the extracted promise matches the expected value
+    [ "$extracted" = "TASK DONE" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles multiline promises" {
+    # Test multiline promise extraction with whitespace normalization
+    local test_output='Some text
+<promise>
+  MULTILINE
+  PROMISE
+</promise>
+some text after'
+
+    # Extract the promise using the same regex as stop-hook.sh
+    local extracted
+    extracted=$(echo "$test_output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Verify whitespace is normalized to single spaces
+    [ "$extracted" = "MULTILINE PROMISE" ]
+}
+
+@test "ralph-loop: stop-hook.sh promise extraction handles multiple promises (non-greedy)" {
+    # Test that non-greedy regex takes the FIRST promise
+    local test_output='<promise>FIRST</promise> some text <promise>SECOND</promise>'
+
+    # Extract the promise using the same regex as stop-hook.sh
+    local extracted
+    extracted=$(echo "$test_output" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+
+    # Verify the FIRST promise is extracted (non-greedy behavior)
+    [ "$extracted" = "FIRST" ]
+}
+
+
 # ============================================================================
 # Multibyte Character Handling Tests
 # ============================================================================
