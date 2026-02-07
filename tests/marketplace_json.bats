@@ -27,21 +27,23 @@ setup() {
     local owner_name
     owner_name=$(json_get "$MARKETPLACE_JSON" "owner.name")
     assert_not_empty "$owner_name" "marketplace.json owner.name field should not be empty"
+    # Also verify the field is a string
+    assert_json_field_type "$MARKETPLACE_JSON" "owner.name" "string" "marketplace.json owner.name should be a string"
 }
 
 @test "marketplace.json plugins array exists" {
-    local plugins
-    plugins=$($JQ_BIN -r '.plugins | type' "$MARKETPLACE_JSON")
-    assert_eq "$plugins" "array" "marketplace.json plugins field should be an array"
+    assert_json_field_type "$MARKETPLACE_JSON" "plugins" "array" "marketplace.json plugins field should be an array"
 }
 
 @test "marketplace.json includes all plugins in plugins/ directory" {
     # Get all plugin directories
     local plugin_dirs=()
+    # shellcheck disable=SC2207
     plugin_dirs=($(find "${PROJECT_ROOT}/plugins" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;))
 
     # Get all plugins listed in marketplace.json (extract just the plugin name)
     local marketplace_plugins=()
+    # shellcheck disable=SC2207
     marketplace_plugins=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON" | sed 's|^\./plugins/||'))
 
     # Track missing plugins
@@ -76,6 +78,7 @@ setup() {
 @test "marketplace.json plugin sources point to existing directories" {
     # Get all plugin sources from marketplace.json
     local sources=()
+    # shellcheck disable=SC2207
     sources=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON"))
 
     for source in "${sources[@]}"; do

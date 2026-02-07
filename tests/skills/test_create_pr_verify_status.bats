@@ -2,15 +2,9 @@
 # Test suite for create-pr skill's verify-pr-status.sh script
 
 load '../helpers/bats_helper'
-load '../helpers/setup'
 
 setup() {
-  setup_test_environment
   export SCRIPT="${BATS_TEST_DIRNAME}/../../plugins/me/skills/create-pr/scripts/verify-pr-status.sh"
-}
-
-teardown() {
-  teardown_test_environment
 }
 
 # Test: Script requires base branch argument
