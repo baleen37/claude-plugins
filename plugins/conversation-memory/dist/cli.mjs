@@ -33,7 +33,7 @@ async function parseConversationWithResult(filePath, projectName, archivePath) {
   let lineNumber = 0;
   let currentExchange = null;
   const finalizeExchange = () => {
-    if (currentExchange && currentExchange.assistantMessages.length > 0) {
+    if (currentExchange && (currentExchange.assistantMessages.length > 0 || currentExchange.toolCalls.length > 0)) {
       const exchangeId = crypto.createHash("md5").update(`${archivePath}:${currentExchange.userLine}-${currentExchange.lastAssistantLine}`).digest("hex");
       const toolCalls = currentExchange.toolCalls.map((tc) => ({
         ...tc,
@@ -102,7 +102,8 @@ async function parseConversationWithResult(filePath, projectName, archivePath) {
           }
         }
       }
-      if (!text.trim() && toolCalls.length === 0) {
+      const hasToolResults = Array.isArray(parsed.message.content) && parsed.message.content.some((block) => block.type === "tool_result");
+      if (!text.trim() && toolCalls.length === 0 && !hasToolResults) {
         continue;
       }
       if (parsed.message.role === "user") {

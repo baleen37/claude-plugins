@@ -50,9 +50,6 @@ JQ_BIN="${JQ_BIN:-jq}"
 # Cached plugin list (populated once per test file)
 _CACHED_PLUGIN_LIST=""
 
-# Cached plugin JSON data (plugin_path -> json_string)
-declare -A _CACHED_PLUGIN_JSON
-
 # Setup function - runs before each test
 # shellcheck disable=SC2155
 setup() {
@@ -336,26 +333,335 @@ parse_plugin_json() {
     local plugin_path="$1"
     local json_file="${plugin_path}/.claude-plugin/plugin.json"
 
-    # Return cached data if available
-    if [ -n "${_CACHED_PLUGIN_JSON[$plugin_path]:-}" ]; then
-        echo "${_CACHED_PLUGIN_JSON[$plugin_path]}"
-        return 0
-    fi
-
-    # Parse and cache the JSON
+    # Parse the JSON (caching removed due to bash compatibility issues)
     if [ -f "$json_file" ]; then
-        local json_content
-        json_content=$($JQ_BIN '.' "$json_file" 2>/dev/null)
-        _CACHED_PLUGIN_JSON[$plugin_path]="$json_content"
-        echo "$json_content"
+        $JQ_BIN '.' "$json_file" 2>/dev/null
         return 0
     fi
 
     return 1
 }
 
-# Performance optimization: Clear plugin JSON cache
+# Performance optimization: Clear plugin JSON cache (no-op now)
 # Usage: clear_plugin_json_cache
 clear_plugin_json_cache() {
-    _CACHED_PLUGIN_JSON=()
+    # No-op - caching removed for compatibility
+    return 0
+}
+
+# Helper: Assert file does NOT exist
+# Usage: assert_file_not_exists <path> <message>
+assert_file_not_exists() {
+    local path="$1"
+    local message="${2:-File should not exist}"
+
+    if [ -f "$path" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  File exists: $path" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert directory does NOT exist
+# Usage: assert_dir_not_exists <path> <message>
+assert_dir_not_exists() {
+    local path="$1"
+    local message="${2:-Directory should not exist}"
+
+    if [ -d "$path" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Directory exists: $path" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert contains (array/string contains substring)
+# Usage: assert_contains <haystack> <needle> <message>
+assert_contains() {
+    local haystack="$1"
+    local needle="$2"
+    local message="${3:-Value should contain substring}"
+
+    if [[ ! "$haystack" == *"$needle"* ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Haystack: $haystack" >&2
+        echo "  Needle:   $needle" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert does NOT contain
+# Usage: assert_not_contains <haystack> <needle> <message>
+assert_not_contains() {
+    local haystack="$1"
+    local needle="$2"
+    local message="${3:-Value should not contain substring}"
+
+    if [[ "$haystack" == *"$needle"* ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Haystack: $haystack" >&2
+        echo "  Found:    $needle" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert greater than
+# Usage: assert_gt <actual> <expected> <message>
+assert_gt() {
+    local actual="$1"
+    local expected="$2"
+    local message="${3:-Value should be greater than expected}"
+
+    if ! [[ "$actual" =~ ^[0-9]+$ ]] || ! [[ "$expected" =~ ^[0-9]+$ ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Both values must be numeric" >&2
+        echo "  Actual: $actual, Expected: $expected" >&2
+        return 1
+    fi
+
+    if [ "$actual" -le "$expected" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Actual: $actual" >&2
+        echo "  Expected to be greater than: $expected" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert less than
+# Usage: assert_lt <actual> <expected> <message>
+assert_lt() {
+    local actual="$1"
+    local expected="$2"
+    local message="${3:-Value should be less than expected}"
+
+    if ! [[ "$actual" =~ ^[0-9]+$ ]] || ! [[ "$expected" =~ ^[0-9]+$ ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Both values must be numeric" >&2
+        echo "  Actual: $actual, Expected: $expected" >&2
+        return 1
+    fi
+
+    if [ "$actual" -ge "$expected" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Actual: $actual" >&2
+        echo "  Expected to be less than: $expected" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert array contains element
+# Usage: assert_array_contains <element> <array> <message>
+# Array elements should be space-separated
+assert_array_contains() {
+    local element="$1"
+    local array="$2"
+    local message="${3:-Array should contain element}"
+
+    for item in $array; do
+        if [ "$item" = "$element" ]; then
+            return 0
+        fi
+    done
+
+    echo "Assertion failed: $message" >&2
+    echo "  Element: $element" >&2
+    echo "  Array:   $array" >&2
+    return 1
+}
+
+# Helper: Assert valid YAML file
+# Usage: assert_valid_yaml <path> <message>
+assert_valid_yaml() {
+    local path="$1"
+    local message="${2:-File should be valid YAML}"
+
+    if ! command -v yq &> /dev/null && ! command -v python3 &> /dev/null; then
+        echo "Warning: Cannot validate YAML - yq or python3 not available" >&2
+        return 0
+    fi
+
+    if command -v yq &> /dev/null; then
+        if ! yq eval '.' "$path" > /dev/null 2>&1; then
+            echo "Assertion failed: $message" >&2
+            echo "  File: $path" >&2
+            return 1
+        fi
+    elif command -v python3 &> /dev/null; then
+        if ! python3 -c "import yaml; yaml.safe_load(open('$path'))" 2>/dev/null; then
+            echo "Assertion failed: $message" >&2
+            echo "  File: $path" >&2
+            return 1
+        fi
+    fi
+}
+
+# Helper: Get YAML field value (requires yq or python3)
+# Usage: yaml_get <file> <field>
+yaml_get() {
+    local file="$1"
+    local field="$2"
+
+    if command -v yq &> /dev/null; then
+        yq eval ".$field" "$file" 2>/dev/null
+    elif command -v python3 &> /dev/null; then
+        python3 -c "import yaml; print(yaml.safe_load(open('$file')).get('$field', ''))" 2>/dev/null
+    else
+        echo "Error: yq or python3 required for yaml_get" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert file is executable
+# Usage: assert_executable <path> <message>
+assert_executable() {
+    local path="$1"
+    local message="${2:-File should be executable}"
+
+    if [ ! -x "$path" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  File: $path" >&2
+        return 1
+    fi
+}
+
+# Helper: Count lines in file
+# Usage: count_lines <file>
+count_lines() {
+    local file="$1"
+    wc -l < "$file" 2>/dev/null | tr -d ' '
+}
+
+# Helper: Get file size in bytes
+# Usage: file_size <file>
+file_size() {
+    local file="$1"
+    stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0"
+}
+
+# Helper: Assert file size is greater than
+# Usage: assert_file_size_gt <file> <min_bytes> <message>
+assert_file_size_gt() {
+    local file="$1"
+    local min_bytes="$2"
+    local message="${3:-File should be larger than minimum size}"
+    local size
+    size=$(file_size "$file")
+
+    if [ "$size" -le "$min_bytes" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  File: $file" >&2
+        echo "  Size: $size bytes" >&2
+        echo "  Minimum expected: $min_bytes bytes" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert JSON field has expected value
+# Usage: assert_json_field <file> <field> <expected_value> [message]
+# Example: assert_json_field "$manifest" "name" "my-plugin"
+assert_json_field() {
+    local file="$1"
+    local field="$2"
+    local expected="$3"
+    # shellcheck disable=SC2016
+    local message="${4:-JSON field '$field' should have value '$expected'}"
+
+    local actual
+    actual=$($JQ_BIN -r ".$field" "$file" 2>/dev/null)
+
+    if [ "$actual" != "$expected" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  File: $file" >&2
+        echo "  Field: $field" >&2
+        echo "  Expected: $expected" >&2
+        echo "  Actual: $actual" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert JSON field has expected type
+# Usage: assert_json_field_type <file> <field> <expected_type> [message]
+# Example: assert_json_field_type "$manifest" "keywords" "array"
+assert_json_field_type() {
+    local file="$1"
+    local field="$2"
+    local expected_type="$3"
+    # shellcheck disable=SC2016
+    local message="${4:-JSON field '$field' should be of type '$expected_type'}"
+
+    if ! json_field_has_type "$file" "$field" "$expected_type"; then
+        local actual_type
+        actual_type=$($JQ_BIN -r ".$field | type" "$file" 2>/dev/null)
+        echo "Assertion failed: $message" >&2
+        echo "  File: $file" >&2
+        echo "  Field: $field" >&2
+        echo "  Expected type: $expected_type" >&2
+        echo "  Actual type: $actual_type" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert output contains substring (consistent wrapper)
+# Usage: assert_output_contains <substring> [message]
+# shellcheck disable=SC2154
+assert_output_contains() {
+    local substring="$1"
+    # shellcheck disable=SC2016
+    local message="${2:-Output should contain '$substring'}"
+
+    if [[ ! "$output" == *"$substring"* ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Expected substring: $substring" >&2
+        echo "  Actual output: $output" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert output matches regex pattern
+# Usage: assert_output_matches <pattern> [message]
+# shellcheck disable=SC2154
+assert_output_matches() {
+    local pattern="$1"
+    # shellcheck disable=SC2016
+    local message="${2:-Output should match pattern '$pattern'}"
+
+    if [[ ! "$output" =~ $pattern ]]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Expected pattern: $pattern" >&2
+        echo "  Actual output: $output" >&2
+        return 1
+    fi
+}
+
+# Helper: Assert exit code with optional message check
+# Usage: assert_exit_code <expected_code> [optional_substring]
+# If optional_substring is provided, also checks that output contains it
+# shellcheck disable=SC2154
+assert_exit_code() {
+    local expected="$1"
+    local optional_substring="${2:-}"
+    local message
+
+    if [ "$expected" -eq 0 ]; then
+        message="Command should succeed (exit code 0)"
+    else
+        message="Command should fail with exit code $expected"
+    fi
+
+    if [ "${status:-}" != "$expected" ]; then
+        echo "Assertion failed: $message" >&2
+        echo "  Expected exit code: $expected" >&2
+        echo "  Actual exit code: $status" >&2
+        echo "  Output: $output" >&2
+        return 1
+    fi
+
+    # If substring provided, check output contains it
+    if [ -n "$optional_substring" ]; then
+        if [[ ! "$output" == *"$optional_substring"* ]]; then
+            echo "Assertion failed: Output should contain '$optional_substring'" >&2
+            echo "  Output: $output" >&2
+            return 1
+        fi
+    fi
 }
