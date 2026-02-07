@@ -511,6 +511,38 @@ yaml_get() {
     fi
 }
 
+# Helper: Ensure YAML validator is available
+# Skips test if neither yq nor python3 is available
+# Usage: ensure_yaml_validator
+ensure_yaml_validator() {
+    if ! command -v yq &> /dev/null && ! command -v python3 &> /dev/null; then
+        skip "yq or python3 required for YAML validation"
+    fi
+}
+
+# Helper: Validate YAML file syntax
+# Returns 0 if valid, 1 if invalid
+# Usage: validate_yaml_file <file>
+validate_yaml_file() {
+    local file="$1"
+
+    if [ ! -f "$file" ]; then
+        echo "Error: File not found: $file" >&2
+        return 1
+    fi
+
+    if command -v yq &> /dev/null; then
+        yq eval '.' "$file" > /dev/null 2>&1
+        return $?
+    elif command -v python3 &> /dev/null; then
+        python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null
+        return $?
+    else
+        echo "Error: yq or python3 required for YAML validation" >&2
+        return 1
+    fi
+}
+
 # Helper: Assert file is executable
 # Usage: assert_executable <path> <message>
 assert_executable() {
