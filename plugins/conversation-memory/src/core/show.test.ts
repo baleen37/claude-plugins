@@ -1,10 +1,15 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+import Database from 'better-sqlite3';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { unlinkSync, existsSync } from 'fs';
 import {
   formatConversationAsMarkdown,
   formatConversationAsHTML,
   escapeHtml,
   isMarkdown,
-  renderMarkdownSafely
+  renderMarkdownSafely,
+  readConversationFromDb
 } from './show.js';
 
 describe('show.ts', () => {
@@ -1398,6 +1403,364 @@ describe('show.ts', () => {
 
       expect(result).toContain('in: 10');
       expect(result).toContain('out: 5');
+    });
+  });
+
+  describe('readConversationFromDb()', () => {
+    let db: Database.Database;
+    let dbPath: string;
+
+    beforeEach(() => {
+      // Create a temporary database for testing
+      dbPath = join(tmpdir(), `test-conversation-${Date.now()}.db`);
+      db = new Database(dbPath);
+
+      // Create exchanges table
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS exchanges (
+          id TEXT PRIMARY KEY,
+          project TEXT NOT NULL,
+          timestamp TEXT NOT NULL,
+          user_message TEXT NOT NULL,
+          assistant_message TEXT NOT NULL,
+          archive_path TEXT NOT NULL,
+          line_start INTEGER NOT NULL,
+          line_end INTEGER NOT NULL,
+          session_id TEXT,
+          cwd TEXT,
+          git_branch TEXT,
+          claude_version TEXT,
+          is_sidechain BOOLEAN DEFAULT 0,
+          compressed_tool_summary TEXT
+        )
+      `);
+    });
+
+    afterEach(() => {
+      if (db) {
+        db.close();
+      }
+      if (existsSync(dbPath)) {
+        unlinkSync(dbPath);
+      }
+    });
+
+    test('returns null when no exchanges found for archive path', () => {
+      const result = readConversationFromDb(db, '/nonexistent/path.jsonl');
+      expect(result).toBeNull();
+    });
+
+    test('formats simple conversation from database', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Hello, world!', 'Hi there!',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).not.toBeNull();
+      expect(result).toContain('# Conversation');
+      expect(result).toContain('## Metadata');
+      expect(result).toContain('**Session ID:** session-123');
+      expect(result).toContain('**Git Branch:** main');
+      expect(result).toContain('**Working Directory:** /project');
+      expect(result).toContain('**Claude Code Version:** 1.0.0');
+      expect(result).toContain('## Messages');
+      expect(result).toContain('Hello, world!');
+      expect(result).toContain('Hi there!');
+    });
+
+    test('includes compressed tool summary when present', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, compressed_tool_summary
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Read file', 'Here is the content',
+        '/test/path.jsonl', 1, 2, 'Read: src/main.ts | Bash: `npm test`'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('**Tools:** Read: src/main.ts | Bash: `npm test`');
+    });
+
+    test('handles multiple exchanges in order', () => {
+      const timestamp1 = '2024-01-15T10:00:00.000Z';
+      const timestamp2 = '2024-01-15T10:01:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp1, 'Message 1', 'Response 1',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-2', 'test-project', timestamp2, 'Message 2', 'Response 2',
+        '/test/path.jsonl', 3, 4, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('Message 1');
+      expect(result).toContain('Response 1');
+      expect(result).toContain('Message 2');
+      expect(result).toContain('Response 2');
+      // Check ordering - Message 1 should come before Message 2
+      const msg1Pos = result.indexOf('Message 1');
+      const msg2Pos = result.indexOf('Message 2');
+      expect(msg1Pos).toBeLessThan(msg2Pos);
+    });
+
+    test('filters by start line when provided', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Message 1', 'Response 1',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-2', 'test-project', timestamp, 'Message 2', 'Response 2',
+        '/test/path.jsonl', 3, 4, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl', 3);
+
+      expect(result).not.toContain('Message 1');
+      expect(result).toContain('Message 2');
+      expect(result).toContain('Response 2');
+    });
+
+    test('filters by end line when provided', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Message 1', 'Response 1',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-2', 'test-project', timestamp, 'Message 2', 'Response 2',
+        '/test/path.jsonl', 3, 4, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl', undefined, 2);
+
+      expect(result).toContain('Message 1');
+      expect(result).toContain('Response 1');
+      expect(result).not.toContain('Message 2');
+    });
+
+    test('filters by both start and end line when provided', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Message 1', 'Response 1',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-2', 'test-project', timestamp, 'Message 2', 'Response 2',
+        '/test/path.jsonl', 3, 4, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-3', 'test-project', timestamp, 'Message 3', 'Response 3',
+        '/test/path.jsonl', 5, 6, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl', 3, 4);
+
+      expect(result).not.toContain('Message 1');
+      expect(result).toContain('Message 2');
+      expect(result).toContain('Response 2');
+      expect(result).not.toContain('Message 3');
+    });
+
+    test('handles sidechain messages with markers', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version, is_sidechain
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Main message', 'Main response',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0', 0
+      );
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version, is_sidechain
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-2', 'test-project', timestamp, 'Sidechain user', 'Sidechain agent',
+        '/test/path.jsonl', 3, 4, 'session-123', '/project', 'main', '1.0.0', 1
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('🔀 SIDECHAIN START');
+      expect(result).toContain('🔀 SIDECHAIN END');
+      expect(result).toContain('Sidechain user');
+      expect(result).toContain('Sidechain agent');
+    });
+
+    test('closes sidechain at end if still open', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version, is_sidechain
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Sidechain message', 'Sidechain response',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0', 1
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('🔀 SIDECHAIN START');
+      expect(result).toContain('🔀 SIDECHAIN END');
+    });
+
+    test('uses correct role labels for sidechain', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version, is_sidechain
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'User in sidechain', 'Subagent response',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0', 1
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('### **Agent**');
+      expect(result).toContain('### **Subagent**');
+    });
+
+    test('handles missing optional metadata fields', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Hello', 'Hi',
+        '/test/path.jsonl', 1, 2
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      expect(result).toContain('# Conversation');
+      expect(result).toContain('## Metadata');
+      expect(result).toContain('Hello');
+      expect(result).toContain('Hi');
+    });
+
+    test('does not include tool input/result in output (uses compressed summary)', () => {
+      const timestamp = '2024-01-15T10:00:00.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, compressed_tool_summary
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Run tool', 'Tool executed',
+        '/test/path.jsonl', 1, 2, 'Bash: `npm test`'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      // Should have compressed summary
+      expect(result).toContain('**Tools:** Bash: `npm test`');
+      // Should NOT have full tool details (those are not in the DB response)
+      expect(result).not.toContain('tool_use_id');
+      expect(result).not.toContain('tool_result');
+    });
+
+    test('formats timestamp correctly', () => {
+      const timestamp = '2024-01-15T10:30:45.000Z';
+
+      db.prepare(`
+        INSERT INTO exchanges (
+          id, project, timestamp, user_message, assistant_message,
+          archive_path, line_start, line_end, session_id, cwd, git_branch, claude_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'exc-1', 'test-project', timestamp, 'Hello', 'Hi',
+        '/test/path.jsonl', 1, 2, 'session-123', '/project', 'main', '1.0.0'
+      );
+
+      const result = readConversationFromDb(db, '/test/path.jsonl');
+
+      // Timestamp should be formatted as locale string
+      expect(result).toContain('2024');
     });
   });
 });

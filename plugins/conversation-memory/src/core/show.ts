@@ -1,4 +1,5 @@
 import { marked } from 'marked';
+import Database from 'better-sqlite3';
 
 interface ConversationMessage {
   uuid: string;
@@ -21,6 +22,137 @@ interface ConversationMessage {
     };
   };
   toolUseResult?: Array<{ type: string; text: string }> | string;
+}
+
+interface DbExchange {
+  id: string;
+  timestamp: string;
+  user_message: string;
+  assistant_message: string;
+  archive_path: string;
+  line_start: number;
+  line_end: number;
+  session_id: string | null;
+  cwd: string | null;
+  git_branch: string | null;
+  claude_version: string | null;
+  is_sidechain: 0 | 1;
+  compressed_tool_summary: string | null;
+}
+
+export function readConversationFromDb(
+  db: Database.Database,
+  archivePath: string,
+  startLine?: number,
+  endLine?: number
+): string | null {
+  // Build query with line range filters if provided
+  let whereClause = 'WHERE archive_path = ?';
+  const params: any[] = [archivePath];
+
+  if (startLine !== undefined) {
+    whereClause += ' AND line_end >= ?';
+    params.push(startLine);
+  }
+  if (endLine !== undefined) {
+    whereClause += ' AND line_start <= ?';
+    params.push(endLine);
+  }
+
+  const query = `
+    SELECT
+      id,
+      timestamp,
+      user_message,
+      assistant_message,
+      archive_path,
+      line_start,
+      line_end,
+      session_id,
+      cwd,
+      git_branch,
+      claude_version,
+      is_sidechain,
+      compressed_tool_summary
+    FROM exchanges
+    ${whereClause}
+    ORDER BY line_start ASC
+  `;
+
+  const exchanges = db.prepare(query).all(...params) as DbExchange[];
+
+  if (exchanges.length === 0) {
+    return null;
+  }
+
+  // Build output starting with header
+  let output = '# Conversation\n\n';
+
+  // Add metadata from first exchange
+  const firstExchange = exchanges[0];
+  output += '## Metadata\n\n';
+  if (firstExchange.session_id) {
+    output += `**Session ID:** ${firstExchange.session_id}\n\n`;
+  }
+  if (firstExchange.git_branch) {
+    output += `**Git Branch:** ${firstExchange.git_branch}\n\n`;
+  }
+  if (firstExchange.cwd) {
+    output += `**Working Directory:** ${firstExchange.cwd}\n\n`;
+  }
+  if (firstExchange.claude_version) {
+    output += `**Claude Code Version:** ${firstExchange.claude_version}\n\n`;
+  }
+
+  output += '---\n\n';
+  output += '## Messages\n\n';
+
+  let inSidechain = false;
+
+  for (const exchange of exchanges) {
+    const timestamp = new Date(exchange.timestamp).toLocaleString();
+
+    // Handle sidechain grouping
+    if (exchange.is_sidechain && !inSidechain) {
+      output += '\n---\n';
+      output += '**🔀 SIDECHAIN START**\n';
+      output += '---\n\n';
+      inSidechain = true;
+    } else if (!exchange.is_sidechain && inSidechain) {
+      output += '\n---\n';
+      output += '**🔀 SIDECHAIN END**\n';
+      output += '---\n\n';
+      inSidechain = false;
+    }
+
+    // Determine role label
+    const roleLabel = exchange.is_sidechain ? 'Agent' : 'User';
+
+    // User message
+    output += `### **${roleLabel}** (${timestamp})\n\n`;
+    output += `${exchange.user_message}\n\n`;
+
+    // Assistant message
+    const agentRoleLabel = exchange.is_sidechain ? 'Subagent' : 'Agent';
+    output += `### **${agentRoleLabel}** (${timestamp})\n\n`;
+    output += `${exchange.assistant_message}\n\n`;
+
+    // Add compressed tool summary if available
+    if (exchange.compressed_tool_summary) {
+      output += '**Tools:** ' + exchange.compressed_tool_summary + '\n\n';
+    }
+
+    output += '---\n\n';
+  }
+
+  // Close sidechain if still open
+  if (inSidechain) {
+    output += '\n---\n';
+    output += '**🔀 SIDECHAIN END**\n';
+    output += '---\n\n';
+  }
+
+  return output;
 }
 
 export function formatConversationAsMarkdown(jsonl: string, startLine?: number, endLine?: number): string {
