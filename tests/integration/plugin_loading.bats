@@ -2,7 +2,7 @@
 # Integration Test: Plugin Loading
 # Tests that all plugins load successfully without conflicts
 
-load ../helpers/bats_helper
+load helpers/bats_helper
 
 @test "all plugins have valid plugin.json files" {
     local plugin_count=0

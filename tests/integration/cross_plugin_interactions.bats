@@ -2,7 +2,7 @@
 # Cross-Plugin Integration Tests
 # Tests interactions between plugins and shared resources
 
-load ../helpers/bats_helper
+load helpers/bats_helper
 
 @test "plugins have unique hook event types" {
     # Check that plugins don't conflict on hook types

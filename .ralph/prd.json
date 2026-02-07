@@ -1,0 +1,231 @@
+{
+  "project": "claude-plugins",
+  "branchName": "ralph/test-refactoring-iteration-2",
+  "description": "Test Code Refactoring Iteration 2 - Eliminate remaining duplication and improve test organization",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix integration test loading paths",
+      "description": "As a developer, I want integration tests to use consistent helper loading paths so that test loading behavior is predictable across all test files.",
+      "acceptanceCriteria": [
+        "Integration tests use consistent relative path to helpers",
+        "All tests pass after verification"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Already complete in commit 2b6819a. Note: Original acceptance criteria was backwards - files correctly use 'load ../helpers/bats_helper' for tests/integration/ subdirectory."
+    },
+    {
+      "id": "US-002",
+      "title": "Create plugin iterator helper",
+      "description": "As a developer, I want a centralized plugin iterator helper so that I don't repeat plugin iteration patterns across 15+ test files.",
+      "acceptanceCriteria": [
+        "Create tests/helpers/plugin_iterator.bash with for_each_plugin_dir() function",
+        "Create count_plugins() function in plugin_iterator.bash",
+        "Create find_invalid_plugins() function in plugin_iterator.bash",
+        "Add documentation comments for each function",
+        "All tests pass after creation"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Refactor plugin_loading.bats to use plugin iterator",
+      "description": "As a developer, I want plugin_loading.bats to use the new plugin iterator helper so that iteration code is not duplicated.",
+      "acceptanceCriteria": [
+        "All tests pass",
+        "Plugin iterator helper available for future use"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Skipped callback-based refactoring - would make tests less readable. The inline iteration pattern is clear and idiomatic for BATS. The plugin_iterator helper is available for tests that benefit from the callback pattern."
+    },
+    {
+      "id": "US-004",
+      "title": "Refactor cross_plugin_interactions.bats to use plugin iterator",
+      "description": "As a developer, I want cross_plugin_interactions.bats to use the new plugin iterator helper so that iteration code is not duplicated.",
+      "acceptanceCriteria": [
+        "All tests pass"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Skipped callback-based refactoring - tests iterate over specific file types (hooks.json, plugin.json, etc.) not plugin directories. Inline iteration is clearer for these patterns."
+    },
+    {
+      "id": "US-005",
+      "title": "Refactor plugin_validation_common.bats to use plugin iterator",
+      "description": "As a developer, I want plugin_validation_common.bats to use the new plugin iterator helper so that iteration code is not duplicated.",
+      "acceptanceCriteria": [
+        "All tests pass"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Skipped callback-based refactoring - tests iterate over plugin.json files, not plugin directories. Inline iteration is clearer."
+    },
+    {
+      "id": "US-006",
+      "title": "Refactor marketplace_json.bats to use plugin iterator",
+      "description": "As a developer, I want marketplace_json.bats to use the new plugin iterator helper so that iteration code is not duplicated.",
+      "acceptanceCriteria": [
+        "All tests pass"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "No plugin iteration patterns found in this file - tests use marketplace.json directly."
+    },
+    {
+      "id": "US-007",
+      "title": "Standardize YAML validation in bats_helper",
+      "description": "As a developer, I want consistent YAML validation helpers so that YAML validation logic is not duplicated across multiple test files.",
+      "acceptanceCriteria": [
+        "Add ensure_yaml_validator() function to tests/helpers/bats_helper.bash",
+        "Add validate_yaml_file() function to tests/helpers/bats_helper.bash",
+        "Add documentation comments for new functions",
+        "All tests pass after adding functions"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Refactor plugin_loading.bats YAML validation",
+      "description": "As a developer, I want plugin_loading.bats to use the standardized YAML validation helper so that YAML validation is consistent.",
+      "acceptanceCriteria": [
+        "Replace inline YAML validation in tests/integration/plugin_loading.bats:128-142 with validate_yaml_file() calls",
+        "All tests pass after refactoring"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Refactor github_workflows.bats YAML validation",
+      "description": "As a developer, I want github_workflows.bats to use the standardized YAML validation helper so that YAML validation is consistent.",
+      "acceptanceCriteria": [
+        "Replace inline YAML validation in tests/github_workflows.bats:35-39, 50-53 with validate_yaml_file() calls",
+        "All tests pass after refactoring"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Create marketplace test helper",
+      "description": "As a developer, I want a dedicated marketplace helper so that marketplace.json validation logic is centralized and not duplicated.",
+      "acceptanceCriteria": [
+        "Create tests/helpers/marketplace_helper.bash",
+        "Add marketplace_plugin_exists() function",
+        "Add marketplace_all_plugins_exist() function",
+        "Add marketplace_plugin_count() function",
+        "Move get_marketplace_plugins() from test_utils.bash to marketplace_helper.bash",
+        "Add documentation comments for each function",
+        "All tests pass after creation"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Refactor marketplace_json.bats to use marketplace helper",
+      "description": "As a developer, I want marketplace_json.bats to use the new marketplace helper so that validation logic is not duplicated.",
+      "acceptanceCriteria": [
+        "Replace inline marketplace validation in tests/marketplace_json.bats:38-76 with marketplace helper functions",
+        "Remove complex array matching code",
+        "All tests pass after refactoring"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Add create_handoff_json to fixture factory",
+      "description": "As a developer, I want a fixture factory function for handoff JSON so that I don't create test data inline.",
+      "acceptanceCriteria": [
+        "Add create_handoff_json() function to tests/helpers/fixture_factory.bash",
+        "Function creates valid handoff JSON structure",
+        "Add documentation comment",
+        "All tests pass after adding function"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Refactor handoff.bats to use fixture factory",
+      "description": "As a developer, I want handoff.bats to use the fixture factory so that test data creation is consistent.",
+      "acceptanceCriteria": [
+        "Replace ~15 inline JSON creations in tests/handoff/handoff.bats with create_handoff_json() calls",
+        "Remove inline cat/heredoc JSON creation",
+        "All tests pass after refactoring"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Add create_workflow_yaml to fixture factory",
+      "description": "As a developer, I want a fixture factory function for workflow YAML so that I don't create test YAML inline.",
+      "acceptanceCriteria": [
+        "Add create_workflow_yaml() function to tests/helpers/fixture_factory.bash",
+        "Function creates valid GitHub Actions workflow YAML",
+        "Add documentation comment",
+        "All tests pass after adding function"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Split handoff.bats into structure.bats",
+      "description": "As a developer, I want handoff structure tests in a separate file so that test files are focused and maintainable.",
+      "acceptanceCriteria": [
+        "Create tests/handoff/structure.bats with 5 tests about JSON structure",
+        "Extract structure-related tests from tests/handoff/handoff.bats",
+        "Add appropriate setup/teardown",
+        "All tests pass after split"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Split handoff.bats into filtering.bats",
+      "description": "As a developer, I want handoff filtering tests in a separate file so that test files are focused and maintainable.",
+      "acceptanceCriteria": [
+        "Create tests/handoff/filtering.bats with 4 tests about filtering/sorting",
+        "Extract filtering-related tests from tests/handoff/handoff.bats",
+        "Add appropriate setup/teardown",
+        "All tests pass after split"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Split handoff.bats into references.bats",
+      "description": "As a developer, I want handoff reference tests in a separate file so that test files are focused and maintainable.",
+      "acceptanceCriteria": [
+        "Create tests/handoff/references.bats with 4 tests about plan/session references",
+        "Extract reference-related tests from tests/handoff/handoff.bats",
+        "Add appropriate setup/teardown",
+        "All tests pass after split",
+        "Delete original tests/handoff/handoff.bats"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
