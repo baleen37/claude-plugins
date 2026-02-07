@@ -35,7 +35,8 @@ const initTestDatabase = (): Database.Database => {
       claude_version TEXT,
       thinking_level TEXT,
       thinking_disabled BOOLEAN,
-      thinking_triggers TEXT
+      thinking_triggers TEXT,
+      compressed_tool_summary TEXT
     )
   `);
 
@@ -105,6 +106,7 @@ export function migrateSchema(db: Database.Database): void {
     { name: 'thinking_level', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_level TEXT' },
     { name: 'thinking_disabled', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN' },
     { name: 'thinking_triggers', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT' },
+    { name: 'compressed_tool_summary', sql: 'ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT' },
   ];
 
   let migrated = false;
@@ -133,8 +135,8 @@ export function insertExchange(
     INSERT OR REPLACE INTO exchanges
     (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end, last_indexed,
      parent_uuid, is_sidechain, session_id, cwd, git_branch, claude_version,
-     thinking_level, thinking_disabled, thinking_triggers)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     thinking_level, thinking_disabled, thinking_triggers, compressed_tool_summary)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -147,15 +149,16 @@ export function insertExchange(
     exchange.lineStart,
     exchange.lineEnd,
     now,
-    exchange.parentUuid || null,
+    exchange.parentUuid ?? null,
     exchange.isSidechain ? 1 : 0,
-    exchange.sessionId || null,
-    exchange.cwd || null,
-    exchange.gitBranch || null,
-    exchange.claudeVersion || null,
-    exchange.thinkingLevel || null,
+    exchange.sessionId ?? null,
+    exchange.cwd ?? null,
+    exchange.gitBranch ?? null,
+    exchange.claudeVersion ?? null,
+    exchange.thinkingLevel ?? null,
     exchange.thinkingDisabled ? 1 : 0,
-    exchange.thinkingTriggers || null
+    exchange.thinkingTriggers ?? null,
+    exchange.compressedToolSummary ?? null
   );
 
   // Insert into vector table (delete first since virtual tables don't support REPLACE)
@@ -297,6 +300,7 @@ describe('Database Operations', () => {
       expect(columnNames).toContain('thinking_level');
       expect(columnNames).toContain('thinking_disabled');
       expect(columnNames).toContain('thinking_triggers');
+      expect(columnNames).toContain('compressed_tool_summary');
     });
   });
 
@@ -338,6 +342,7 @@ describe('Database Operations', () => {
       expect(columnNames.has('thinking_level')).toBe(true);
       expect(columnNames.has('thinking_disabled')).toBe(true);
       expect(columnNames.has('thinking_triggers')).toBe(true);
+      expect(columnNames.has('compressed_tool_summary')).toBe(true);
     });
 
     test('skips migration if schema is current', () => {
@@ -586,6 +591,108 @@ describe('Database Operations', () => {
       `).get(exchange.id) as { count: number };
 
       expect(count.count).toBe(1);
+    });
+
+    test('stores compressed_tool_summary when present', () => {
+      const exchange: ConversationExchange = {
+        id: 'test-6b',
+        project: 'test-project',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        userMessage: 'Hello',
+        assistantMessage: 'Hi there!',
+        archivePath: '/path/to/archive.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
+        compressedToolSummary: 'Used bash, grep, and read tools',
+      };
+
+      const embedding = new Array(768).fill(0.1);
+      insertExchange(db, exchange, embedding);
+
+      const row = db.prepare(`
+        SELECT compressed_tool_summary FROM exchanges WHERE id = ?
+      `).get(exchange.id) as any;
+
+      expect(row).toBeDefined();
+      expect(row.compressed_tool_summary).toBe('Used bash, grep, and read tools');
+    });
+
+    test('stores NULL for compressed_tool_summary when not present', () => {
+      const exchange: ConversationExchange = {
+        id: 'test-6c',
+        project: 'test-project',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        userMessage: 'Hello',
+        assistantMessage: 'Hi there!',
+        archivePath: '/path/to/archive.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
+      };
+
+      const embedding = new Array(768).fill(0.1);
+      insertExchange(db, exchange, embedding);
+
+      const row = db.prepare(`
+        SELECT compressed_tool_summary FROM exchanges WHERE id = ?
+      `).get(exchange.id) as any;
+
+      expect(row).toBeDefined();
+      expect(row.compressed_tool_summary).toBeNull();
+    });
+
+    test('handles empty string for compressed_tool_summary', () => {
+      const exchange: ConversationExchange = {
+        id: 'test-6d',
+        project: 'test-project',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        userMessage: 'Hello',
+        assistantMessage: 'Hi there!',
+        archivePath: '/path/to/archive.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
+        compressedToolSummary: '',
+      };
+
+      const embedding = new Array(768).fill(0.1);
+      insertExchange(db, exchange, embedding);
+
+      const row = db.prepare(`
+        SELECT compressed_tool_summary FROM exchanges WHERE id = ?
+      `).get(exchange.id) as any;
+
+      expect(row).toBeDefined();
+      expect(row.compressed_tool_summary).toBe('');
+    });
+
+    test('updates compressed_tool_summary on replace', () => {
+      const exchange: ConversationExchange = {
+        id: 'test-6e',
+        project: 'test-project',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        userMessage: 'Hello',
+        assistantMessage: 'Hi there!',
+        archivePath: '/path/to/archive.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
+        compressedToolSummary: 'Original summary',
+      };
+
+      const embedding = new Array(768).fill(0.1);
+      insertExchange(db, exchange, embedding);
+
+      // Update with new summary
+      const updatedExchange = {
+        ...exchange,
+        compressedToolSummary: 'Updated summary',
+      };
+
+      insertExchange(db, updatedExchange, embedding);
+
+      const row = db.prepare(`
+        SELECT compressed_tool_summary FROM exchanges WHERE id = ?
+      `).get(exchange.id) as any;
+
+      expect(row.compressed_tool_summary).toBe('Updated summary');
     });
   });
 
