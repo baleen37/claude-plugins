@@ -277,7 +277,8 @@ function migrateSchema(db) {
     { name: "claude_version", sql: "ALTER TABLE exchanges ADD COLUMN claude_version TEXT" },
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
-    { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" }
+    { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
   ];
   let migrated = false;
   for (const migration of migrations) {
@@ -320,7 +321,8 @@ function initDatabase() {
       claude_version TEXT,
       thinking_level TEXT,
       thinking_disabled BOOLEAN,
-      thinking_triggers TEXT
+      thinking_triggers TEXT,
+      compressed_tool_summary TEXT
     )
   `);
   db.exec(`
@@ -371,8 +373,8 @@ function insertExchange(db, exchange, embedding, toolNames) {
     INSERT OR REPLACE INTO exchanges
     (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end, last_indexed,
      parent_uuid, is_sidechain, session_id, cwd, git_branch, claude_version,
-     thinking_level, thinking_disabled, thinking_triggers)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     thinking_level, thinking_disabled, thinking_triggers, compressed_tool_summary)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     exchange.id,
@@ -384,15 +386,16 @@ function insertExchange(db, exchange, embedding, toolNames) {
     exchange.lineStart,
     exchange.lineEnd,
     now,
-    exchange.parentUuid || null,
+    exchange.parentUuid ?? null,
     exchange.isSidechain ? 1 : 0,
-    exchange.sessionId || null,
-    exchange.cwd || null,
-    exchange.gitBranch || null,
-    exchange.claudeVersion || null,
-    exchange.thinkingLevel || null,
+    exchange.sessionId ?? null,
+    exchange.cwd ?? null,
+    exchange.gitBranch ?? null,
+    exchange.claudeVersion ?? null,
+    exchange.thinkingLevel ?? null,
     exchange.thinkingDisabled ? 1 : 0,
-    exchange.thinkingTriggers || null
+    exchange.thinkingTriggers ?? null,
+    exchange.compressedToolSummary ?? null
   );
   const delStmt = db.prepare(`DELETE FROM vec_exchanges WHERE id = ?`);
   delStmt.run(exchange.id);
@@ -2135,6 +2138,168 @@ init_logger();
 import fs6 from "fs";
 import path4 from "path";
 import os2 from "os";
+
+// src/core/tool-compress.ts
+function normalizeToolName(toolName) {
+  const lastUnderscoreIndex = toolName.lastIndexOf("__");
+  if (lastUnderscoreIndex !== -1 && toolName.startsWith("mcp__plugin")) {
+    return toolName.substring(lastUnderscoreIndex + 2);
+  }
+  return toolName;
+}
+function extractFirstLine(text, truncateLength = 50) {
+  if (!text) return "";
+  const firstLine = text.split("\n")[0];
+  if (firstLine.length <= truncateLength) {
+    return firstLine;
+  }
+  return firstLine.substring(0, truncateLength - 3) + "...";
+}
+function truncateCommand(command2, maxLength = 80) {
+  if (command2.length <= maxLength) {
+    return command2;
+  }
+  return command2.substring(0, maxLength - 3) + "...";
+}
+function formatUnknownTool(toolName, toolInput) {
+  if (toolInput === null || toolInput === void 0) {
+    return toolName;
+  }
+  if (typeof toolInput === "string") {
+    return `${toolName}("${toolInput}")`;
+  }
+  if (typeof toolInput === "number" || typeof toolInput === "boolean") {
+    return `${toolName}(${String(toolInput)})`;
+  }
+  if (typeof toolInput === "object") {
+    const input = toolInput;
+    const entries = Object.entries(input).slice(0, 2);
+    if (entries.length === 0) {
+      return toolName;
+    }
+    const pairs = entries.map(([k, v]) => `${k}=${v === null ? "null" : String(v)}`);
+    return `${toolName}(${pairs.join(", ")})`;
+  }
+  return toolName;
+}
+var TOOL_FORMATS = {
+  Read: (input) => {
+    const file = input?.file_path;
+    return file || "";
+  },
+  Write: (input) => {
+    const file = input?.file_path;
+    return file || "";
+  },
+  Edit: (input) => {
+    const editInput = input;
+    const file = editInput.file_path || "";
+    const oldString = editInput.old_string ? extractFirstLine(editInput.old_string, 50) : "";
+    if (!file) return "";
+    if (oldString) {
+      return `${file} (match: "${oldString}")`;
+    }
+    return file;
+  },
+  Bash: (input) => {
+    const command2 = input?.command || "";
+    return `\`${truncateCommand(command2, 80)}\``;
+  },
+  Grep: (input) => {
+    const grepInput = input;
+    const pattern = grepInput.pattern || "";
+    const path7 = grepInput.path;
+    return path7 ? `${pattern} in ${path7}` : pattern;
+  },
+  Glob: (input) => {
+    const globInput = input;
+    const pattern = globInput.pattern || "";
+    const path7 = globInput.path;
+    return path7 ? `${pattern} in ${path7}` : pattern;
+  },
+  Task: (input) => {
+    const description = input?.description || "";
+    return description;
+  },
+  TaskCreate: (input) => {
+    const subject = input?.subject || "";
+    return subject;
+  },
+  TaskUpdate: (input) => {
+    const updateInput = input;
+    const taskId = updateInput.taskId || "";
+    const status = updateInput.status;
+    return status ? `${taskId} \u2192 ${status}` : taskId;
+  },
+  LSP: (input) => {
+    const lspInput = input;
+    const operation = lspInput.operation || "";
+    const filePath = lspInput.filePath || "";
+    return filePath ? `${operation} on ${filePath}` : operation;
+  },
+  WebSearch: (input) => {
+    const query = input?.query || "";
+    return `"${query}"`;
+  },
+  WebFetch: (input) => {
+    const url = input?.url || "";
+    return url;
+  }
+};
+function formatToolInput(toolName, toolInput) {
+  const normalized = normalizeToolName(toolName);
+  const formatFn = TOOL_FORMATS[normalized];
+  if (formatFn) {
+    return formatFn(toolInput);
+  }
+  return formatUnknownTool(normalized, toolInput);
+}
+function formatToolSummary(toolCalls) {
+  if (toolCalls.length === 0) {
+    return "";
+  }
+  const groups = /* @__PURE__ */ new Map();
+  for (const call of toolCalls) {
+    const normalized = normalizeToolName(call.toolName);
+    const existing = groups.get(normalized) || [];
+    existing.push(call.toolInput);
+    groups.set(normalized, existing);
+  }
+  const seen = /* @__PURE__ */ new Set();
+  const parts = [];
+  for (const call of toolCalls) {
+    const normalized = normalizeToolName(call.toolName);
+    if (seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    const inputs = groups.get(normalized) || [];
+    const results = inputs.map((input) => formatToolInput(normalized, input));
+    const isKnownTool = TOOL_FORMATS.hasOwnProperty(normalized);
+    if (isKnownTool) {
+      const nonEmptyResults = results.filter((r) => r);
+      if (nonEmptyResults.length === 0) {
+        parts.push(normalized);
+      } else if (nonEmptyResults.length === 1) {
+        parts.push(`${normalized}: ${nonEmptyResults[0]}`);
+      } else {
+        parts.push(`${normalized}: ${nonEmptyResults.join(", ")}`);
+      }
+    } else {
+      const nonEmptyResults = results.filter((r) => r);
+      if (nonEmptyResults.length === 0) {
+        parts.push(normalized);
+      } else if (nonEmptyResults.length === 1) {
+        parts.push(nonEmptyResults[0]);
+      } else {
+        parts.push(nonEmptyResults.join(", "));
+      }
+    }
+  }
+  return parts.join(" | ");
+}
+
+// src/core/indexer.ts
 import { EventEmitter } from "events";
 EventEmitter.defaultMaxListeners = 20;
 function getProjectsDir() {
@@ -2229,6 +2394,9 @@ Processing project: ${project} (${files.length} conversations)`);
     }
     for (const conv of toProcess) {
       for (const exchange of conv.exchanges) {
+        if (exchange.toolCalls?.length) {
+          exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+        }
         const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
         const embedding = await generateExchangeEmbedding(
           exchange.userMessage,
@@ -2290,6 +2458,9 @@ async function indexSession(sessionId, concurrency2 = 1, noSummaries2 = false) {
           console.log(`Summary: ${summary.split(/\s+/).length} words`);
         }
         for (const exchange of parseResult.exchanges) {
+          if (exchange.toolCalls?.length) {
+            exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+          }
           const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
           const embedding = await generateExchangeEmbedding(
             exchange.userMessage,
@@ -2377,6 +2548,9 @@ async function indexUnprocessed(concurrency2 = 1, noSummaries2 = false) {
 Indexing embeddings...`);
   for (const conv of unprocessed) {
     for (const exchange of conv.exchanges) {
+      if (exchange.toolCalls?.length) {
+        exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+      }
       const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
       const embedding = await generateExchangeEmbedding(
         exchange.userMessage,
@@ -2501,6 +2675,9 @@ async function syncConversations(sourceDir, destDir, options = {}) {
         const project = path5.basename(path5.dirname(file));
         const exchanges = await parseConversation3(file, project, file);
         for (const exchange of exchanges) {
+          if (exchange.toolCalls?.length) {
+            exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+          }
           const toolNames = exchange.toolCalls?.map((tc) => tc.toolName);
           const embedding = await generateExchangeEmbedding2(
             exchange.userMessage,

@@ -8,6 +8,7 @@ import { summarizeConversation } from './summarizer.js';
 import { ConversationExchange } from './types.js';
 import { getArchiveDir, getExcludedProjects } from './paths.js';
 import { logInfo, logError, logWarn } from './logger.js';
+import { formatToolSummary } from './tool-compress.js';
 
 // Increase max listeners for concurrent API calls
 import { EventEmitter } from 'events';
@@ -157,6 +158,9 @@ export async function indexConversations(
     // Now process embeddings and DB inserts (fast, sequential is fine)
     for (const conv of toProcess) {
       for (const exchange of conv.exchanges) {
+        if (exchange.toolCalls?.length) {
+          exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+        }
         const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
         const embedding = await generateExchangeEmbedding(
           exchange.userMessage,
@@ -240,6 +244,9 @@ export async function indexSession(sessionId: string, concurrency: number = 1, n
 
         // Index
         for (const exchange of parseResult.exchanges) {
+          if (exchange.toolCalls?.length) {
+            exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+          }
           const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
           const embedding = await generateExchangeEmbedding(
             exchange.userMessage,
@@ -364,6 +371,9 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
   console.log(`\nIndexing embeddings...`);
   for (const conv of unprocessed) {
     for (const exchange of conv.exchanges) {
+      if (exchange.toolCalls?.length) {
+        exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+      }
       const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
       const embedding = await generateExchangeEmbedding(
         exchange.userMessage,

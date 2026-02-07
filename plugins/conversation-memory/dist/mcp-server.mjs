@@ -17795,7 +17795,8 @@ function migrateSchema(db) {
     { name: "claude_version", sql: "ALTER TABLE exchanges ADD COLUMN claude_version TEXT" },
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
-    { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" }
+    { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
   ];
   let migrated = false;
   for (const migration of migrations) {
@@ -17838,7 +17839,8 @@ function initDatabase() {
       claude_version TEXT,
       thinking_level TEXT,
       thinking_disabled BOOLEAN,
-      thinking_triggers TEXT
+      thinking_triggers TEXT,
+      compressed_tool_summary TEXT
     )
   `);
   db.exec(`
