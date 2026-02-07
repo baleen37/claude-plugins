@@ -1,12 +1,15 @@
-# Ralph Loop Plugin
+# Ralph Wiggum Plugin
 
 Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops in Claude Code.
 
-## What is Ralph Loop?
+## What is Ralph?
 
-Ralph Loop is a development methodology based on continuous AI agent loops. As Geoffrey Huntley describes it: **"Ralph is a Bash loop"** - a simple `while true` that repeatedly feeds an AI agent a prompt file, allowing it to iteratively improve its work until completion.
+Ralph is a development methodology based on continuous AI agent loops. As Geoffrey
+Huntley describes it: **"Ralph is a Bash loop"** - a simple `while true` that repeatedly
+feeds an AI agent a prompt file, allowing it to iteratively improve its work until
+completion.
 
-This technique is inspired by the Ralph Wiggum coding technique (named after the character from The Simpsons), embodying the philosophy of persistent iteration despite setbacks.
+The technique is named after Ralph Wiggum from The Simpsons, embodying the philosophy of persistent iteration despite setbacks.
 
 ### Core Concept
 
@@ -24,9 +27,12 @@ This plugin implements Ralph using a **Stop hook** that intercepts Claude's exit
 # 5. Repeat until completion
 ```
 
-The loop happens **inside your current session** - you don't need external bash loops. The Stop hook in `hooks/stop-hook.sh` creates the self-referential feedback loop by blocking normal session exit.
+The loop happens **inside your current session** - you don't need external bash loops.
+The Stop hook in `hooks/stop-hook.sh` creates the self-referential feedback loop by
+blocking normal session exit.
 
 This creates a **self-referential feedback loop** where:
+
 - The prompt never changes between iterations
 - Claude's previous work persists in files
 - Each iteration sees modified files and git history
@@ -35,48 +41,16 @@ This creates a **self-referential feedback loop** where:
 ## Quick Start
 
 ```bash
-/ralph-loop "Build a REST API for todos. Requirements: CRUD operations, input validation, tests. Output COMPLETE when done." --completion-promise "COMPLETE" --max-iterations 50
+/ralph-loop "Build a REST API for todos. Requirements: CRUD operations, input validation, tests. Output <promise>COMPLETE</promise> when done." --completion-promise "COMPLETE" --max-iterations 50
 ```
 
 Claude will:
+
 - Implement the API iteratively
 - Run tests and see failures
 - Fix bugs based on test output
 - Iterate until all requirements met
 - Output the completion promise when done
-
-## Multi-Session Support
-
-Ralph Loop now supports multiple concurrent sessions. Each session maintains its own independent loop state.
-
-### State File Location
-
-Loop state is stored in: `~/.claude/ralph-loop/ralph-loop-{session_id}.local.md`
-
-- **Session ID**: Automatically assigned by Claude Code
-- **Isolation**: Each session's loop is completely independent
-- **Concurrent Execution**: Run different Ralph loops in different terminal sessions simultaneously
-
-### Example
-
-```bash
-# Terminal 1
-/ralph-loop "Fix auth bug" --max-iterations 10
-
-# Terminal 2 (simultaneously)
-/ralph-loop "Refactor cache" --max-iterations 20
-
-# Each terminal runs its own loop independently
-```
-
-### Canceling a Loop
-
-Each session can only cancel its own loop:
-
-```bash
-/cancel-ralph
-# Cancels only the current session's loop
-```
 
 ## Commands
 
@@ -85,19 +59,22 @@ Each session can only cancel its own loop:
 Start a Ralph loop in your current session.
 
 **Usage:**
+
 ```bash
-/ralph-loop "<PROMPT>" [--max-iterations <N>] [--completion-promise "<TEXT>"]
+/ralph-loop "<prompt>" --max-iterations <n> --completion-promise "<text>"
 ```
 
 **Options:**
-- `--max-iterations <N>` - Stop after N iterations (default: unlimited)
-- `--completion-promise <TEXT>` - Phrase that signals completion
+
+- `--max-iterations <n>` - Stop after N iterations (default: unlimited)
+- `--completion-promise <text>` - Phrase that signals completion
 
 ### /cancel-ralph
 
 Cancel the active Ralph loop.
 
 **Usage:**
+
 ```bash
 /cancel-ralph
 ```
@@ -109,14 +86,16 @@ Cancel the active Ralph loop.
 ❌ Bad: "Build a todo API and make it good."
 
 ✅ Good:
+
 ```markdown
 Build a REST API for todos.
+
 When complete:
 - All CRUD endpoints working
 - Input validation in place
 - Tests passing (coverage > 80%)
 - README with API docs
-Output: COMPLETE
+- Output: <promise>COMPLETE</promise>
 ```
 
 ### 2. Incremental Goals
@@ -124,11 +103,13 @@ Output: COMPLETE
 ❌ Bad: "Create a complete e-commerce platform."
 
 ✅ Good:
+
 ```markdown
 Phase 1: User authentication (JWT, tests)
 Phase 2: Product catalog (list/search, tests)
 Phase 3: Shopping cart (add/remove, tests)
-Output COMPLETE when all phases done.
+
+Output <promise>COMPLETE</promise> when all phases done.
 ```
 
 ### 3. Self-Correction
@@ -136,6 +117,7 @@ Output COMPLETE when all phases done.
 ❌ Bad: "Write code for feature X."
 
 ✅ Good:
+
 ```markdown
 Implement feature X following TDD:
 1. Write failing tests
@@ -144,7 +126,7 @@ Implement feature X following TDD:
 4. If any fail, debug and fix
 5. Refactor if needed
 6. Repeat until all green
-7. Output: COMPLETE
+7. Output: <promise>COMPLETE</promise>
 ```
 
 ### 4. Escape Hatches
@@ -157,38 +139,46 @@ Always use `--max-iterations` as a safety net to prevent infinite loops on impos
 
 # In your prompt, include what to do if stuck:
 # "After 15 iterations, if not complete:
-# - Document what's blocking progress
-# - List what was attempted
-# - Suggest alternative approaches"
+#  - Document what's blocking progress
+#  - List what was attempted
+#  - Suggest alternative approaches"
 ```
 
-**Note**: The `--completion-promise` uses exact string matching, so you cannot use it for multiple completion conditions (like "SUCCESS" vs "BLOCKED"). Always rely on `--max-iterations` as your primary safety mechanism.
+**Note**: The `--completion-promise` uses exact string matching, so you cannot use it
+for multiple completion conditions (like "SUCCESS" vs "BLOCKED"). Always rely on
+`--max-iterations` as your primary safety mechanism.
 
 ## Philosophy
 
 Ralph embodies several key principles:
 
 ### 1. Iteration > Perfection
+
 Don't aim for perfect on first try. Let the loop refine the work.
 
 ### 2. Failures Are Data
+
 "Deterministically bad" means failures are predictable and informative. Use them to tune prompts.
 
 ### 3. Operator Skill Matters
+
 Success depends on writing good prompts, not just having a good model.
 
 ### 4. Persistence Wins
+
 Keep trying until success. The loop handles retry logic automatically.
 
 ## When to Use Ralph
 
 **Good for:**
+
 - Well-defined tasks with clear success criteria
 - Tasks requiring iteration and refinement (e.g., getting tests to pass)
 - Greenfield projects where you can walk away
 - Tasks with automatic verification (tests, linters)
 
 **Not good for:**
+
 - Tasks requiring human judgment or design decisions
 - One-shot operations
 - Tasks with unclear success criteria
@@ -202,8 +192,8 @@ Keep trying until success. The loop handles retry logic automatically.
 
 ## Learn More
 
-- Original technique: https://ghuntley.com/ralph/
-- Ralph Orchestrator: https://github.com/mikeyobrien/ralph-orchestrator
+- Original technique: <https://ghuntley.com/ralph/>
+- Ralph Orchestrator: <https://github.com/mikeyobrien/ralph-orchestrator>
 
 ## For Help
 
