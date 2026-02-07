@@ -46,20 +46,20 @@ function truncateCommand(command: string, maxLength = 80): string {
 
 /**
  * Formats an unknown tool with its input values.
- * Handles primitives, objects, and arrays.
+ * Falls back to ToolName(key=val) format.
  */
-function formatUnknownTool(toolName: string, toolInput: unknown): FormatResult {
+function formatUnknownTool(toolName: string, toolInput: unknown): string {
   // Handle primitive values
   if (toolInput === null || toolInput === undefined) {
-    return { formatted: toolName, includesName: true };
+    return toolName;
   }
 
   if (typeof toolInput === 'string') {
-    return { formatted: `${toolName}("${toolInput}")`, includesName: true };
+    return `${toolName}("${toolInput}")`;
   }
 
   if (typeof toolInput === 'number' || typeof toolInput === 'boolean') {
-    return { formatted: `${toolName}(${String(toolInput)})`, includesName: true };
+    return `${toolName}(${String(toolInput)})`;
   }
 
   // Handle objects
@@ -67,128 +67,109 @@ function formatUnknownTool(toolName: string, toolInput: unknown): FormatResult {
     const input = toolInput as Record<string, unknown>;
     const entries = Object.entries(input).slice(0, 2); // Show first 2 keys
     if (entries.length === 0) {
-      return { formatted: toolName, includesName: true };
+      return toolName;
     }
     const pairs = entries.map(([k, v]) => `${k}=${v === null ? 'null' : String(v)}`);
-    return { formatted: `${toolName}(${pairs.join(', ')})`, includesName: true };
+    return `${toolName}(${pairs.join(', ')})`;
   }
 
-  return { formatted: toolName, includesName: true };
-}
-
-/**
- * Format result that indicates whether the tool name is already included.
- */
-interface FormatResult {
-  /** The formatted string */
-  formatted: string;
-  /** Whether the tool name is already included in the formatted string */
-  includesName: boolean;
+  return toolName;
 }
 
 /**
  * Format function type for tool input formatting.
  */
-type ToolFormatFn = (input: unknown) => FormatResult;
+type ToolFormatFn = (input: unknown) => string;
 
 /**
  * Record of formatting functions for each known tool type.
  */
 const TOOL_FORMATS: Record<string, ToolFormatFn> = {
-  Read: (input): FormatResult => {
+  Read: (input): string => {
     const file = (input as { file_path?: string })?.file_path;
-    if (!file) return { formatted: '', includesName: false };
-    return { formatted: file, includesName: false };
+    return file || '';
   },
 
-  Write: (input): FormatResult => {
+  Write: (input): string => {
     const file = (input as { file_path?: string })?.file_path;
-    if (!file) return { formatted: '', includesName: false };
-    return { formatted: file, includesName: false };
+    return file || '';
   },
 
-  Edit: (input): FormatResult => {
+  Edit: (input): string => {
     const editInput = input as { file_path?: string; old_string?: string; new_string?: string };
     const file = editInput.file_path || '';
     const oldString = editInput.old_string ? extractFirstLine(editInput.old_string, 50) : '';
-    if (!file) return { formatted: '', includesName: false };
+    if (!file) return '';
     if (oldString) {
-      return { formatted: `${file} (match: "${oldString}")`, includesName: false };
+      return `${file} (match: "${oldString}")`;
     }
-    return { formatted: file, includesName: false };
+    return file;
   },
 
-  Bash: (input): FormatResult => {
+  Bash: (input): string => {
     const command = (input as { command?: string })?.command || '';
-    return { formatted: `\`${truncateCommand(command, 80)}\``, includesName: false };
+    return `\`${truncateCommand(command, 80)}\``;
   },
 
-  Grep: (input): FormatResult => {
+  Grep: (input): string => {
     const grepInput = input as { pattern?: string; path?: string };
     const pattern = grepInput.pattern || '';
     const path = grepInput.path;
-    const formatted = path ? `${pattern} in ${path}` : pattern;
-    return { formatted, includesName: false };
+    return path ? `${pattern} in ${path}` : pattern;
   },
 
-  Glob: (input): FormatResult => {
+  Glob: (input): string => {
     const globInput = input as { pattern?: string; path?: string };
     const pattern = globInput.pattern || '';
     const path = globInput.path;
-    const formatted = path ? `${pattern} in ${path}` : pattern;
-    return { formatted, includesName: false };
+    return path ? `${pattern} in ${path}` : pattern;
   },
 
-  Task: (input): FormatResult => {
+  Task: (input): string => {
     const description = (input as { description?: string })?.description || '';
-    return { formatted: description, includesName: false };
+    return description;
   },
 
-  TaskCreate: (input): FormatResult => {
+  TaskCreate: (input): string => {
     const subject = (input as { subject?: string })?.subject || '';
-    return { formatted: subject, includesName: false };
+    return subject;
   },
 
-  TaskUpdate: (input): FormatResult => {
+  TaskUpdate: (input): string => {
     const updateInput = input as { taskId?: string; status?: string };
     const taskId = updateInput.taskId || '';
     const status = updateInput.status;
-    const formatted = status ? `${taskId} → ${status}` : taskId;
-    return { formatted, includesName: false };
+    return status ? `${taskId} → ${status}` : taskId;
   },
 
-  LSP: (input): FormatResult => {
+  LSP: (input): string => {
     const lspInput = input as { operation?: string; filePath?: string };
     const operation = lspInput.operation || '';
     const filePath = lspInput.filePath || '';
-    const formatted = filePath ? `${operation} on ${filePath}` : operation;
-    return { formatted, includesName: false };
+    return filePath ? `${operation} on ${filePath}` : operation;
   },
 
-  WebSearch: (input): FormatResult => {
+  WebSearch: (input): string => {
     const query = (input as { query?: string })?.query || '';
-    return { formatted: `"${query}"`, includesName: false };
+    return `"${query}"`;
   },
 
-  WebFetch: (input): FormatResult => {
+  WebFetch: (input): string => {
     const url = (input as { url?: string })?.url || '';
-    return { formatted: url, includesName: false };
+    return url;
   },
 };
 
 /**
- * Formats a single tool call into a summary string.
+ * Formats a single tool call input into a summary string.
+ * Returns empty string if the input cannot be formatted.
  */
-function formatToolCall(toolName: string, toolInput: unknown): FormatResult {
+function formatToolInput(toolName: string, toolInput: unknown): string {
   const normalized = normalizeToolName(toolName);
   const formatFn = TOOL_FORMATS[normalized];
 
   if (formatFn) {
-    const result = formatFn(toolInput);
-    if (!result.formatted) {
-      return { formatted: normalized, includesName: true };
-    }
-    return result;
+    return formatFn(toolInput);
   }
 
   // Unknown tool - use fallback format
@@ -236,44 +217,37 @@ export function formatToolSummary(toolCalls: Array<{ toolName: string; toolInput
     seen.add(normalized);
 
     const inputs = groups.get(normalized) || [];
-    const results = inputs.map((input) => formatToolCall(normalized, input));
+    const results = inputs.map((input) => formatToolInput(normalized, input));
 
-    // Separate results by whether they include the name
-    const withName: string[] = [];
-    const withoutName: string[] = [];
+    // Check if this is a known tool (has a formatter) or unknown tool
+    const isKnownTool = TOOL_FORMATS.hasOwnProperty(normalized);
 
-    for (const result of results) {
-      if (!result.formatted) continue;
-      if (result.includesName) {
-        withName.push(result.formatted);
-      } else {
-        withoutName.push(result.formatted);
-      }
-    }
+    if (isKnownTool) {
+      // Known tools - all results should just be the values (no tool name included)
+      const nonEmptyResults = results.filter((r) => r);
 
-    // Build the output string
-    if (withoutName.length > 0 && withName.length > 0) {
-      // Mix of both - combine with tool name prefix
-      const withoutPart = `${normalized}: ${withoutName.join(', ')}`;
-      parts.push(withoutPart, ...withName);
-    } else if (withoutName.length > 0) {
-      // Only results without name - add tool name prefix
-      if (withoutName.length === 1) {
-        parts.push(`${normalized}: ${withoutName[0]}`);
+      if (nonEmptyResults.length === 0) {
+        // All empty - just show the tool name
+        parts.push(normalized);
+      } else if (nonEmptyResults.length === 1) {
+        // Single result - add tool name prefix
+        parts.push(`${normalized}: ${nonEmptyResults[0]}`);
       } else {
-        parts.push(`${normalized}: ${withoutName.join(', ')}`);
-      }
-    } else if (withName.length > 0) {
-      // Only results with name - just use them
-      if (withName.length === 1) {
-        parts.push(withName[0]);
-      } else {
-        // Multiple results that already include the name
-        parts.push(`${normalized}: ${withName.join(', ')}`);
+        // Multiple results - comma separate with tool name prefix
+        parts.push(`${normalized}: ${nonEmptyResults.join(', ')}`);
       }
     } else {
-      // All empty - just show the tool name
-      parts.push(normalized);
+      // Unknown tools - formatUnknownTool already includes the tool name
+      // Just join the results with commas (each result already includes the tool name)
+      const nonEmptyResults = results.filter((r) => r);
+      if (nonEmptyResults.length === 0) {
+        parts.push(normalized);
+      } else if (nonEmptyResults.length === 1) {
+        parts.push(nonEmptyResults[0]);
+      } else {
+        // Multiple unknown tool calls - comma separate
+        parts.push(nonEmptyResults.join(', '));
+      }
     }
   }
 
