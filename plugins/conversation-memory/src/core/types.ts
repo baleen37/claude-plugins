@@ -35,6 +35,9 @@ export interface ConversationExchange {
 
   // Tool calls (populated separately)
   toolCalls?: ToolCall[];
+
+  // Compressed tool summary
+  compressedToolSummary?: string;
 }
 
 export interface SearchResult {
