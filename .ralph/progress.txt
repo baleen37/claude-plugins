@@ -134,3 +134,22 @@ Started: 2025-02-08T00:00:00Z
   - The pre-commit hook runs BATS tests and can fail if tests were modified, requiring those changes to be included in the commit
   - ShellCheck warnings should be fixed even in test files to maintain code quality standards
 
+## Iteration 6 - US-013: Refactor handoff.bats to use fixture factory
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Added `load ../helpers/fixture_factory` to tests/handoff/handoff.bats
+  - Replaced all 15 inline JSON creations with `create_handoff_json()` calls
+  - Tests refactored: JSON structure test, filtering test, loaded_at test, recent handoffs test, loaded handoffs test, sorting test, plan_path test, tasks_session_id test, missing plan test, source_session_id test, most recent unloaded test
+  - Reduced code from 320 lines to 172 lines (148 lines removed)
+  - Fixed ShellCheck warning by using $HOME instead of ~ in quotes for missing plan path test
+- **File modified**: tests/handoff/handoff.bats
+- **Tests verified**: All 231 tests pass
+- **Learnings**:
+  - The load statement needs correct relative path (../helpers/fixture_factory) from tests/handoff/ subdirectory
+  - Fixture factory function signature with many parameters is still more readable than inline heredoc JSON
+  - ShellCheck SC2088 warning about tilde in quotes can be avoided by using $HOME directly
+  - The test for missing plan file originally tested tilde expansion, but using $HOME achieves the same goal (a non-existent path) without triggering ShellCheck
+  - Refactoring reduced code by 46% while maintaining all test functionality
+  - Consistent test data creation makes tests more maintainable and less error-prone
+
