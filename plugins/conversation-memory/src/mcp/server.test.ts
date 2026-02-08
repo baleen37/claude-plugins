@@ -931,9 +931,6 @@ describe('MCP Server - conversation-memory__read tool', () => {
       // Create a real database for testing
       const db = initDatabase();
 
-      // Mock close to verify it's called
-      const closeSpy = vi.spyOn(db, 'close');
-
       try {
         // Insert test data
         const stmt = db.prepare(`
