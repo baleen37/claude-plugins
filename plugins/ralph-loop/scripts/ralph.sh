@@ -83,7 +83,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # Run fresh Claude instance
   # Output to both console and log file
   echo "Starting iteration $i at $(date)" > "$ITERATION_LOG"
-  OUTPUT=$(echo "$PROMPT" | claude --print 2>&1 | tee -a "$ITERATION_LOG") || true
+  OUTPUT=$(echo "$PROMPT" | claude --print --dangerously-skip-permissions 2>&1 | tee -a "$ITERATION_LOG") || true
   echo "Finished iteration $i at $(date)" >> "$ITERATION_LOG"
 
   # Check for completion promise
