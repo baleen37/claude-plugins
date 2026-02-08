@@ -9,6 +9,33 @@
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs sync",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs observer start",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs observe",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs observe --summarize",
+            "async": true
           }
         ]
       }

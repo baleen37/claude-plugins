@@ -244,6 +244,9 @@ function getLogFilePath() {
   const date = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   return path.join(getLogDir(), `${date}.log`);
 }
+function getObserverPidPath() {
+  return path.join(getSuperpowersDir(), "observer.pid");
+}
 var init_paths = __esm({
   "src/core/paths.ts"() {
     "use strict";
@@ -256,8 +259,15 @@ __export(db_exports, {
   deleteExchange: () => deleteExchange,
   getAllExchanges: () => getAllExchanges,
   getFileLastIndexed: () => getFileLastIndexed,
+  getLastPromptNumber: () => getLastPromptNumber,
+  getPendingEvents: () => getPendingEvents,
+  getSessionSummary: () => getSessionSummary,
   initDatabase: () => initDatabase,
   insertExchange: () => insertExchange,
+  insertObservation: () => insertObservation,
+  insertPendingEvent: () => insertPendingEvent,
+  insertSessionSummary: () => insertSessionSummary,
+  markEventProcessed: () => markEventProcessed,
   migrateSchema: () => migrateSchema
 });
 import Database from "better-sqlite3";
@@ -343,6 +353,60 @@ function initDatabase() {
       embedding FLOAT[768]
     )
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      prompt_number INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      narrative TEXT NOT NULL,
+      facts TEXT NOT NULL,
+      concepts TEXT NOT NULL,
+      files_read TEXT NOT NULL,
+      files_modified TEXT NOT NULL,
+      tool_name TEXT,
+      correlation_id TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS session_summaries (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      request TEXT NOT NULL,
+      investigated TEXT NOT NULL,
+      learned TEXT NOT NULL,
+      completed TEXT NOT NULL,
+      next_steps TEXT NOT NULL,
+      notes TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      tool_name TEXT,
+      tool_input TEXT,
+      tool_response TEXT,
+      cwd TEXT,
+      timestamp INTEGER NOT NULL,
+      processed BOOLEAN DEFAULT 0,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS vec_observations USING vec0(
+      id TEXT PRIMARY KEY,
+      embedding FLOAT[768]
+    )
+  `);
   migrateSchema(db);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_timestamp ON exchanges(timestamp DESC)
@@ -364,6 +428,24 @@ function initDatabase() {
   `);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tool_exchange ON tool_calls(exchange_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_project ON observations(project)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_type ON observations(type)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_timestamp ON observations(timestamp DESC)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_session ON pending_events(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_processed ON pending_events(processed)
   `);
   return db;
 }
@@ -439,6 +521,135 @@ function getFileLastIndexed(db, archivePath) {
 function deleteExchange(db, id) {
   db.prepare(`DELETE FROM vec_exchanges WHERE id = ?`).run(id);
   db.prepare(`DELETE FROM exchanges WHERE id = ?`).run(id);
+}
+function insertObservation(db, observation, embedding) {
+  const stmt = db.prepare(`
+    INSERT INTO observations
+    (id, session_id, project, prompt_number, timestamp, type, title, subtitle, narrative,
+     facts, concepts, files_read, files_modified, tool_name, correlation_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    observation.id,
+    observation.sessionId,
+    observation.project,
+    observation.promptNumber,
+    observation.timestamp,
+    observation.type,
+    observation.title,
+    observation.subtitle,
+    observation.narrative,
+    JSON.stringify(observation.facts),
+    JSON.stringify(observation.concepts),
+    JSON.stringify(observation.filesRead),
+    JSON.stringify(observation.filesModified),
+    observation.toolName ?? null,
+    observation.correlationId ?? null,
+    observation.createdAt
+  );
+  if (embedding) {
+    const delStmt = db.prepare(`DELETE FROM vec_observations WHERE id = ?`);
+    delStmt.run(observation.id);
+    const vecStmt = db.prepare(`
+      INSERT INTO vec_observations (id, embedding)
+      VALUES (?, ?)
+    `);
+    vecStmt.run(observation.id, Buffer.from(new Float32Array(embedding).buffer));
+  }
+}
+function insertPendingEvent(db, event) {
+  const stmt = db.prepare(`
+    INSERT INTO pending_events
+    (id, session_id, event_type, tool_name, tool_input, tool_response, cwd, timestamp, processed, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    event.id,
+    event.sessionId,
+    event.eventType,
+    event.toolName ?? null,
+    event.toolInput ? JSON.stringify(event.toolInput) : null,
+    event.toolResponse ?? null,
+    event.cwd ?? null,
+    event.timestamp,
+    event.processed ? 1 : 0,
+    event.createdAt
+  );
+}
+function getPendingEvents(db, sessionId, limit = 10) {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, event_type as eventType, tool_name as toolName,
+           tool_input as toolInput, tool_response as toolResponse, cwd, timestamp,
+           processed, created_at as createdAt
+    FROM pending_events
+    WHERE session_id = ? AND processed = 0
+    ORDER BY created_at ASC
+    LIMIT ?
+  `);
+  const rows = stmt.all(sessionId, limit);
+  return rows.map((row) => ({
+    ...row,
+    toolInput: row.toolInput ? JSON.parse(row.toolInput) : void 0,
+    processed: row.processed === 1
+  }));
+}
+function markEventProcessed(db, eventId) {
+  const stmt = db.prepare(`UPDATE pending_events SET processed = 1 WHERE id = ?`);
+  stmt.run(eventId);
+}
+function insertSessionSummary(db, summary) {
+  const stmt = db.prepare(`
+    INSERT OR REPLACE INTO session_summaries
+    (id, session_id, project, request, investigated, learned, completed, next_steps, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  stmt.run(
+    summary.id,
+    summary.sessionId,
+    summary.project,
+    summary.request,
+    JSON.stringify(summary.investigated),
+    JSON.stringify(summary.learned),
+    JSON.stringify(summary.completed),
+    JSON.stringify(summary.nextSteps),
+    summary.notes,
+    summary.createdAt
+  );
+}
+function getSessionSummary(db, sessionId) {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, request, investigated, learned,
+           completed, next_steps as nextSteps, notes, created_at as createdAt
+    FROM session_summaries
+    WHERE session_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+  const row = stmt.get(sessionId);
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    sessionId: row.sessionId,
+    project: row.project,
+    request: row.request,
+    investigated: JSON.parse(row.investigated),
+    learned: JSON.parse(row.learned),
+    completed: JSON.parse(row.completed),
+    nextSteps: JSON.parse(row.nextSteps),
+    notes: row.notes,
+    createdAt: row.createdAt
+  };
+}
+function getLastPromptNumber(db, sessionId) {
+  const stmt = db.prepare(`
+    SELECT MAX(prompt_number) as maxPrompt
+    FROM observations
+    WHERE session_id = ?
+  `);
+  const row = stmt.get(sessionId);
+  return row.maxPrompt ?? 0;
 }
 var init_db = __esm({
   "src/core/db.ts"() {
@@ -1991,6 +2202,544 @@ var init_summarizer = __esm({
   }
 });
 
+// src/core/observations.ts
+async function createObservation(db, observation) {
+  const embeddingText = `${observation.title}
+${observation.subtitle}
+${observation.narrative}`;
+  const embedding = await generateEmbedding(embeddingText);
+  insertObservation(db, observation, embedding);
+}
+function getObservationsBySession(db, sessionId) {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, prompt_number as promptNumber,
+           timestamp, type, title, subtitle, narrative, facts, concepts,
+           files_read as filesRead, files_modified as filesModified,
+           tool_name as toolName, correlation_id as correlationId, created_at as createdAt
+    FROM observations
+    WHERE session_id = ?
+    ORDER BY timestamp ASC
+  `);
+  const rows = stmt.all(sessionId);
+  return rows.map((row) => ({
+    ...row,
+    facts: JSON.parse(row.facts),
+    concepts: JSON.parse(row.concepts),
+    filesRead: JSON.parse(row.filesRead),
+    filesModified: JSON.parse(row.filesModified)
+  }));
+}
+var init_observations = __esm({
+  "src/core/observations.ts"() {
+    "use strict";
+    init_db();
+    init_embeddings();
+  }
+});
+
+// src/core/observation-prompt.ts
+function buildInitPrompt() {
+  return `<system>
+You are an Observer AI that watches Claude Code sessions and extracts structured observations.
+
+Your role:
+1. Watch tool executions and identify meaningful observations
+2. Extract facts, concepts, and technical insights
+3. Track files read and modified
+4. Generate session summaries when requested
+
+Observation types:
+- "decision": Architectural or technical decisions made
+- "learning": New information learned or discovered
+- "bugfix": Bugs identified or fixed
+- "refactor": Code restructuring or improvements
+- "feature": New features implemented
+- "debug": Debugging activities and findings
+- "test": Testing activities and results
+- "config": Configuration changes or setup
+
+Response format:
+- For observations: Return XML <observation>...</observation>
+- For unimportant events: Return XML <skip><reason>...</reason></skip>
+- For session summaries: Return XML <session_summary>...</session_summary>
+
+Always respond with valid XML. No markdown, no explanations outside XML.
+</system>`;
+}
+function buildObservationPrompt(toolName, toolInput, toolResponse, cwd, project, previousContext) {
+  const context = previousContext ? `
+
+<previous_context>
+${previousContext}
+</previous_context>` : "";
+  return `${context}
+
+<tool_event>
+  <tool_name>${toolName}</tool_name>
+  <cwd>${cwd}</cwd>
+  <project>${project}</project>
+  <tool_input>${JSON.stringify(toolInput, null, 2)}</tool_input>
+  <tool_response>${escapeXml(toolResponse)}</tool_response>
+</tool_event>
+
+Analyze this tool execution and:
+1. If it's a low-value tool (like TodoWrite, TaskCreate, etc), respond with <skip>
+2. If it produced meaningful results, respond with <observation> containing:
+   - type: observation type (decision, learning, bugfix, etc)
+   - title: brief descriptive title
+   - subtitle: additional context or detail
+   - narrative: detailed explanation of what happened
+   - facts: array of concrete facts learned
+   - concepts: array of technical concepts involved
+   - files_read: array of files that were read
+   - files_modified: array of files that were modified
+   - correlation_id: optional ID to correlate related observations
+
+Respond with valid XML only.`;
+}
+function buildSummaryPrompt(sessionContext, project) {
+  return `<session_context>
+${sessionContext}
+</session_context>
+
+<project>${project}</project>
+
+Generate a comprehensive session summary with:
+- request: What the user was trying to accomplish
+- investigated: Topics or issues investigated
+- learned: New knowledge or insights gained
+- completed: Tasks or features completed
+- next_steps: Outstanding work or follow-ups needed
+- notes: Additional observations or context
+
+Respond with valid <session_summary> XML only.`;
+}
+function parseObservationResponse(response) {
+  const observationMatch = response.match(/<observation>([\s\S]*?)<\/observation>/);
+  if (observationMatch) {
+    try {
+      const parsed = parseObservationXML(observationMatch[1]);
+      return { type: "observation", data: parsed };
+    } catch (error) {
+      console.warn("Failed to parse observation XML:", error);
+    }
+  }
+  const skipMatch = response.match(/<skip>([\s\S]*?)<\/skip>/);
+  if (skipMatch) {
+    const reasonMatch = skipMatch[1].match(/<reason>(.*?)<\/reason>/);
+    return {
+      type: "skip",
+      reason: reasonMatch ? reasonMatch[1].trim() : "Unspecified reason"
+    };
+  }
+  return { type: "skip", reason: "Failed to parse response" };
+}
+function parseSummaryResponse(response, sessionId, project) {
+  const match = response.match(/<session_summary>([\s\S]*?)<\/session_summary>/);
+  if (!match) {
+    return null;
+  }
+  try {
+    return parseSessionSummaryXML(match[1], sessionId, project);
+  } catch (error) {
+    console.warn("Failed to parse session summary XML:", error);
+    return null;
+  }
+}
+function parseObservationXML(xml) {
+  const type = extractXmlTag(xml, "type") || "general";
+  const title = extractXmlTag(xml, "title") || "Untitled";
+  const subtitle = extractXmlTag(xml, "subtitle") || "";
+  const narrative = extractXmlTag(xml, "narrative") || "";
+  const facts = parseXmlArray(extractXmlTag(xml, "facts") || "");
+  const concepts = parseXmlArray(extractXmlTag(xml, "concepts") || "");
+  const filesRead = parseXmlArray(extractXmlTag(xml, "files_read") || "");
+  const filesModified = parseXmlArray(extractXmlTag(xml, "files_modified") || "");
+  const correlationId = extractXmlTag(xml, "correlation_id") || void 0;
+  return {
+    id: generateId(),
+    sessionId: "",
+    // Will be set by caller
+    project: "",
+    // Will be set by caller
+    promptNumber: 0,
+    // Will be set by caller
+    timestamp: Date.now(),
+    type,
+    title,
+    subtitle,
+    narrative,
+    facts,
+    concepts,
+    filesRead,
+    filesModified,
+    toolName: void 0,
+    correlationId,
+    createdAt: Date.now()
+  };
+}
+function parseSessionSummaryXML(xml, sessionId, project) {
+  const request = extractXmlTag(xml, "request") || "";
+  const investigated = parseXmlArray(extractXmlTag(xml, "investigated") || "");
+  const learned = parseXmlArray(extractXmlTag(xml, "learned") || "");
+  const completed = parseXmlArray(extractXmlTag(xml, "completed") || "");
+  const nextSteps = parseXmlArray(extractXmlTag(xml, "next_steps") || "");
+  const notes = extractXmlTag(xml, "notes") || "";
+  return {
+    id: generateId(),
+    sessionId,
+    project,
+    request,
+    investigated,
+    learned,
+    completed,
+    nextSteps,
+    notes,
+    createdAt: Date.now()
+  };
+}
+function extractXmlTag(xml, tagName) {
+  const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, "i");
+  const match = xml.match(regex);
+  return match ? match[1].trim() : null;
+}
+function parseXmlArray(xml) {
+  const items = [];
+  const regex = /<item>([\s\S]*?)<\/item>/gi;
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    items.push(match[1].trim());
+  }
+  return items;
+}
+function escapeXml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+}
+function isLowValueTool(toolName) {
+  return LOW_VALUE_TOOLS.has(toolName);
+}
+var LOW_VALUE_TOOLS;
+var init_observation_prompt = __esm({
+  "src/core/observation-prompt.ts"() {
+    "use strict";
+    LOW_VALUE_TOOLS = /* @__PURE__ */ new Set([
+      "TodoWrite",
+      "TodoRead",
+      "TaskCreate",
+      "TaskUpdate",
+      "TaskList",
+      "TaskGet"
+    ]);
+  }
+});
+
+// src/core/session-summary.ts
+function saveSessionSummary(db, summary) {
+  insertSessionSummary(db, summary);
+}
+function processSessionSummary(db, llmResponse, sessionId, project) {
+  const summary = parseSummaryResponse(llmResponse, sessionId, project);
+  if (summary) {
+    saveSessionSummary(db, summary);
+  }
+  return summary;
+}
+var init_session_summary = __esm({
+  "src/core/session-summary.ts"() {
+    "use strict";
+    init_db();
+    init_observation_prompt();
+  }
+});
+
+// src/core/observer.ts
+var observer_exports = {};
+__export(observer_exports, {
+  generateProjectName: () => generateProjectName,
+  generateSessionId: () => generateSessionId,
+  getCurrentProject: () => getCurrentProject,
+  getCurrentSessionId: () => getCurrentSessionId,
+  observerStatus: () => observerStatus,
+  startObserver: () => startObserver,
+  stopObserver: () => stopObserver
+});
+import fs8 from "fs";
+import path6 from "path";
+import crypto2 from "crypto";
+function generateSessionId(cwd) {
+  return crypto2.createHash("sha256").update(cwd).digest("hex").substring(0, 16);
+}
+function generateProjectName(cwd) {
+  return path6.basename(cwd);
+}
+function getCurrentSessionId() {
+  const envSessionId = process.env.CLAUDE_SESSION_ID;
+  if (envSessionId) {
+    return envSessionId;
+  }
+  const cwd = process.cwd();
+  return generateSessionId(cwd);
+}
+function getCurrentProject() {
+  const cwd = process.cwd();
+  return generateProjectName(cwd);
+}
+async function startObserver() {
+  const pidPath = getObserverPidPath();
+  if (fs8.existsSync(pidPath)) {
+    const existingPid = parseInt(fs8.readFileSync(pidPath, "utf-8"), 10);
+    try {
+      process.kill(existingPid, 0);
+      console.error(`Observer already running with PID ${existingPid}`);
+      process.exit(1);
+    } catch (error) {
+      fs8.unlinkSync(pidPath);
+    }
+  }
+  fs8.writeFileSync(pidPath, process.pid.toString());
+  const db = initDatabase();
+  const config = loadConfig();
+  if (!config) {
+    console.error("No LLM config found. Please create ~/.config/conversation-memory/config.json");
+    process.exit(1);
+  }
+  const llmProvider = createProvider(config);
+  const sessionId = getCurrentSessionId();
+  const project = getCurrentProject();
+  console.log(`Observer started for session ${sessionId} (${project})`);
+  const sessionContexts = /* @__PURE__ */ new Map();
+  sessionContexts.set(sessionId, {
+    sessionId,
+    conversationHistory: [
+      { role: "user", content: buildInitPrompt() }
+    ],
+    lastActivity: Date.now(),
+    promptCount: getLastPromptNumber(db, sessionId)
+  });
+  const pollInterval = setInterval(async () => {
+    try {
+      await pollPendingEvents(db, llmProvider, sessionContexts);
+    } catch (error) {
+      console.error("Error polling events:", error);
+    }
+  }, POLL_INTERVAL_MS);
+  process.on("SIGINT", () => shutdownObserver(pollInterval, pidPath, db));
+  process.on("SIGTERM", () => shutdownObserver(pollInterval, pidPath, db));
+  process.stdin.resume();
+}
+async function pollPendingEvents(db, llmProvider, sessionContexts) {
+  const now = Date.now();
+  for (const [sessionId, context] of sessionContexts.entries()) {
+    if (now - context.lastActivity > IDLE_TIMEOUT_MS) {
+      console.log(`Session ${sessionId} idle timeout, removing context`);
+      sessionContexts.delete(sessionId);
+    }
+  }
+  for (const [sessionId, context] of sessionContexts.entries()) {
+    const events = getPendingEvents(db, sessionId, 10);
+    if (events.length === 0) {
+      continue;
+    }
+    context.lastActivity = now;
+    for (const event of events) {
+      try {
+        await processEvent(db, llmProvider, event, context);
+        markEventProcessed(db, event.id);
+      } catch (error) {
+        console.error(`Error processing event ${event.id}:`, error);
+      }
+    }
+  }
+}
+async function processEvent(db, llmProvider, event, context) {
+  if (event.eventType === "tool_use" && event.toolName && isLowValueTool(event.toolName)) {
+    return;
+  }
+  const promptNumber = context.promptCount + 1;
+  if (event.eventType === "tool_use") {
+    await processToolUseEvent(db, llmProvider, event, context, promptNumber);
+  } else if (event.eventType === "summarize") {
+    await processSummarizeEvent(db, llmProvider, event, context);
+  }
+  context.promptCount = promptNumber;
+}
+async function processToolUseEvent(db, llmProvider, event, context, promptNumber) {
+  const previousObservations = getObservationsBySession(db, context.sessionId);
+  const previousContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.subtitle}`).join("\n");
+  const prompt = buildObservationPrompt(
+    event.toolName,
+    event.toolInput,
+    event.toolResponse || "",
+    event.cwd || process.cwd(),
+    event.project || "",
+    previousContext
+  );
+  context.conversationHistory.push({ role: "user", content: prompt });
+  const response = await llmProvider.complete(
+    context.conversationHistory.map((msg) => msg.content).join("\n\n")
+  );
+  context.conversationHistory.push({ role: "model", content: response.text });
+  const result = parseObservationResponse(response.text);
+  if (result.type === "observation" && result.data) {
+    const observation = {
+      ...result.data,
+      sessionId: context.sessionId,
+      project: event.project || "",
+      promptNumber,
+      toolName: event.toolName
+    };
+    createObservation(db, observation);
+    console.log(`Created observation: ${observation.title}`);
+  }
+}
+async function processSummarizeEvent(db, llmProvider, event, context) {
+  const previousObservations = getObservationsBySession(db, context.sessionId);
+  const sessionContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.narrative}`).join("\n");
+  const prompt = buildSummaryPrompt(sessionContext, event.project || "");
+  const response = await llmProvider.complete(prompt);
+  const summary = processSessionSummary(
+    db,
+    response.text,
+    context.sessionId,
+    event.project || ""
+  );
+  if (summary) {
+    console.log(`Created session summary for ${context.sessionId}`);
+  }
+}
+function shutdownObserver(pollInterval, pidPath, db) {
+  clearInterval(pollInterval);
+  db.close();
+  if (fs8.existsSync(pidPath)) {
+    fs8.unlinkSync(pidPath);
+  }
+  console.log("Observer stopped");
+  process.exit(0);
+}
+function stopObserver() {
+  const pidPath = getObserverPidPath();
+  if (!fs8.existsSync(pidPath)) {
+    console.error("Observer is not running");
+    process.exit(1);
+  }
+  const pid = parseInt(fs8.readFileSync(pidPath, "utf-8"), 10);
+  try {
+    process.kill(pid, "SIGTERM");
+    console.log(`Sent SIGTERM to observer process (PID ${pid})`);
+  } catch (error) {
+    console.error(`Failed to stop observer: ${error}`);
+    process.exit(1);
+  }
+}
+function observerStatus() {
+  const pidPath = getObserverPidPath();
+  if (!fs8.existsSync(pidPath)) {
+    console.log("Observer is not running");
+    process.exit(0);
+  }
+  const pid = parseInt(fs8.readFileSync(pidPath, "utf-8"), 10);
+  try {
+    process.kill(pid, 0);
+    console.log(`Observer is running (PID ${pid})`);
+    process.exit(0);
+  } catch (error) {
+    console.log("Observer PID file exists but process is not running");
+    process.exit(1);
+  }
+}
+var POLL_INTERVAL_MS, IDLE_TIMEOUT_MS;
+var init_observer = __esm({
+  "src/core/observer.ts"() {
+    "use strict";
+    init_db();
+    init_paths();
+    init_observations();
+    init_session_summary();
+    init_observation_prompt();
+    init_config();
+    POLL_INTERVAL_MS = 1e3;
+    IDLE_TIMEOUT_MS = 30 * 60 * 1e3;
+  }
+});
+
+// src/cli/observer-cli.ts
+var observer_cli_exports = {};
+import { spawn } from "child_process";
+import path7 from "path";
+async function startObserver2() {
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();
+  const cliPath = path7.join(pluginRoot, "dist", "cli.mjs");
+  const observer = spawn("node", [cliPath, "observer-run"], {
+    detached: true,
+    stdio: "ignore",
+    env: {
+      ...process.env,
+      CLAUDE_PLUGIN_ROOT: pluginRoot
+    }
+  });
+  observer.unref();
+  console.log("Observer process started");
+}
+async function stopObserver2() {
+  const { startObserver: stop } = await Promise.resolve().then(() => (init_observer(), observer_exports));
+  stop();
+}
+async function checkStatus() {
+  const { observerStatus: observerStatus2 } = await Promise.resolve().then(() => (init_observer(), observer_exports));
+  observerStatus2();
+}
+async function main() {
+  try {
+    switch (command) {
+      case "start":
+        await startObserver2();
+        break;
+      case "stop":
+        await stopObserver2();
+        break;
+      case "status":
+        await checkStatus();
+        break;
+      case "observer-run":
+        const { startObserver: run } = await Promise.resolve().then(() => (init_observer(), observer_exports));
+        await run();
+        break;
+      default:
+        console.error(`
+Observer CLI - Control the observer background process
+
+Usage:
+  observer <command>
+
+Commands:
+  start    Start the observer process in the background
+  stop     Stop the observer process
+  status   Check if the observer is running
+
+Examples:
+  conversation-memory observer start
+  conversation-memory observer status
+  conversation-memory observer stop
+`);
+        process.exit(1);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    process.exit(1);
+  }
+}
+var command;
+var init_observer_cli = __esm({
+  "src/cli/observer-cli.ts"() {
+    "use strict";
+    command = process.argv[2] || "status";
+    main();
+  }
+});
+
 // src/core/verify.ts
 init_parser();
 init_db();
@@ -2155,11 +2904,11 @@ function extractFirstLine(text, truncateLength = 50) {
   }
   return firstLine.substring(0, truncateLength - 3) + "...";
 }
-function truncateCommand(command2, maxLength = 80) {
-  if (command2.length <= maxLength) {
-    return command2;
+function truncateCommand(command3, maxLength = 80) {
+  if (command3.length <= maxLength) {
+    return command3;
   }
-  return command2.substring(0, maxLength - 3) + "...";
+  return command3.substring(0, maxLength - 3) + "...";
 }
 function formatUnknownTool(toolName, toolInput) {
   if (toolInput === null || toolInput === void 0) {
@@ -2202,20 +2951,20 @@ var TOOL_FORMATS = {
     return file;
   },
   Bash: (input) => {
-    const command2 = input?.command || "";
-    return `\`${truncateCommand(command2, 80)}\``;
+    const command3 = input?.command || "";
+    return `\`${truncateCommand(command3, 80)}\``;
   },
   Grep: (input) => {
     const grepInput = input;
     const pattern = grepInput.pattern || "";
-    const path7 = grepInput.path;
-    return path7 ? `${pattern} in ${path7}` : pattern;
+    const path9 = grepInput.path;
+    return path9 ? `${pattern} in ${path9}` : pattern;
   },
   Glob: (input) => {
     const globInput = input;
     const pattern = globInput.pattern || "";
-    const path7 = globInput.path;
-    return path7 ? `${pattern} in ${path7}` : pattern;
+    const path9 = globInput.path;
+    return path9 ? `${pattern} in ${path9}` : pattern;
   },
   Task: (input) => {
     const description = input?.description || "";
@@ -2773,12 +3522,12 @@ async function syncConversations(sourceDir, destDir, options = {}) {
 
 // src/cli/index-cli.ts
 init_paths();
-import fs8 from "fs";
-import path6 from "path";
+import fs9 from "fs";
+import path8 from "path";
 import os3 from "os";
 import { execSync } from "child_process";
-var command = process.argv[2];
-if (!command || command === "--help" || command === "-h") {
+var command2 = process.argv[2];
+if (!command2 || command2 === "--help" || command2 === "-h") {
   console.log(`
 Conversation Memory CLI - Persistent semantic search for Claude Code sessions
 
@@ -2794,10 +3543,13 @@ COMMANDS:
   verify              Check index health for issues
   repair              Fix detected issues from verify
   rebuild             Delete database and re-index everything
+  observe             Handle PostToolUse hook (internal)
+  observer            Control observer background process
 
 OPTIONS:
   --concurrency, -c N  Parallelism for summaries/embeddings (1-16, default: 1)
   --no-summaries       Skip AI summarization
+  --summarize          Request session summary (for Stop hook)
 
 EXAMPLES:
   # Sync new conversations
@@ -2821,6 +3573,11 @@ EXAMPLES:
   # Rebuild entire index
   conversation-memory rebuild --concurrency 8
 
+  # Observer control
+  conversation-memory observer start
+  conversation-memory observer status
+  conversation-memory observer stop
+
 ENVIRONMENT VARIABLES:
   CONVERSATION_MEMORY_CONFIG_DIR   Override config directory
   CONVERSATION_MEMORY_DB_PATH      Override database path
@@ -2832,8 +3589,8 @@ For more information, visit: https://github.com/wooto/claude-plugins
 }
 async function ensureDependencies() {
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();
-  const nodeModulesPath = path6.join(pluginRoot, "node_modules");
-  if (!fs8.existsSync(nodeModulesPath)) {
+  const nodeModulesPath = path8.join(pluginRoot, "node_modules");
+  if (!fs9.existsSync(nodeModulesPath)) {
     console.error("[conversation-memory] Installing dependencies...");
     try {
       execSync("npm install --silent", {
@@ -2860,10 +3617,15 @@ function getNoSummaries() {
 }
 var concurrency = getConcurrency();
 var noSummaries = getNoSummaries();
-async function main() {
+async function main2() {
   try {
     await ensureDependencies();
-    switch (command) {
+    switch (command2) {
+      case "observe":
+      case "observer":
+      case "observer-run":
+        await Promise.resolve().then(() => (init_observer_cli(), observer_cli_exports));
+        break;
       case "index-session":
         const sessionId = process.argv[3];
         if (!sessionId) {
@@ -2886,7 +3648,7 @@ async function main() {
         break;
       }
       case "sync":
-        const syncSourceDir = path6.join(os3.homedir(), ".claude", "projects");
+        const syncSourceDir = path8.join(os3.homedir(), ".claude", "projects");
         const syncDestDir = getArchiveDir();
         console.log("Syncing conversations...");
         const syncResult = await syncConversations(syncSourceDir, syncDestDir, { skipSummaries: noSummaries });
@@ -2933,19 +3695,19 @@ Errors: ${syncResult.errors.length}`);
       case "rebuild":
         console.log("Rebuilding entire index...");
         const dbPath = getDbPath();
-        if (fs8.existsSync(dbPath)) {
-          fs8.unlinkSync(dbPath);
+        if (fs9.existsSync(dbPath)) {
+          fs9.unlinkSync(dbPath);
           console.log("Deleted existing database");
         }
         const archiveDir = getArchiveDir();
-        if (fs8.existsSync(archiveDir)) {
-          const projects = fs8.readdirSync(archiveDir);
+        if (fs9.existsSync(archiveDir)) {
+          const projects = fs9.readdirSync(archiveDir);
           for (const project of projects) {
-            const projectPath = path6.join(archiveDir, project);
-            if (!fs8.statSync(projectPath).isDirectory()) continue;
-            const summaries = fs8.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
+            const projectPath = path8.join(archiveDir, project);
+            if (!fs9.statSync(projectPath).isDirectory()) continue;
+            const summaries = fs9.readdirSync(projectPath).filter((f) => f.endsWith("-summary.txt"));
             for (const summary of summaries) {
-              fs8.unlinkSync(path6.join(projectPath, summary));
+              fs9.unlinkSync(path8.join(projectPath, summary));
             }
           }
           console.log("Deleted all summary files");
@@ -2963,7 +3725,7 @@ Errors: ${syncResult.errors.length}`);
     process.exit(1);
   }
 }
-main();
+main2();
 /*! Bundled license information:
 
 @google/generative-ai/dist/index.mjs:

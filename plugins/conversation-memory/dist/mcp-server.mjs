@@ -17861,6 +17861,60 @@ function initDatabase() {
       embedding FLOAT[768]
     )
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      prompt_number INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      narrative TEXT NOT NULL,
+      facts TEXT NOT NULL,
+      concepts TEXT NOT NULL,
+      files_read TEXT NOT NULL,
+      files_modified TEXT NOT NULL,
+      tool_name TEXT,
+      correlation_id TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS session_summaries (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      request TEXT NOT NULL,
+      investigated TEXT NOT NULL,
+      learned TEXT NOT NULL,
+      completed TEXT NOT NULL,
+      next_steps TEXT NOT NULL,
+      notes TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      tool_name TEXT,
+      tool_input TEXT,
+      tool_response TEXT,
+      cwd TEXT,
+      timestamp INTEGER NOT NULL,
+      processed BOOLEAN DEFAULT 0,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS vec_observations USING vec0(
+      id TEXT PRIMARY KEY,
+      embedding FLOAT[768]
+    )
+  `);
   migrateSchema(db);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_timestamp ON exchanges(timestamp DESC)
@@ -17882,6 +17936,24 @@ function initDatabase() {
   `);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tool_exchange ON tool_calls(exchange_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_project ON observations(project)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_type ON observations(type)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_timestamp ON observations(timestamp DESC)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_session ON pending_events(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_processed ON pending_events(processed)
   `);
   return db;
 }
