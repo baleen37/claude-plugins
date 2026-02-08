@@ -140,8 +140,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added load helpers/marketplace_helper. Replaced inline marketplace validation (49 lines removed) with marketplace_all_plugins_listed() and marketplace_all_plugins_exist() calls. Reduced from 95 lines to 46 lines. All 231 tests pass."
     },
     {
       "id": "US-012",

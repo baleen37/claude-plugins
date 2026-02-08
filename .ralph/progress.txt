@@ -98,3 +98,20 @@ Started: 2025-02-08T00:00:00Z
   - Added bonus `marketplace_all_plugins_listed()` function for checking reverse direction
   - The `get_marketplace_plugins()` function was already in test_utils.bash, kept it there for backward compatibility
 
+## Iteration 4 - US-011: Refactor marketplace_json.bats to use marketplace helper
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Added `load helpers/marketplace_helper` to marketplace_json.bats
+  - Replaced inline marketplace validation (lines 38-76) with `marketplace_all_plugins_listed()` function
+  - Replaced inline marketplace validation (lines 78-94) with `marketplace_all_plugins_exist()` function
+  - Removed complex array matching code with nested loops and conditionals
+  - Reduced code from 95 lines to 46 lines (49 lines removed)
+- **File modified**: tests/marketplace_json.bats
+- **Tests verified**: All 231 tests pass
+- **Learnings**:
+  - The marketplace helper functions provide a clean abstraction for marketplace.json validation
+  - The complex array matching pattern (finding missing plugins in array) was a good candidate for extraction
+  - Helper functions handle error messages internally (stderr output for missing items)
+  - Refactoring reduces cognitive load - the test intent is clearer with just one function call
+
