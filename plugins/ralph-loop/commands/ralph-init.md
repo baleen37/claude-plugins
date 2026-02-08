@@ -42,7 +42,7 @@ The user's task description: $ARGUMENTS
 
 ## `.ralph/progress.txt` Initial Content
 
-```
+```text
 # Ralph Progress Log
 Started: [ISO timestamp]
 
@@ -63,6 +63,7 @@ Started: [ISO timestamp]
 ## After Creating Files
 
 Report:
+
 - Total number of stories
 - Story list with IDs and titles
 - Suggested command: `/ralph-loop` or `/ralph-loop --max-iterations N`
