@@ -153,3 +153,21 @@ Started: 2025-02-08T00:00:00Z
   - Refactoring reduced code by 46% while maintaining all test functionality
   - Consistent test data creation makes tests more maintainable and less error-prone
 
+## Iteration 7 - US-014: Add create_workflow_yaml to fixture factory
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Added `create_workflow_yaml()` function to tests/helpers/fixture_factory.bash
+  - Function supports: output_path, workflow_name, trigger_yaml, permissions_yaml, jobs_yaml
+  - Creates valid GitHub Actions workflow YAML structure
+  - Added documentation comment to file header
+  - Added usage example to file header documentation
+- **File modified**: tests/helpers/fixture_factory.bash
+- **Tests verified**: All 249 tests pass
+- **Learnings**:
+  - Workflow YAML structure has name, triggers (on), permissions, and jobs sections
+  - The function uses heredoc for clean YAML generation
+  - Default values provided for trigger_yaml (on: push) and permissions_yaml (permissions: {})
+  - Jobs section is optional - only added if jobs_yaml parameter is provided
+  - Fixture factory now supports all common test fixture types: plugins, marketplace, hooks, skills, handoffs, and workflows
+
