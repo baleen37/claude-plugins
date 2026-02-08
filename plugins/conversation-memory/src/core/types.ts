@@ -40,14 +40,27 @@ export interface ConversationExchange {
   compressedToolSummary?: string;
 }
 
-export interface SearchResult {
-  exchange: ConversationExchange;
-  similarity: number;
+// Compact types for search results (without full ConversationExchange)
+export interface CompactSearchResult {
+  id: string;
+  project: string;
+  timestamp: string;
+  archivePath: string;
+  lineStart: number;
+  lineEnd: number;
+  compressedToolSummary?: string;
+  similarity?: number;
   snippet: string;
 }
 
-export interface MultiConceptResult {
-  exchange: ConversationExchange;
+export interface CompactMultiConceptResult {
+  id: string;
+  project: string;
+  timestamp: string;
+  archivePath: string;
+  lineStart: number;
+  lineEnd: number;
+  compressedToolSummary?: string;
   snippet: string;
   conceptSimilarities: number[];
   averageSimilarity: number;

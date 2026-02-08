@@ -214,7 +214,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             2
           );
         } else {
-          resultText = await formatMultiConceptResults(results, params.query);
+          resultText = formatMultiConceptResults(results, params.query);
         }
       } else {
         // Single-concept search
@@ -231,11 +231,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (params.response_format === 'json') {
           resultText = JSON.stringify(
             {
-              results: results.map((r) => ({
-                exchange: r.exchange,
-                similarity: r.similarity,
-                snippet: r.snippet,
-              })),
+              results: results,
               count: results.length,
               mode: params.mode,
             },
@@ -243,7 +239,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             2
           );
         } else {
-          resultText = await formatResults(results);
+          resultText = formatResults(results);
         }
       }
 
