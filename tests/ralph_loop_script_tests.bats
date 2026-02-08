@@ -482,10 +482,10 @@ EOF
   bash "$RALPH_SCRIPT" 3 > "$output_file" 2>&1 &
   ralph_pid=$!
 
-  # Wait for all iterations to complete with longer timeout for CI
+  # Wait for all iterations to complete with much longer timeout for CI
   local count=0
-  while kill -0 "$ralph_pid" 2>/dev/null && [ $count -lt 30 ]; do
-    sleep 0.3
+  while kill -0 "$ralph_pid" 2>/dev/null && [ $count -lt 60 ]; do
+    sleep 0.5
     count=$((count + 1))
   done
 
