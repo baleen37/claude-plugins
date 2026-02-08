@@ -34,6 +34,9 @@
 #   # Create handoff JSON for testing
 #   create_handoff_json "$TEST_TEMP_DIR/handoff.json" "test-id" "2026-02-08T10:00:00Z" "/project/path" "Summary" "main" "project-name"
 #
+#   # Create GitHub Actions workflow YAML for testing
+#   create_workflow_yaml "$TEST_TEMP_DIR/workflow.yml" "Test Workflow" "on: push"
+#
 #   # Clean up fixtures
 #   cleanup_fixtures "$FIXTURE_ROOT"
 #
@@ -48,6 +51,7 @@
 #   - create_skill_md(): Create a SKILL.md file with frontmatter
 #   - create_plugin_with_custom_fields(): Create a plugin.json with custom JSON fields
 #   - create_handoff_json(): Create a handoff JSON file with test data
+#   - create_workflow_yaml(): Create a GitHub Actions workflow YAML file
 #   - cleanup_fixtures(): Safely remove fixture directories
 
 # Ensure JQ_BIN is set
@@ -452,6 +456,41 @@ create_handoff_json() {
   "source_session_id": $source_session_id_json
 }
 EOF
+
+    echo "$output_path"
+}
+
+# Create a GitHub Actions workflow YAML file
+# Args: output_path, workflow_name, [trigger_yaml], [permissions_yaml], [jobs_yaml]
+# Returns: Path to created workflow YAML
+create_workflow_yaml() {
+    local output_path="$1"
+    local workflow_name="$2"
+    local trigger_yaml="${3:-on: push}"
+    local permissions_yaml="${4:-permissions: {}}"
+    local jobs_yaml="${5:-}"
+
+    local workflow_dir
+    workflow_dir=$(dirname "$output_path")
+    mkdir -p "$workflow_dir"
+
+    # Create workflow YAML
+    cat > "$output_path" <<EOF
+name: ${workflow_name}
+
+${trigger_yaml}
+
+${permissions_yaml}
+EOF
+
+    # Add jobs section if provided
+    if [ -n "$jobs_yaml" ]; then
+        cat >> "$output_path" <<EOF
+
+jobs:
+${jobs_yaml}
+EOF
+    fi
 
     echo "$output_path"
 }

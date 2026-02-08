@@ -153,3 +153,73 @@ Started: 2025-02-08T00:00:00Z
   - Refactoring reduced code by 46% while maintaining all test functionality
   - Consistent test data creation makes tests more maintainable and less error-prone
 
+## Iteration 7 - US-014: Add create_workflow_yaml to fixture factory
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Added `create_workflow_yaml()` function to tests/helpers/fixture_factory.bash
+  - Function supports: output_path, workflow_name, trigger_yaml, permissions_yaml, jobs_yaml
+  - Creates valid GitHub Actions workflow YAML structure
+  - Added documentation comment to file header
+  - Added usage example to file header documentation
+- **File modified**: tests/helpers/fixture_factory.bash
+- **Tests verified**: All 249 tests pass
+- **Learnings**:
+  - Workflow YAML structure has name, triggers (on), permissions, and jobs sections
+  - The function uses heredoc for clean YAML generation
+  - Default values provided for trigger_yaml (on: push) and permissions_yaml (permissions: {})
+  - Jobs section is optional - only added if jobs_yaml parameter is provided
+  - Fixture factory now supports all common test fixture types: plugins, marketplace, hooks, skills, handoffs, and workflows
+
+## Iteration 8 - US-015: Split handoff.bats into structure.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/structure.bats exists with exactly 5 structure tests
+  - Removed "handoff file filtering by project path works" test (belongs in filtering.bats)
+  - Final structure tests: directory creation, JSON structure validation, loaded_at updates, recent handoff detection, loaded handoff filtering
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File modified**: tests/handoff/structure.bats
+- **Tests verified**: All 249 tests pass (5 structure tests verified)
+- **Learnings**:
+  - Test splitting requires careful attention to test categorization - some tests may be misclassified
+  - Structure tests should focus on JSON schema, required fields, and basic field operations
+  - Filtering/sorting tests belong in separate filtering.bats file
+  - The fixture_factory helper is loaded with relative path (../helpers/fixture_factory)
+  - Original handoff.bats remains unchanged until US-017 (final split and deletion)
+
+## Iteration 8 - US-016: Split handoff.bats into filtering.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/filtering.bats exists with 4 filtering/sorting tests
+  - Tests included: project path filtering, created_at sorting, recent handoff detection, most recent unloaded handoff
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File exists**: tests/handoff/filtering.bats
+- **Tests verified**: All 249 tests pass
+- **Learnings**:
+  - Filtering tests verify jq-based filtering and sorting operations
+  - Tests use complex jq queries for multi-condition filtering (project path + loaded status + timestamp sorting)
+  - The fixture_factory helper is loaded with relative path (../helpers/fixture_factory)
+  - Concurrent Ralph loops can create overlapping work - need to check for existing files before implementing
+  - Original handoff.bats remains unchanged until US-017 (final split and deletion)
+
+## Iteration 8 - US-017: Split handoff.bats into references.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/references.bats exists with 4 reference tests
+  - Tests included: plan_path resolution with tilde expansion, tasks_session_id extraction, missing plan file handling, source_session_id display
+  - Original tests/handoff/handoff.bats was deleted
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File created**: tests/handoff/references.bats
+- **File deleted**: tests/handoff/handoff.bats
+- **Tests verified**: All 253 tests pass (up from 249 due to split)
+- **Learnings**:
+  - Reference tests verify the references object fields (plan_path, tasks_session_id) and source_session_id
+  - Tests verify both successful extraction and error handling (missing plan file)
+  - Tilde expansion testing uses parameter expansion: ${PLAN_PATH/#\~/$TEST_TEMP_DIR}
+  - Test file split increased total test count slightly due to test file overhead (setup/teardown)
+  - Minor duplication exists: 'session-start hook detects recent handoffs' appears in both structure.bats and filtering.bats
+  - All three new test files (structure, filtering, references) successfully split the original handoff.bats
+

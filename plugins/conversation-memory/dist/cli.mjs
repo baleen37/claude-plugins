@@ -275,9 +275,17 @@ import path2 from "path";
 import fs3 from "fs";
 import * as sqliteVec from "sqlite-vec";
 function migrateSchema(db) {
-  const columns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all();
-  const columnNames = new Set(columns.map((c) => c.name));
-  const migrations = [
+  const exchangesColumns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all();
+  const exchangeColumnNames = new Set(exchangesColumns.map((c) => c.name));
+  let pendingEventColumnNames = /* @__PURE__ */ new Set();
+  const pendingEventsTableExists = db.prepare(`
+    SELECT name FROM sqlite_master WHERE type='table' AND name='pending_events'
+  `).get();
+  if (pendingEventsTableExists) {
+    const pendingColumns = db.prepare(`SELECT name FROM pragma_table_info('pending_events')`).all();
+    pendingEventColumnNames = new Set(pendingColumns.map((c) => c.name));
+  }
+  const exchangeMigrations = [
     { name: "last_indexed", sql: "ALTER TABLE exchanges ADD COLUMN last_indexed INTEGER" },
     { name: "parent_uuid", sql: "ALTER TABLE exchanges ADD COLUMN parent_uuid TEXT" },
     { name: "is_sidechain", sql: "ALTER TABLE exchanges ADD COLUMN is_sidechain BOOLEAN DEFAULT 0" },
@@ -288,15 +296,26 @@ function migrateSchema(db) {
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
     { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
-    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" },
-    { name: "project_pending_events", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
+  ];
+  const pendingEventMigrations = [
+    { name: "project", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
   ];
   let migrated = false;
-  for (const migration of migrations) {
-    if (!columnNames.has(migration.name)) {
-      console.log(`Migrating schema: adding ${migration.name} column...`);
+  for (const migration of exchangeMigrations) {
+    if (!exchangeColumnNames.has(migration.name)) {
+      console.log(`Migrating exchanges table: adding ${migration.name} column...`);
       db.prepare(migration.sql).run();
       migrated = true;
+    }
+  }
+  if (pendingEventsTableExists) {
+    for (const migration of pendingEventMigrations) {
+      if (!pendingEventColumnNames.has(migration.name)) {
+        console.log(`Migrating pending_events table: adding ${migration.name} column...`);
+        db.prepare(migration.sql).run();
+        migrated = true;
+      }
     }
   }
   if (migrated) {
@@ -2523,9 +2542,6 @@ function generateId() {
 function isLowValueTool(toolName) {
   return skipTools.has(toolName);
 }
-function configureSkipTools(tools) {
-  skipTools = new Set(tools);
-}
 var DEFAULT_SKIP_TOOLS, skipTools;
 var init_observation_prompt = __esm({
   "src/core/observation-prompt.ts"() {
@@ -2614,10 +2630,6 @@ async function startObserver() {
     console.error("No LLM config found. Please create ~/.config/conversation-memory/config.json");
     process.exit(1);
   }
-  if (config.skipTools) {
-    configureSkipTools(config.skipTools);
-    console.log(`Configured skipTools: ${config.skipTools.join(", ")}`);
-  }
   const llmProvider = createProvider(config);
   const sessionId = getCurrentSessionId();
   const project = getCurrentProject();
@@ -2625,6 +2637,9 @@ async function startObserver() {
   const sessionContexts = /* @__PURE__ */ new Map();
   sessionContexts.set(sessionId, {
     sessionId,
+    conversationHistory: [
+      { role: "user", content: buildInitPrompt() }
+    ],
     lastActivity: Date.now(),
     promptCount: getLastPromptNumber(db, sessionId)
   });
@@ -2687,7 +2702,6 @@ async function processEvent(db, llmProvider, event, context, pollInterval, pidPa
   return false;
 }
 async function processToolUseEvent(db, llmProvider, event, context, promptNumber) {
-  const systemPrompt = buildInitPrompt();
   const prompt = buildObservationPrompt(
     event.toolName,
     event.toolInput,
@@ -2695,7 +2709,11 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
     event.cwd || process.cwd(),
     event.project || ""
   );
-  const response = await llmProvider.complete(prompt, { systemPrompt });
+  context.conversationHistory.push({ role: "user", content: prompt });
+  const response = await llmProvider.complete(
+    context.conversationHistory.map((msg) => msg.content).join("\n\n")
+  );
+  context.conversationHistory.push({ role: "model", content: response.text });
   const result = parseObservationResponse(response.text);
   if (result.type === "observation" && result.data) {
     const observation = {
@@ -2710,11 +2728,10 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
   }
 }
 async function processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath) {
-  const systemPrompt = buildInitPrompt();
   const previousObservations = getObservationsBySession(db, context.sessionId);
   const sessionContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.narrative}`).join("\n");
   const prompt = buildSummaryPrompt(sessionContext, event.project || "");
-  const response = await llmProvider.complete(prompt, { systemPrompt });
+  const response = await llmProvider.complete(prompt);
   const summary = processSessionSummary(
     db,
     response.text,

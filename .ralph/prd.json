@@ -181,8 +181,8 @@
         "All tests pass after adding function"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created create_workflow_yaml() function with support for workflow name, trigger YAML, permissions YAML, and jobs YAML. Function creates valid GitHub Actions workflow YAML structure. Added documentation comment to file header. All 249 tests pass."
     },
     {
       "id": "US-015",
@@ -195,8 +195,8 @@
         "All tests pass after split"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created tests/handoff/structure.bats with exactly 5 structure tests: handoff directory creation, JSON structure validation, loaded_at timestamp updates, recent handoff detection, and loaded handoff filtering. Removed the project path filtering test (belongs in filtering.bats). All 249 tests pass."
     },
     {
       "id": "US-016",
@@ -209,8 +209,8 @@
         "All tests pass after split"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created tests/handoff/filtering.bats with 4 tests: project path filtering, created_at sorting, recent handoff detection, most recent unloaded handoff filtering. File includes appropriate setup/teardown and loads fixture_factory helper. All 249 tests pass."
     },
     {
       "id": "US-017",
@@ -224,8 +224,8 @@
         "Delete original tests/handoff/handoff.bats"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created tests/handoff/references.bats with 4 tests: plan_path resolution, tasks_session_id extraction, missing plan file handling, source_session_id display. Deleted original tests/handoff/handoff.bats. All 253 tests pass. Note: 'session-start hook detects recent handoffs' test exists in both structure.bats and filtering.bats (minor duplication, all tests pass)."
     }
   ]
 }
