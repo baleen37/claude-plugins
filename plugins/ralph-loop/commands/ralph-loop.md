@@ -1,23 +1,45 @@
 ---
-description: "Start Ralph Wiggum loop in current session"
-argument-hint: "PROMPT [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh:*)"]
-hide-from-slash-command-tool: "true"
+description: "Start Ralph loop in current session"
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh*)"]
 ---
 
-# Ralph Loop Command
+# Ralph Loop
 
-Execute the setup script to initialize the Ralph loop:
+Execute the Ralph loop script. This will spawn fresh Claude instances in a bash loop.
+
+## Prerequisites
+
+- `.ralph/prd.json` must exist (run `/ralph-init` first)
+
+## Usage
+
+Default (10 iterations):
 
 ```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh" $ARGUMENTS
+"${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh"
 ```
 
-Please work on the task. When you try to exit, the Ralph loop will feed the SAME PROMPT
-back to you for the next iteration. You'll see your previous work in files and git
-history, allowing you to iterate and improve.
+With custom max iterations:
 
-CRITICAL RULE: If a completion promise is set, you may ONLY output it when the statement is
-completely and unequivocally TRUE. Do not output false promises to escape the loop,
-even if you think you're stuck or should exit for other reasons. The loop is designed
-to continue until genuine completion.
+```!
+"${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh" $ARGUMENTS
+```
+
+## What Happens
+
+1. Script reads `.ralph/prd.json` for user stories
+2. For each iteration, spawns a fresh `claude --print` instance
+3. Each instance implements one user story, runs tests, commits if passing
+4. Loop exits when all stories pass or max iterations reached
+5. Progress is tracked in `.ralph/progress.txt`
+
+## Monitoring
+
+Watch progress in another terminal:
+
+```bash
+tail -f .ralph/progress.txt
+```
+
+To cancel: `/cancel-ralph`
+To cancel: `/cancel-ralph`
