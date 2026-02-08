@@ -61,3 +61,20 @@ Started: 2025-02-08T00:00:00Z
   - Refactoring eliminates the nested if-elif structure for better readability
   - This pattern can be applied to other test files with inline YAML validation
 
+## Iteration 3 - US-009: Refactor github_workflows.bats YAML validation
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Removed local `ensure_yq()` helper function (5 lines)
+  - Replaced all 10 `ensure_yq` calls with `ensure_yaml_validator` from bats_helper
+  - Replaced 3 inline YAML validation calls (`yaml_get "." >/dev/null`) with `validate_yaml_file()`
+  - Updated tests: CI workflow, Release workflow, Marketplace sync workflow YAML syntax tests
+  - Reduced code from 139 lines to 128 lines (11 lines removed)
+- **File modified**: tests/github_workflows.bats
+- **Tests verified**: All 231 tests pass
+- **Learnings**:
+  - Local helper functions that duplicate bats_helper functionality should be removed
+  - The `ensure_yaml_validator()` is more robust than local `ensure_yq()` because it supports both yq and python3
+  - All three YAML validation tests now use the standardized helper
+  - Pattern is consistent across all workflow YAML validation tests
+

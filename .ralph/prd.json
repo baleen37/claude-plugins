@@ -110,8 +110,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Removed local ensure_yq() helper (5 lines). Replaced 10 ensure_yq calls with ensure_yaml_validator. Replaced 3 inline YAML validation calls (yaml_get '.' >/dev/null) with validate_yaml_file(). Reduced from 139 lines to 128 lines (11 lines removed). All 231 tests pass."
     },
     {
       "id": "US-010",
