@@ -6,7 +6,7 @@ hide-from-slash-command-tool: "true"
 
 # Ralph Loop Command
 
-<!-- TODO: Update this command to use the new architecture (see Task #7) -->
+<!-- TODO: Update this command to use the new architecture (see Task #5) -->
 <!-- The Stop hook mechanism has been removed. This command needs to be rewritten to -->
 <!-- use the new bash loop + fresh Claude instance approach. -->
 
