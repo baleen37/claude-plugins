@@ -17956,6 +17956,7 @@ async function searchConversations(query, options = {}) {
         e.archive_path,
         e.line_start,
         e.line_end,
+        e.compressed_tool_summary,
         vec.distance
       FROM vec_exchanges AS vec
       JOIN exchanges AS e ON vec.id = e.id
@@ -17983,6 +17984,7 @@ async function searchConversations(query, options = {}) {
         e.archive_path,
         e.line_start,
         e.line_end,
+        e.compressed_tool_summary,
         0 as distance
       FROM exchanges AS e
       WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
@@ -18019,7 +18021,8 @@ async function searchConversations(query, options = {}) {
       assistantMessage: row.assistant_message,
       archivePath: row.archive_path,
       lineStart: row.line_start,
-      lineEnd: row.line_end
+      lineEnd: row.line_end,
+      compressedToolSummary: row.compressed_tool_summary
     };
     const summaryPath = row.archive_path.replace(".jsonl", "-summary.txt");
     let summary;
@@ -18082,13 +18085,8 @@ async function formatResults(results) {
     }
     output += `   "${result.snippet}"
 `;
-    if (result.exchange.toolCalls && result.exchange.toolCalls.length > 0) {
-      const toolCounts = /* @__PURE__ */ new Map();
-      result.exchange.toolCalls.forEach((tc) => {
-        toolCounts.set(tc.toolName, (toolCounts.get(tc.toolName) || 0) + 1);
-      });
-      const toolSummary = Array.from(toolCounts.entries()).map(([name, count]) => `${name}(${count})`).join(", ");
-      output += `   Tools: ${toolSummary}
+    if (result.exchange.compressedToolSummary) {
+      output += `   Actions: ${result.exchange.compressedToolSummary}
 `;
     }
     const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
@@ -18157,13 +18155,8 @@ async function formatMultiConceptResults(results, concepts) {
 `;
     output += `   "${result.snippet}"
 `;
-    if (result.exchange.toolCalls && result.exchange.toolCalls.length > 0) {
-      const toolCounts = /* @__PURE__ */ new Map();
-      result.exchange.toolCalls.forEach((tc) => {
-        toolCounts.set(tc.toolName, (toolCounts.get(tc.toolName) || 0) + 1);
-      });
-      const toolSummary = Array.from(toolCounts.entries()).map(([name, count]) => `${name}(${count})`).join(", ");
-      output += `   Tools: ${toolSummary}
+    if (result.exchange.compressedToolSummary) {
+      output += `   Actions: ${result.exchange.compressedToolSummary}
 `;
     }
     const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
@@ -19354,6 +19347,105 @@ var Ft = b.parse;
 var jt = x.lex;
 
 // src/core/show.ts
+function readConversationFromDb(db, archivePath, startLine, endLine) {
+  let whereClause = "WHERE archive_path = ?";
+  const params = [archivePath];
+  if (startLine !== void 0) {
+    whereClause += " AND line_end >= ?";
+    params.push(startLine);
+  }
+  if (endLine !== void 0) {
+    whereClause += " AND line_start <= ?";
+    params.push(endLine);
+  }
+  const query = `
+    SELECT
+      id,
+      timestamp,
+      user_message,
+      assistant_message,
+      archive_path,
+      line_start,
+      line_end,
+      session_id,
+      cwd,
+      git_branch,
+      claude_version,
+      is_sidechain,
+      compressed_tool_summary
+    FROM exchanges
+    ${whereClause}
+    ORDER BY line_start ASC
+  `;
+  const exchanges = db.prepare(query).all(...params);
+  if (exchanges.length === 0) {
+    return null;
+  }
+  let output = "# Conversation\n\n";
+  const firstExchange = exchanges[0];
+  output += "## Metadata\n\n";
+  if (firstExchange.session_id) {
+    output += `**Session ID:** ${firstExchange.session_id}
+
+`;
+  }
+  if (firstExchange.git_branch) {
+    output += `**Git Branch:** ${firstExchange.git_branch}
+
+`;
+  }
+  if (firstExchange.cwd) {
+    output += `**Working Directory:** ${firstExchange.cwd}
+
+`;
+  }
+  if (firstExchange.claude_version) {
+    output += `**Claude Code Version:** ${firstExchange.claude_version}
+
+`;
+  }
+  output += "---\n\n";
+  output += "## Messages\n\n";
+  let inSidechain = false;
+  for (const exchange of exchanges) {
+    const timestamp = new Date(exchange.timestamp).toLocaleString();
+    if (exchange.is_sidechain && !inSidechain) {
+      output += "\n---\n";
+      output += "**\u{1F500} SIDECHAIN START**\n";
+      output += "---\n\n";
+      inSidechain = true;
+    } else if (!exchange.is_sidechain && inSidechain) {
+      output += "\n---\n";
+      output += "**\u{1F500} SIDECHAIN END**\n";
+      output += "---\n\n";
+      inSidechain = false;
+    }
+    const roleLabel = exchange.is_sidechain ? "Agent" : "User";
+    output += `### **${roleLabel}** (${timestamp})
+
+`;
+    output += `${exchange.user_message}
+
+`;
+    const agentRoleLabel = exchange.is_sidechain ? "Subagent" : "Agent";
+    output += `### **${agentRoleLabel}** (${timestamp})
+
+`;
+    output += `${exchange.assistant_message}
+
+`;
+    if (exchange.compressed_tool_summary) {
+      output += "**Tools:** " + exchange.compressed_tool_summary + "\n\n";
+    }
+    output += "---\n\n";
+  }
+  if (inSidechain) {
+    output += "\n---\n";
+    output += "**\u{1F500} SIDECHAIN END**\n";
+    output += "---\n\n";
+  }
+  return output;
+}
 function formatConversationAsMarkdown(jsonl, startLine, endLine) {
   const allLines = jsonl.trim().split("\n").filter((line) => line.trim());
   const lines = startLine !== void 0 || endLine !== void 0 ? allLines.slice(
@@ -19635,7 +19727,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "read",
-        description: `Read full conversations to extract detailed context after finding relevant results with search. Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
+        description: `Returns compressed conversation data from indexed DB. Tool inputs/results are summarized, not shown in full. Read full conversations to extract detailed context after finding relevant results with search. Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
         inputSchema: {
           type: "object",
           properties: {
@@ -19721,23 +19813,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     if (name === "read") {
       const params = ShowConversationInputSchema.parse(args);
-      if (!fs4.existsSync(params.path)) {
-        throw new Error(`File not found: ${params.path}`);
+      const db = initDatabase();
+      try {
+        const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
+        if (dbResult) {
+          return { content: [{ type: "text", text: dbResult }] };
+        }
+        if (!fs4.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
+        const jsonlContent = fs4.readFileSync(params.path, "utf-8");
+        return { content: [{ type: "text", text: formatConversationAsMarkdown(jsonlContent, params.startLine, params.endLine) }] };
+      } finally {
+        db.close();
       }
-      const jsonlContent = fs4.readFileSync(params.path, "utf-8");
-      const markdownContent = formatConversationAsMarkdown(
-        jsonlContent,
-        params.startLine,
-        params.endLine
-      );
-      return {
-        content: [
-          {
-            type: "text",
-            text: markdownContent
-          }
-        ]
-      };
     }
     throw new Error(`Unknown tool: ${name}`);
   } catch (error2) {
