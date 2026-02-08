@@ -3,22 +3,29 @@ import {
   SessionSummary
 } from './types.js';
 
-const LOW_VALUE_TOOLS = new Set([
+const DEFAULT_SKIP_TOOLS_LIST = [
   'TodoWrite',
   'TodoRead',
   'TaskCreate',
   'TaskUpdate',
   'TaskList',
-  'TaskGet'
-]);
+  'TaskGet',
+  'Glob',
+  'LSP'
+];
+
+// Current skip tools (can be configured)
+let skipTools = new Set(DEFAULT_SKIP_TOOLS_LIST);
 
 /**
  * Build the initial system prompt for the observer.
  * This establishes the observer's role and expectations.
+ *
+ * Note: The <system> tag is intentionally omitted here because Gemini's
+ * systemInstruction API handles system prompts separately.
  */
 export function buildInitPrompt(): string {
-  return `<system>
-You are an Observer AI that watches Claude Code sessions and extracts structured observations.
+  return `You are an Observer AI that watches Claude Code sessions and extracts structured observations.
 
 Your role:
 1. Watch tool executions and identify meaningful observations
@@ -36,54 +43,54 @@ Observation types:
 - "test": Testing activities and results
 - "config": Configuration changes or setup
 
-Response format:
-- For observations: Return XML <observation>...</observation>
-- For unimportant events: Return XML <skip><reason>...</reason></skip>
-- For session summaries: Return XML <session_summary>...</session_summary>
+Observation format:
+When a tool event occurs, respond with XML in one of these formats:
 
-Always respond with valid XML. No markdown, no explanations outside XML.
-</system>`;
+1. For meaningful observations:
+<observation>
+  <type>decision|learning|bugfix|refactor|feature|debug|test|config</type>
+  <title>Brief descriptive title</title>
+  <subtitle>Additional context or detail (optional)</subtitle>
+  <narrative>Detailed explanation of what happened</narrative>
+  <facts><item>Concrete fact 1</item><item>Concrete fact 2</item></facts>
+  <concepts><item>Technical concept 1</item><item>Technical concept 2</item></concepts>
+  <files_read><item>path/to/file1</item><item>path/to/file2</item></files_read>
+  <files_modified><item>path/to/file1</item></files_modified>
+  <correlation_id>optional-id-to-correlate-related-observations</correlation_id>
+</observation>
+
+2. For unimportant events (respond with <skip> or empty response):
+<skip><reason>Low value - reason here</reason></skip>
+
+WHEN TO SKIP (respond with <skip> or empty response):
+- Empty status checks or trivial git operations
+- Simple file listings with no notable findings
+- Repetitive operations already covered
+- Package installations with no errors
+- Tool calls that produced empty or trivially short output
+- Read operations on well-known config files unless they reveal something unexpected
+
+Always respond with valid XML only. No markdown, no explanations outside XML tags.`;
 }
 
 /**
  * Build a prompt for processing a tool use event.
+ * Simplified to only include the tool event XML - analysis instructions are in buildInitPrompt.
  */
 export function buildObservationPrompt(
   toolName: string,
   toolInput: any,
   toolResponse: string,
   cwd: string,
-  project: string,
-  previousContext?: string
+  project: string
 ): string {
-  const context = previousContext
-    ? `\n\n<previous_context>\n${previousContext}\n</previous_context>`
-    : '';
-
-  return `${context}
-
-<tool_event>
+  return `<tool_event>
   <tool_name>${toolName}</tool_name>
   <cwd>${cwd}</cwd>
   <project>${project}</project>
   <tool_input>${JSON.stringify(toolInput, null, 2)}</tool_input>
   <tool_response>${escapeXml(toolResponse)}</tool_response>
-</tool_event>
-
-Analyze this tool execution and:
-1. If it's a low-value tool (like TodoWrite, TaskCreate, etc), respond with <skip>
-2. If it produced meaningful results, respond with <observation> containing:
-   - type: observation type (decision, learning, bugfix, etc)
-   - title: brief descriptive title
-   - subtitle: additional context or detail
-   - narrative: detailed explanation of what happened
-   - facts: array of concrete facts learned
-   - concepts: array of technical concepts involved
-   - files_read: array of files that were read
-   - files_modified: array of files that were modified
-   - correlation_id: optional ID to correlate related observations
-
-Respond with valid XML only.`;
+</tool_event>`;
 }
 
 /**
@@ -273,5 +280,23 @@ export function generateId(): string {
  * Check if a tool should be skipped (low-value).
  */
 export function isLowValueTool(toolName: string): boolean {
-  return LOW_VALUE_TOOLS.has(toolName);
+  return skipTools.has(toolName);
+}
+
+/**
+ * Get the default list of skip tools.
+ * Returns a copy of the default list.
+ */
+export function getDefaultSkipTools(): string[] {
+  return [...DEFAULT_SKIP_TOOLS_LIST];
+}
+
+/**
+ * Configure the list of skip tools.
+ * This completely replaces the current list.
+ *
+ * @param tools - Array of tool names to skip
+ */
+export function configureSkipTools(tools: string[]): void {
+  skipTools = new Set(tools);
 }

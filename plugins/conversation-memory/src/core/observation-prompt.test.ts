@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   buildInitPrompt,
   buildObservationPrompt,
@@ -6,17 +6,39 @@ import {
   parseObservationResponse,
   parseSummaryResponse,
   isLowValueTool,
-  generateId
+  generateId,
+  configureSkipTools,
+  getDefaultSkipTools
 } from './observation-prompt.js';
 import type { Observation, SessionSummary } from './types.js';
 
 describe('observation-prompt', () => {
   describe('buildInitPrompt', () => {
-    it('should build initial system prompt', () => {
+    it('should build initial system prompt without <system> tag', () => {
       const prompt = buildInitPrompt();
-      expect(prompt).toContain('<system>');
+      expect(prompt).not.toContain('<system>');
       expect(prompt).toContain('Observer AI');
       expect(prompt).toContain('Observation types:');
+    });
+
+    it('should include skip guidance', () => {
+      const prompt = buildInitPrompt();
+      expect(prompt).toContain('WHEN TO SKIP');
+      expect(prompt).toContain('Empty status checks');
+      expect(prompt).toContain('Simple file listings');
+      expect(prompt).toContain('Repetitive operations');
+    });
+
+    it('should include observation format instructions', () => {
+      const prompt = buildInitPrompt();
+      expect(prompt).toContain('Observation format:');
+      expect(prompt).toContain('Always respond with valid XML');
+    });
+
+    it('should include response format with skip option', () => {
+      const prompt = buildInitPrompt();
+      expect(prompt).toContain('<skip>');
+      expect(prompt).toContain('<observation>');
     });
   });
 
@@ -36,18 +58,66 @@ describe('observation-prompt', () => {
       expect(prompt).toContain('myproject');
     });
 
-    it('should include previous context when provided', () => {
+    it('should not include previous_context (removed in stateless refactor)', () => {
       const prompt = buildObservationPrompt(
         'Read',
         { file_path: '/path/to/file.txt' },
         'File content',
         '/cwd',
-        'myproject',
-        'Previous observation: Fixed bug in parser'
+        'myproject'
       );
 
-      expect(prompt).toContain('<previous_context>');
-      expect(prompt).toContain('Previous observation: Fixed bug in parser');
+      expect(prompt).not.toContain('<previous_context>');
+    });
+
+    it('should only contain tool_event XML (analysis instructions moved to buildInitPrompt)', () => {
+      const prompt = buildObservationPrompt(
+        'Bash',
+        { command: 'ls -la' },
+        'file1.txt\nfile2.txt',
+        '/home/user/project',
+        'myproject'
+      );
+
+      // Should contain the tool_event
+      expect(prompt).toContain('<tool_event>');
+      expect(prompt).toContain('<tool_name>Bash</tool_name>');
+
+      // Should not contain analysis instructions (they're in buildInitPrompt now)
+      expect(prompt).not.toContain('Analyze this tool execution');
+      expect(prompt).not.toContain('low-value tool');
+    });
+
+    it('should accept new signature without previousContext parameter', () => {
+      // This test verifies the new signature works
+      const prompt = buildObservationPrompt(
+        'Edit',
+        { file_path: '/path/to/file.ts', old_string: 'foo', new_string: 'bar' },
+        'Edit successful',
+        '/workspace',
+        'test-project'
+      );
+
+      expect(prompt).toContain('<tool_name>Edit</tool_name>');
+      expect(prompt).toContain('/workspace');
+      expect(prompt).toContain('test-project');
+    });
+  });
+
+  describe('buildObservationPrompt', () => {
+    it('should build observation prompt for tool use', () => {
+      const prompt = buildObservationPrompt(
+        'Read',
+        { file_path: '/path/to/file.txt' },
+        'File content',
+        '/cwd',
+        'myproject'
+      );
+
+      expect(prompt).toContain('<tool_event>');
+      expect(prompt).toContain('<tool_name>Read</tool_name>');
+      expect(prompt).toContain('/path/to/file.txt');
+      expect(prompt).toContain('myproject');
     });
   });
 
@@ -140,19 +210,75 @@ describe('observation-prompt', () => {
   });
 
   describe('isLowValueTool', () => {
-    it('should identify low-value tools', () => {
+    it('should identify low-value tools including Todo, Task, Glob, LSP', () => {
       expect(isLowValueTool('TodoWrite')).toBe(true);
       expect(isLowValueTool('TodoRead')).toBe(true);
       expect(isLowValueTool('TaskCreate')).toBe(true);
       expect(isLowValueTool('TaskUpdate')).toBe(true);
       expect(isLowValueTool('TaskList')).toBe(true);
       expect(isLowValueTool('TaskGet')).toBe(true);
+      expect(isLowValueTool('Glob')).toBe(true);
+      expect(isLowValueTool('LSP')).toBe(true);
     });
 
     it('should not flag high-value tools', () => {
       expect(isLowValueTool('Read')).toBe(false);
       expect(isLowValueTool('Edit')).toBe(false);
       expect(isLowValueTool('Bash')).toBe(false);
+      expect(isLowValueTool('Write')).toBe(false);
+    });
+  });
+
+  describe('getDefaultSkipTools', () => {
+    it('should return array of default skip tools', () => {
+      const tools = getDefaultSkipTools();
+      expect(Array.isArray(tools)).toBe(true);
+      expect(tools).toContain('TodoWrite');
+      expect(tools).toContain('TodoRead');
+      expect(tools).toContain('TaskCreate');
+      expect(tools).toContain('TaskUpdate');
+      expect(tools).toContain('TaskList');
+      expect(tools).toContain('TaskGet');
+      expect(tools).toContain('Glob');
+      expect(tools).toContain('LSP');
+    });
+
+    it('should return a copy (not the internal array)', () => {
+      const tools1 = getDefaultSkipTools();
+      const tools2 = getDefaultSkipTools();
+      expect(tools1).not.toBe(tools2);
+    });
+  });
+
+  describe('configureSkipTools', () => {
+    const originalDefaultSkipTools = [...getDefaultSkipTools()];
+
+    afterEach(() => {
+      // Restore default after each test
+      configureSkipTools(originalDefaultSkipTools);
+    });
+
+    it('should replace the default skip tools', () => {
+      configureSkipTools(['CustomTool1', 'CustomTool2']);
+      expect(isLowValueTool('CustomTool1')).toBe(true);
+      expect(isLowValueTool('CustomTool2')).toBe(true);
+      expect(isLowValueTool('TodoWrite')).toBe(false); // No longer in list
+    });
+
+    it('should accept empty array to disable all skip tools', () => {
+      configureSkipTools([]);
+      expect(isLowValueTool('TodoWrite')).toBe(false);
+      expect(isLowValueTool('TaskCreate')).toBe(false);
+      expect(isLowValueTool('Glob')).toBe(false);
+    });
+
+    it('should not affect getDefaultSkipTools return value', () => {
+      const before = getDefaultSkipTools();
+      configureSkipTools(['OnlyTool']);
+      const after = getDefaultSkipTools();
+
+      // getDefaultSkipTools should still return the original defaults
+      expect(before).toEqual(after);
     });
   });
 
