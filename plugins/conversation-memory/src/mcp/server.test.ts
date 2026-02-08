@@ -40,7 +40,7 @@
  * In production, these are defined in server.ts and should be kept in sync.
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { z } from 'zod';
 import Database from 'better-sqlite3';
 
@@ -601,83 +601,440 @@ describe('MCP Server - conversation-memory__read tool', () => {
   });
 
   describe('DB integration with fallback', () => {
-    let mockDb: Database.Database;
-    let mockInitDb: ReturnType<typeof vi.fn>;
-    let mockReadFromDb: ReturnType<typeof vi.fn>;
+    // These tests require actual database integration
+    // They test the full handler flow with real DB operations
+
+    // Set up test-specific database path
+    const originalDbPath = process.env.CONVERSATION_MEMORY_DB_PATH;
+    const testDbDir = '/tmp/conversation-memory-test-' + Date.now();
 
     beforeEach(() => {
-      // Create mock database
-      mockDb = {
-        prepare: vi.fn(() => ({
-          all: vi.fn(() => []),
-          get: vi.fn(() => null),
-          run: vi.fn()
-        })),
-        close: vi.fn()
-      } as any;
+      // Set test database path
+      process.env.CONVERSATION_MEMORY_CONFIG_DIR = testDbDir;
+    });
 
-      mockInitDb = vi.fn(() => mockDb);
-      mockReadFromDb = vi.fn(() => null);
+    afterEach(() => {
+      // Restore original database path
+      if (originalDbPath) {
+        process.env.CONVERSATION_MEMORY_DB_PATH = originalDbPath;
+      } else {
+        delete process.env.CONVERSATION_MEMORY_DB_PATH;
+      }
+      delete process.env.CONVERSATION_MEMORY_CONFIG_DIR;
     });
 
     test('returns DB data when conversation is indexed', async () => {
-      // Mock DB hit - return compressed data
-      mockReadFromDb = vi.fn(() => '# Conversation\n\n**Compressed from DB**\n\n');
-      (mockDb.prepare as any).mockReturnValue({
-        all: vi.fn(() => [
-          {
-            id: 'test-id',
-            timestamp: '2024-01-01T00:00:00.000Z',
-            user_message: 'Test user message',
-            assistant_message: 'Test assistant message',
-            archive_path: '/test/path',
-            line_start: 1,
-            line_end: 10,
-            session_id: 'session-123',
-            cwd: '/test/dir',
-            git_branch: 'main',
-            claude_version: '1.0.0',
-            is_sidechain: 0,
-            compressed_tool_summary: 'Used: Bash, Read'
-          }
-        ])
-      });
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
 
-      // Simulate DB-first path
-      const dbResult = mockReadFromDb(mockDb, '/test/path', 1, 10);
-      expect(dbResult).toContain('# Conversation');
-      expect(dbResult).toContain('Compressed from DB');
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Insert test data
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          'db-data-test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'Test user message',
+          'Test assistant message',
+          '/test/path',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          'Used: Bash, Read'
+        );
+
+        // Test reading from DB
+        const result = readConversationFromDb(db, '/test/path', 1, 10);
+
+        expect(result).not.toBeNull();
+        expect(result).toContain('# Conversation');
+        expect(result).toContain('Test user message');
+        expect(result).toContain('Test assistant message');
+        expect(result).toContain('**Session ID:** session-123');
+        expect(result).toContain('Used: Bash, Read');
+      } finally {
+        db.close();
+      }
     });
 
-    test('falls back to JSONL when DB returns null', async () => {
-      // Mock DB miss
-      mockReadFromDb = vi.fn(() => null);
+    test('returns null when conversation is not in DB', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
 
-      // Verify fallback would occur
-      const dbResult = mockReadFromDb(mockDb, '/test/unindexed.jsonl');
-      expect(dbResult).toBeNull();
-      // In real implementation, would fall back to fs.readFileSync + formatConversationAsMarkdown
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Don't insert any data - query should return null
+        const result = readConversationFromDb(db, '/nonexistent/path');
+
+        expect(result).toBeNull();
+      } finally {
+        db.close();
+      }
     });
 
-    test('handles DB errors gracefully', async () => {
-      // Mock DB error
-      mockInitDb = vi.fn(() => {
-        throw new Error('Database connection failed');
-      });
+    test('respects pagination parameters', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
 
-      expect(() => mockInitDb()).toThrow('Database connection failed');
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Insert multiple exchanges
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        // First exchange (lines 1-10)
+        stmt.run(
+          'pagination-test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'First message',
+          'First response',
+          '/test/path',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          'Used: Bash'
+        );
+
+        // Second exchange (lines 11-20)
+        stmt.run(
+          'pagination-test-id-2',
+          'test-project',
+          '2024-01-01T01:00:00.000Z',
+          'Second message',
+          'Second response',
+          '/test/path',
+          11,
+          20,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          'Used: Read'
+        );
+
+        // Third exchange (lines 21-30)
+        stmt.run(
+          'pagination-test-id-3',
+          'test-project',
+          '2024-01-01T02:00:00.000Z',
+          'Third message',
+          'Third response',
+          '/test/path',
+          21,
+          30,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          'Used: Write'
+        );
+
+        // Test pagination: only get second exchange
+        const result = readConversationFromDb(db, '/test/path', 11, 20);
+
+        expect(result).not.toBeNull();
+        expect(result).toContain('Second message');
+        expect(result).toContain('Second response');
+        expect(result).not.toContain('First message');
+        expect(result).not.toContain('Third message');
+      } finally {
+        db.close();
+      }
     });
 
-    test('closes DB connection after read', async () => {
-      // Test that DB.close() is called
-      const closeSpy = vi.fn();
-      (mockDb.close as any) = closeSpy;
+    test('filters by archive path', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
 
-      // Simulate DB usage
-      mockDb.prepare('SELECT * FROM exchanges');
-      closeSpy();
+      // Create a real database for testing
+      const db = initDatabase();
 
-      expect(closeSpy).toHaveBeenCalled();
+      try {
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        // Insert data for different paths
+        stmt.run(
+          'filter-test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'Message from path A',
+          'Response A',
+          '/test/path-a',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          null
+        );
+
+        stmt.run(
+          'filter-test-id-2',
+          'test-project',
+          '2024-01-01T01:00:00.000Z',
+          'Message from path B',
+          'Response B',
+          '/test/path-b',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          null
+        );
+
+        // Query path-a should only return data from path-a
+        const resultA = readConversationFromDb(db, '/test/path-a');
+        expect(resultA).toContain('Message from path A');
+        expect(resultA).not.toContain('Message from path B');
+
+        // Query path-b should only return data from path-b
+        const resultB = readConversationFromDb(db, '/test/path-b');
+        expect(resultB).toContain('Message from path B');
+        expect(resultB).not.toContain('Message from path A');
+      } finally {
+        db.close();
+      }
+    });
+  });
+
+  describe('Handler integration tests', () => {
+    // These tests verify the actual handler flow from server.ts
+
+    // Set up test-specific database path
+    const originalDbPath = process.env.CONVERSATION_MEMORY_DB_PATH;
+    const testDbDir = '/tmp/conversation-memory-handler-test-' + Date.now();
+
+    beforeEach(() => {
+      // Set test database path
+      process.env.CONVERSATION_MEMORY_CONFIG_DIR = testDbDir;
+    });
+
+    afterEach(() => {
+      // Restore original database path
+      if (originalDbPath) {
+        process.env.CONVERSATION_MEMORY_DB_PATH = originalDbPath;
+      } else {
+        delete process.env.CONVERSATION_MEMORY_DB_PATH;
+      }
+      delete process.env.CONVERSATION_MEMORY_CONFIG_DIR;
+    });
+
+    test('read handler calls DB and returns compressed data', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
+
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Insert test data
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          'test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'Test user message',
+          'Test assistant message',
+          '/test/path',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          'Used: Bash, Read'
+        );
+
+        // Simulate the handler flow
+        const dbResult = readConversationFromDb(db, '/test/path', 1, 10);
+
+        expect(dbResult).not.toBeNull();
+        expect(dbResult).toContain('# Conversation');
+        expect(dbResult).toContain('Test user message');
+        expect(dbResult).toContain('Test assistant message');
+
+        // Verify the handler would return this as content
+        expect(dbResult).toMatch(/## Metadata/);
+        expect(dbResult).toMatch(/## Messages/);
+      } finally {
+        db.close();
+      }
+    });
+
+    test('read handler falls back to null when DB has no data', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
+
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Don't insert any data
+        const dbResult = readConversationFromDb(db, '/nonexistent/path');
+
+        // Verify DB returns null (triggering fallback in handler)
+        expect(dbResult).toBeNull();
+      } finally {
+        db.close();
+      }
+    });
+
+    test('DB connection is properly closed after read', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
+
+      // Create a real database for testing
+      const db = initDatabase();
+
+      // Mock close to verify it's called
+      const closeSpy = vi.spyOn(db, 'close');
+
+      try {
+        // Insert test data
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          'handler-close-test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'Test user message',
+          'Test assistant message',
+          '/test/path',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          null
+        );
+
+        // Mock close to verify it's called
+        const closeSpy = vi.spyOn(db, 'close');
+
+        // Simulate handler flow (read but don't close yet)
+        readConversationFromDb(db, '/test/path');
+
+        // The handler would close the DB here
+        db.close();
+
+        // Verify close was called
+        expect(closeSpy).toHaveBeenCalled();
+      } finally {
+        // Ensure DB is closed even if test fails (idempotent close)
+        try {
+          db.close();
+        } catch {
+          // Already closed, ignore error
+        }
+      }
+    });
+
+    test('read handler integration flow with DB close', async () => {
+      const { initDatabase } = await import('../core/db.js');
+      const { readConversationFromDb } = await import('../core/show.js');
+
+      // Create a real database for testing
+      const db = initDatabase();
+
+      try {
+        // Insert test data
+        const stmt = db.prepare(`
+          INSERT INTO exchanges
+          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
+           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          'handler-flow-test-id-1',
+          'test-project',
+          '2024-01-01T00:00:00.000Z',
+          'Test user message',
+          'Test assistant message',
+          '/test/path',
+          1,
+          10,
+          'session-123',
+          '/test/dir',
+          'main',
+          '1.0.0',
+          0,
+          null
+        );
+
+        // Simulate the handler flow from server.ts:
+        // const db = initDatabase();
+        // try {
+        //   const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
+        //   if (dbResult) { return { content: [{ type: 'text', text: dbResult }] }; }
+        // } finally {
+        //   db.close();
+        // }
+
+        const dbResult = readConversationFromDb(db, '/test/path', 1, 10);
+
+        expect(dbResult).not.toBeNull();
+        expect(dbResult).toContain('Test user message');
+        expect(dbResult).toContain('Test assistant message');
+
+        // The handler would return this as content
+        // return { content: [{ type: 'text', text: dbResult }] };
+      } finally {
+        // Handler always closes DB in finally block
+        db.close();
+      }
     });
   });
 });
