@@ -127,8 +127,8 @@
         "All tests pass after creation"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created tests/helpers/marketplace_helper.bash with all required functions. Added get_marketplace_plugins(), marketplace_plugin_count(), marketplace_plugin_exists(), marketplace_all_plugins_exist(), and marketplace_all_plugins_listed() functions. All 231 tests pass."
     },
     {
       "id": "US-011",
