@@ -97,6 +97,9 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   echo ""
   echo "--- Iteration $i finished, continuing... ---"
   echo ""
+
+  # Sleep to prevent API rate limiting
+  sleep 2
 done
 
 echo "=== Ralph reached max iterations ($MAX_ITERATIONS) ==="

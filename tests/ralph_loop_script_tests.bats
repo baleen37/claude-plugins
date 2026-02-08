@@ -382,6 +382,12 @@ EOF
   [[ "$output" == *"PID_FILE"* ]]
 }
 
+# Test: Script sleeps between iterations to prevent API rate limiting
+@test "ralph.sh: sleeps between iterations" {
+  run grep -q "sleep 2" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
 # Functional Test: cancel-ralph PID kill behavior
 @test "cancel-ralph: kills ralph.sh process and removes PID file" {
   # Skip this test on CI due to timing issues
