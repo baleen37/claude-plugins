@@ -42,4 +42,3 @@ tail -f .ralph/progress.txt
 ```
 
 To cancel: `/cancel-ralph`
-To cancel: `/cancel-ralph`
