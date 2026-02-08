@@ -52,3 +52,29 @@ export interface MultiConceptResult {
   conceptSimilarities: number[];
   averageSimilarity: number;
 }
+
+// Compact types for search results (without full ConversationExchange)
+export interface CompactSearchResult {
+  id: string;
+  project: string;
+  timestamp: string;
+  archivePath: string;
+  lineStart: number;
+  lineEnd: number;
+  compressedToolSummary?: string;
+  similarity?: number;
+  snippet: string;
+}
+
+export interface CompactMultiConceptResult {
+  id: string;
+  project: string;
+  timestamp: string;
+  archivePath: string;
+  lineStart: number;
+  lineEnd: number;
+  compressedToolSummary?: string;
+  snippet: string;
+  conceptSimilarities: number[];
+  averageSimilarity: number;
+}

@@ -27,6 +27,7 @@ import {
   formatResults,
   searchMultipleConcepts,
   formatMultiConceptResults,
+  applyRecencyBoost,
   type SearchOptions
 } from './search.js';
 
@@ -856,5 +857,90 @@ describe('Helper functions - getFileSizeInKB and countLines', () => {
     } finally {
       fs.unlinkSync(archivePath);
     }
+  });
+});
+
+describe('applyRecencyBoost', () => {
+  // Fixed reference date for consistent testing
+  const fixedReferenceDate = new Date('2026-02-08T00:00:00Z').getTime();
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedReferenceDate);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('should boost by 1.15 for today (days=0)', () => {
+    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
+    const result = applyRecencyBoost(0.8, today);
+    // Boost = 1.15, so 0.8 * 1.15 = 0.92
+    expect(result).toBeCloseTo(0.92, 2);
+  });
+
+  test('should have boost of 1.15 for days=0', () => {
+    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, today);
+    // Boost = 1.15, so 1.0 * 1.15 = 1.15
+    expect(result).toBeCloseTo(1.15, 2);
+  });
+
+  test('should have boost of 1.0 for days=90', () => {
+    // 90 days ago from fixed reference date
+    const ninetyDaysAgo = new Date(fixedReferenceDate - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, ninetyDaysAgo);
+    // Boost = 1.0, so 1.0 * 1.0 = 1.0
+    expect(result).toBeCloseTo(1.0, 2);
+  });
+
+  test('should have boost of 0.85 for days=180', () => {
+    // 180 days ago from fixed reference date
+    const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
+    // Boost = 0.85, so 1.0 * 0.85 = 0.85
+    expect(result).toBeCloseTo(0.85, 2);
+  });
+
+  test('should clamp boost to 0.85 for days=270 (beyond 180)', () => {
+    // 270 days ago from fixed reference date
+    const twoSeventyDaysAgo = new Date(fixedReferenceDate - 270 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, twoSeventyDaysAgo);
+    // Boost should be clamped at 0.85
+    expect(result).toBeCloseTo(0.85, 2);
+  });
+
+  test('should interpolate boost correctly for days=45', () => {
+    // 45 days ago from fixed reference date
+    const fortyFiveDaysAgo = new Date(fixedReferenceDate - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, fortyFiveDaysAgo);
+    // Boost = 1.075, so 1.0 * 1.075 = 1.075
+    expect(result).toBeCloseTo(1.075, 2);
+  });
+
+  test('should apply boost correctly with similarity=0.8 and days=0', () => {
+    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
+    const result = applyRecencyBoost(0.8, today);
+    // Boost = 1.15, so 0.8 * 1.15 = 0.92
+    expect(result).toBeCloseTo(0.92, 2);
+  });
+
+  test('should handle edge case of very old dates (beyond 180 days)', () => {
+    // Very old date - should be clamped at 0.85
+    const result = applyRecencyBoost(0.5, '2020-01-01');
+    expect(result).toBeCloseTo(0.425, 2);
+  });
+
+  test('should handle similarity of 0', () => {
+    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
+    const result = applyRecencyBoost(0, today);
+    expect(result).toBe(0);
+  });
+
+  test('should handle similarity of 1 with no boost effect on product', () => {
+    const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
+    expect(result).toBeCloseTo(0.85, 2);
   });
 });

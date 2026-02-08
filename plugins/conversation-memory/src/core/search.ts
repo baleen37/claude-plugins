@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { initDatabase } from './db.js';
 import { initEmbeddings, generateEmbedding } from './embeddings.js';
-import { SearchResult, ConversationExchange, MultiConceptResult } from './types.js';
+import { SearchResult, ConversationExchange, MultiConceptResult, CompactSearchResult, CompactMultiConceptResult } from './types.js';
 import fs from 'fs';
 import readline from 'readline';
 
@@ -23,6 +23,32 @@ function validateISODate(dateStr: string, paramName: string): void {
   if (isNaN(date.getTime())) {
     throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
   }
+}
+
+/**
+ * Apply recency boost to similarity scores based on timestamp.
+ * Uses linear decay: today = ×1.15, 90 days = ×1.0, 180+ days = ×0.85
+ *
+ * @param similarity - The base similarity score (0-1)
+ * @param timestamp - ISO timestamp string of the conversation
+ * @returns The boosted similarity score
+ */
+export function applyRecencyBoost(similarity: number, timestamp: string): number {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffTime = Math.abs(now.getTime() - then.getTime());
+  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  // Clamp days to maximum of 180 for the boost calculation
+  const t = Math.min(days / 180, 1);
+
+  // Formula: similarity * (1 + 0.3 * (0.5 - t))
+  // When t=0 (today): 1 + 0.3 * 0.5 = 1.15
+  // When t=0.5 (90 days): 1 + 0.3 * 0 = 1.0
+  // When t=1.0 (180+ days): 1 + 0.3 * (-0.5) = 0.85
+  const boost = 1 + 0.3 * (0.5 - t);
+
+  return similarity * boost;
 }
 
 export async function searchConversations(
