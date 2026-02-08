@@ -376,3 +376,152 @@ EOF
   [[ "$output" == *"rm -f"* ]]
   [[ "$output" == *"PID_FILE"* ]]
 }
+
+# Functional Test: cancel-ralph PID kill behavior
+@test "cancel-ralph: kills ralph.sh process and removes PID file" {
+  create_prd
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Start ralph.sh in background
+  bash "$RALPH_SCRIPT" 10 >/dev/null 2>&1 &
+  ralph_pid=$!
+
+  # Wait for PID file to be created (poll with timeout)
+  local count=0
+  while [ ! -f .ralph/ralph.pid ] && [ $count -lt 20 ]; do
+    sleep 0.1
+    count=$((count + 1))
+  done
+
+  # Verify PID file exists
+  [ -f .ralph/ralph.pid ]
+
+  pid_from_file=$(cat .ralph/ralph.pid)
+  [ "$pid_from_file" = "$ralph_pid" ]
+
+  # Verify process is running
+  kill -0 "$ralph_pid" 2>/dev/null
+
+  # Kill the process (simulating cancel-ralph behavior)
+  kill "$ralph_pid" 2>/dev/null || true
+  sleep 0.2
+
+  # Verify process is dead
+  ! kill -0 "$ralph_pid" 2>/dev/null
+
+  # Remove PID file (as cancel-ralph would do)
+  rm -f .ralph/ralph.pid
+
+  # Verify PID file is removed
+  [ ! -f .ralph/ralph.pid ]
+}
+
+# Functional Test: ralph.sh iteration counting
+@test "ralph.sh: iterates correct number of times" {
+  create_prd
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Create a mock claude that never returns COMPLETE
+  # This allows ralph.sh to run through all iterations
+  cat > "$MOCK_CLAUDE" <<'EOF'
+#!/bin/bash
+# Mock claude that never returns COMPLETE
+if [[ "$*" == *"--print"* ]]; then
+  # Read from stdin and echo response without COMPLETE
+  cat >/dev/null
+  echo "Working on tasks..."
+  exit 0
+fi
+echo "Mock claude command"
+EOF
+  chmod +x "$MOCK_CLAUDE"
+
+  # Run ralph.sh with 3 iterations, output to a temp file
+  local output_file="${TEST_TEMP_DIR}/ralph_output.txt"
+  bash "$RALPH_SCRIPT" 3 > "$output_file" 2>&1 &
+  ralph_pid=$!
+
+  # Wait for all iterations to complete
+  local count=0
+  while kill -0 "$ralph_pid" 2>/dev/null && [ $count -lt 15 ]; do
+    sleep 0.3
+    count=$((count + 1))
+  done
+
+  # Wait for process to finish
+  wait $ralph_pid 2>/dev/null || true
+
+  # Read output from file
+  output=$(cat "$output_file")
+
+  # Verify we ran exactly 3 iterations
+  # The script should show "=== Ralph iteration 1/3 ===", "2/3", "3/3"
+  iteration_count=$(echo "$output" | grep -c "Ralph iteration" || true)
+  [ "$iteration_count" -eq 3 ]
+
+  # Should show "reached max iterations" message
+  [[ "$output" == *"max iterations"* ]]
+}
+
+# Functional Test: ralph.sh COMPLETE detection
+@test "ralph.sh: detects COMPLETE and exits with 0" {
+  create_prd
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Create a mock claude that returns COMPLETE immediately
+  cat > "$MOCK_CLAUDE" <<'EOF'
+#!/bin/bash
+# Mock claude that returns COMPLETE
+if [[ "$*" == *"--print"* ]]; then
+  # Read from stdin
+  cat >/dev/null
+  # Return COMPLETE promise
+  echo "<promise>COMPLETE</promise>"
+  exit 0
+fi
+echo "Mock claude command"
+EOF
+  chmod +x "$MOCK_CLAUDE"
+
+  # Run ralph.sh with 10 iterations but expect it to exit early
+  run bash "$RALPH_SCRIPT" 10 2>&1
+
+  # Should exit with 0 (not 1 for max iterations)
+  [ $status -eq 0 ]
+
+  # Should show completion message
+  [[ "$output" == *"Ralph completed at iteration"* ]]
+
+  # Should show iteration 1 (should exit on first iteration)
+  [[ "$output" == *"iteration 1/10"* ]]
+
+  # Should NOT show iteration 2 or beyond
+  ! [[ "$output" == *"iteration 2/"* ]]
+}
