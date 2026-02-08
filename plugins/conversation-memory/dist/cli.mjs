@@ -2343,8 +2343,7 @@ var init_observations = __esm({
 
 // src/core/observation-prompt.ts
 function buildInitPrompt() {
-  return `<system>
-You are an Observer AI that watches Claude Code sessions and extracts structured observations.
+  return `You are an Observer AI that watches Claude Code sessions and extracts structured observations.
 
 Your role:
 1. Watch tool executions and identify meaningful observations
@@ -2362,44 +2361,43 @@ Observation types:
 - "test": Testing activities and results
 - "config": Configuration changes or setup
 
-Response format:
-- For observations: Return XML <observation>...</observation>
-- For unimportant events: Return XML <skip><reason>...</reason></skip>
-- For session summaries: Return XML <session_summary>...</session_summary>
+Observation format:
+When a tool event occurs, respond with XML in one of these formats:
 
-Always respond with valid XML. No markdown, no explanations outside XML.
-</system>`;
+1. For meaningful observations:
+<observation>
+  <type>decision|learning|bugfix|refactor|feature|debug|test|config</type>
+  <title>Brief descriptive title</title>
+  <subtitle>Additional context or detail (optional)</subtitle>
+  <narrative>Detailed explanation of what happened</narrative>
+  <facts><item>Concrete fact 1</item><item>Concrete fact 2</item></facts>
+  <concepts><item>Technical concept 1</item><item>Technical concept 2</item></concepts>
+  <files_read><item>path/to/file1</item><item>path/to/file2</item></files_read>
+  <files_modified><item>path/to/file1</item></files_modified>
+  <correlation_id>optional-id-to-correlate-related-observations</correlation_id>
+</observation>
+
+2. For unimportant events (respond with <skip> or empty response):
+<skip><reason>Low value - reason here</reason></skip>
+
+WHEN TO SKIP (respond with <skip> or empty response):
+- Empty status checks or trivial git operations
+- Simple file listings with no notable findings
+- Repetitive operations already covered
+- Package installations with no errors
+- Tool calls that produced empty or trivially short output
+- Read operations on well-known config files unless they reveal something unexpected
+
+Always respond with valid XML only. No markdown, no explanations outside XML tags.`;
 }
-function buildObservationPrompt(toolName, toolInput, toolResponse, cwd, project, previousContext) {
-  const context = previousContext ? `
-
-<previous_context>
-${previousContext}
-</previous_context>` : "";
-  return `${context}
-
-<tool_event>
+function buildObservationPrompt(toolName, toolInput, toolResponse, cwd, project) {
+  return `<tool_event>
   <tool_name>${toolName}</tool_name>
   <cwd>${cwd}</cwd>
   <project>${project}</project>
   <tool_input>${JSON.stringify(toolInput, null, 2)}</tool_input>
   <tool_response>${escapeXml(toolResponse)}</tool_response>
-</tool_event>
-
-Analyze this tool execution and:
-1. If it's a low-value tool (like TodoWrite, TaskCreate, etc), respond with <skip>
-2. If it produced meaningful results, respond with <observation> containing:
-   - type: observation type (decision, learning, bugfix, etc)
-   - title: brief descriptive title
-   - subtitle: additional context or detail
-   - narrative: detailed explanation of what happened
-   - facts: array of concrete facts learned
-   - concepts: array of technical concepts involved
-   - files_read: array of files that were read
-   - files_modified: array of files that were modified
-   - correlation_id: optional ID to correlate related observations
-
-Respond with valid XML only.`;
+</tool_event>`;
 }
 function buildSummaryPrompt(sessionContext, project) {
   return `<session_context>
@@ -2523,20 +2521,26 @@ function generateId() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 function isLowValueTool(toolName) {
-  return LOW_VALUE_TOOLS.has(toolName);
+  return skipTools.has(toolName);
 }
-var LOW_VALUE_TOOLS;
+function configureSkipTools(tools) {
+  skipTools = new Set(tools);
+}
+var DEFAULT_SKIP_TOOLS, skipTools;
 var init_observation_prompt = __esm({
   "src/core/observation-prompt.ts"() {
     "use strict";
-    LOW_VALUE_TOOLS = /* @__PURE__ */ new Set([
+    DEFAULT_SKIP_TOOLS = [
       "TodoWrite",
       "TodoRead",
       "TaskCreate",
       "TaskUpdate",
       "TaskList",
-      "TaskGet"
-    ]);
+      "TaskGet",
+      "Glob",
+      "LSP"
+    ];
+    skipTools = new Set(DEFAULT_SKIP_TOOLS);
   }
 });
 
@@ -2610,6 +2614,10 @@ async function startObserver() {
     console.error("No LLM config found. Please create ~/.config/conversation-memory/config.json");
     process.exit(1);
   }
+  if (config.skipTools) {
+    configureSkipTools(config.skipTools);
+    console.log(`Configured skipTools: ${config.skipTools.join(", ")}`);
+  }
   const llmProvider = createProvider(config);
   const sessionId = getCurrentSessionId();
   const project = getCurrentProject();
@@ -2617,9 +2625,6 @@ async function startObserver() {
   const sessionContexts = /* @__PURE__ */ new Map();
   sessionContexts.set(sessionId, {
     sessionId,
-    conversationHistory: [
-      { role: "user", content: buildInitPrompt() }
-    ],
     lastActivity: Date.now(),
     promptCount: getLastPromptNumber(db, sessionId)
   });
@@ -2682,21 +2687,15 @@ async function processEvent(db, llmProvider, event, context, pollInterval, pidPa
   return false;
 }
 async function processToolUseEvent(db, llmProvider, event, context, promptNumber) {
-  const previousObservations = getObservationsBySession(db, context.sessionId);
-  const previousContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.subtitle}`).join("\n");
+  const systemPrompt = buildInitPrompt();
   const prompt = buildObservationPrompt(
     event.toolName,
     event.toolInput,
     event.toolResponse || "",
     event.cwd || process.cwd(),
-    event.project || "",
-    previousContext
+    event.project || ""
   );
-  context.conversationHistory.push({ role: "user", content: prompt });
-  const response = await llmProvider.complete(
-    context.conversationHistory.map((msg) => msg.content).join("\n\n")
-  );
-  context.conversationHistory.push({ role: "model", content: response.text });
+  const response = await llmProvider.complete(prompt, { systemPrompt });
   const result = parseObservationResponse(response.text);
   if (result.type === "observation" && result.data) {
     const observation = {
@@ -2711,10 +2710,11 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
   }
 }
 async function processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath) {
+  const systemPrompt = buildInitPrompt();
   const previousObservations = getObservationsBySession(db, context.sessionId);
   const sessionContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.narrative}`).join("\n");
   const prompt = buildSummaryPrompt(sessionContext, event.project || "");
-  const response = await llmProvider.complete(prompt);
+  const response = await llmProvider.complete(prompt, { systemPrompt });
   const summary = processSessionSummary(
     db,
     response.text,
