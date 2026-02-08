@@ -68,6 +68,7 @@ export async function searchConversations(
         e.archive_path,
         e.line_start,
         e.line_end,
+        e.compressed_tool_summary,
         vec.distance
       FROM vec_exchanges AS vec
       JOIN exchanges AS e ON vec.id = e.id
@@ -99,6 +100,7 @@ export async function searchConversations(
         e.archive_path,
         e.line_start,
         e.line_end,
+        e.compressed_tool_summary,
         0 as distance
       FROM exchanges AS e
       WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
@@ -141,7 +143,8 @@ export async function searchConversations(
       assistantMessage: row.assistant_message,
       archivePath: row.archive_path,
       lineStart: row.line_start,
-      lineEnd: row.line_end
+      lineEnd: row.line_end,
+      compressedToolSummary: row.compressed_tool_summary
     };
 
     // Try to load summary if available
@@ -222,15 +225,8 @@ export async function formatResults(results: Array<SearchResult & { summary?: st
     output += `   "${result.snippet}"\n`;
 
     // Show tool usage if available
-    if (result.exchange.toolCalls && result.exchange.toolCalls.length > 0) {
-      const toolCounts = new Map<string, number>();
-      result.exchange.toolCalls.forEach(tc => {
-        toolCounts.set(tc.toolName, (toolCounts.get(tc.toolName) || 0) + 1);
-      });
-      const toolSummary = Array.from(toolCounts.entries())
-        .map(([name, count]) => `${name}(${count})`)
-        .join(', ');
-      output += `   Tools: ${toolSummary}\n`;
+    if (result.exchange.compressedToolSummary) {
+      output += `   Actions: ${result.exchange.compressedToolSummary}\n`;
     }
 
     // Get file metadata
@@ -336,15 +332,8 @@ export async function formatMultiConceptResults(
     output += `   "${result.snippet}"\n`;
 
     // Show tool usage if available
-    if (result.exchange.toolCalls && result.exchange.toolCalls.length > 0) {
-      const toolCounts = new Map<string, number>();
-      result.exchange.toolCalls.forEach(tc => {
-        toolCounts.set(tc.toolName, (toolCounts.get(tc.toolName) || 0) + 1);
-      });
-      const toolSummary = Array.from(toolCounts.entries())
-        .map(([name, count]) => `${name}(${count})`)
-        .join(', ');
-      output += `   Tools: ${toolSummary}\n`;
+    if (result.exchange.compressedToolSummary) {
+      output += `   Actions: ${result.exchange.compressedToolSummary}\n`;
     }
 
     // Get file metadata

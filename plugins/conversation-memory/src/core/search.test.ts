@@ -48,7 +48,8 @@ function createTestDatabase(): Database {
       assistant_message TEXT NOT NULL,
       archive_path TEXT NOT NULL,
       line_start INTEGER NOT NULL,
-      line_end INTEGER NOT NULL
+      line_end INTEGER NOT NULL,
+      compressed_tool_summary TEXT
     )
   `);
 
@@ -553,24 +554,7 @@ describe('formatResults', () => {
           archivePath: archivePath,
           lineStart: 1,
           lineEnd: 5,
-          toolCalls: [
-            {
-              id: 'tool-1',
-              exchangeId: '1',
-              toolName: 'Bash',
-              toolInput: { command: 'ls' },
-              isError: false,
-              timestamp: '2025-01-15T10:00:00Z'
-            },
-            {
-              id: 'tool-2',
-              exchangeId: '1',
-              toolName: 'Read',
-              toolInput: { file_path: '/tmp/file.txt' },
-              isError: false,
-              timestamp: '2025-01-15T10:01:00Z'
-            }
-          ]
+          compressedToolSummary: 'Bash: `ls` | Read: /tmp/file.txt'
         },
         similarity: 0.8,
         snippet: 'Question'
@@ -579,9 +563,8 @@ describe('formatResults', () => {
 
     try {
       const output = await formatResults(results);
-      expect(output).toContain('Tools:');
-      expect(output).toContain('Bash(1)');
-      expect(output).toContain('Read(1)');
+      expect(output).toContain('Actions:');
+      expect(output).toContain('Bash: `ls` | Read: /tmp/file.txt');
     } finally {
       fs.unlinkSync(archivePath);
     }
@@ -739,16 +722,7 @@ describe('formatMultiConceptResults', () => {
           archivePath: archivePath,
           lineStart: 1,
           lineEnd: 10,
-          toolCalls: [
-            {
-              id: 't1',
-              exchangeId: '1',
-              toolName: 'Bash',
-              toolInput: { command: 'ls' },
-              isError: false,
-              timestamp: '2025-01-15T10:00:00Z'
-            }
-          ]
+          compressedToolSummary: 'Bash: `ls`'
         },
         snippet: 'Question',
         conceptSimilarities: [0.8],
@@ -758,8 +732,8 @@ describe('formatMultiConceptResults', () => {
 
     try {
       const output = await formatMultiConceptResults(results, ['concept1']);
-      expect(output).toContain('Tools:');
-      expect(output).toContain('Bash(1)');
+      expect(output).toContain('Actions:');
+      expect(output).toContain('Bash: `ls`');
     } finally {
       fs.unlinkSync(archivePath);
     }

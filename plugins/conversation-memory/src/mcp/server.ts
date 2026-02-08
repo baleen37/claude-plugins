@@ -19,7 +19,8 @@ import {
   formatMultiConceptResults,
   SearchOptions,
 } from '../core/search.js';
-import { formatConversationAsMarkdown } from '../core/show.js';
+import { formatConversationAsMarkdown, readConversationFromDb } from '../core/show.js';
+import { initDatabase } from '../core/db.js';
 import fs from 'fs';
 
 // Zod Schemas for Input Validation
@@ -158,7 +159,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'read',
-        description: `Read full conversations to extract detailed context after finding relevant results with search. Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
+        description: `Returns compressed conversation data from indexed DB. Tool inputs/results are summarized, not shown in full. Read full conversations to extract detailed context after finding relevant results with search. Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
         inputSchema: {
           type: 'object',
           properties: {
@@ -258,28 +259,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (name === 'read') {
       const params = ShowConversationInputSchema.parse(args);
-
-      // Verify file exists
-      if (!fs.existsSync(params.path)) {
-        throw new Error(`File not found: ${params.path}`);
+      const db = initDatabase();
+      try {
+        // Try DB first (compressed, token-efficient)
+        const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
+        if (dbResult) {
+          return { content: [{ type: 'text', text: dbResult }] };
+        }
+        // Fallback: JSONL parsing for unindexed data
+        if (!fs.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
+        const jsonlContent = fs.readFileSync(params.path, 'utf-8');
+        return { content: [{ type: 'text', text: formatConversationAsMarkdown(jsonlContent, params.startLine, params.endLine) }] };
+      } finally {
+        db.close();
       }
-
-      // Read and format conversation with optional line range
-      const jsonlContent = fs.readFileSync(params.path, 'utf-8');
-      const markdownContent = formatConversationAsMarkdown(
-        jsonlContent,
-        params.startLine,
-        params.endLine
-      );
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: markdownContent,
-          },
-        ],
-      };
     }
 
     throw new Error(`Unknown tool: ${name}`);

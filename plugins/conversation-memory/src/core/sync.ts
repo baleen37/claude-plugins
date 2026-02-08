@@ -3,6 +3,7 @@ import path from 'path';
 import { SUMMARIZER_CONTEXT_MARKER } from './constants.js';
 import { getExcludedProjects } from './paths.js';
 import type { TokenUsage } from './llm/types.js';
+import { formatToolSummary } from './tool-compress.js';
 
 const EXCLUSION_MARKERS = [
   '<INSTRUCTIONS-TO-EPISODIC-MEMORY>DO NOT INDEX THIS CHAT</INSTRUCTIONS-TO-EPISODIC-MEMORY>',
@@ -179,6 +180,9 @@ export async function syncConversations(
         const exchanges = await parseConversation(file, project, file);
 
         for (const exchange of exchanges) {
+          if (exchange.toolCalls?.length) {
+            exchange.compressedToolSummary = formatToolSummary(exchange.toolCalls);
+          }
           const toolNames = exchange.toolCalls?.map(tc => tc.toolName);
           const embedding = await generateExchangeEmbedding(
             exchange.userMessage,
