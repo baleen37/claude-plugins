@@ -171,3 +171,20 @@ Started: 2025-02-08T00:00:00Z
   - Jobs section is optional - only added if jobs_yaml parameter is provided
   - Fixture factory now supports all common test fixture types: plugins, marketplace, hooks, skills, handoffs, and workflows
 
+## Iteration 8 - US-015: Split handoff.bats into structure.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/structure.bats exists with exactly 5 structure tests
+  - Removed "handoff file filtering by project path works" test (belongs in filtering.bats)
+  - Final structure tests: directory creation, JSON structure validation, loaded_at updates, recent handoff detection, loaded handoff filtering
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File modified**: tests/handoff/structure.bats
+- **Tests verified**: All 249 tests pass (5 structure tests verified)
+- **Learnings**:
+  - Test splitting requires careful attention to test categorization - some tests may be misclassified
+  - Structure tests should focus on JSON schema, required fields, and basic field operations
+  - Filtering/sorting tests belong in separate filtering.bats file
+  - The fixture_factory helper is loaded with relative path (../helpers/fixture_factory)
+  - Original handoff.bats remains unchanged until US-017 (final split and deletion)
+
