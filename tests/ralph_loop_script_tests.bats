@@ -41,7 +41,7 @@ EOF
 teardown() {
   # Kill any stray ralph.sh processes from this test
   if [ -n "${TEST_TEMP_DIR:-}" ] && [ -f "${TEST_TEMP_DIR}/.ralph/ralph.pid" ]; then
-    kill $(cat "${TEST_TEMP_DIR}/.ralph/ralph.pid") 2>/dev/null || true
+    kill "$(cat "${TEST_TEMP_DIR}/.ralph/ralph.pid")" 2>/dev/null || true
   fi
 
   # Clean up temp directory
@@ -336,9 +336,9 @@ EOF
   [ $status -eq 0 ]
 }
 
-# Test: Script calls claude --print
-@test "ralph.sh: calls claude --print" {
-  run grep -q 'claude --print' "$RALPH_SCRIPT"
+# Test: Script calls claude --message
+@test "ralph.sh: calls claude --message" {
+  run grep -q 'claude --message' "$RALPH_SCRIPT"
   [ $status -eq 0 ]
 }
 
@@ -532,7 +532,7 @@ EOF
   cat > "$MOCK_CLAUDE" <<'EOF'
 #!/bin/bash
 # Mock claude that returns COMPLETE
-if [[ "$*" == *"--print"* ]]; then
+if [[ "$*" == *"--message"* ]]; then
   # Read from stdin
   cat >/dev/null
   # Return COMPLETE promise
