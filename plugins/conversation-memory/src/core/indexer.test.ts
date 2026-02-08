@@ -101,7 +101,8 @@ describe('File filtering for agent conversations', () => {
   });
 
   test('handles empty array', () => {
-    const filtered = [].filter(f => f.endsWith('.jsonl') && !f.startsWith('agent-'));
+    const files: string[] = [];
+    const filtered = files.filter(f => f.endsWith('.jsonl') && !f.startsWith('agent-'));
     expect(filtered).toEqual([]);
   });
 
