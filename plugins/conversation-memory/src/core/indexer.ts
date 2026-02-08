@@ -397,7 +397,7 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
  * @param db - Database instance
  * @returns Count of processed exchanges
  */
-export async function recomputeToolSummaries(db: InstanceType<typeof Database>): Promise<number> {
+export async function recomputeToolSummaries(db: Database.Database): Promise<number> {
   // Get all exchange_ids that have tool calls
   const exchangeIdsStmt = db.prepare(`
     SELECT DISTINCT exchange_id
