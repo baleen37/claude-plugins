@@ -31,3 +31,18 @@ Started: 2025-02-08T00:00:00Z
 | US-010 | Add edge case tests for helper functions | pending |
 | US-011 | Reorganize test files by category | pending |
 | US-012 | Split helper files by responsibility | pending |
+
+## Iteration 1 - US-007: Standardize YAML validation in bats_helper
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Functions verified**:
+  - `ensure_yaml_validator()` at bats_helper.bash:517
+  - `validate_yaml_file()` at bats_helper.bash:526
+- **Findings**: Both functions already exist with proper documentation comments
+- **Tests verified**: All 231 tests pass
+- **Learnings**:
+  - PRD changed during iteration from "test-code-improvement" to "test-refactoring-iteration-2"
+  - Functions may already exist even when story is marked as incomplete
+  - Always verify existing code before implementing new features
+  - YAML validation uses yq or python3 as fallback
+

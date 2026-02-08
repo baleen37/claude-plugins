@@ -86,8 +86,8 @@
         "All tests pass after adding functions"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Functions already exist in bats_helper.bash:517-540 with proper documentation. Added in previous commit. All 231 tests pass."
     },
     {
       "id": "US-008",
