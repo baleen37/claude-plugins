@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites time="28.794">
+<testsuite name="directory_structure.bats" tests="3" failures="0" errors="0" skipped="0" time="0.218" timestamp="2026-02-08T10:06:25" hostname="kakaostyle-jito">
+    <testcase classname="directory_structure.bats" name="Required directories exist" time="0.071" />
+    <testcase classname="directory_structure.bats" name="Each plugin has valid plugin.json" time="0.079" />
+    <testcase classname="directory_structure.bats" name="Plugin directories follow naming convention" time="0.068" />
+
+</testsuite>
+<testsuite name="edge_cases.bats" tests="17" failures="0" errors="0" skipped="0" time="0.484" timestamp="2026-02-08T10:06:26" hostname="kakaostyle-jito">
+    <testcase classname="edge_cases.bats" name="handles empty plugin.json file" time="0.023" />
+    <testcase classname="edge_cases.bats" name="handles plugin with no components" time="0.028" />
+    <testcase classname="edge_cases.bats" name="handles unicode in description fields" time="0.034" />
+    <testcase classname="edge_cases.bats" name="handles very long field values" time="0.026" />
+    <testcase classname="edge_cases.bats" name="handles minimal valid plugin.json" time="0.024" />
+    <testcase classname="edge_cases.bats" name="handles plugin.json with all optional fields" time="0.065" />
+    <testcase classname="edge_cases.bats" name="handles author as string" time="0.023" />
+    <testcase classname="edge_cases.bats" name="handles author as object" time="0.024" />
+    <testcase classname="edge_cases.bats" name="handles empty arrays in plugin.json" time="0.025" />
+    <testcase classname="edge_cases.bats" name="handles special characters in plugin name" time="0.016" />
+    <testcase classname="edge_cases.bats" name="handles frontmatter with multiline values" time="0.023" />
+    <testcase classname="edge_cases.bats" name="handles SKILL.md without content" time="0.033" />
+    <testcase classname="edge_cases.bats" name="handles marketplace with no plugins" time="0.039" />
+    <testcase classname="edge_cases.bats" name="handles very long plugin name" time="0.023" />
+    <testcase classname="edge_cases.bats" name="handles version boundary values" time="0.016" />
+    <testcase classname="edge_cases.bats" name="handles empty hooks.json" time="0.031" />
+    <testcase classname="edge_cases.bats" name="handles nested hooks.json structure" time="0.031" />
+
+</testsuite>
+<testsuite name="error_handling.bats" tests="23" failures="0" errors="0" skipped="0" time="0.451" timestamp="2026-02-08T10:06:27" hostname="kakaostyle-jito">
+    <testcase classname="error_handling.bats" name="validate_json provides clear error for malformed JSON" time="0.026" />
+    <testcase classname="error_handling.bats" name="validate_json handles empty file gracefully" time="0.024" />
+    <testcase classname="error_handling.bats" name="json_get handles missing file" time="0.021" />
+    <testcase classname="error_handling.bats" name="json_get handles missing field" time="0.021" />
+    <testcase classname="error_handling.bats" name="is_valid_plugin_name rejects uppercase" time="0.019" />
+    <testcase classname="error_handling.bats" name="is_valid_plugin_name rejects underscores" time="0.016" />
+    <testcase classname="error_handling.bats" name="is_valid_plugin_name rejects dots" time="0.018" />
+    <testcase classname="error_handling.bats" name="is_valid_plugin_name accepts valid names" time="0.016" />
+    <testcase classname="error_handling.bats" name="has_frontmatter_delimiter handles non-markdown files" time="0.020" />
+    <testcase classname="error_handling.bats" name="has_frontmatter_delimiter handles empty file" time="0.019" />
+    <testcase classname="error_handling.bats" name="has_frontmatter_field handles file without frontmatter" time="0.019" />
+    <testcase classname="error_handling.bats" name="fixture factory rejects invalid plugin name" time="0.018" />
+    <testcase classname="error_handling.bats" name="cleanup_fixtures handles non-existent directory" time="0.015" />
+    <testcase classname="error_handling.bats" name="assert_eq shows clear difference on failure" time="0.019" />
+    <testcase classname="error_handling.bats" name="assert_file_exists shows file path on failure" time="0.016" />
+    <testcase classname="error_handling.bats" name="assert_matches shows pattern and value on failure" time="0.017" />
+    <testcase classname="error_handling.bats" name="is_valid_semver rejects invalid versions" time="0.023" />
+    <testcase classname="error_handling.bats" name="is_valid_semver accepts valid versions" time="0.016" />
+    <testcase classname="error_handling.bats" name="plugin manifest validation catches disallowed fields" time="0.024" />
+    <testcase classname="error_handling.bats" name="count_files handles non-existent directory" time="0.021" />
+    <testcase classname="error_handling.bats" name="json_field_is_allowed rejects unknown fields" time="0.016" />
+    <testcase classname="error_handling.bats" name="yaml_get handles missing file" time="0.022" />
+    <testcase classname="error_handling.bats" name="setup creates temp directory even on failure retry" time="0.025" />
+
+</testsuite>
+<testsuite name="fixture_factory.bats" tests="12" failures="0" errors="0" skipped="0" time="0.501" timestamp="2026-02-08T10:06:28" hostname="kakaostyle-jito">
+    <testcase classname="fixture_factory.bats" name="create_minimal_plugin creates minimal plugin structure" time="0.058" />
+    <testcase classname="fixture_factory.bats" name="create_minimal_plugin validates plugin name format" time="0.013" />
+    <testcase classname="fixture_factory.bats" name="create_full_plugin creates complete plugin structure" time="0.089" />
+    <testcase classname="fixture_factory.bats" name="create_command_file creates valid command file" time="0.030" />
+    <testcase classname="fixture_factory.bats" name="create_agent_file creates valid agent file" time="0.037" />
+    <testcase classname="fixture_factory.bats" name="create_skill_file creates valid skill structure" time="0.037" />
+    <testcase classname="fixture_factory.bats" name="create_skill_file with content creates detailed skill" time="0.028" />
+    <testcase classname="fixture_factory.bats" name="cleanup_fixtures removes all fixture directories" time="0.069" />
+    <testcase classname="fixture_factory.bats" name="cleanup_fixtures handles non-existent directory gracefully" time="0.013" />
+    <testcase classname="fixture_factory.bats" name="create_minimal_plugin with custom options" time="0.033" />
+    <testcase classname="fixture_factory.bats" name="create_full_plugin includes hooks.json with valid structure" time="0.069" />
+    <testcase classname="fixture_factory.bats" name="fixture factory generates valid plugin names only" time="0.025" />
+
+</testsuite>
+<testsuite name="frontmatter_tests.bats" tests="8" failures="0" errors="0" skipped="0" time="2.340" timestamp="2026-02-08T10:06:31" hostname="kakaostyle-jito">
+    <testcase classname="frontmatter_tests.bats" name="Command files exist in plugins" time="0.153" />
+    <testcase classname="frontmatter_tests.bats" name="Command files have frontmatter delimiter" time="0.274" />
+    <testcase classname="frontmatter_tests.bats" name="Agent files exist in plugins" time="0.144" />
+    <testcase classname="frontmatter_tests.bats" name="Agent files have frontmatter delimiter" time="0.163" />
+    <testcase classname="frontmatter_tests.bats" name="SKILL.md files exist" time="0.397" />
+    <testcase classname="frontmatter_tests.bats" name="SKILL.md files have valid frontmatter delimiter" time="0.419" />
+    <testcase classname="frontmatter_tests.bats" name="SKILL.md files have name field" time="0.398" />
+    <testcase classname="frontmatter_tests.bats" name="SKILL.md files have description field" time="0.392" />
+
+</testsuite>
+<testsuite name="github_workflows.bats" tests="15" failures="0" errors="0" skipped="0" time="0.343" timestamp="2026-02-08T10:06:31" hostname="kakaostyle-jito">
+    <testcase classname="github_workflows.bats" name="Workflow directory exists" time="0.012" />
+    <testcase classname="github_workflows.bats" name="CI workflow file exists" time="0.013" />
+    <testcase classname="github_workflows.bats" name="CI workflow has valid YAML syntax" time="0.019" />
+    <testcase classname="github_workflows.bats" name="CI workflow triggers on push to main" time="0.020" />
+    <testcase classname="github_workflows.bats" name="CI workflow triggers on pull_request" time="0.019" />
+    <testcase classname="github_workflows.bats" name="CI workflow has only test job (no release job)" time="0.028" />
+    <testcase classname="github_workflows.bats" name="CI workflow has read-only permissions" time="0.035" />
+    <testcase classname="github_workflows.bats" name="Release workflow exists" time="0.026" />
+    <testcase classname="github_workflows.bats" name="Release workflow has valid YAML syntax" time="0.021" />
+    <testcase classname="github_workflows.bats" name="Release workflow triggers on push to main" time="0.033" />
+    <testcase classname="github_workflows.bats" name="Release workflow has required permissions" time="0.036" />
+    <testcase classname="github_workflows.bats" name="Marketplace sync workflow exists" time="0.017" />
+    <testcase classname="github_workflows.bats" name="Marketplace sync workflow has valid YAML syntax" time="0.020" />
+    <testcase classname="github_workflows.bats" name="Release workflow has infinite loop prevention" time="0.023" />
+    <testcase classname="github_workflows.bats" name="Release workflow uses full git history" time="0.021" />
+
+</testsuite>
+<testsuite name="hooks_json.bats" tests="6" failures="0" errors="0" skipped="0" time="1.627" timestamp="2026-02-08T10:06:33" hostname="kakaostyle-jito">
+    <testcase classname="hooks_json.bats" name="hooks.json is valid JSON" time="0.071" />
+    <testcase classname="hooks_json.bats" name="hooks.json has required top-level structure" time="0.281" />
+    <testcase classname="hooks_json.bats" name="hooks.json events have valid structure" time="0.534" />
+    <testcase classname="hooks_json.bats" name="hooks.json hook entries have required type field" time="0.297" />
+    <testcase classname="hooks_json.bats" name="hooks.json command type has command field" time="0.370" />
+    <testcase classname="hooks_json.bats" name="hooks.json uses portable CLAUDE_PLUGIN_ROOT paths" time="0.074" />
+
+</testsuite>
+<testsuite name="marketplace_json.bats" tests="7" failures="0" errors="0" skipped="0" time="0.176" timestamp="2026-02-08T10:06:34" hostname="kakaostyle-jito">
+    <testcase classname="marketplace_json.bats" name="marketplace.json exists" time="0.003" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json is valid JSON" time="0.007" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json has required fields" time="0.016" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json owner.name is not empty" time="0.017" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json plugins array exists" time="0.009" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json includes all plugins in plugins/ directory" time="0.108" />
+    <testcase classname="marketplace_json.bats" name="marketplace.json plugin sources point to existing directories" time="0.016" />
+
+</testsuite>
+<testsuite name="negative_tests.bats" tests="17" failures="0" errors="0" skipped="0" time="0.552" timestamp="2026-02-08T10:06:35" hostname="kakaostyle-jito">
+    <testcase classname="negative_tests.bats" name="rejects plugin.json with invalid top-level field" time="0.028" />
+    <testcase classname="negative_tests.bats" name="rejects plugin.json with missing required name field" time="0.035" />
+    <testcase classname="negative_tests.bats" name="rejects plugin.json with null name field" time="0.029" />
+    <testcase classname="negative_tests.bats" name="rejects plugin.json with invalid author field" time="0.039" />
+    <testcase classname="negative_tests.bats" name="rejects hooks.json with invalid structure" time="0.039" />
+    <testcase classname="negative_tests.bats" name="rejects SKILL.md without required name field" time="0.035" />
+    <testcase classname="negative_tests.bats" name="rejects SKILL.md without frontmatter delimiter" time="0.028" />
+    <testcase classname="negative_tests.bats" name="rejects command file without description" time="0.026" />
+    <testcase classname="negative_tests.bats" name="rejects agent file without model field" time="0.023" />
+    <testcase classname="negative_tests.bats" name="rejects marketplace.json with duplicate plugin names" time="0.033" />
+    <testcase classname="negative_tests.bats" name="rejects invalid semantic version formats" time="0.045" />
+    <testcase classname="negative_tests.bats" name="rejects plugin name with invalid characters" time="0.051" />
+    <testcase classname="negative_tests.bats" name="handles malformed YAML in hooks.json" time="0.027" />
+    <testcase classname="negative_tests.bats" name="rejects plugin.json with wrong field type" time="0.032" />
+    <testcase classname="negative_tests.bats" name="rejects marketplace.json with missing owner" time="0.028" />
+    <testcase classname="negative_tests.bats" name="rejects workflow file with invalid YAML syntax" time="0.026" />
+    <testcase classname="negative_tests.bats" name="rejects empty plugin name" time="0.028" />
+
+</testsuite>
+<testsuite name="new_assertions.bats" tests="18" failures="0" errors="0" skipped="0" time="0.278" timestamp="2026-02-08T10:06:35" hostname="kakaostyle-jito">
+    <testcase classname="new_assertions.bats" name="assert_file_not_exists passes when file does not exist" time="0.013" />
+    <testcase classname="new_assertions.bats" name="assert_file_not_exists fails when file exists" time="0.019" />
+    <testcase classname="new_assertions.bats" name="assert_dir_not_exists passes when directory does not exist" time="0.014" />
+    <testcase classname="new_assertions.bats" name="assert_contains passes when haystack contains needle" time="0.014" />
+    <testcase classname="new_assertions.bats" name="assert_contains fails when haystack does not contain needle" time="0.013" />
+    <testcase classname="new_assertions.bats" name="assert_not_contains passes when haystack does not contain needle" time="0.013" />
+    <testcase classname="new_assertions.bats" name="assert_gt passes when actual is greater" time="0.014" />
+    <testcase classname="new_assertions.bats" name="assert_gt fails when actual is less" time="0.015" />
+    <testcase classname="new_assertions.bats" name="assert_lt passes when actual is less" time="0.013" />
+    <testcase classname="new_assertions.bats" name="assert_lt fails when actual is greater" time="0.015" />
+    <testcase classname="new_assertions.bats" name="assert_array_contains passes when element exists" time="0.014" />
+    <testcase classname="new_assertions.bats" name="assert_array_contains fails when element does not exist" time="0.016" />
+    <testcase classname="new_assertions.bats" name="assert_executable passes for executable files" time="0.016" />
+    <testcase classname="new_assertions.bats" name="assert_executable fails for non-executable files" time="0.017" />
+    <testcase classname="new_assertions.bats" name="count_lines returns correct line count" time="0.020" />
+    <testcase classname="new_assertions.bats" name="file_size returns correct size" time="0.017" />
+    <testcase classname="new_assertions.bats" name="assert_file_size_gt passes when file is large enough" time="0.017" />
+    <testcase classname="new_assertions.bats" name="assert_file_size_gt fails when file is too small" time="0.018" />
+
+</testsuite>
+<testsuite name="plugin_json.bats" tests="9" failures="0" errors="0" skipped="0" time="4.026" timestamp="2026-02-08T10:06:40" hostname="kakaostyle-jito">
+    <testcase classname="plugin_json.bats" name="plugin.json exists" time="0.008" />
+    <testcase classname="plugin_json.bats" name="plugin.json is valid JSON" time="0.060" />
+    <testcase classname="plugin_json.bats" name="plugin.json has required fields" time="0.184" />
+    <testcase classname="plugin_json.bats" name="plugin.json name follows naming convention" time="0.083" />
+    <testcase classname="plugin_json.bats" name="plugin.json fields are not empty" time="0.234" />
+    <testcase classname="plugin_json.bats" name="plugin.json uses only allowed fields" time="0.266" />
+    <testcase classname="plugin_json.bats" name="all plugin.json files pass comprehensive validation" time="0.801" />
+    <testcase classname="plugin_json.bats" name="plugin count is valid" time="0.938" />
+    <testcase classname="plugin_json.bats" name="no invalid plugin manifests exist" time="1.452" />
+
+</testsuite>
+<testsuite name="plugin_validation_common.bats" tests="12" failures="0" errors="0" skipped="0" time="5.609" timestamp="2026-02-08T10:06:45" hostname="kakaostyle-jito">
+    <testcase classname="plugin_validation_common.bats" name="common: plugin.json files exist in plugin directories" time="0.140" />
+    <testcase classname="plugin_validation_common.bats" name="common: all plugin.json files are valid JSON" time="0.070" />
+    <testcase classname="plugin_validation_common.bats" name="common: all plugin.json files have required fields" time="0.196" />
+    <testcase classname="plugin_validation_common.bats" name="common: all plugin.json files have non-empty required field values" time="0.264" />
+    <testcase classname="plugin_validation_common.bats" name="common: all plugin.json names follow naming convention" time="0.103" />
+    <testcase classname="plugin_validation_common.bats" name="common: all plugin.json files use only allowed fields" time="0.262" />
+    <testcase classname="plugin_validation_common.bats" name="common: validate all plugin manifests using comprehensive validation" time="0.786" />
+    <testcase classname="plugin_validation_common.bats" name="common: count valid plugins returns expected number" time="2.225" />
+    <testcase classname="plugin_validation_common.bats" name="common: get_invalid_plugins returns empty list when all are valid" time="1.353" />
+    <testcase classname="plugin_validation_common.bats" name="common: validate_plugin_manifest_comprehensive works on valid plugin" time="0.076" />
+    <testcase classname="plugin_validation_common.bats" name="common: validate_plugin_manifest_comprehensive detects missing fields" time="0.065" />
+    <testcase classname="plugin_validation_common.bats" name="common: validate_plugin_manifest_comprehensive detects invalid fields" time="0.069" />
+
+</testsuite>
+<testsuite name="ralph_loop_command_tests.bats" tests="39" failures="0" errors="0" skipped="0" time="0.198" timestamp="2026-02-08T10:06:46" hostname="kakaostyle-jito">
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: exists" time="0.002" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: has valid frontmatter delimiter" time="0.006" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: has description field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: description mentions canceling Ralph loop" time="0.008" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: has allowed-tools field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: allowed-tools includes kill command" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: allowed-tools includes reading PID file" time="0.006" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: allowed-tools includes removing PID file" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: instructions mention .ralph/ralph.pid" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: instructions mention checking if PID file exists" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: instructions mention killing the process" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: instructions mention removing PID file" time="0.007" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: instructions mention reporting cancellation" time="0.006" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: does NOT mention .claude/ralph-loop.local.md" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="cancel-ralph.md: does NOT mention iteration field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-init.md: exists" time="0.003" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-init.md: has valid frontmatter delimiter" time="0.007" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-init.md: has description field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-loop.md: exists" time="0.003" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-loop.md: has valid frontmatter delimiter" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-loop.md: has description field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-loop.md: has allowed-tools field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="ralph-loop.md: mentions cancel-ralph in documentation" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: exists" time="0.002" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: has valid frontmatter delimiter" time="0.006" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: has description field" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: mentions /ralph-init command" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: mentions /ralph-loop command" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: mentions /cancel-ralph command" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: explains PRD creation workflow" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: explains fresh instance approach" time="0.004" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: explains bash loop mechanism" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: mentions PRD file location" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: mentions progress tracking" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: does NOT mention Stop hook" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: does NOT mention completion-promise" time="0.006" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: does NOT mention &lt;promise&gt; tags" time="0.005" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: does NOT mention session-based looping" time="0.007" />
+    <testcase classname="ralph_loop_command_tests.bats" name="help.md: credits snarktank/ralph inspiration" time="0.005" />
+
+</testsuite>
+<testsuite name="ralph_loop_script_tests.bats" tests="48" failures="0" errors="0" skipped="2" time="11.241" timestamp="2026-02-08T10:06:59" hostname="kakaostyle-jito">
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: exists and is executable" time="0.054" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: uses set -euo pipefail" time="0.056" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: exits with error if .ralph/prd.json missing" time="0.060" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: accepts custom max iterations argument" time="0.058" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: default iterations is 10" time="0.056" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: creates PID file on startup" time="0.574" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: cleans up PID file on exit" time="0.781" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: detects existing running loop" time="0.088" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: checks out branch from prd.json" time="0.620" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: creates branch if it doesn&#39;t exist" time="0.634" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: creates progress.txt if missing" time="0.612" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has {{ITERATION}} placeholder" time="0.062" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has {{MAX}} placeholder" time="0.057" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions reading .ralph/prd.json" time="0.056" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions reading .ralph/progress.txt" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions &lt;promise&gt;COMPLETE&lt;/promise&gt;" time="0.058" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions implementing ONE story" time="0.056" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions updating .ralph/prd.json" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions appending to progress.txt" time="0.057" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has Progress Report Format section" time="0.055" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has Consolidate Patterns section" time="0.053" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: mentions Codebase Patterns section" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has Update CLAUDE.md Files section" time="0.060" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has Quality Requirements section" time="0.061" />
+    <testcase classname="ralph_loop_script_tests.bats" name="prompt.md: has Browser Testing section" time="0.058" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: substitutes {{ITERATION}} and {{MAX}} in prompt" time="0.061" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: calls claude --print" time="0.055" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: checks for &lt;promise&gt;COMPLETE&lt;/promise&gt;" time="0.057" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: exits with 0 when COMPLETE detected" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: uses seq loop for iterations" time="0.064" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: shows iteration progress" time="0.057" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: has cleanup trap" time="0.058" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: cleanup function removes PID file" time="0.057" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: sleeps between iterations" time="0.052" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: creates log directory for iteration archives" time="0.056" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: has LOG_DIR variable" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: writes iteration logs to archive directory" time="0.059" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: supports --dangerously-skip-permissions flag" time="0.053" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: passes --dangerously-skip-permissions to claude" time="0.060" />
+    <testcase classname="ralph_loop_script_tests.bats" name="cancel-ralph: kills ralph.sh process and removes PID file" time="0">
+        <skipped>Test skipped due to timing sensitivity on CI runners</skipped>
+    </testcase>
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: iterates correct number of times" time="0">
+        <skipped>Test skipped on CI due to timing sensitivity with mock claude</skipped>
+    </testcase>
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: detects COMPLETE and exits with 0" time="0.334" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: creates .last-branch file on first run" time="0.610" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: archives previous run when branch changes" time="1.130" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: does not archive when branch is the same" time="1.110" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: handles archive directory name collision with timestamp" time="1.125" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: archive directory name removes ralph/ prefix" time="1.120" />
+    <testcase classname="ralph_loop_script_tests.bats" name="ralph.sh: handles null branchName without archiving" time="0.602" />
+
+</testsuite>
+<testsuite name="validate_paths.bats" tests="6" failures="0" errors="0" skipped="0" time="0.108" timestamp="2026-02-08T10:06:59" hostname="kakaostyle-jito">
+    <testcase classname="validate_paths.bats" name="detects hardcoded absolute paths in JSON files" time="0.020" />
+    <testcase classname="validate_paths.bats" name="allows portable ${CLAUDE_PLUGIN_ROOT} paths" time="0.019" />
+    <testcase classname="validate_paths.bats" name="detects hardcoded paths in shell scripts" time="0.020" />
+    <testcase classname="validate_paths.bats" name="excludes .git directory from path checks" time="0.012" />
+    <testcase classname="validate_paths.bats" name="allows dollar-prefixed variables (not hardcoded paths)" time="0.018" />
+    <testcase classname="validate_paths.bats" name="checks markdown files for hardcoded paths" time="0.019" />
+
+</testsuite>
+<testsuite name="validate_plugin_manifest.bats" tests="9" failures="0" errors="0" skipped="0" time="0.642" timestamp="2026-02-08T10:07:00" hostname="kakaostyle-jito">
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json has only allowed top-level fields" time="0.035" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json rejects disallowed top-level fields" time="0.028" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json allows only name and email in author object" time="0.033" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json rejects disallowed author fields" time="0.034" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json requires name field" time="0.032" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json name is valid JSON string" time="0.033" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json author can be string or object" time="0.042" />
+    <testcase classname="validate_plugin_manifest.bats" name="plugin.json keywords is array of strings" time="0.031" />
+    <testcase classname="validate_plugin_manifest.bats" name="all real plugin manifests are valid" time="0.374" />
+
+</testsuite>
+</testsuites>

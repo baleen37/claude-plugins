@@ -2523,9 +2523,6 @@ function generateId() {
 function isLowValueTool(toolName) {
   return skipTools.has(toolName);
 }
-function configureSkipTools(tools) {
-  skipTools = new Set(tools);
-}
 var DEFAULT_SKIP_TOOLS, skipTools;
 var init_observation_prompt = __esm({
   "src/core/observation-prompt.ts"() {
@@ -2614,10 +2611,6 @@ async function startObserver() {
     console.error("No LLM config found. Please create ~/.config/conversation-memory/config.json");
     process.exit(1);
   }
-  if (config.skipTools) {
-    configureSkipTools(config.skipTools);
-    console.log(`Configured skipTools: ${config.skipTools.join(", ")}`);
-  }
   const llmProvider = createProvider(config);
   const sessionId = getCurrentSessionId();
   const project = getCurrentProject();
@@ -2625,6 +2618,9 @@ async function startObserver() {
   const sessionContexts = /* @__PURE__ */ new Map();
   sessionContexts.set(sessionId, {
     sessionId,
+    conversationHistory: [
+      { role: "user", content: buildInitPrompt() }
+    ],
     lastActivity: Date.now(),
     promptCount: getLastPromptNumber(db, sessionId)
   });
@@ -2687,7 +2683,6 @@ async function processEvent(db, llmProvider, event, context, pollInterval, pidPa
   return false;
 }
 async function processToolUseEvent(db, llmProvider, event, context, promptNumber) {
-  const systemPrompt = buildInitPrompt();
   const prompt = buildObservationPrompt(
     event.toolName,
     event.toolInput,
@@ -2695,7 +2690,11 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
     event.cwd || process.cwd(),
     event.project || ""
   );
-  const response = await llmProvider.complete(prompt, { systemPrompt });
+  context.conversationHistory.push({ role: "user", content: prompt });
+  const response = await llmProvider.complete(
+    context.conversationHistory.map((msg) => msg.content).join("\n\n")
+  );
+  context.conversationHistory.push({ role: "model", content: response.text });
   const result = parseObservationResponse(response.text);
   if (result.type === "observation" && result.data) {
     const observation = {
@@ -2710,11 +2709,10 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
   }
 }
 async function processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath) {
-  const systemPrompt = buildInitPrompt();
   const previousObservations = getObservationsBySession(db, context.sessionId);
   const sessionContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.narrative}`).join("\n");
   const prompt = buildSummaryPrompt(sessionContext, event.project || "");
-  const response = await llmProvider.complete(prompt, { systemPrompt });
+  const response = await llmProvider.complete(prompt);
   const summary = processSessionSummary(
     db,
     response.text,

@@ -188,3 +188,38 @@ Started: 2025-02-08T00:00:00Z
   - The fixture_factory helper is loaded with relative path (../helpers/fixture_factory)
   - Original handoff.bats remains unchanged until US-017 (final split and deletion)
 
+## Iteration 8 - US-016: Split handoff.bats into filtering.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/filtering.bats exists with 4 filtering/sorting tests
+  - Tests included: project path filtering, created_at sorting, recent handoff detection, most recent unloaded handoff
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File exists**: tests/handoff/filtering.bats
+- **Tests verified**: All 249 tests pass
+- **Learnings**:
+  - Filtering tests verify jq-based filtering and sorting operations
+  - Tests use complex jq queries for multi-condition filtering (project path + loaded status + timestamp sorting)
+  - The fixture_factory helper is loaded with relative path (../helpers/fixture_factory)
+  - Concurrent Ralph loops can create overlapping work - need to check for existing files before implementing
+  - Original handoff.bats remains unchanged until US-017 (final split and deletion)
+
+## Iteration 8 - US-017: Split handoff.bats into references.bats
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Verified tests/handoff/references.bats exists with 4 reference tests
+  - Tests included: plan_path resolution with tilde expansion, tasks_session_id extraction, missing plan file handling, source_session_id display
+  - Original tests/handoff/handoff.bats was deleted
+  - File includes appropriate setup/teardown and loads fixture_factory helper
+- **File created**: tests/handoff/references.bats
+- **File deleted**: tests/handoff/handoff.bats
+- **Tests verified**: All 253 tests pass (up from 249 due to split)
+- **Learnings**:
+  - Reference tests verify the references object fields (plan_path, tasks_session_id) and source_session_id
+  - Tests verify both successful extraction and error handling (missing plan file)
+  - Tilde expansion testing uses parameter expansion: ${PLAN_PATH/#\~/$TEST_TEMP_DIR}
+  - Test file split increased total test count slightly due to test file overhead (setup/teardown)
+  - Minor duplication exists: 'session-start hook detects recent handoffs' appears in both structure.bats and filtering.bats
+  - All three new test files (structure, filtering, references) successfully split the original handoff.bats
+
