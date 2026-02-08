@@ -110,3 +110,70 @@ setup() {
 @test "ralph-loop.md: mentions cancel-ralph in documentation" {
   grep -q "cancel-ralph" "$RALPH_LOOP_CMD"
 }
+
+# help.md command tests
+HELP_CMD="${PROJECT_ROOT}/plugins/ralph-loop/commands/help.md"
+
+@test "help.md: exists" {
+  [ -f "$HELP_CMD" ]
+}
+
+@test "help.md: has valid frontmatter delimiter" {
+  has_frontmatter_delimiter "$HELP_CMD"
+}
+
+@test "help.md: has description field" {
+  has_frontmatter_field "$HELP_CMD" "description"
+}
+
+@test "help.md: mentions /ralph-init command" {
+  grep -q "/ralph-init" "$HELP_CMD"
+}
+
+@test "help.md: mentions /ralph-loop command" {
+  grep -q "/ralph-loop" "$HELP_CMD"
+}
+
+@test "help.md: mentions /cancel-ralph command" {
+  grep -q "/cancel-ralph" "$HELP_CMD"
+}
+
+@test "help.md: explains PRD creation workflow" {
+  grep -q "PRD" "$HELP_CMD" || grep -q "Product Requirements Document" "$HELP_CMD"
+}
+
+@test "help.md: explains fresh instance approach" {
+  grep -q "fresh" "$HELP_CMD"
+}
+
+@test "help.md: explains bash loop mechanism" {
+  grep -q "bash loop" "$HELP_CMD" || grep -q "while" "$HELP_CMD"
+}
+
+@test "help.md: mentions PRD file location" {
+  grep -q "\.ralph/prd\.json" "$HELP_CMD"
+}
+
+@test "help.md: mentions progress tracking" {
+  grep -q "progress" "$HELP_CMD"
+}
+
+@test "help.md: does NOT mention Stop hook" {
+  ! grep -q "Stop hook" "$HELP_CMD"
+}
+
+@test "help.md: does NOT mention completion-promise" {
+  ! grep -q "completion-promise" "$HELP_CMD"
+}
+
+@test "help.md: does NOT mention <promise> tags" {
+  ! grep -q "<promise>" "$HELP_CMD"
+}
+
+@test "help.md: does NOT mention session-based looping" {
+  ! grep -q "session" "$HELP_CMD" || ! grep -q "current session" "$HELP_CMD"
+}
+
+@test "help.md: credits snarktank/ralph inspiration" {
+  grep -q "snarktank" "$HELP_CMD" || grep -q "ghuntley" "$HELP_CMD"
+}
