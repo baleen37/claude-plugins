@@ -416,7 +416,7 @@ EOF
   sleep 0.2
 
   # Verify process is dead
-  ! kill -0 "$ralph_pid" 2>/dev/null
+  run ! kill -0 "$ralph_pid" 2>/dev/null
 
   # Remove PID file (as cancel-ralph would do)
   rm -f .ralph/ralph.pid

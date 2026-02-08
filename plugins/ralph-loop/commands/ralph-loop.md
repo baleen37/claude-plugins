@@ -14,11 +14,13 @@ Execute the Ralph loop script. This will spawn fresh Claude instances in a bash 
 ## Usage
 
 Default (10 iterations):
+
 ```!
 "${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh"
 ```
 
 With custom max iterations:
+
 ```!
 "${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh" $ARGUMENTS
 ```
@@ -34,8 +36,10 @@ With custom max iterations:
 ## Monitoring
 
 Watch progress in another terminal:
+
 ```bash
 tail -f .ralph/progress.txt
 ```
 
+To cancel: `/cancel-ralph`
 To cancel: `/cancel-ralph`

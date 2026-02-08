@@ -28,7 +28,9 @@ while true; do
 done
 ```
 
-Each iteration spawns a **fresh Claude instance** that receives the SAME prompt. The "self-referential" aspect comes from Claude seeing its own previous work in the files and git history, not from feeding output back as input.
+Each iteration spawns a **fresh Claude instance** that receives the SAME prompt.
+The "self-referential" aspect comes from Claude seeing its own previous work
+in the files and git history, not from feeding output back as input.
 
 This creates a **self-referential feedback loop** where:
 
@@ -70,7 +72,7 @@ Claude will:
 
 Ralph uses a `.ralph/` directory for state management:
 
-```
+```text
 .ralph/
 ├── prd.json         # Product Requirements Document with user stories
 ├── progress.txt     # Progress log with learnings from each iteration
@@ -255,6 +257,7 @@ When `/ralph-init` creates stories, it should break the task into manageable pie
 ❌ Too big: "Build the entire e-commerce platform"
 
 ✅ Right-sized:
+
 - US-001: Setup project structure and dependencies
 - US-002: Create product data model
 - US-003: Implement product list endpoint
@@ -266,6 +269,7 @@ When `/ralph-init` creates stories, it should break the task into manageable pie
 Make testing explicit:
 
 ✅ Good breakdown:
+
 - US-001: Create user model
 - US-002: Write unit tests for user model
 - US-003: Implement user service
@@ -291,6 +295,7 @@ Always use max-iterations as a safety net:
 Each story should have clear pass/fail criteria:
 
 ✅ Good acceptance criteria:
+
 - "Todo model with id, title, completed fields defined"
 - "POST /todos creates a todo and returns 201"
 - "GET /todos returns array of todos"
@@ -549,7 +554,8 @@ Started: 2026-02-08T12:00:00Z
 **prd.json:** All stories have `"passes": true`
 
 **Git history:**
-```
+
+```text
 d69aec5 feat: US-004 - Implement GET /todos endpoint
 c8f4b2a feat: US-003 - Implement POST /todos endpoint
 a3e7d1c feat: US-002 - Create todo model and interface
@@ -561,18 +567,21 @@ a3e7d1c feat: US-002 - Create todo model and interface
 ### Key Observations
 
 **When a story fails tests:**
+
 - Story remains marked as `passes: false`
 - Next iteration retries the SAME story
 - Progress.txt captures what went wrong
 - Each iteration builds on previous work
 
 **When a story passes tests:**
+
 - Story is marked as `passes: true`
 - Work is committed
 - Next iteration moves to the next story
 - Progress.txt captures what was learned
 
 **Fresh instance benefits:**
+
 - Each iteration starts with clean state
 - No conversation context pollution
 - Progress.txt provides continuity
@@ -584,19 +593,25 @@ Ralph embodies several key principles:
 
 ### 1. Iteration > Perfection
 
-Don't aim for perfect on first try. Let the loop refine the work. Each iteration builds on the previous one, incrementally improving toward the goal.
+Don't aim for perfect on first try. Let the loop refine the work. Each iteration
+builds on the previous one, incrementally improving toward the goal.
 
 ### 2. Failures Are Data
 
-"Deterministically bad" means failures are predictable and informative. Use them to tune prompts. The `progress.txt` file captures learnings from each failure, informing subsequent iterations.
+"Deterministically bad" means failures are predictable and informative. Use them
+to tune prompts. The `progress.txt` file captures learnings from each failure,
+informing subsequent iterations.
 
 ### 3. Operator Skill Matters
 
-Success depends on writing good task descriptions and story breakdowns, not just having a good model. The quality of your `/ralph-init` prompt determines the quality of the results.
+Success depends on writing good task descriptions and story breakdowns, not just
+having a good model. The quality of your `/ralph-init` prompt determines the
+quality of the results.
 
 ### 4. Persistence Wins
 
-Keep trying until success. The loop handles retry logic automatically. If a story fails tests, the next iteration sees the failure in `progress.txt` and can fix it.
+Keep trying until success. The loop handles retry logic automatically. If a story
+fails tests, the next iteration sees the failure in `progress.txt` and can fix it.
 
 ### 5. Fresh State Benefits
 
@@ -640,7 +655,9 @@ The loop completes when:
 2. **Completion promise**: Claude outputs `<promise>COMPLETE</promise>`
 3. **Max iterations**: The loop reaches the iteration limit (exits with error)
 
-The loop script checks for the completion promise in Claude's output after each iteration. When found, it exits cleanly. If max iterations is reached without completion, the script exits with an error.
+The loop script checks for the completion promise in Claude's output after each
+iteration. When found, it exits cleanly. If max iterations is reached without
+completion, the script exits with an error.
 
 ## Learn More
 

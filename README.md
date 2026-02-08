@@ -90,9 +90,8 @@ claude-plugins/
 │   └── marketplace.json          # Marketplace configuration (baleen-plugins)
 ├── plugins/                      # Plugins (auto-discovered)
 │   ├── ralph-loop/              # Ralph Wiggum technique implementation
-│   │   ├── commands/             # Slash commands (/ralph-loop, /cancel-ralph)
-│   │   ├── hooks/                # SessionStart/Stop hooks
-│   │   ├── scripts/              # Setup and utility scripts
+│   │   ├── commands/             # Slash commands (/ralph-init, /ralph-loop, /cancel-ralph, /help)
+│   │   ├── scripts/              # Core loop script (ralph.sh) and prompt template
 │   │   └── tests/                # BATS tests
 │   ├── git-guard/               # Git workflow protection
 │   │   ├── hooks/                # PreToolUse hook
