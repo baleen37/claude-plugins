@@ -2564,6 +2564,47 @@ Indexing embeddings...`);
   console.log(`
 \u2705 Processed ${unprocessed.length} conversations`);
 }
+async function recomputeToolSummaries(db) {
+  const exchangeIdsStmt = db.prepare(`
+    SELECT DISTINCT exchange_id
+    FROM tool_calls
+    ORDER BY exchange_id
+  `);
+  const exchangeIds = exchangeIdsStmt.all();
+  let processedCount = 0;
+  const updateStmt = db.prepare(`
+    UPDATE exchanges
+    SET compressed_tool_summary = ?
+    WHERE id = ?
+  `);
+  for (const { exchange_id } of exchangeIds) {
+    const toolCallsStmt = db.prepare(`
+      SELECT tool_name, tool_input
+      FROM tool_calls
+      WHERE exchange_id = ?
+      ORDER BY id
+    `);
+    const toolCalls = toolCallsStmt.all(exchange_id);
+    if (toolCalls.length === 0) {
+      continue;
+    }
+    const formattedCalls = toolCalls.map((tc) => {
+      let toolInput = null;
+      try {
+        toolInput = tc.tool_input ? JSON.parse(tc.tool_input) : null;
+      } catch {
+      }
+      return {
+        toolName: tc.tool_name,
+        toolInput
+      };
+    });
+    const summary = formatToolSummary(formattedCalls);
+    updateStmt.run(summary, exchange_id);
+    processedCount++;
+  }
+  return processedCount;
+}
 
 // src/core/sync.ts
 init_constants();
@@ -2745,13 +2786,14 @@ USAGE:
   conversation-memory <command> [options]
 
 COMMANDS:
-  sync              Copy new conversations from ~/.claude/projects to archive
-  index-all         Re-index all conversations (slow, use with caution)
-  index-session <id> Index a specific session by ID
-  index-cleanup     Index only unprocessed conversations
-  verify            Check index health for issues
-  repair            Fix detected issues from verify
-  rebuild           Delete database and re-index everything
+  sync                Copy new conversations from ~/.claude/projects to archive
+  index-all           Re-index all conversations (slow, use with caution)
+  index-session <id>  Index a specific session by ID
+  index-cleanup       Index only unprocessed conversations
+  recompute-summaries Recompute compressed tool summaries for existing indexed data
+  verify              Check index health for issues
+  repair              Fix detected issues from verify
+  rebuild             Delete database and re-index everything
 
 OPTIONS:
   --concurrency, -c N  Parallelism for summaries/embeddings (1-16, default: 1)
@@ -2772,6 +2814,9 @@ EXAMPLES:
 
   # Repair issues
   conversation-memory repair --repair
+
+  # Recompute tool summaries for existing data
+  conversation-memory recompute-summaries
 
   # Rebuild entire index
   conversation-memory rebuild --concurrency 8
@@ -2830,6 +2875,16 @@ async function main() {
       case "index-cleanup":
         await indexUnprocessed(concurrency, noSummaries);
         break;
+      case "recompute-summaries": {
+        const db = await Promise.resolve().then(() => (init_db(), db_exports)).then((m) => m.initDatabase());
+        try {
+          const count = await recomputeToolSummaries(db);
+          console.log(`Recomputed summaries for ${count} exchanges`);
+        } finally {
+          db.close();
+        }
+        break;
+      }
       case "sync":
         const syncSourceDir = path6.join(os3.homedir(), ".claude", "projects");
         const syncDestDir = getArchiveDir();
