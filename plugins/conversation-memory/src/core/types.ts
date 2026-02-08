@@ -40,19 +40,6 @@ export interface ConversationExchange {
   compressedToolSummary?: string;
 }
 
-export interface SearchResult {
-  exchange: ConversationExchange;
-  similarity: number;
-  snippet: string;
-}
-
-export interface MultiConceptResult {
-  exchange: ConversationExchange;
-  snippet: string;
-  conceptSimilarities: number[];
-  averageSimilarity: number;
-}
-
 // Compact types for search results (without full ConversationExchange)
 export interface CompactSearchResult {
   id: string;

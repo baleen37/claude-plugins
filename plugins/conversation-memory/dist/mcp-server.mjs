@@ -6776,12 +6776,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs5, exportName) {
+    function addFormats(ajv, list, fs4, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs5[f]);
+        ajv.addFormat(f, fs4[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -17915,8 +17915,8 @@ async function generateEmbedding(text) {
 }
 
 // src/core/search.ts
-import fs3 from "fs";
-import readline from "readline";
+var BOOST_FACTOR = 0.3;
+var BOOST_MIDPOINT = 0.5;
 function validateISODate(dateStr, paramName) {
   const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!isoDateRegex.test(dateStr)) {
@@ -17927,6 +17927,15 @@ function validateISODate(dateStr, paramName) {
     throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
   }
 }
+function applyRecencyBoost(similarity, timestamp) {
+  const now = /* @__PURE__ */ new Date();
+  const then = new Date(timestamp);
+  const diffTime = Math.abs(now.getTime() - then.getTime());
+  const days = Math.floor(diffTime / (1e3 * 60 * 60 * 24));
+  const t = Math.min(days / 180, 1);
+  const boost = 1 + BOOST_FACTOR * (BOOST_MIDPOINT - t);
+  return similarity * boost;
+}
 async function searchConversations(query, options = {}) {
   const { limit = 10, mode = "both", after, before, projects } = options;
   if (after) validateISODate(after, "--after");
@@ -17934,8 +17943,15 @@ async function searchConversations(query, options = {}) {
   const db = initDatabase();
   let results = [];
   const timeFilter = [];
-  if (after) timeFilter.push(`e.timestamp >= '${after}'`);
-  if (before) timeFilter.push(`e.timestamp <= '${before}'`);
+  const timeFilterParams = [];
+  if (after) {
+    timeFilter.push("e.timestamp >= ?");
+    timeFilterParams.push(after);
+  }
+  if (before) {
+    timeFilter.push("e.timestamp <= ?");
+    timeFilterParams.push(before);
+  }
   const timeClause = timeFilter.length > 0 ? `AND ${timeFilter.join(" AND ")}` : "";
   const projectFilter = [];
   if (projects && projects.length > 0) {
@@ -17951,12 +17967,11 @@ async function searchConversations(query, options = {}) {
         e.id,
         e.project,
         e.timestamp,
-        e.user_message,
-        e.assistant_message,
         e.archive_path,
         e.line_start,
         e.line_end,
         e.compressed_tool_summary,
+        SUBSTR(e.user_message, 1, 100) AS snippet_text,
         vec.distance
       FROM vec_exchanges AS vec
       JOIN exchanges AS e ON vec.id = e.id
@@ -17969,6 +17984,7 @@ async function searchConversations(query, options = {}) {
     const vectorParams = [
       Buffer.from(new Float32Array(queryEmbedding).buffer),
       limit,
+      ...timeFilterParams,
       ...projects || []
     ];
     results = stmt.all(...vectorParams);
@@ -17979,12 +17995,11 @@ async function searchConversations(query, options = {}) {
         e.id,
         e.project,
         e.timestamp,
-        e.user_message,
-        e.assistant_message,
         e.archive_path,
         e.line_start,
         e.line_end,
         e.compressed_tool_summary,
+        SUBSTR(e.user_message, 1, 100) AS snippet_text,
         0 as distance
       FROM exchanges AS e
       WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
@@ -17996,6 +18011,7 @@ async function searchConversations(query, options = {}) {
     const textParams = [
       `%${query}%`,
       `%${query}%`,
+      ...timeFilterParams,
       ...projects || [],
       limit
     ];
@@ -18012,58 +18028,40 @@ async function searchConversations(query, options = {}) {
     }
   }
   db.close();
-  return results.map((row) => {
-    const exchange = {
+  let compactResults = results.map((row) => {
+    const snippetText = row.snippet_text || "";
+    const snippet = snippetText + (snippetText.length >= 100 ? "..." : "");
+    return {
       id: row.id,
       project: row.project,
       timestamp: row.timestamp,
-      userMessage: row.user_message,
-      assistantMessage: row.assistant_message,
       archivePath: row.archive_path,
       lineStart: row.line_start,
       lineEnd: row.line_end,
-      compressedToolSummary: row.compressed_tool_summary
-    };
-    const summaryPath = row.archive_path.replace(".jsonl", "-summary.txt");
-    let summary;
-    if (fs3.existsSync(summaryPath)) {
-      summary = fs3.readFileSync(summaryPath, "utf-8").trim();
-    }
-    const snippetText = exchange.userMessage.substring(0, 200).replace(/\s+/g, " ").trim();
-    const snippet = snippetText + (exchange.userMessage.length > 200 ? "..." : "");
-    return {
-      exchange,
+      compressedToolSummary: row.compressed_tool_summary,
       similarity: mode === "text" ? void 0 : 1 - row.distance,
-      snippet,
-      summary
+      snippet
     };
   });
-}
-async function countLines(filePath) {
-  try {
-    const fileStream = fs3.createReadStream(filePath);
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
+  if (mode === "vector" || mode === "both") {
+    compactResults = compactResults.map((result) => {
+      if (result.similarity !== void 0) {
+        return {
+          ...result,
+          similarity: applyRecencyBoost(result.similarity, result.timestamp)
+        };
+      }
+      return result;
     });
-    let count = 0;
-    for await (const line of rl) {
-      if (line.trim()) count++;
-    }
-    return count;
-  } catch (error2) {
-    return 0;
+    compactResults.sort((a, b2) => {
+      const aSim = a.similarity ?? 0;
+      const bSim = b2.similarity ?? 0;
+      return bSim - aSim;
+    });
   }
+  return compactResults;
 }
-function getFileSizeInKB(filePath) {
-  try {
-    const stats = fs3.statSync(filePath);
-    return Math.round(stats.size / 1024 * 10) / 10;
-  } catch (error2) {
-    return 0;
-  }
-}
-async function formatResults(results) {
+function formatResults(results) {
   if (results.length === 0) {
     return "No results found.";
   }
@@ -18072,27 +18070,21 @@ async function formatResults(results) {
 `;
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
-    const date3 = new Date(result.exchange.timestamp).toISOString().split("T")[0];
+    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
     const simPct = result.similarity !== void 0 ? Math.round(result.similarity * 100) : null;
-    output += `${index + 1}. [${result.exchange.project}, ${date3}]`;
+    output += `${index + 1}. [${result.project}, ${date3}]`;
     if (simPct !== null) {
       output += ` - ${simPct}% match`;
     }
     output += "\n";
-    if (result.summary && result.summary.length < 300) {
-      output += `   ${result.summary}
-`;
-    }
     output += `   "${result.snippet}"
 `;
-    if (result.exchange.compressedToolSummary) {
-      output += `   Actions: ${result.exchange.compressedToolSummary}
+    if (result.compressedToolSummary) {
+      output += `   Actions: ${result.compressedToolSummary}
 `;
     }
-    const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
-    const totalLines = await countLines(result.exchange.archivePath);
-    const lineRange = `${result.exchange.lineStart}-${result.exchange.lineEnd}`;
-    output += `   Lines ${lineRange} in ${result.exchange.archivePath} (${fileSizeKB}KB, ${totalLines} lines)
+    const lineRange = `${result.lineStart}-${result.lineEnd}`;
+    output += `   Lines ${lineRange} in ${result.archivePath}
 
 `;
   }
@@ -18109,7 +18101,7 @@ async function searchMultipleConcepts(concepts, options = {}) {
   const conversationMap = /* @__PURE__ */ new Map();
   conceptResults.forEach((results, conceptIndex) => {
     results.forEach((result) => {
-      const key = result.exchange.archivePath;
+      const key = result.archivePath;
       if (!conversationMap.has(key)) {
         conversationMap.set(key, []);
       }
@@ -18127,7 +18119,13 @@ async function searchMultipleConcepts(concepts, options = {}) {
       const averageSimilarity = conceptSimilarities.reduce((sum, sim) => sum + sim, 0) / conceptSimilarities.length;
       const firstResult = results[0];
       multiConceptResults.push({
-        exchange: firstResult.exchange,
+        id: firstResult.id,
+        project: firstResult.project,
+        timestamp: firstResult.timestamp,
+        archivePath: firstResult.archivePath,
+        lineStart: firstResult.lineStart,
+        lineEnd: firstResult.lineEnd,
+        compressedToolSummary: firstResult.compressedToolSummary,
         snippet: firstResult.snippet,
         conceptSimilarities,
         averageSimilarity
@@ -18137,7 +18135,7 @@ async function searchMultipleConcepts(concepts, options = {}) {
   multiConceptResults.sort((a, b2) => b2.averageSimilarity - a.averageSimilarity);
   return multiConceptResults.slice(0, limit);
 }
-async function formatMultiConceptResults(results, concepts) {
+function formatMultiConceptResults(results, concepts) {
   if (results.length === 0) {
     return `No conversations found matching all concepts: ${concepts.join(", ")}`;
   }
@@ -18146,23 +18144,21 @@ async function formatMultiConceptResults(results, concepts) {
 `;
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
-    const date3 = new Date(result.exchange.timestamp).toISOString().split("T")[0];
+    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
     const avgPct = Math.round(result.averageSimilarity * 100);
-    output += `${index + 1}. [${result.exchange.project}, ${date3}] - ${avgPct}% avg match
+    output += `${index + 1}. [${result.project}, ${date3}] - ${avgPct}% avg match
 `;
     const scores = result.conceptSimilarities.map((sim, i) => `${concepts[i]}: ${Math.round(sim * 100)}%`).join(", ");
     output += `   Concepts: ${scores}
 `;
     output += `   "${result.snippet}"
 `;
-    if (result.exchange.compressedToolSummary) {
-      output += `   Actions: ${result.exchange.compressedToolSummary}
+    if (result.compressedToolSummary) {
+      output += `   Actions: ${result.compressedToolSummary}
 `;
     }
-    const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
-    const totalLines = await countLines(result.exchange.archivePath);
-    const lineRange = `${result.exchange.lineStart}-${result.exchange.lineEnd}`;
-    output += `   Lines ${lineRange} in ${result.exchange.archivePath} (${fileSizeKB}KB, ${totalLines} lines)
+    const lineRange = `${result.lineStart}-${result.lineEnd}`;
+    output += `   Lines ${lineRange} in ${result.archivePath}
 
 `;
   }
@@ -19649,7 +19645,7 @@ ${JSON.stringify(value, null, 2)}
 }
 
 // src/mcp/server.ts
-import fs4 from "fs";
+import fs3 from "fs";
 var SearchModeEnum = external_exports.enum(["vector", "text", "both"]);
 var ResponseFormatEnum = external_exports.enum(["markdown", "json"]);
 var SearchInputSchema = external_exports.object({
@@ -19773,7 +19769,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             2
           );
         } else {
-          resultText = await formatMultiConceptResults(results, params.query);
+          resultText = formatMultiConceptResults(results, params.query);
         }
       } else {
         const options = {
@@ -19787,11 +19783,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (params.response_format === "json") {
           resultText = JSON.stringify(
             {
-              results: results.map((r) => ({
-                exchange: r.exchange,
-                similarity: r.similarity,
-                snippet: r.snippet
-              })),
+              results,
               count: results.length,
               mode: params.mode
             },
@@ -19799,7 +19791,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             2
           );
         } else {
-          resultText = await formatResults(results);
+          resultText = formatResults(results);
         }
       }
       return {
@@ -19819,8 +19811,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (dbResult) {
           return { content: [{ type: "text", text: dbResult }] };
         }
-        if (!fs4.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
-        const jsonlContent = fs4.readFileSync(params.path, "utf-8");
+        if (!fs3.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
+        const jsonlContent = fs3.readFileSync(params.path, "utf-8");
         return { content: [{ type: "text", text: formatConversationAsMarkdown(jsonlContent, params.startLine, params.endLine) }] };
       } finally {
         db.close();

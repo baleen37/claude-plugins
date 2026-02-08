@@ -18,7 +18,7 @@ import {
   formatMultiConceptResults,
   type SearchOptions
 } from '../core/search.js';
-import type { SearchResult, MultiConceptResult, CompactSearchResult, CompactMultiConceptResult } from '../core/types.js';
+import type { CompactSearchResult, CompactMultiConceptResult } from '../core/types.js';
 
 describe('search-cli argument parsing', () => {
   describe('mode selection', () => {

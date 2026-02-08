@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { initDatabase } from './db.js';
 import { initEmbeddings, generateEmbedding } from './embeddings.js';
-import { SearchResult, ConversationExchange, MultiConceptResult, CompactSearchResult, CompactMultiConceptResult } from './types.js';
+import { CompactSearchResult, CompactMultiConceptResult } from './types.js';
 
 // Constants for recency boost calculation
 const BOOST_FACTOR = 0.3;

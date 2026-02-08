@@ -5,7 +5,7 @@ import path from 'path';
 import { tmpdir } from 'os';
 
 // Import types
-import { ConversationExchange, SearchResult, MultiConceptResult } from './types.js';
+import { CompactSearchResult, CompactMultiConceptResult } from './types.js';
 
 // Global mock factory that can be controlled per test
 let mockDbInstance: Database | null = null;
@@ -254,8 +254,12 @@ describe('searchConversations - text mode', () => {
 
     const results = await searchConversations('authentication', { mode: 'text' });
     expect(results.length).toBe(1);
-    expect(results[0].exchange.userMessage).toContain('authentication');
+    expect(results[0].snippet).toContain('authentication');
     expect(results[0].similarity).toBeUndefined();
+    // Verify it's a CompactSearchResult (no exchange property)
+    expect('exchange' in results[0]).toBe(false);
+    // Verify snippet length is limited
+    expect(results[0].snippet.length).toBeLessThanOrEqual(103);
   });
 
   test('should search in both user and assistant messages', async () => {
@@ -344,7 +348,12 @@ describe('searchConversations - text mode', () => {
     });
 
     const results = await searchConversations('test', { mode: 'text', projects: ['project-a'] });
-    expect(results.every(r => r.exchange.project === 'project-a')).toBe(true);
+    expect(results.every(r => r.project === 'project-a')).toBe(true);
+    // Verify it's a CompactSearchResult (no exchange property)
+    expect('exchange' in results[0]).toBe(false);
+    // Verify no userMessage/assistantMessage properties
+    expect('userMessage' in results[0]).toBe(false);
+    expect('assistantMessage' in results[0]).toBe(false);
   });
 
   test('should filter by date range in text mode', async () => {
@@ -376,260 +385,137 @@ describe('searchConversations - text mode', () => {
       before: '2025-01-25'
     });
     expect(results.length).toBe(1);
-    expect(results[0].exchange.id).toBe('2');
+    expect(results[0].id).toBe('2');
+    // Verify it's a CompactSearchResult (no exchange property)
+    expect('exchange' in results[0]).toBe(false);
+    // Verify no summary property (summary is removed)
+    expect('summary' in results[0]).toBe(false);
   });
 });
 
 describe('formatResults', () => {
-  test('should return "No results found" for empty array', async () => {
-    const output = await formatResults([]);
+  test('should return "No results found" for empty array', () => {
+    const output = formatResults([]);
     expect(output).toBe('No results found.');
   });
 
-  test('should format single result correctly', async () => {
-    const mockExchange: ConversationExchange = {
-      id: '1',
-      project: 'test-project',
-      timestamp: '2025-01-15T10:00:00Z',
-      userMessage: 'How do I implement authentication?',
-      assistantMessage: 'Use JWT tokens',
-      archivePath: '/tmp/test-archive.jsonl',
-      lineStart: 1,
-      lineEnd: 10
-    };
-
-    // Create a temporary archive file for testing
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\nline3\n');
-
-    const results: SearchResult[] = [
+  test('should format single result correctly', () => {
+    const results: CompactSearchResult[] = [
       {
-        exchange: mockExchange,
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
         similarity: 0.85,
         snippet: 'How do I implement authentication?'
       }
     ];
 
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('Found 1 relevant conversation:');
-      expect(output).toContain('[test-project, 2025-01-15]');
-      expect(output).toContain('85% match');
-      expect(output).toContain('"How do I implement authentication?"');
-      expect(output).toContain('Lines 1-10');
-      expect(output).toContain('/tmp/test-archive.jsonl');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatResults(results);
+    expect(output).toContain('Found 1 relevant conversation:');
+    expect(output).toContain('[test-project, 2025-01-15]');
+    expect(output).toContain('85% match');
+    expect(output).toContain('"How do I implement authentication?"');
+    expect(output).toContain('Lines 1-10 in /archive/test.jsonl');
+    // Should NOT contain file size and line count metadata
+    expect(output).not.toContain('KB');
+    expect(output).not.toMatch(/\(\d+ lines\)/);
   });
 
-  test('should format multiple results', async () => {
-    const archivePath1 = '/tmp/test-archive1.jsonl';
-    const archivePath2 = '/tmp/test-archive2.jsonl';
-    fs.writeFileSync(archivePath1, 'line1\nline2\n');
-    fs.writeFileSync(archivePath2, 'line1\nline2\nline3\n');
-
-    const results: SearchResult[] = [
+  test('should format multiple results', () => {
+    const results: CompactSearchResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'project-a',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'First question',
-          assistantMessage: 'First answer',
-          archivePath: archivePath1,
-          lineStart: 1,
-          lineEnd: 5
-        },
+        id: '1',
+        project: 'project-a',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test1.jsonl',
+        lineStart: 1,
+        lineEnd: 5,
         similarity: 0.9,
         snippet: 'First question'
       },
       {
-        exchange: {
-          id: '2',
-          project: 'project-b',
-          timestamp: '2025-01-16T10:00:00Z',
-          userMessage: 'Second question',
-          assistantMessage: 'Second answer',
-          archivePath: archivePath2,
-          lineStart: 1,
-          lineEnd: 8
-        },
+        id: '2',
+        project: 'project-b',
+        timestamp: '2025-01-16T10:00:00Z',
+        archivePath: '/archive/test2.jsonl',
+        lineStart: 1,
+        lineEnd: 8,
         similarity: 0.75,
         snippet: 'Second question'
       }
     ];
 
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('Found 2 relevant conversations:');
-      expect(output).toContain('[project-a, 2025-01-15] - 90% match');
-      expect(output).toContain('[project-b, 2025-01-16] - 75% match');
-      expect(output).toContain('Lines 1-5');
-      expect(output).toContain('Lines 1-8');
-    } finally {
-      fs.unlinkSync(archivePath1);
-      fs.unlinkSync(archivePath2);
-    }
+    const output = formatResults(results);
+    expect(output).toContain('Found 2 relevant conversations:');
+    expect(output).toContain('[project-a, 2025-01-15] - 90% match');
+    expect(output).toContain('[project-b, 2025-01-16] - 75% match');
+    expect(output).toContain('Lines 1-5 in /archive/test1.jsonl');
+    expect(output).toContain('Lines 1-8 in /archive/test2.jsonl');
+    // Should NOT contain file size and line count metadata
+    expect(output).not.toContain('KB');
+    expect(output).not.toMatch(/\(\d+ lines\)/);
   });
 
-  test('should include summary when available and concise', async () => {
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const summaryPath = '/tmp/test-archive-summary.txt';
-    fs.writeFileSync(summaryPath, 'Brief summary of the conversation');
-
-    const results: Array<SearchResult & { summary?: string }> = [
+  test('should include tool calls when present', () => {
+    const results: CompactSearchResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question',
-        summary: 'Brief summary of the conversation'
-      }
-    ];
-
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('Brief summary of the conversation');
-    } finally {
-      fs.unlinkSync(archivePath);
-      fs.unlinkSync(summaryPath);
-    }
-  });
-
-  test('should NOT include summary when too long (>300 chars)', async () => {
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const longSummary = 'A'.repeat(301);
-
-    const results: Array<SearchResult & { summary?: string }> = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question',
-        summary: longSummary
-      }
-    ];
-
-    try {
-      const output = await formatResults(results);
-      // Summary should not be in output if too long
-      expect(output).not.toContain(longSummary.substring(0, 50));
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
-  });
-
-  test('should include tool calls when present', async () => {
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const results: SearchResult[] = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5,
-          compressedToolSummary: 'Bash: `ls` | Read: /tmp/file.txt'
-        },
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 5,
+        compressedToolSummary: 'Bash: `ls` | Read: /tmp/file.txt',
         similarity: 0.8,
         snippet: 'Question'
       }
     ];
 
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('Actions:');
-      expect(output).toContain('Bash: `ls` | Read: /tmp/file.txt');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatResults(results);
+    expect(output).toContain('Actions:');
+    expect(output).toContain('Bash: `ls` | Read: /tmp/file.txt');
   });
 
-  test('should handle text mode results without similarity', async () => {
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const results: SearchResult[] = [
+  test('should handle text mode results without similarity', () => {
+    const results: CompactSearchResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 5,
         similarity: undefined,
         snippet: 'Question'
       }
     ];
 
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('[test-project, 2025-01-15]');
-      expect(output).not.toContain('% match');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatResults(results);
+    expect(output).toContain('[test-project, 2025-01-15]');
+    expect(output).not.toContain('% match');
   });
 
-  test('should truncate long user messages in snippet', async () => {
-    const archivePath = '/tmp/test-archive.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
+  test('should truncate long user messages in snippet', () => {
     const longMessage = 'A'.repeat(300);
 
-    const results: SearchResult[] = [
+    const results: CompactSearchResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: longMessage,
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 5,
         similarity: 0.8,
         snippet: longMessage.substring(0, 200) + '...'
       }
     ];
 
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('...');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatResults(results);
+    expect(output).toContain('...');
   });
 });
 
@@ -668,195 +554,58 @@ describe('searchMultipleConcepts', () => {
 });
 
 describe('formatMultiConceptResults', () => {
-  test('should return message for empty results', async () => {
-    const output = await formatMultiConceptResults([], ['auth', 'security']);
+  test('should return message for empty results', () => {
+    const output = formatMultiConceptResults([], ['auth', 'security']);
     expect(output).toContain('No conversations found matching all concepts');
     expect(output).toContain('auth, security');
   });
 
-  test('should format multi-concept results', async () => {
-    const archivePath = '/tmp/test-multi.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const results: MultiConceptResult[] = [
+  test('should format multi-concept results', () => {
+    const results: CompactMultiConceptResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'How to implement authentication?',
-          assistantMessage: 'Use JWT',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 10
-        },
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
         snippet: 'How to implement authentication?',
         conceptSimilarities: [0.85, 0.72],
         averageSimilarity: 0.785
       }
     ];
 
-    try {
-      const output = await formatMultiConceptResults(results, ['authentication', 'JWT']);
-      expect(output).toContain('Found 1 conversation matching all concepts');
-      expect(output).toContain('[authentication + JWT]');
-      expect(output).toContain('79% avg match');
-      expect(output).toContain('authentication: 85%');
-      expect(output).toContain('JWT: 72%');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatMultiConceptResults(results, ['authentication', 'JWT']);
+    expect(output).toContain('Found 1 conversation matching all concepts');
+    expect(output).toContain('[authentication + JWT]');
+    expect(output).toContain('79% avg match');
+    expect(output).toContain('authentication: 85%');
+    expect(output).toContain('JWT: 72%');
+    expect(output).toContain('Lines 1-10 in /archive/test.jsonl');
+    // Should NOT contain file size and line count metadata
+    expect(output).not.toContain('KB');
+    expect(output).not.toMatch(/\(\d+ lines\)/);
   });
 
-  test('should include tool calls in multi-concept format', async () => {
-    const archivePath = '/tmp/test-multi.jsonl';
-    fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-    const results: MultiConceptResult[] = [
+  test('should include tool calls in multi-concept format', () => {
+    const results: CompactMultiConceptResult[] = [
       {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 10,
-          compressedToolSummary: 'Bash: `ls`'
-        },
+        id: '1',
+        project: 'test-project',
+        timestamp: '2025-01-15T10:00:00Z',
+        archivePath: '/archive/test.jsonl',
+        lineStart: 1,
+        lineEnd: 10,
+        compressedToolSummary: 'Bash: `ls`',
         snippet: 'Question',
         conceptSimilarities: [0.8],
         averageSimilarity: 0.8
       }
     ];
 
-    try {
-      const output = await formatMultiConceptResults(results, ['concept1']);
-      expect(output).toContain('Actions:');
-      expect(output).toContain('Bash: `ls`');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
-  });
-});
-
-describe('Helper functions - getFileSizeInKB and countLines', () => {
-  // These are tested indirectly through formatResults, but let's add edge cases
-
-  test('should handle non-existent archive file gracefully', async () => {
-    const archivePath = '/tmp/non-existent-archive-xyz.jsonl';
-
-    const results: SearchResult[] = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question'
-      }
-    ];
-
-    // Should not throw, just handle gracefully
-    const output = await formatResults(results);
-    expect(output).toBeDefined();
-  });
-
-  test('should count lines correctly', async () => {
-    const archivePath = '/tmp/test-lines.jsonl';
-    const content = 'line1\nline2\nline3\nline4\n\nline5\n'; // 5 non-empty lines
-    fs.writeFileSync(archivePath, content);
-
-    const results: SearchResult[] = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question'
-      }
-    ];
-
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('5 lines');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
-  });
-
-  test('should calculate file size in KB', async () => {
-    const archivePath = '/tmp/test-size.jsonl';
-    const content = 'A'.repeat(2048); // 2KB
-    fs.writeFileSync(archivePath, content);
-
-    const results: SearchResult[] = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question'
-      }
-    ];
-
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('2KB');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
-  });
-
-  test('should round file size to one decimal place', async () => {
-    const archivePath = '/tmp/test-round.jsonl';
-    const content = 'A'.repeat(1536); // 1.5KB
-    fs.writeFileSync(archivePath, content);
-
-    const results: SearchResult[] = [
-      {
-        exchange: {
-          id: '1',
-          project: 'test-project',
-          timestamp: '2025-01-15T10:00:00Z',
-          userMessage: 'Question',
-          assistantMessage: 'Answer',
-          archivePath: archivePath,
-          lineStart: 1,
-          lineEnd: 5
-        },
-        similarity: 0.8,
-        snippet: 'Question'
-      }
-    ];
-
-    try {
-      const output = await formatResults(results);
-      expect(output).toContain('1.5KB');
-    } finally {
-      fs.unlinkSync(archivePath);
-    }
+    const output = formatMultiConceptResults(results, ['concept1']);
+    expect(output).toContain('Actions:');
+    expect(output).toContain('Bash: `ls`');
   });
 });
 

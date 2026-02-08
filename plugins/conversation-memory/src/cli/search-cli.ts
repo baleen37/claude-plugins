@@ -84,8 +84,8 @@ if (queries.length > 1) {
   const options = { limit, after, before, projects };
 
   searchMultipleConcepts(queries, options)
-    .then(async results => {
-      console.log(await formatMultiConceptResults(results, queries));
+    .then(results => {
+      console.log(formatMultiConceptResults(results, queries));
     })
     .catch(error => {
       console.error('Error searching:', error);
@@ -102,8 +102,8 @@ if (queries.length > 1) {
   };
 
   searchConversations(queries[0], options)
-    .then(async results => {
-      console.log(await formatResults(results));
+    .then(results => {
+      console.log(formatResults(results));
     })
     .catch(error => {
       console.error('Error searching:', error);
