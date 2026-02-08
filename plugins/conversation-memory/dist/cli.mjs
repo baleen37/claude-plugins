@@ -288,7 +288,8 @@ function migrateSchema(db) {
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
     { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
-    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" },
+    { name: "project_pending_events", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
   ];
   let migrated = false;
   for (const migration of migrations) {
@@ -396,6 +397,7 @@ function initDatabase() {
       tool_input TEXT,
       tool_response TEXT,
       cwd TEXT,
+      project TEXT,
       timestamp INTEGER NOT NULL,
       processed BOOLEAN DEFAULT 0,
       created_at INTEGER NOT NULL
@@ -560,8 +562,8 @@ function insertObservation(db, observation, embedding) {
 function insertPendingEvent(db, event) {
   const stmt = db.prepare(`
     INSERT INTO pending_events
-    (id, session_id, event_type, tool_name, tool_input, tool_response, cwd, timestamp, processed, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (id, session_id, event_type, tool_name, tool_input, tool_response, cwd, project, timestamp, processed, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     event.id,
@@ -571,6 +573,7 @@ function insertPendingEvent(db, event) {
     event.toolInput ? JSON.stringify(event.toolInput) : null,
     event.toolResponse ?? null,
     event.cwd ?? null,
+    event.project ?? null,
     event.timestamp,
     event.processed ? 1 : 0,
     event.createdAt
@@ -579,7 +582,7 @@ function insertPendingEvent(db, event) {
 function getPendingEvents(db, sessionId, limit = 10) {
   const stmt = db.prepare(`
     SELECT id, session_id as sessionId, event_type as eventType, tool_name as toolName,
-           tool_input as toolInput, tool_response as toolResponse, cwd, timestamp,
+           tool_input as toolInput, tool_response as toolResponse, cwd, project, timestamp,
            processed, created_at as createdAt
     FROM pending_events
     WHERE session_id = ? AND processed = 0
@@ -2818,7 +2821,7 @@ async function startObserver2() {
   console.log("Observer process started");
 }
 async function stopObserver2() {
-  const { startObserver: stop } = await Promise.resolve().then(() => (init_observer(), observer_exports));
+  const { stopObserver: stop } = await Promise.resolve().then(() => (init_observer(), observer_exports));
   stop();
 }
 async function checkStatus() {
@@ -2865,11 +2868,12 @@ Examples:
     process.exit(1);
   }
 }
-var command;
+var subcommandIndex, command;
 var init_observer_cli = __esm({
   "src/cli/observer-cli.ts"() {
     "use strict";
-    command = process.argv[2] || "status";
+    subcommandIndex = process.argv[2] === "observer" || process.argv[2] === "observer-run" ? 3 : 2;
+    command = process.argv[subcommandIndex] || "status";
     main2();
   }
 });

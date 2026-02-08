@@ -1,6 +1,6 @@
 ---
 name: remembering-conversations
-description: Use when user asks 'how should I...' or 'what's the best approach...' after exploring code, OR when you've tried to solve something and are stuck, OR for unfamiliar workflows, OR when user references past work. Searches conversation history.
+description: Use when user asks 'how should I...' or 'what's the best approach...' after exploring code, OR when you've tried to solve something and are stuck, OR for unfamiliar workflows, OR when user references past work. Searches conversation history using observations (structured insights).
 version: 1.0.0
 ---
 
@@ -23,12 +23,25 @@ Task tool:
   subagent_type: "search-conversation"
 ```
 
-The agent will:
+The agent will use **progressive disclosure** (3 layers):
 
-1. Search with the `search` tool
-2. Read top 2-5 results with the `read` tool
-3. Synthesize findings (200-1000 words)
-4. Return actionable insights + sources
+1. **Layer 1: search()** - Returns compact observations (~30t each)
+   - Fast discovery of relevant insights from past sessions
+
+2. **Layer 2: get_observations()** - Full observation details (~200-500t each)
+   - Complete context: narrative, concepts, files, decisions
+   - Most searches stop here - this is usually enough
+
+3. **Layer 3: read()** - Raw conversation transcript (~500-2000t)
+   - Full dialogue when you need the complete rationale
+   - Use only when layers 1-2 don't provide enough context
+
+The agent will:
+- Search with the `search` tool (observations for single-concept)
+- Get full details with `get_observations` for top results
+- Read raw conversations only if needed (rare)
+- Synthesize findings (200-1000 words)
+- Return actionable insights + sources
 
 **Saves 50-100x context vs. loading raw conversations.**
 

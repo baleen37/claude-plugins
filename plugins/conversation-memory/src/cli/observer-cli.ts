@@ -10,7 +10,11 @@
 import { spawn } from 'child_process';
 import path from 'path';
 
-const command = process.argv[2] || 'status';
+// Get subcommand from process.argv
+// When called directly: node observer-cli.js <subcommand>
+// When called from index-cli: node index-cli.js observer <subcommand>
+const subcommandIndex = process.argv[2] === 'observer' || process.argv[2] === 'observer-run' ? 3 : 2;
+const command = process.argv[subcommandIndex] || 'status';
 
 /**
  * Start the observer process in the background.
@@ -37,7 +41,7 @@ async function startObserver(): Promise<void> {
  * Stop the observer process.
  */
 async function stopObserver(): Promise<void> {
-  const { startObserver: stop } = await import('../core/observer.js');
+  const { stopObserver: stop } = await import('../core/observer.js');
   stop();
 }
 

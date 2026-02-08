@@ -6,7 +6,7 @@
  */
 
 import { initDatabase, insertPendingEvent } from '../core/db.js';
-import { getCurrentSessionId } from '../core/observer.js';
+import { getCurrentSessionId, getCurrentProject } from '../core/observer.js';
 import { isLowValueTool, generateId } from '../core/observation-prompt.js';
 
 const args = process.argv.slice(2);
@@ -51,6 +51,7 @@ async function handlePostToolUse(): Promise<void> {
       toolInput: data.input,
       toolResponse: data.response,
       cwd: process.cwd(),
+      project: getCurrentProject(),
       timestamp: Date.now(),
       processed: false,
       createdAt: Date.now()
@@ -84,6 +85,7 @@ async function handleStop(): Promise<void> {
       sessionId: getCurrentSessionId(),
       eventType: 'summarize' as const,
       cwd: process.cwd(),
+      project: getCurrentProject(),
       timestamp: Date.now(),
       processed: false,
       createdAt: Date.now()

@@ -242,3 +242,36 @@ export function parseObservation(data: any): Observation | null {
     return null;
   }
 }
+
+/**
+ * Get full observations by IDs (Layer 2 of progressive disclosure).
+ * Returns complete observation details including narrative.
+ */
+export function getObservationsByIds(
+  db: Database.Database,
+  ids: string[]
+): Observation[] {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, prompt_number as promptNumber,
+           timestamp, type, title, subtitle, narrative, facts, concepts,
+           files_read as filesRead, files_modified as filesModified,
+           tool_name as toolName, correlation_id as correlationId, created_at as createdAt
+    FROM observations
+    WHERE id IN (${ids.map(() => '?').join(',')})
+    ORDER BY timestamp DESC
+  `);
+
+  const rows = stmt.all(...ids) as any[];
+
+  return rows.map(row => ({
+    ...row,
+    facts: JSON.parse(row.facts),
+    concepts: JSON.parse(row.concepts),
+    filesRead: JSON.parse(row.filesRead),
+    filesModified: JSON.parse(row.filesModified)
+  }));
+}

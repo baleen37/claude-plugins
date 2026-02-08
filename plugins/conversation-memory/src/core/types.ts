@@ -123,6 +123,7 @@ export interface PendingEvent {
   toolInput?: any;
   toolResponse?: string;
   cwd?: string;
+  project?: string;
   timestamp: number;
   processed: boolean;
   createdAt: number;
