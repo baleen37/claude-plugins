@@ -80,10 +80,10 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # Log file for this iteration
   ITERATION_LOG="$LOG_DIR/iteration-$i.log"
 
-  # Run fresh Claude instance using --message for better CLI compatibility
+  # Run fresh Claude instance
   # Output to both console and log file
   echo "Starting iteration $i at $(date)" > "$ITERATION_LOG"
-  OUTPUT=$(claude --message "$PROMPT" 2>&1 | tee -a "$ITERATION_LOG") || true
+  OUTPUT=$(echo "$PROMPT" | claude --print 2>&1 | tee -a "$ITERATION_LOG") || true
   echo "Finished iteration $i at $(date)" >> "$ITERATION_LOG"
 
   # Check for completion promise
