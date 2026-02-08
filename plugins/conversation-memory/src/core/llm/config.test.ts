@@ -91,6 +91,40 @@ describe('loadConfig', () => {
       const config = loadConfig();
       expect(config).toEqual(validConfig);
     });
+
+    it('should return LLMConfig with skipTools array', () => {
+      const validConfig = {
+        provider: 'gemini',
+        gemini: {
+          apiKeys: ['key1'],
+        },
+        skipTools: ['TodoWrite', 'TaskCreate', 'Glob'],
+      };
+
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
+
+      const config = loadConfig();
+      expect(config).toEqual(validConfig);
+      expect(config?.skipTools).toEqual(['TodoWrite', 'TaskCreate', 'Glob']);
+    });
+
+    it('should return LLMConfig with empty skipTools array', () => {
+      const validConfig = {
+        provider: 'gemini',
+        gemini: {
+          apiKeys: ['key1'],
+        },
+        skipTools: [],
+      };
+
+      vi.mocked(existsSync).mockReturnValue(true);
+      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
+
+      const config = loadConfig();
+      expect(config).toEqual(validConfig);
+      expect(config?.skipTools).toEqual([]);
+    });
   });
 
   describe('when config file exists but is invalid', () => {
