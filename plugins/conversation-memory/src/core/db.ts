@@ -6,10 +6,23 @@ import * as sqliteVec from 'sqlite-vec';
 import { getDbPath } from './paths.js';
 
 export function migrateSchema(db: Database.Database): void {
-  const columns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all() as Array<{ name: string }>;
-  const columnNames = new Set(columns.map(c => c.name));
+  // Get columns from exchanges table
+  const exchangesColumns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all() as Array<{ name: string }>;
+  const exchangeColumnNames = new Set(exchangesColumns.map(c => c.name));
 
-  const migrations: Array<{ name: string; sql: string }> = [
+  // Get columns from pending_events table (if it exists)
+  let pendingEventColumnNames = new Set<string>();
+  const pendingEventsTableExists = db.prepare(`
+    SELECT name FROM sqlite_master WHERE type='table' AND name='pending_events'
+  `).get() as { name: string } | undefined;
+
+  if (pendingEventsTableExists) {
+    const pendingColumns = db.prepare(`SELECT name FROM pragma_table_info('pending_events')`).all() as Array<{ name: string }>;
+    pendingEventColumnNames = new Set(pendingColumns.map(c => c.name));
+  }
+
+  // Migrations for exchanges table
+  const exchangeMigrations: Array<{ name: string; sql: string }> = [
     { name: 'last_indexed', sql: 'ALTER TABLE exchanges ADD COLUMN last_indexed INTEGER' },
     { name: 'parent_uuid', sql: 'ALTER TABLE exchanges ADD COLUMN parent_uuid TEXT' },
     { name: 'is_sidechain', sql: 'ALTER TABLE exchanges ADD COLUMN is_sidechain BOOLEAN DEFAULT 0' },
@@ -21,15 +34,32 @@ export function migrateSchema(db: Database.Database): void {
     { name: 'thinking_disabled', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN' },
     { name: 'thinking_triggers', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT' },
     { name: 'compressed_tool_summary', sql: 'ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT' },
-    { name: 'project_pending_events', sql: 'ALTER TABLE pending_events ADD COLUMN project TEXT' },
+  ];
+
+  // Migrations for pending_events table
+  const pendingEventMigrations: Array<{ name: string; sql: string }> = [
+    { name: 'project', sql: 'ALTER TABLE pending_events ADD COLUMN project TEXT' },
   ];
 
   let migrated = false;
-  for (const migration of migrations) {
-    if (!columnNames.has(migration.name)) {
-      console.log(`Migrating schema: adding ${migration.name} column...`);
+
+  // Apply exchange table migrations
+  for (const migration of exchangeMigrations) {
+    if (!exchangeColumnNames.has(migration.name)) {
+      console.log(`Migrating exchanges table: adding ${migration.name} column...`);
       db.prepare(migration.sql).run();
       migrated = true;
+    }
+  }
+
+  // Apply pending_events table migrations (only if table exists)
+  if (pendingEventsTableExists) {
+    for (const migration of pendingEventMigrations) {
+      if (!pendingEventColumnNames.has(migration.name)) {
+        console.log(`Migrating pending_events table: adding ${migration.name} column...`);
+        db.prepare(migration.sql).run();
+        migrated = true;
+      }
     }
   }
 

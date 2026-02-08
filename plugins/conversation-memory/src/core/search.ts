@@ -514,6 +514,8 @@ export async function searchObservations(
 
   if (mode === 'text' || mode === 'both') {
     // Text-based search using LIKE
+    // Use WHERE if no filters, otherwise AND
+    const textWhereClause = whereClause ? `${whereClause}\n      AND (` : 'WHERE (';
     const textStmt = db.prepare(`
       SELECT
         o.id,
@@ -528,8 +530,7 @@ export async function searchObservations(
         o.files_read as filesRead,
         o.files_modified as filesModified
       FROM observations o
-      ${whereClause}
-      AND (
+      ${textWhereClause}
         o.title LIKE ? OR
         o.subtitle LIKE ? OR
         o.narrative LIKE ?

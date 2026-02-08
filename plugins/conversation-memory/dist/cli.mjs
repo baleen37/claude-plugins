@@ -275,9 +275,17 @@ import path2 from "path";
 import fs3 from "fs";
 import * as sqliteVec from "sqlite-vec";
 function migrateSchema(db) {
-  const columns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all();
-  const columnNames = new Set(columns.map((c) => c.name));
-  const migrations = [
+  const exchangesColumns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all();
+  const exchangeColumnNames = new Set(exchangesColumns.map((c) => c.name));
+  let pendingEventColumnNames = /* @__PURE__ */ new Set();
+  const pendingEventsTableExists = db.prepare(`
+    SELECT name FROM sqlite_master WHERE type='table' AND name='pending_events'
+  `).get();
+  if (pendingEventsTableExists) {
+    const pendingColumns = db.prepare(`SELECT name FROM pragma_table_info('pending_events')`).all();
+    pendingEventColumnNames = new Set(pendingColumns.map((c) => c.name));
+  }
+  const exchangeMigrations = [
     { name: "last_indexed", sql: "ALTER TABLE exchanges ADD COLUMN last_indexed INTEGER" },
     { name: "parent_uuid", sql: "ALTER TABLE exchanges ADD COLUMN parent_uuid TEXT" },
     { name: "is_sidechain", sql: "ALTER TABLE exchanges ADD COLUMN is_sidechain BOOLEAN DEFAULT 0" },
@@ -288,15 +296,26 @@ function migrateSchema(db) {
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
     { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
-    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" },
-    { name: "project_pending_events", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
+  ];
+  const pendingEventMigrations = [
+    { name: "project", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
   ];
   let migrated = false;
-  for (const migration of migrations) {
-    if (!columnNames.has(migration.name)) {
-      console.log(`Migrating schema: adding ${migration.name} column...`);
+  for (const migration of exchangeMigrations) {
+    if (!exchangeColumnNames.has(migration.name)) {
+      console.log(`Migrating exchanges table: adding ${migration.name} column...`);
       db.prepare(migration.sql).run();
       migrated = true;
+    }
+  }
+  if (pendingEventsTableExists) {
+    for (const migration of pendingEventMigrations) {
+      if (!pendingEventColumnNames.has(migration.name)) {
+        console.log(`Migrating pending_events table: adding ${migration.name} column...`);
+        db.prepare(migration.sql).run();
+        migrated = true;
+      }
     }
   }
   if (migrated) {
