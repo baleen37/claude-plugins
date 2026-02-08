@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import Database from 'better-sqlite3';
 import { initDatabase, insertExchange } from './db.js';
 import { parseConversation, parseConversationWithResult } from './parser.js';
 import { initEmbeddings, generateExchangeEmbedding } from './embeddings.js';
@@ -386,4 +387,71 @@ export async function indexUnprocessed(concurrency: number = 1, noSummaries: boo
 
   db.close();
   console.log(`\n✅ Processed ${unprocessed.length} conversations`);
+}
+
+/**
+ * Recomputes compressed tool summaries for existing indexed data.
+ * Queries tool_calls table grouped by exchange_id, formats each group,
+ * and updates the exchanges table.
+ *
+ * @param db - Database instance
+ * @returns Count of processed exchanges
+ */
+export async function recomputeToolSummaries(db: Database.Database): Promise<number> {
+  // Get all exchange_ids that have tool calls
+  const exchangeIdsStmt = db.prepare(`
+    SELECT DISTINCT exchange_id
+    FROM tool_calls
+    ORDER BY exchange_id
+  `);
+  const exchangeIds = exchangeIdsStmt.all() as Array<{ exchange_id: string }>;
+
+  let processedCount = 0;
+
+  // Prepare update statement
+  const updateStmt = db.prepare(`
+    UPDATE exchanges
+    SET compressed_tool_summary = ?
+    WHERE id = ?
+  `);
+
+  for (const { exchange_id } of exchangeIds) {
+    // Get all tool calls for this exchange
+    const toolCallsStmt = db.prepare(`
+      SELECT tool_name, tool_input
+      FROM tool_calls
+      WHERE exchange_id = ?
+      ORDER BY id
+    `);
+    const toolCalls = toolCallsStmt.all(exchange_id) as Array<{
+      tool_name: string;
+      tool_input: string | null;
+    }>;
+
+    if (toolCalls.length === 0) {
+      continue;
+    }
+
+    // Parse tool inputs and format summary
+    const formattedCalls = toolCalls.map(tc => {
+      let toolInput: unknown = null;
+      try {
+        toolInput = tc.tool_input ? JSON.parse(tc.tool_input) : null;
+      } catch {
+        // If parsing fails, leave as null
+      }
+      return {
+        toolName: tc.tool_name,
+        toolInput
+      };
+    });
+
+    const summary = formatToolSummary(formattedCalls);
+
+    // Update the exchange
+    updateStmt.run(summary, exchange_id);
+    processedCount++;
+  }
+
+  return processedCount;
 }

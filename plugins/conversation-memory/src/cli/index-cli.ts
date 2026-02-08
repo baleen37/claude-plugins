@@ -1,5 +1,5 @@
 import { verifyIndex, repairIndex } from '../core/verify.js';
-import { indexSession, indexUnprocessed, indexConversations } from '../core/indexer.js';
+import { indexSession, indexUnprocessed, indexConversations, recomputeToolSummaries } from '../core/indexer.js';
 import { syncConversations } from '../core/sync.js';
 import { getDbPath, getArchiveDir } from '../core/paths.js';
 import fs from 'fs';
@@ -18,13 +18,14 @@ USAGE:
   conversation-memory <command> [options]
 
 COMMANDS:
-  sync              Copy new conversations from ~/.claude/projects to archive
-  index-all         Re-index all conversations (slow, use with caution)
-  index-session <id> Index a specific session by ID
-  index-cleanup     Index only unprocessed conversations
-  verify            Check index health for issues
-  repair            Fix detected issues from verify
-  rebuild           Delete database and re-index everything
+  sync                Copy new conversations from ~/.claude/projects to archive
+  index-all           Re-index all conversations (slow, use with caution)
+  index-session <id>  Index a specific session by ID
+  index-cleanup       Index only unprocessed conversations
+  recompute-summaries Recompute compressed tool summaries for existing indexed data
+  verify              Check index health for issues
+  repair              Fix detected issues from verify
+  rebuild             Delete database and re-index everything
 
 OPTIONS:
   --concurrency, -c N  Parallelism for summaries/embeddings (1-16, default: 1)
@@ -45,6 +46,9 @@ EXAMPLES:
 
   # Repair issues
   conversation-memory repair --repair
+
+  # Recompute tool summaries for existing data
+  conversation-memory recompute-summaries
 
   # Rebuild entire index
   conversation-memory rebuild --concurrency 8
@@ -115,6 +119,17 @@ async function main() {
       case 'index-cleanup':
         await indexUnprocessed(concurrency, noSummaries);
         break;
+
+      case 'recompute-summaries': {
+        const db = await import('../core/db.js').then(m => m.initDatabase());
+        try {
+          const count = await recomputeToolSummaries(db);
+          console.log(`Recomputed summaries for ${count} exchanges`);
+        } finally {
+          db.close();
+        }
+        break;
+      }
 
       case 'sync':
         const syncSourceDir = path.join(os.homedir(), '.claude', 'projects');
