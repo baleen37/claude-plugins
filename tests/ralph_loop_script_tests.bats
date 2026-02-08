@@ -634,3 +634,256 @@ EOF
   # Should NOT show iteration 2 or beyond
   ! [[ "$output" == *"iteration 2/"* ]]
 }
+
+# Test: Script creates .last-branch file on first run
+@test "ralph.sh: creates .last-branch file on first run" {
+  local test_branch="ralph/first-run"
+  create_prd "$test_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # .last-branch should exist and contain the branch name
+  [ -f .ralph/.last-branch ]
+  [ "$(cat .ralph/.last-branch)" = "$test_branch" ]
+}
+
+# Test: Script archives previous run when branch changes
+@test "ralph.sh: archives previous run when branch changes" {
+  local first_branch="ralph/first-feature"
+  local second_branch="ralph/second-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Modify progress.txt so we can verify it was archived
+  echo "Some progress content" >> .ralph/progress.txt
+
+  # Update PRD for second run with different branch
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive should be created
+  [ -d .ralph/archive ]
+
+  # Find the archive directory (format: YYYY-MM-DD-first-feature)
+  local archive_dir
+  archive_dir=$(find .ralph/archive -type d -name "*-first-feature" | head -1)
+  [ -n "$archive_dir" ]
+
+  # Archived files should exist
+  [ -f "$archive_dir/prd.json" ]
+  [ -f "$archive_dir/progress.txt" ]
+
+  # Archived progress.txt should contain our custom content
+  grep -q "Some progress content" "$archive_dir/progress.txt"
+
+  # .last-branch should be updated to new branch
+  [ "$(cat .ralph/.last-branch)" = "$second_branch" ]
+
+  # Current progress.txt should be reset (no custom content)
+  ! grep -q "Some progress content" .ralph/progress.txt
+}
+
+# Test: Script does not archive when branch is the same
+@test "ralph.sh: does not archive when branch is the same" {
+  local test_branch="ralph/same-branch"
+  create_prd "$test_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Modify progress.txt
+  echo "Custom progress" >> .ralph/progress.txt
+
+  # Run second time with same branch
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive directory should NOT be created
+  [ ! -d .ralph/archive ]
+
+  # Custom progress should still be there (not reset)
+  grep -q "Custom progress" .ralph/progress.txt
+}
+
+# Test: Script handles archive directory name collision
+@test "ralph.sh: handles archive directory name collision with timestamp" {
+  local first_branch="ralph/collision-test"
+  local second_branch="ralph/other-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Manually create an archive directory with today's date to simulate collision
+  local today
+  today=$(date +"%Y-%m-%d")
+  mkdir -p ".ralph/archive/${today}-collision-test"
+
+  # Update PRD for second run
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time - should create a timestamped archive to avoid collision
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Should have at least one collision-test archive directory
+  local archive_count
+  archive_count=$(find .ralph/archive -type d -name "*-collision-test*" | wc -l)
+  [ "$archive_count" -ge 1 ]
+}
+
+# Test: Archive removes ralph/ prefix from branch name
+@test "ralph.sh: archive directory name removes ralph/ prefix" {
+  local first_branch="ralph/my-awesome-feature"
+  local second_branch="ralph/other-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Update PRD for second run
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive directory should be named with feature name, not full branch
+  local archive_dir
+  archive_dir=$(find .ralph/archive -type d -name "*-my-awesome-feature" | head -1)
+  [ -n "$archive_dir" ]
+
+  # Should NOT contain ralph/ in the directory name
+  [[ "$archive_dir" != *"/ralph-my-awesome-feature" ]]
+}
+
+# Test: Script handles null branchName in prd.json
+@test "ralph.sh: handles null branchName without archiving" {
+  # Create PRD with null branchName
+  cat > "$TEST_RALPH_DIR/prd.json" <<EOF
+{
+  "project": "test-project",
+  "branchName": null,
+  "description": "Test PRD",
+  "userStories": []
+}
+EOF
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run with null branchName
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # .last-branch should contain "null" as written
+  [ -f .ralph/.last-branch ]
+  [ "$(cat .ralph/.last-branch)" = "null" ]
+}
