@@ -7,7 +7,8 @@
 
 import { initDatabase, insertPendingEvent } from '../core/db.js';
 import { getCurrentSessionId, getCurrentProject } from '../core/observer.js';
-import { isLowValueTool, generateId } from '../core/observation-prompt.js';
+import { isLowValueTool, generateId, configureSkipTools } from '../core/observation-prompt.js';
+import { loadConfig } from '../core/llm/config.js';
 
 const args = process.argv.slice(2);
 const isSummarize = args.includes('--summarize');
@@ -20,6 +21,12 @@ async function handlePostToolUse(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    // Load config and configure skipTools (fast operation - file read)
+    const config = loadConfig();
+    if (config?.skipTools) {
+      configureSkipTools(config.skipTools);
+    }
+
     // Read tool use data from stdin
     let inputData = '';
     for await (const chunk of process.stdin) {

@@ -230,19 +230,13 @@ async function processToolUseEvent(
   context: SessionContext,
   promptNumber: number
 ): Promise<void> {
-  // Build prompt with conversation history
-  const previousObservations = getObservationsBySession(db, context.sessionId);
-  const previousContext = previousObservations
-    .map(obs => `- [${obs.type}] ${obs.title}: ${obs.subtitle}`)
-    .join('\n');
-
+  // Build prompt - no previousContext needed (stateless)
   const prompt = buildObservationPrompt(
     event.toolName,
     event.toolInput,
     event.toolResponse || '',
     event.cwd || process.cwd(),
-    event.project || '',
-    previousContext
+    event.project || ''
   );
 
   // Add to conversation history

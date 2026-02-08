@@ -47,6 +47,8 @@ export interface LLMConfig {
     /** Optional model name (defaults to gemini-2.0-flash) */
     model?: string;
   };
+  /** Optional list of tool names to skip during observation */
+  skipTools?: string[];
 }
 
 /**
