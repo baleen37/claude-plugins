@@ -18,7 +18,7 @@ import {
   formatMultiConceptResults,
   type SearchOptions
 } from '../core/search.js';
-import type { SearchResult, MultiConceptResult } from '../core/types.js';
+import type { SearchResult, MultiConceptResult, CompactSearchResult, CompactMultiConceptResult } from '../core/types.js';
 
 describe('search-cli argument parsing', () => {
   describe('mode selection', () => {
@@ -354,7 +354,7 @@ describe('search-cli output formatting', () => {
 
   describe('formatResults integration', () => {
     test('should handle empty results', async () => {
-      const output = await formatResults([]);
+      const output = formatResults([]);
       expect(output).toBe('No results found.');
     });
 
@@ -362,25 +362,21 @@ describe('search-cli output formatting', () => {
       const archivePath = '/tmp/test-archive.jsonl';
       fs.writeFileSync(archivePath, 'line1\nline2\n');
 
-      const results: SearchResult[] = [
+      const results: CompactSearchResult[] = [
         {
-          exchange: {
-            id: '1',
-            project: 'test-project',
-            timestamp: '2025-01-15T10:00:00Z',
-            userMessage: 'How to implement auth?',
-            assistantMessage: 'Use JWT',
-            archivePath: archivePath,
-            lineStart: 1,
-            lineEnd: 5
-          },
+          id: '1',
+          project: 'test-project',
+          timestamp: '2025-01-15T10:00:00Z',
+          archivePath: archivePath,
+          lineStart: 1,
+          lineEnd: 5,
           similarity: 0.85,
           snippet: 'How to implement auth?'
         }
       ];
 
       try {
-        const output = await formatResults(results);
+        const output = formatResults(results);
         expect(output).toContain('Found 1 relevant conversation');
         expect(output).toContain('[test-project, 2025-01-15]');
       } finally {
@@ -390,42 +386,31 @@ describe('search-cli output formatting', () => {
   });
 
   describe('formatMultiConceptResults integration', () => {
-    test('should handle empty multi-concept results', async () => {
-      const output = await formatMultiConceptResults([], ['auth', 'security']);
+    test('should handle empty multi-concept results', () => {
+      const output = formatMultiConceptResults([], ['auth', 'security']);
       expect(output).toContain('No conversations found matching all concepts');
       expect(output).toContain('auth, security');
     });
 
-    test('should format multi-concept results with scores', async () => {
-      const archivePath = '/tmp/test-multi.jsonl';
-      fs.writeFileSync(archivePath, 'line1\nline2\n');
-
-      const results: MultiConceptResult[] = [
+    test('should format multi-concept results with scores', () => {
+      const results: CompactMultiConceptResult[] = [
         {
-          exchange: {
-            id: '1',
-            project: 'test-project',
-            timestamp: '2025-01-15T10:00:00Z',
-            userMessage: 'How to implement auth?',
-            assistantMessage: 'Use JWT',
-            archivePath: archivePath,
-            lineStart: 1,
-            lineEnd: 5
-          },
+          id: '1',
+          project: 'test-project',
+          timestamp: '2025-01-15T10:00:00Z',
+          archivePath: '/tmp/test-multi.jsonl',
+          lineStart: 1,
+          lineEnd: 5,
           snippet: 'How to implement auth?',
           conceptSimilarities: [0.85, 0.72],
           averageSimilarity: 0.785
         }
       ];
 
-      try {
-        const output = await formatMultiConceptResults(results, ['authentication', 'JWT']);
-        expect(output).toContain('Found 1 conversation matching all concepts');
-        expect(output).toContain('[authentication + JWT]');
-        expect(output).toContain('79% avg match');
-      } finally {
-        fs.unlinkSync(archivePath);
-      }
+      const output = formatMultiConceptResults(results, ['authentication', 'JWT']);
+      expect(output).toContain('Found 1 conversation matching all concepts');
+      expect(output).toContain('[authentication + JWT]');
+      expect(output).toContain('79% avg match');
     });
   });
 });

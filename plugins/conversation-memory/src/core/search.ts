@@ -2,8 +2,10 @@ import Database from 'better-sqlite3';
 import { initDatabase } from './db.js';
 import { initEmbeddings, generateEmbedding } from './embeddings.js';
 import { SearchResult, ConversationExchange, MultiConceptResult, CompactSearchResult, CompactMultiConceptResult } from './types.js';
-import fs from 'fs';
-import readline from 'readline';
+
+// Constants for recency boost calculation
+const BOOST_FACTOR = 0.3;
+const BOOST_MIDPOINT = 0.5;
 
 export interface SearchOptions {
   limit?: number;
@@ -42,11 +44,11 @@ export function applyRecencyBoost(similarity: number, timestamp: string): number
   // Clamp days to maximum of 180 for the boost calculation
   const t = Math.min(days / 180, 1);
 
-  // Formula: similarity * (1 + 0.3 * (0.5 - t))
-  // When t=0 (today): 1 + 0.3 * 0.5 = 1.15
-  // When t=0.5 (90 days): 1 + 0.3 * 0 = 1.0
-  // When t=1.0 (180+ days): 1 + 0.3 * (-0.5) = 0.85
-  const boost = 1 + 0.3 * (0.5 - t);
+  // Formula: similarity * (1 + BOOST_FACTOR * (BOOST_MIDPOINT - t))
+  // When t=0 (today): 1 + BOOST_FACTOR * BOOST_MIDPOINT = 1.15
+  // When t=0.5 (90 days): 1 + BOOST_FACTOR * 0 = 1.0
+  // When t=1.0 (180+ days): 1 + BOOST_FACTOR * (-BOOST_MIDPOINT) = 0.85
+  const boost = 1 + BOOST_FACTOR * (BOOST_MIDPOINT - t);
 
   return similarity * boost;
 }
@@ -54,7 +56,7 @@ export function applyRecencyBoost(similarity: number, timestamp: string): number
 export async function searchConversations(
   query: string,
   options: SearchOptions = {}
-): Promise<SearchResult[]> {
+): Promise<CompactSearchResult[]> {
   const { limit = 10, mode = 'both', after, before, projects } = options;
 
   // Validate date parameters
@@ -65,14 +67,21 @@ export async function searchConversations(
 
   let results: any[] = [];
 
-  // Build time filter clause
-  const timeFilter = [];
-  if (after) timeFilter.push(`e.timestamp >= '${after}'`);
-  if (before) timeFilter.push(`e.timestamp <= '${before}'`);
+  // Build time filter clause and parameters
+  const timeFilter: string[] = [];
+  const timeFilterParams: string[] = [];
+  if (after) {
+    timeFilter.push('e.timestamp >= ?');
+    timeFilterParams.push(after);
+  }
+  if (before) {
+    timeFilter.push('e.timestamp <= ?');
+    timeFilterParams.push(before);
+  }
   const timeClause = timeFilter.length > 0 ? `AND ${timeFilter.join(' AND ')}` : '';
 
   // Build project filter clause
-  const projectFilter = [];
+  const projectFilter: string[] = [];
   if (projects && projects.length > 0) {
     const projectPlaceholders = projects.map(() => '?').join(',');
     projectFilter.push(`e.project IN (${projectPlaceholders})`);
@@ -89,12 +98,11 @@ export async function searchConversations(
         e.id,
         e.project,
         e.timestamp,
-        e.user_message,
-        e.assistant_message,
         e.archive_path,
         e.line_start,
         e.line_end,
         e.compressed_tool_summary,
+        SUBSTR(e.user_message, 1, 100) AS snippet_text,
         vec.distance
       FROM vec_exchanges AS vec
       JOIN exchanges AS e ON vec.id = e.id
@@ -108,6 +116,7 @@ export async function searchConversations(
     const vectorParams = [
       Buffer.from(new Float32Array(queryEmbedding).buffer),
       limit,
+      ...timeFilterParams,
       ...(projects || [])
     ];
 
@@ -121,12 +130,11 @@ export async function searchConversations(
         e.id,
         e.project,
         e.timestamp,
-        e.user_message,
-        e.assistant_message,
         e.archive_path,
         e.line_start,
         e.line_end,
         e.compressed_tool_summary,
+        SUBSTR(e.user_message, 1, 100) AS snippet_text,
         0 as distance
       FROM exchanges AS e
       WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
@@ -139,6 +147,7 @@ export async function searchConversations(
     const textParams = [
       `%${query}%`,
       `%${query}%`,
+      ...timeFilterParams,
       ...(projects || []),
       limit
     ];
@@ -160,108 +169,79 @@ export async function searchConversations(
 
   db.close();
 
-  return results.map((row: any) => {
-    const exchange: ConversationExchange = {
+  // Map rows to CompactSearchResult
+  let compactResults = results.map((row: any): CompactSearchResult => {
+    // Create snippet from snippet_text (first 100 chars from SQL)
+    const snippetText = row.snippet_text || '';
+    const snippet = snippetText + (snippetText.length >= 100 ? '...' : '');
+
+    return {
       id: row.id,
       project: row.project,
       timestamp: row.timestamp,
-      userMessage: row.user_message,
-      assistantMessage: row.assistant_message,
       archivePath: row.archive_path,
       lineStart: row.line_start,
       lineEnd: row.line_end,
-      compressedToolSummary: row.compressed_tool_summary
-    };
-
-    // Try to load summary if available
-    const summaryPath = row.archive_path.replace('.jsonl', '-summary.txt');
-    let summary: string | undefined;
-    if (fs.existsSync(summaryPath)) {
-      summary = fs.readFileSync(summaryPath, 'utf-8').trim();
-    }
-
-    // Create snippet (first 200 chars, collapse newlines)
-    const snippetText = exchange.userMessage.substring(0, 200).replace(/\s+/g, ' ').trim();
-    const snippet = snippetText + (exchange.userMessage.length > 200 ? '...' : '');
-
-    return {
-      exchange,
+      compressedToolSummary: row.compressed_tool_summary,
       similarity: mode === 'text' ? undefined : 1 - row.distance,
-      snippet,
-      summary
-    } as SearchResult & { summary?: string };
+      snippet
+    };
   });
-}
 
-// Helper function to count lines in a file efficiently
-async function countLines(filePath: string): Promise<number> {
-  try {
-    const fileStream = fs.createReadStream(filePath);
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
+  // Apply recency boost to vector results and re-sort by boosted similarity
+  if (mode === 'vector' || mode === 'both') {
+    // For vector results, apply recency boost
+    compactResults = compactResults.map(result => {
+      if (result.similarity !== undefined) {
+        return {
+          ...result,
+          similarity: applyRecencyBoost(result.similarity, result.timestamp)
+        };
+      }
+      return result;
     });
 
-    let count = 0;
-    for await (const line of rl) {
-      if (line.trim()) count++;
-    }
-    return count;
-  } catch (error) {
-    return 0; // Return 0 if file can't be read
+    // Re-sort by boosted similarity (highest first)
+    compactResults.sort((a, b) => {
+      const aSim = a.similarity ?? 0;
+      const bSim = b.similarity ?? 0;
+      return bSim - aSim;
+    });
   }
+
+  return compactResults;
 }
 
-// Helper function to get file size in KB
-function getFileSizeInKB(filePath: string): number {
-  try {
-    const stats = fs.statSync(filePath);
-    return Math.round(stats.size / 1024 * 10) / 10; // Round to 1 decimal place
-  } catch (error) {
-    return 0;
-  }
-}
-
-export async function formatResults(results: Array<SearchResult & { summary?: string }>): Promise<string> {
+export function formatResults(results: CompactSearchResult[]): string {
   if (results.length === 0) {
     return 'No results found.';
   }
 
   let output = `Found ${results.length} relevant conversation${results.length > 1 ? 's' : ''}:\n\n`;
 
-  // Process results sequentially to get file metadata
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
-    const date = new Date(result.exchange.timestamp).toISOString().split('T')[0];
+    const date = new Date(result.timestamp).toISOString().split('T')[0];
     const simPct = result.similarity !== undefined ? Math.round(result.similarity * 100) : null;
 
     // Header with match percentage
-    output += `${index + 1}. [${result.exchange.project}, ${date}]`;
+    output += `${index + 1}. [${result.project}, ${date}]`;
     if (simPct !== null) {
       output += ` - ${simPct}% match`;
     }
     output += '\n';
 
-    // Show summary only if it's concise (< 300 chars)
-    if (result.summary && result.summary.length < 300) {
-      output += `   ${result.summary}\n`;
-    }
-
     // Show snippet
     output += `   "${result.snippet}"\n`;
 
     // Show tool usage if available
-    if (result.exchange.compressedToolSummary) {
-      output += `   Actions: ${result.exchange.compressedToolSummary}\n`;
+    if (result.compressedToolSummary) {
+      output += `   Actions: ${result.compressedToolSummary}\n`;
     }
 
-    // Get file metadata
-    const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
-    const totalLines = await countLines(result.exchange.archivePath);
-    const lineRange = `${result.exchange.lineStart}-${result.exchange.lineEnd}`;
-
-    // File information with metadata (clean format for smart tool selection)
-    output += `   Lines ${lineRange} in ${result.exchange.archivePath} (${fileSizeKB}KB, ${totalLines} lines)\n\n`;
+    // File information without metadata
+    const lineRange = `${result.lineStart}-${result.lineEnd}`;
+    output += `   Lines ${lineRange} in ${result.archivePath}\n\n`;
   }
 
   return output;
@@ -270,7 +250,7 @@ export async function formatResults(results: Array<SearchResult & { summary?: st
 export async function searchMultipleConcepts(
   concepts: string[],
   options: Omit<SearchOptions, 'mode'> = {}
-): Promise<MultiConceptResult[]> {
+): Promise<CompactMultiConceptResult[]> {
   const { limit = 10, projects } = options;
 
   if (concepts.length === 0) {
@@ -283,11 +263,11 @@ export async function searchMultipleConcepts(
   );
 
   // Build map of conversation path -> array of results (one per concept)
-  const conversationMap = new Map<string, Array<SearchResult & { conceptIndex: number }>>();
+  const conversationMap = new Map<string, Array<CompactSearchResult & { conceptIndex: number }>>();
 
   conceptResults.forEach((results, conceptIndex) => {
     results.forEach(result => {
-      const key = result.exchange.archivePath;
+      const key = result.archivePath;
       if (!conversationMap.has(key)) {
         conversationMap.set(key, []);
       }
@@ -296,7 +276,7 @@ export async function searchMultipleConcepts(
   });
 
   // Find conversations that match ALL concepts
-  const multiConceptResults: MultiConceptResult[] = [];
+  const multiConceptResults: CompactMultiConceptResult[] = [];
 
   for (const [archivePath, results] of conversationMap.entries()) {
     // Check if all concepts are represented
@@ -310,11 +290,17 @@ export async function searchMultipleConcepts(
 
       const averageSimilarity = conceptSimilarities.reduce((sum, sim) => sum + sim, 0) / conceptSimilarities.length;
 
-      // Use the first result's exchange data (they're all from the same conversation)
+      // Use the first result's data (they're all from the same conversation)
       const firstResult = results[0];
 
       multiConceptResults.push({
-        exchange: firstResult.exchange,
+        id: firstResult.id,
+        project: firstResult.project,
+        timestamp: firstResult.timestamp,
+        archivePath: firstResult.archivePath,
+        lineStart: firstResult.lineStart,
+        lineEnd: firstResult.lineEnd,
+        compressedToolSummary: firstResult.compressedToolSummary,
         snippet: firstResult.snippet,
         conceptSimilarities,
         averageSimilarity
@@ -329,24 +315,23 @@ export async function searchMultipleConcepts(
   return multiConceptResults.slice(0, limit);
 }
 
-export async function formatMultiConceptResults(
-  results: MultiConceptResult[],
+export function formatMultiConceptResults(
+  results: CompactMultiConceptResult[],
   concepts: string[]
-): Promise<string> {
+): string {
   if (results.length === 0) {
     return `No conversations found matching all concepts: ${concepts.join(', ')}`;
   }
 
   let output = `Found ${results.length} conversation${results.length > 1 ? 's' : ''} matching all concepts [${concepts.join(' + ')}]:\n\n`;
 
-  // Process results sequentially to get file metadata
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
-    const date = new Date(result.exchange.timestamp).toISOString().split('T')[0];
+    const date = new Date(result.timestamp).toISOString().split('T')[0];
     const avgPct = Math.round(result.averageSimilarity * 100);
 
     // Header with average match percentage
-    output += `${index + 1}. [${result.exchange.project}, ${date}] - ${avgPct}% avg match\n`;
+    output += `${index + 1}. [${result.project}, ${date}] - ${avgPct}% avg match\n`;
 
     // Show individual concept scores
     const scores = result.conceptSimilarities
@@ -358,17 +343,13 @@ export async function formatMultiConceptResults(
     output += `   "${result.snippet}"\n`;
 
     // Show tool usage if available
-    if (result.exchange.compressedToolSummary) {
-      output += `   Actions: ${result.exchange.compressedToolSummary}\n`;
+    if (result.compressedToolSummary) {
+      output += `   Actions: ${result.compressedToolSummary}\n`;
     }
 
-    // Get file metadata
-    const fileSizeKB = getFileSizeInKB(result.exchange.archivePath);
-    const totalLines = await countLines(result.exchange.archivePath);
-    const lineRange = `${result.exchange.lineStart}-${result.exchange.lineEnd}`;
-
-    // File information with metadata (clean format for smart tool selection)
-    output += `   Lines ${lineRange} in ${result.exchange.archivePath} (${fileSizeKB}KB, ${totalLines} lines)\n\n`;
+    // File information without metadata
+    const lineRange = `${result.lineStart}-${result.lineEnd}`;
+    output += `   Lines ${lineRange} in ${result.archivePath}\n\n`;
   }
 
   return output;
