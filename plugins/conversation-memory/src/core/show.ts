@@ -48,7 +48,7 @@ export function readConversationFromDb(
 ): string | null {
   // Build query with line range filters if provided
   let whereClause = 'WHERE archive_path = ?';
-  const params: any[] = [archivePath];
+  const params: (string | number)[] = [archivePath];
 
   if (startLine !== undefined) {
     whereClause += ' AND line_end >= ?';
