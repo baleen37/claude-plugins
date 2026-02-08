@@ -86,8 +86,8 @@
         "All tests pass after adding functions"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Functions already exist in bats_helper.bash:517-540 with proper documentation. Added in previous commit. All 231 tests pass."
     },
     {
       "id": "US-008",
@@ -98,8 +98,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Successfully refactored inline YAML validation to use validate_yaml_file() helper. Reduced from 18 lines to 13 lines. All 231 tests pass."
     },
     {
       "id": "US-009",
@@ -110,8 +110,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Removed local ensure_yq() helper (5 lines). Replaced 10 ensure_yq calls with ensure_yaml_validator. Replaced 3 inline YAML validation calls (yaml_get '.' >/dev/null) with validate_yaml_file(). Reduced from 139 lines to 128 lines (11 lines removed). All 231 tests pass."
     },
     {
       "id": "US-010",
@@ -127,8 +127,8 @@
         "All tests pass after creation"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created tests/helpers/marketplace_helper.bash with all required functions. Added get_marketplace_plugins(), marketplace_plugin_count(), marketplace_plugin_exists(), marketplace_all_plugins_exist(), and marketplace_all_plugins_listed() functions. All 231 tests pass."
     },
     {
       "id": "US-011",
@@ -140,8 +140,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added load helpers/marketplace_helper. Replaced inline marketplace validation (49 lines removed) with marketplace_all_plugins_listed() and marketplace_all_plugins_exist() calls. Reduced from 95 lines to 46 lines. All 231 tests pass."
     },
     {
       "id": "US-012",
@@ -154,8 +154,8 @@
         "All tests pass after adding function"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created create_handoff_json() function with support for all handoff JSON fields (id, created_at, loaded_at, project_name, project_path, branch, summary, references.plan_path, references.tasks_session_id, source_session_id). Function handles null values correctly and generates current timestamp if not provided. Added documentation comment to file header. All 231 tests pass."
     },
     {
       "id": "US-013",
@@ -167,8 +167,8 @@
         "All tests pass after refactoring"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Replaced all 15 inline JSON creations with create_handoff_json() calls. Added 'load ../helpers/fixture_factory' to test file. Reduced from 320 lines to 172 lines (148 lines removed). Fixed ShellCheck warning by using $HOME instead of ~ in quotes. All 231 tests pass."
     },
     {
       "id": "US-014",

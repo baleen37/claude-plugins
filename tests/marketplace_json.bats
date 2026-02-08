@@ -2,6 +2,7 @@
 # Test: marketplace.json validation
 
 load helpers/bats_helper
+load helpers/marketplace_helper
 
 MARKETPLACE_JSON="${PROJECT_ROOT}/.claude-plugin/marketplace.json"
 
@@ -36,59 +37,9 @@ setup() {
 }
 
 @test "marketplace.json includes all plugins in plugins/ directory" {
-    # Get all plugin directories
-    local plugin_dirs=()
-    # shellcheck disable=SC2207
-    plugin_dirs=($(find "${PROJECT_ROOT}/plugins" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;))
-
-    # Get all plugins listed in marketplace.json (extract just the plugin name)
-    local marketplace_plugins=()
-    # shellcheck disable=SC2207
-    marketplace_plugins=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON" | sed 's|^\./plugins/||'))
-
-    # Track missing plugins
-    local missing_plugins=()
-
-    # Check each plugin directory is listed
-    for plugin in "${plugin_dirs[@]}"; do
-        # Skip if directory doesn't have plugin.json
-        [ -f "${PROJECT_ROOT}/plugins/${plugin}/.claude-plugin/plugin.json" ] || continue
-
-        # Check if plugin is in marketplace.json
-        local found=0
-        for mp_plugin in "${marketplace_plugins[@]}"; do
-            if [ "$mp_plugin" == "$plugin" ]; then
-                found=1
-                break
-            fi
-        done
-
-        if [ $found -eq 0 ]; then
-            missing_plugins+=("$plugin")
-        fi
-    done
-
-    # Fail if any plugins are missing
-    if [ ${#missing_plugins[@]} -gt 0 ]; then
-        echo "Plugins missing from marketplace.json: ${missing_plugins[*]}"
-        return 1
-    fi
+    marketplace_all_plugins_listed "$MARKETPLACE_JSON"
 }
 
 @test "marketplace.json plugin sources point to existing directories" {
-    # Get all plugin sources from marketplace.json
-    local sources=()
-    # shellcheck disable=SC2207
-    sources=($($JQ_BIN -r '.plugins[].source' "$MARKETPLACE_JSON"))
-
-    for source in "${sources[@]}"; do
-        # Remove leading ./
-        local full_path="${PROJECT_ROOT}/${source}"
-
-        # Check if directory exists
-        assert_dir_exists "$full_path" "Plugin source '$source' should exist"
-
-        # Check if plugin.json exists
-        assert_file_exists "${full_path}/.claude-plugin/plugin.json" "Plugin source '$source' should have plugin.json"
-    done
+    marketplace_all_plugins_exist "$MARKETPLACE_JSON"
 }

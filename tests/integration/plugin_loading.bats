@@ -123,18 +123,13 @@ load helpers/bats_helper
     local workflow_dir="${PROJECT_ROOT}/.github/workflows"
     local invalid_count=0
 
+    ensure_yaml_validator
+
     for workflow in "$workflow_dir"/*.yml "$workflow_dir"/*.yaml; do
         if [ -f "$workflow" ]; then
-            if command -v yq &> /dev/null; then
-                if ! yq eval '.' "$workflow" > /dev/null 2>&1; then
-                    echo "Invalid YAML: $workflow" >&2
-                    invalid_count=$((invalid_count + 1))
-                fi
-            elif command -v python3 &> /dev/null; then
-                if ! python3 -c "import yaml; yaml.safe_load(open('$workflow'))" 2>/dev/null; then
-                    echo "Invalid YAML: $workflow" >&2
-                    invalid_count=$((invalid_count + 1))
-                fi
+            if ! validate_yaml_file "$workflow" 2>/dev/null; then
+                echo "Invalid YAML: $workflow" >&2
+                invalid_count=$((invalid_count + 1))
             fi
         fi
     done

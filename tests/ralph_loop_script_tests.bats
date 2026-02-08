@@ -41,7 +41,7 @@ EOF
 teardown() {
   # Kill any stray ralph.sh processes from this test
   if [ -n "${TEST_TEMP_DIR:-}" ] && [ -f "${TEST_TEMP_DIR}/.ralph/ralph.pid" ]; then
-    kill $(cat "${TEST_TEMP_DIR}/.ralph/ralph.pid") 2>/dev/null || true
+    kill "$(cat "${TEST_TEMP_DIR}/.ralph/ralph.pid")" 2>/dev/null || true
   fi
 
   # Clean up temp directory

@@ -7,6 +7,7 @@ RALPH_DIR=".ralph"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_TEMPLATE="$SCRIPT_DIR/prompt.md"
 PID_FILE="$RALPH_DIR/ralph.pid"
+LOG_DIR="$RALPH_DIR/logs"
 
 # === Validation ===
 if [[ ! -f "$RALPH_DIR/prd.json" ]]; then
@@ -54,6 +55,9 @@ Started: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 EOF
 fi
 
+# === Create log directory ===
+mkdir -p "$LOG_DIR"
+
 # === Record PID ===
 echo $$ > "$PID_FILE"
 
@@ -73,8 +77,14 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # Build prompt from template
   PROMPT=$(sed "s/{{ITERATION}}/$i/g; s/{{MAX}}/$MAX_ITERATIONS/g" "$PROMPT_TEMPLATE")
 
+  # Log file for this iteration
+  ITERATION_LOG="$LOG_DIR/iteration-$i.log"
+
   # Run fresh Claude instance
-  OUTPUT=$(echo "$PROMPT" | claude --print 2>&1 | tee /dev/stderr) || true
+  # Output to both console and log file
+  echo "Starting iteration $i at $(date)" > "$ITERATION_LOG"
+  OUTPUT=$(echo "$PROMPT" | claude --print 2>&1 | tee -a "$ITERATION_LOG") || true
+  echo "Finished iteration $i at $(date)" >> "$ITERATION_LOG"
 
   # Check for completion promise
   if echo "$OUTPUT" | grep -q '<promise>COMPLETE</promise>'; then
