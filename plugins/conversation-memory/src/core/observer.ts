@@ -122,7 +122,10 @@ export async function startObserver(): Promise<void> {
   // Start polling loop
   const pollInterval = setInterval(async () => {
     try {
-      await pollPendingEvents(db, llmProvider, sessionContexts);
+      const shouldShutdown = await pollPendingEvents(db, llmProvider, sessionContexts, pollInterval, pidPath);
+      if (shouldShutdown) {
+        console.log('Shutting down observer after session summary');
+      }
     } catch (error) {
       console.error('Error polling events:', error);
     }
@@ -138,12 +141,15 @@ export async function startObserver(): Promise<void> {
 
 /**
  * Poll for pending events and process them.
+ * Returns true if the observer should shut down (after summarize event).
  */
 async function pollPendingEvents(
   db: Database.Database,
   llmProvider: LLMProvider,
-  sessionContexts: Map<string, SessionContext>
-): Promise<void> {
+  sessionContexts: Map<string, SessionContext>,
+  pollInterval: NodeJS.Timeout,
+  pidPath: string
+): Promise<boolean> {
   const now = Date.now();
 
   // Check for idle sessions and clean up
@@ -166,27 +172,36 @@ async function pollPendingEvents(
 
     for (const event of events) {
       try {
-        await processEvent(db, llmProvider, event, context);
+        const shouldShutdown = await processEvent(db, llmProvider, event, context, pollInterval, pidPath);
         markEventProcessed(db, event.id);
+
+        if (shouldShutdown) {
+          return true;
+        }
       } catch (error) {
         console.error(`Error processing event ${event.id}:`, error);
       }
     }
   }
+
+  return false;
 }
 
 /**
  * Process a single pending event.
+ * Returns true if the observer should shut down.
  */
 async function processEvent(
   db: Database.Database,
   llmProvider: LLMProvider,
   event: any,
-  context: SessionContext
-): Promise<void> {
+  context: SessionContext,
+  pollInterval: NodeJS.Timeout,
+  pidPath: string
+): Promise<boolean> {
   // Skip low-value tools at the code level
   if (event.eventType === 'tool_use' && event.toolName && isLowValueTool(event.toolName)) {
-    return;
+    return false;
   }
 
   // Get current prompt number
@@ -194,11 +209,15 @@ async function processEvent(
 
   if (event.eventType === 'tool_use') {
     await processToolUseEvent(db, llmProvider, event, context, promptNumber);
+    context.promptCount = promptNumber;
+    return false;
   } else if (event.eventType === 'summarize') {
-    await processSummarizeEvent(db, llmProvider, event, context);
+    await processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath);
+    return true; // Signal shutdown after summarize
   }
 
   context.promptCount = promptNumber;
+  return false;
 }
 
 /**
@@ -256,12 +275,15 @@ async function processToolUseEvent(
 
 /**
  * Process a summarize event.
+ * After generating the summary, the observer should exit.
  */
 async function processSummarizeEvent(
   db: Database.Database,
   llmProvider: LLMProvider,
   event: any,
-  context: SessionContext
+  context: SessionContext,
+  pollInterval: NodeJS.Timeout,
+  pidPath: string
 ): Promise<void> {
   // Get previous observations for context
   const previousObservations = getObservationsBySession(db, context.sessionId);
@@ -285,6 +307,9 @@ async function processSummarizeEvent(
   if (summary) {
     console.log(`Created session summary for ${context.sessionId}`);
   }
+
+  // Shutdown observer after summary is generated
+  shutdownObserver(pollInterval, pidPath, db);
 }
 
 /**

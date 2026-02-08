@@ -2202,6 +2202,107 @@ var init_summarizer = __esm({
   }
 });
 
+// src/core/inject.ts
+function getObservationsForInjection(db, options = {}) {
+  const { days = 7, limit = 30 } = options;
+  const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1e3;
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, timestamp, type, title, subtitle,
+           facts, concepts, files_read as filesRead, files_modified as filesModified
+    FROM observations
+    WHERE timestamp >= ?
+    ORDER BY timestamp DESC
+    LIMIT ?
+  `);
+  const rows = stmt.all(cutoffTime, limit);
+  const observationsByDate = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const date = new Date(row.timestamp).toLocaleDateString("en-CA", {
+      // YYYY-MM-DD format
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).replace(/\//g, "-");
+    const time = new Date(row.timestamp).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+    if (!observationsByDate.has(date)) {
+      observationsByDate.set(date, []);
+    }
+    observationsByDate.get(date).push({
+      id: row.id,
+      sessionId: row.sessionId,
+      project: row.project,
+      timestamp: row.timestamp,
+      type: row.type,
+      title: row.title,
+      subtitle: row.subtitle,
+      facts: JSON.parse(row.facts),
+      concepts: JSON.parse(row.concepts),
+      filesRead: JSON.parse(row.filesRead),
+      filesModified: JSON.parse(row.filesModified),
+      time
+    });
+  }
+  return Array.from(observationsByDate.entries()).map(([date, observations]) => ({ date, observations })).sort((a, b) => b.date.localeCompare(a.date));
+}
+function formatInjectContext(grouped, projectName) {
+  if (grouped.length === 0) {
+    return `# [${projectName}] recent context (conversation-memory)
+
+No recent observations found. Use \`search()\` to find past work.
+`;
+  }
+  const totalObs = grouped.reduce((sum, g) => sum + g.observations.length, 0);
+  const estimatedTokens = totalObs * 30;
+  let output = `# [${projectName}] recent context (conversation-memory)
+
+**Tools**: \`search(query)\` find past work | \`get_observations(ids)\` details | \`read(path)\` full conversation
+**Stats**: ${totalObs} observations | ~${estimatedTokens}t index | ~${Math.round(estimatedTokens * 15)}t of past work
+`;
+  for (const group of grouped) {
+    output += `
+### ${group.date}
+
+`;
+    output += `| # | Time | Type | Title | Files |
+`;
+    output += `|---|------|------|-------|-------|
+`;
+    for (let i = 0; i < group.observations.length; i++) {
+      const obs = group.observations[i];
+      const files = obs.filesModified.join(", ") || "-";
+      output += `| ${i + 1} | ${obs.time} | ${obs.type} | ${obs.title} | ${files} |
+`;
+    }
+  }
+  const exampleIds = grouped[0]?.observations.slice(0, 2).map((o) => o.id).join('", "') || "";
+  if (exampleIds) {
+    output += `
+---
+Access full details: \`get_observations(["${exampleIds}"])\`
+`;
+  }
+  return output;
+}
+function getInjectContext(projectName, options) {
+  const db = initDatabase();
+  try {
+    const grouped = getObservationsForInjection(db, options);
+    return formatInjectContext(grouped, projectName);
+  } finally {
+    db.close();
+  }
+}
+var init_inject = __esm({
+  "src/core/inject.ts"() {
+    "use strict";
+    init_db();
+  }
+});
+
 // src/core/observations.ts
 async function createObservation(db, observation) {
   const embeddingText = `${observation.title}
@@ -2521,7 +2622,10 @@ async function startObserver() {
   });
   const pollInterval = setInterval(async () => {
     try {
-      await pollPendingEvents(db, llmProvider, sessionContexts);
+      const shouldShutdown = await pollPendingEvents(db, llmProvider, sessionContexts, pollInterval, pidPath);
+      if (shouldShutdown) {
+        console.log("Shutting down observer after session summary");
+      }
     } catch (error) {
       console.error("Error polling events:", error);
     }
@@ -2530,7 +2634,7 @@ async function startObserver() {
   process.on("SIGTERM", () => shutdownObserver(pollInterval, pidPath, db));
   process.stdin.resume();
 }
-async function pollPendingEvents(db, llmProvider, sessionContexts) {
+async function pollPendingEvents(db, llmProvider, sessionContexts, pollInterval, pidPath) {
   const now = Date.now();
   for (const [sessionId, context] of sessionContexts.entries()) {
     if (now - context.lastActivity > IDLE_TIMEOUT_MS) {
@@ -2546,25 +2650,33 @@ async function pollPendingEvents(db, llmProvider, sessionContexts) {
     context.lastActivity = now;
     for (const event of events) {
       try {
-        await processEvent(db, llmProvider, event, context);
+        const shouldShutdown = await processEvent(db, llmProvider, event, context, pollInterval, pidPath);
         markEventProcessed(db, event.id);
+        if (shouldShutdown) {
+          return true;
+        }
       } catch (error) {
         console.error(`Error processing event ${event.id}:`, error);
       }
     }
   }
+  return false;
 }
-async function processEvent(db, llmProvider, event, context) {
+async function processEvent(db, llmProvider, event, context, pollInterval, pidPath) {
   if (event.eventType === "tool_use" && event.toolName && isLowValueTool(event.toolName)) {
-    return;
+    return false;
   }
   const promptNumber = context.promptCount + 1;
   if (event.eventType === "tool_use") {
     await processToolUseEvent(db, llmProvider, event, context, promptNumber);
+    context.promptCount = promptNumber;
+    return false;
   } else if (event.eventType === "summarize") {
-    await processSummarizeEvent(db, llmProvider, event, context);
+    await processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath);
+    return true;
   }
   context.promptCount = promptNumber;
+  return false;
 }
 async function processToolUseEvent(db, llmProvider, event, context, promptNumber) {
   const previousObservations = getObservationsBySession(db, context.sessionId);
@@ -2595,7 +2707,7 @@ async function processToolUseEvent(db, llmProvider, event, context, promptNumber
     console.log(`Created observation: ${observation.title}`);
   }
 }
-async function processSummarizeEvent(db, llmProvider, event, context) {
+async function processSummarizeEvent(db, llmProvider, event, context, pollInterval, pidPath) {
   const previousObservations = getObservationsBySession(db, context.sessionId);
   const sessionContext = previousObservations.map((obs) => `- [${obs.type}] ${obs.title}: ${obs.narrative}`).join("\n");
   const prompt = buildSummaryPrompt(sessionContext, event.project || "");
@@ -2609,6 +2721,7 @@ async function processSummarizeEvent(db, llmProvider, event, context) {
   if (summary) {
     console.log(`Created session summary for ${context.sessionId}`);
   }
+  shutdownObserver(pollInterval, pidPath, db);
 }
 function shutdownObserver(pollInterval, pidPath, db) {
   clearInterval(pollInterval);
@@ -2665,6 +2778,27 @@ var init_observer = __esm({
   }
 });
 
+// src/cli/inject-cli.ts
+var inject_cli_exports = {};
+async function main() {
+  try {
+    const project = getCurrentProject();
+    const context = getInjectContext(project);
+    console.log(context);
+  } catch (error) {
+    console.error("[conversation-memory] Inject error:", error);
+    process.exit(0);
+  }
+}
+var init_inject_cli = __esm({
+  "src/cli/inject-cli.ts"() {
+    "use strict";
+    init_inject();
+    init_observer();
+    main();
+  }
+});
+
 // src/cli/observer-cli.ts
 var observer_cli_exports = {};
 import { spawn } from "child_process";
@@ -2691,7 +2825,7 @@ async function checkStatus() {
   const { observerStatus: observerStatus2 } = await Promise.resolve().then(() => (init_observer(), observer_exports));
   observerStatus2();
 }
-async function main() {
+async function main2() {
   try {
     switch (command) {
       case "start":
@@ -2736,7 +2870,7 @@ var init_observer_cli = __esm({
   "src/cli/observer-cli.ts"() {
     "use strict";
     command = process.argv[2] || "status";
-    main();
+    main2();
   }
 });
 
@@ -3543,6 +3677,7 @@ COMMANDS:
   verify              Check index health for issues
   repair              Fix detected issues from verify
   rebuild             Delete database and re-index everything
+  inject              Inject recent context into session (for SessionStart hook)
   observe             Handle PostToolUse hook (internal)
   observer            Control observer background process
 
@@ -3617,10 +3752,13 @@ function getNoSummaries() {
 }
 var concurrency = getConcurrency();
 var noSummaries = getNoSummaries();
-async function main2() {
+async function main3() {
   try {
     await ensureDependencies();
     switch (command2) {
+      case "inject":
+        await Promise.resolve().then(() => (init_inject_cli(), inject_cli_exports));
+        break;
       case "observe":
       case "observer":
       case "observer-run":
@@ -3725,7 +3863,7 @@ Errors: ${syncResult.errors.length}`);
     process.exit(1);
   }
 }
-main2();
+main3();
 /*! Bundled license information:
 
 @google/generative-ai/dist/index.mjs:

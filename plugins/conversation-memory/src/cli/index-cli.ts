@@ -26,6 +26,7 @@ COMMANDS:
   verify              Check index health for issues
   repair              Fix detected issues from verify
   rebuild             Delete database and re-index everything
+  inject              Inject recent context into session (for SessionStart hook)
   observe             Handle PostToolUse hook (internal)
   observer            Control observer background process
 
@@ -115,6 +116,11 @@ async function main() {
     await ensureDependencies();
 
     switch (command) {
+      case 'inject':
+        // Inject command - handle directly without dependency check for speed
+        await import('./inject-cli.js');
+        break;
+
       case 'observe':
       case 'observer':
       case 'observer-run':
