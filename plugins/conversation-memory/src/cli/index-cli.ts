@@ -26,10 +26,14 @@ COMMANDS:
   verify              Check index health for issues
   repair              Fix detected issues from verify
   rebuild             Delete database and re-index everything
+  inject              Inject recent context into session (for SessionStart hook)
+  observe             Handle PostToolUse hook (internal)
+  observer            Control observer background process
 
 OPTIONS:
   --concurrency, -c N  Parallelism for summaries/embeddings (1-16, default: 1)
   --no-summaries       Skip AI summarization
+  --summarize          Request session summary (for Stop hook)
 
 EXAMPLES:
   # Sync new conversations
@@ -52,6 +56,11 @@ EXAMPLES:
 
   # Rebuild entire index
   conversation-memory rebuild --concurrency 8
+
+  # Observer control
+  conversation-memory observer start
+  conversation-memory observer status
+  conversation-memory observer stop
 
 ENVIRONMENT VARIABLES:
   CONVERSATION_MEMORY_CONFIG_DIR   Override config directory
@@ -107,6 +116,18 @@ async function main() {
     await ensureDependencies();
 
     switch (command) {
+      case 'inject':
+        // Inject command - handle directly without dependency check for speed
+        await import('./inject-cli.js');
+        break;
+
+      case 'observe':
+      case 'observer':
+      case 'observer-run':
+        // Observer commands - handle directly without dependency check for speed
+        await import('./observer-cli.js');
+        break;
+
       case 'index-session':
         const sessionId = process.argv[3];
         if (!sessionId) {

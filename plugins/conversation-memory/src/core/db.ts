@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { ConversationExchange } from './types.js';
+import { ConversationExchange, Observation, SessionSummary, PendingEvent } from './types.js';
 import path from 'path';
 import fs from 'fs';
 import * as sqliteVec from 'sqlite-vec';
@@ -21,6 +21,7 @@ export function migrateSchema(db: Database.Database): void {
     { name: 'thinking_disabled', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN' },
     { name: 'thinking_triggers', sql: 'ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT' },
     { name: 'compressed_tool_summary', sql: 'ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT' },
+    { name: 'project_pending_events', sql: 'ALTER TABLE pending_events ADD COLUMN project TEXT' },
   ];
 
   let migrated = false;
@@ -102,6 +103,69 @@ export function initDatabase(): Database.Database {
     )
   `);
 
+  // Create observations table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      prompt_number INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      narrative TEXT NOT NULL,
+      facts TEXT NOT NULL,
+      concepts TEXT NOT NULL,
+      files_read TEXT NOT NULL,
+      files_modified TEXT NOT NULL,
+      tool_name TEXT,
+      correlation_id TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
+  // Create session_summaries table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS session_summaries (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      request TEXT NOT NULL,
+      investigated TEXT NOT NULL,
+      learned TEXT NOT NULL,
+      completed TEXT NOT NULL,
+      next_steps TEXT NOT NULL,
+      notes TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
+  // Create pending_events table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      tool_name TEXT,
+      tool_input TEXT,
+      tool_response TEXT,
+      cwd TEXT,
+      project TEXT,
+      timestamp INTEGER NOT NULL,
+      processed BOOLEAN DEFAULT 0,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
+  // Create vector table for observations
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS vec_observations USING vec0(
+      id TEXT PRIMARY KEY,
+      embedding FLOAT[768]
+    )
+  `);
+
   // Run migrations first
   migrateSchema(db);
 
@@ -126,6 +190,26 @@ export function initDatabase(): Database.Database {
   `);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tool_exchange ON tool_calls(exchange_id)
+  `);
+
+  // Create indexes for observation system
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_project ON observations(project)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_type ON observations(type)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_timestamp ON observations(timestamp DESC)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_session ON pending_events(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_processed ON pending_events(processed)
   `);
 
   return db;
@@ -223,4 +307,175 @@ export function deleteExchange(db: Database.Database, id: string): void {
 
   // Delete from main table
   db.prepare(`DELETE FROM exchanges WHERE id = ?`).run(id);
+}
+
+// Observation functions
+
+export function insertObservation(
+  db: Database.Database,
+  observation: Observation,
+  embedding?: number[]
+): void {
+  const stmt = db.prepare(`
+    INSERT INTO observations
+    (id, session_id, project, prompt_number, timestamp, type, title, subtitle, narrative,
+     facts, concepts, files_read, files_modified, tool_name, correlation_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  stmt.run(
+    observation.id,
+    observation.sessionId,
+    observation.project,
+    observation.promptNumber,
+    observation.timestamp,
+    observation.type,
+    observation.title,
+    observation.subtitle,
+    observation.narrative,
+    JSON.stringify(observation.facts),
+    JSON.stringify(observation.concepts),
+    JSON.stringify(observation.filesRead),
+    JSON.stringify(observation.filesModified),
+    observation.toolName ?? null,
+    observation.correlationId ?? null,
+    observation.createdAt
+  );
+
+  // Insert embedding if provided
+  if (embedding) {
+    const delStmt = db.prepare(`DELETE FROM vec_observations WHERE id = ?`);
+    delStmt.run(observation.id);
+
+    const vecStmt = db.prepare(`
+      INSERT INTO vec_observations (id, embedding)
+      VALUES (?, ?)
+    `);
+    vecStmt.run(observation.id, Buffer.from(new Float32Array(embedding).buffer));
+  }
+}
+
+export function insertPendingEvent(
+  db: Database.Database,
+  event: PendingEvent
+): void {
+  const stmt = db.prepare(`
+    INSERT INTO pending_events
+    (id, session_id, event_type, tool_name, tool_input, tool_response, cwd, project, timestamp, processed, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  stmt.run(
+    event.id,
+    event.sessionId,
+    event.eventType,
+    event.toolName ?? null,
+    event.toolInput ? JSON.stringify(event.toolInput) : null,
+    event.toolResponse ?? null,
+    event.cwd ?? null,
+    event.project ?? null,
+    event.timestamp,
+    event.processed ? 1 : 0,
+    event.createdAt
+  );
+}
+
+export function getPendingEvents(
+  db: Database.Database,
+  sessionId: string,
+  limit: number = 10
+): PendingEvent[] {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, event_type as eventType, tool_name as toolName,
+           tool_input as toolInput, tool_response as toolResponse, cwd, project, timestamp,
+           processed, created_at as createdAt
+    FROM pending_events
+    WHERE session_id = ? AND processed = 0
+    ORDER BY created_at ASC
+    LIMIT ?
+  `);
+
+  const rows = stmt.all(sessionId, limit) as any[];
+
+  return rows.map(row => ({
+    ...row,
+    toolInput: row.toolInput ? JSON.parse(row.toolInput) : undefined,
+    processed: row.processed === 1
+  }));
+}
+
+export function markEventProcessed(db: Database.Database, eventId: string): void {
+  const stmt = db.prepare(`UPDATE pending_events SET processed = 1 WHERE id = ?`);
+  stmt.run(eventId);
+}
+
+export function insertSessionSummary(
+  db: Database.Database,
+  summary: SessionSummary
+): void {
+  const stmt = db.prepare(`
+    INSERT OR REPLACE INTO session_summaries
+    (id, session_id, project, request, investigated, learned, completed, next_steps, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  stmt.run(
+    summary.id,
+    summary.sessionId,
+    summary.project,
+    summary.request,
+    JSON.stringify(summary.investigated),
+    JSON.stringify(summary.learned),
+    JSON.stringify(summary.completed),
+    JSON.stringify(summary.nextSteps),
+    summary.notes,
+    summary.createdAt
+  );
+}
+
+export function getSessionSummary(
+  db: Database.Database,
+  sessionId: string
+): SessionSummary | null {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, request, investigated, learned,
+           completed, next_steps as nextSteps, notes, created_at as createdAt
+    FROM session_summaries
+    WHERE session_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+
+  const row = stmt.get(sessionId) as any;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    sessionId: row.sessionId,
+    project: row.project,
+    request: row.request,
+    investigated: JSON.parse(row.investigated),
+    learned: JSON.parse(row.learned),
+    completed: JSON.parse(row.completed),
+    nextSteps: JSON.parse(row.nextSteps),
+    notes: row.notes,
+    createdAt: row.createdAt
+  };
+}
+
+export function getLastPromptNumber(
+  db: Database.Database,
+  sessionId: string
+): number {
+  const stmt = db.prepare(`
+    SELECT MAX(prompt_number) as maxPrompt
+    FROM observations
+    WHERE session_id = ?
+  `);
+
+  const row = stmt.get(sessionId) as { maxPrompt: number | null };
+  return row.maxPrompt ?? 0;
 }

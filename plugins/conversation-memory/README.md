@@ -1,20 +1,25 @@
 # Conversation Memory Plugin
 
-Conversation memory plugin with semantic search across Claude Code sessions.
+Conversation memory plugin with **observation-based semantic search** across Claude Code sessions.
 
 ## Purpose
 
-Gives Claude persistent memory across sessions by automatically indexing conversations and providing semantic
-search capabilities. Based on [@obra/episodic-memory](https://github.com/obra/episodic-memory) with integration
-into the Claude Code plugin ecosystem.
+Gives Claude persistent memory across sessions by automatically indexing conversations and providing
+**progressive disclosure search** through structured observations. Based on [@obra/episodic-memory](https://github.com/obra/episodic-memory)
+with integration into the Claude Code plugin ecosystem.
 
 ## Features
 
 - **Automatic Indexing**: SessionEnd hook syncs conversations automatically
+- **Observation-Based Search**: Structured insights from past sessions (~30t each)
+- **Progressive Disclosure**: 3-layer pattern saves 50-100x context
+  - Layer 1: search() returns compact observations
+  - Layer 2: get_observations() returns full details
+  - Layer 3: read() returns raw conversation (rarely needed)
 - **Semantic Search**: Vector embeddings for intelligent similarity matching
 - **Text Search**: Fast exact-text matching for specific terms
-- **Multi-Concept Search**: AND search across 2-5 concepts simultaneously
-- **Project Filtering**: Search within specific projects for more relevant results
+- **Advanced Filtering**: Filter by observation type, concepts, files, projects
+- **Multi-Concept Search**: AND search across 2-5 concepts (legacy exchange-based)
 - **Date Filtering**: Search within specific time ranges
 - **Conversation Reading**: Full conversation retrieval with pagination
 - **Inline Exclusion Markers**: Exclude sensitive conversations with `DO NOT INDEX THIS CHAT`
@@ -25,16 +30,16 @@ into the Claude Code plugin ecosystem.
 
 ### `search-conversation`
 
-Specialized agent for searching and synthesizing conversation history.
-Saves 50-100x context by returning synthesized insights instead of raw
-conversation data.
+Specialized agent for searching and synthesizing conversation history using **observations** (structured insights).
+Saves 50-100x context by using progressive disclosure and returning synthesized insights.
 
 **The agent automatically:**
 
-1. Searches using semantic + text search
-2. Reads top 2-5 relevant conversations
-3. Synthesizes findings into 200-1000 word summary
-4. Returns actionable insights with sources
+1. Searches observations (Layer 1: compact results ~30t each)
+2. Gets full observation details (Layer 2: complete context ~200-500t each)
+3. Reads raw conversations only if needed (Layer 3: full transcript ~500-2000t)
+4. Synthesizes findings into 200-1000 word summary
+5. Returns actionable insights with sources
 
 **Always use the agent instead of MCP tools directly** to avoid wasting context.
 
@@ -72,32 +77,39 @@ These tools are exposed for advanced usage only. See `skills/remembering-convers
 
 ### `conversation-memory__search`
 
-Restores context by searching past conversations. Claude doesn't automatically remember past sessions—this tool
-recovers decisions, solutions, and avoids reinventing work.
+Restores context by searching past conversations using **observations** (structured insights).
+Uses progressive disclosure to minimize context usage.
 
 **Use the search-conversation agent instead of calling this directly.**
 
 **Parameters:**
 
-- `query` (string | string[], required): Search query (single string for semantic search, array of 2-5 strings for
-  multi-concept AND search)
+- `query` (string | string[], required): Search query (single string for observation-based search, array of 2-5 strings for
+  multi-concept AND search - **deprecated**, use single-concept with filters instead)
 - `limit` (number, optional): Maximum results to return (1-50, default: 10)
 - `mode` (string, optional): Search mode - "vector", "text", or "both" (default: "both", only for single-concept)
 - `before` (string, optional): Only conversations before this date (YYYY-MM-DD)
 - `after` (string, optional): Only conversations after this date (YYYY-MM-DD)
 - `projects` (string[], optional): Filter results to specific project names
+- `types` (string[], optional): Filter by observation types (single-concept only)
+- `concepts` (string[], optional): Filter by tagged concepts (single-concept only)
+- `files` (string[], optional): Filter by files mentioned/modified (single-concept only)
 - `response_format` (string, optional): "markdown" or "json" (default: "markdown")
 
 **Examples:**
 
 ```javascript
-// Semantic search
+// Observation-based search (recommended)
 { query: "React Router authentication errors" }
 
 // Text search for exact match
 { query: "a1b2c3d4e5f6", mode: "text" }
 
-// Multi-concept AND search
+// Advanced filtering (single-concept only)
+{ query: "authentication", types: ["decision", "bug-fix"], concepts: ["JWT"] }
+
+// Multi-concept AND search (deprecated, uses exchanges)
+// Instead use: { query: "React Router authentication JWT", concepts: ["React Router", "authentication", "JWT"], mode: "both" }
 { query: ["React Router", "authentication", "JWT"] }
 
 // Date filtering
@@ -107,10 +119,29 @@ recovers decisions, solutions, and avoids reinventing work.
 { query: "authentication", projects: ["my-project"] }
 ```
 
+### `conversation-memory__get_observations`
+
+Gets full observation details (Layer 2 of progressive disclosure). Use after search() to retrieve
+complete information including narrative, facts, concepts, and files.
+
+**Use the search-conversation agent instead of calling this directly.**
+
+**Parameters:**
+
+- `ids` (string[], required): Array of observation IDs (1-20)
+
+**Example:**
+
+```javascript
+// Get full details for specific observations
+{ ids: ["obs-abc123", "obs-def456", "obs-ghi789"] }
+```
+
 ### `conversation-memory__read`
 
-Reads full conversations to extract detailed context after finding relevant results with search. Essential for
-understanding complete rationale, evolution, and gotchas behind past decisions.
+Reads full conversations (Layer 3 of progressive disclosure). Use to extract detailed context after finding
+relevant observations with search() and getting full details with get_observations(). Essential for understanding
+the complete rationale, evolution, and gotchas behind past decisions.
 
 **Use the search-conversation agent instead of calling this directly.**
 
@@ -119,6 +150,9 @@ understanding complete rationale, evolution, and gotchas behind past decisions.
 - `path` (string, required): Conversation file path from search results
 - `startLine` (number, optional): Starting line number (1-indexed) for pagination
 - `endLine` (number, optional): Ending line number (1-indexed) for pagination
+
+**Note:** Most searches are satisfied with layers 1-2 (search + get_observations). Only use this when
+absolutely necessary to save context.
 
 ## Installation
 

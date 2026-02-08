@@ -8,9 +8,21 @@ This reference is for advanced use cases only.
 
 ---
 
+## Overview: Progressive Disclosure
+
+The conversation-memory system uses a **3-layer progressive disclosure pattern** to minimize context usage:
+
+1. **search()** - Returns compact observations (~30t each)
+2. **get_observations()** - Full observation details (~200-500t each)
+3. **read()** - Raw conversation transcript (~500-2000t)
+
+**Most searches are satisfied with layers 1-2.** Only use layer 3 when absolutely necessary.
+
+---
+
 ## search
 
-Search conversation history using semantic similarity and/or full-text search.
+Search conversation history using **observations** (structured insights) for single-concept queries, or **exchanges** (legacy) for multi-concept queries.
 
 ### Parameters
 
@@ -21,9 +33,13 @@ Search conversation history using semantic similarity and/or full-text search.
 | `limit` | `number` | No | `10` | Max results (1-50) |
 | `after` | `string` | No | - | Filter results after this date (YYYY-MM-DD) |
 | `before` | `string` | No | - | Filter results before this date (YYYY-MM-DD) |
+| `projects` | `string[]` | No | - | Filter by project names |
+| `types` | `string[]` | No | - | Filter by observation types (single-concept only) |
+| `concepts` | `string[]` | No | - | Filter by tagged concepts (single-concept only) |
+| `files` | `string[]` | No | - | Filter by files mentioned/modified (single-concept only) |
 | `response_format` | `"markdown" \| "json"` | No | `"markdown"` | Output format |
 
-### Single Concept Search
+### Single Concept Search (Observations)
 
 ```json
 {
@@ -31,9 +47,53 @@ Search conversation history using semantic similarity and/or full-text search.
 }
 ```
 
-Returns conversations semantically similar to "authentication patterns".
+Returns **observations** semantically similar to "authentication patterns":
 
-### Multi-Concept AND Search
+```markdown
+## Search Results (10 observations)
+
+### 1. [my-api] - 2025-12-01
+**ID:** obs-abc123
+**Type:** decision
+**Score:** 0.85
+
+**Title:** Implement JWT authentication middleware
+**Facts:**
+- Chose JWT over session-based auth for statelessness
+- Implemented refresh token rotation for security
+- Added rate limiting to prevent brute force
+
+---
+
+### 2. [auth-service] - 2025-11-15
+**ID:** obs-def456
+**Type:** pattern
+**Score:** 0.78
+
+**Title:** OAuth2 integration pattern
+**Facts:**
+- Standardized OAuth2 flow across services
+- Created shared auth library
+...
+```
+
+### Advanced Filtering (Single-Concept Only)
+
+```json
+{
+  "query": "authentication",
+  "types": ["decision", "bug-fix"],
+  "concepts": ["JWT", "middleware"],
+  "files": ["auth.ts"],
+  "projects": ["my-api"]
+}
+```
+
+Returns observations matching all specified filters.
+
+### Multi-Concept AND Search (Legacy)
+
+**Note:** Multi-concept search uses the legacy exchange-based system, not observations.
 
 ```json
 {
@@ -41,7 +101,15 @@ Returns conversations semantically similar to "authentication patterns".
 }
 ```
 
-Returns only conversations containing ALL three concepts.
+Returns conversations containing ALL three concepts (exchanges, not observations).
+
+**Consider using single-concept search with filters instead:**
+```json
+{
+  "query": "React Router authentication",
+  "concepts": ["JWT"]
+}
+```
 
 ### Date Filtering
 
@@ -129,9 +197,72 @@ Summary: User implemented authentication using JWT...
 
 ---
 
+## get_observations
+
+Get full observation details (Layer 2 of progressive disclosure).
+
+### get_observations() Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `ids` | `string[]` | Yes | - | Array of observation IDs (1-20) |
+
+### Basic Usage
+
+```json
+{
+  "ids": ["obs-abc123", "obs-def456", "obs-ghi789"]
+}
+```
+
+Returns full observation details including narrative, facts, concepts, and files.
+
+### get_observations() Response Format
+
+```markdown
+Retrieved 3 observations:
+
+## [my-api, 2025-12-01 14:30] - decision: Implement JWT authentication middleware
+
+**Chose JWT over session-based auth for API scalability**
+
+After evaluating both options, decided on JWT because:
+- Stateless nature fits microservices architecture
+- Easier to scale horizontally without session replication
+- Built-in expiry handling reduces security risks
+
+**Facts:**
+- Implemented refresh token rotation for security
+- Added rate limiting to prevent brute force attacks
+- Used HS256 for simplicity (single service)
+
+**Concepts:** `JWT`, `middleware`, `refresh-token`, `rate-limiting`
+
+**Files:** `auth.ts`, `middleware/jwt.ts`
+
+---
+
+## [auth-service, 2025-11-15 09:15] - pattern: OAuth2 integration pattern
+...
+```
+
+### get_observations() Error Handling
+
+**Invalid IDs:**
+
+- Returns error if IDs don't exist
+- Verify IDs from search results
+
+**Too many IDs:**
+
+- Maximum 20 observations per request
+- Split into multiple requests if needed
+
+---
+
 ## read
 
-Read full conversation transcript.
+Read full conversation transcript (Layer 3 of progressive disclosure).
 
 ### read() Parameters
 
@@ -210,7 +341,13 @@ Based on previous discussions...
 
 - Typical: < 100ms
 - First query may take longer (index warmup)
-- Vector search scales well to 10K+ conversations
+- Vector search scales well to 10K+ observations
+
+### get_observations Performance
+
+- Typical: < 50ms
+- Direct database lookup by ID
+- Very efficient for 1-20 observations
 
 ### Read Performance
 
@@ -218,21 +355,43 @@ Based on previous discussions...
 - Large conversations (> 100 exchanges): 100-500ms
 - **Use pagination for conversations > 200 exchanges**
 
-### Context Usage
+### Context Usage (Progressive Disclosure)
 
-**Direct tool usage:**
+**Layer 1: search()**
+- Returns compact observations: ~30 tokens each
+- 10 observations = ~300 tokens
 
-- Search: ~500 tokens
-- Read (100 exchanges): ~50,000 tokens 🚨
+**Layer 2: get_observations()**
+- Full observation details: ~200-500 tokens each
+- 5 observations = ~1,000-2,500 tokens
+
+**Layer 3: read()**
+- Raw conversation: ~500-2,000 tokens each
+- Use only when absolutely necessary
 
 **Agent-mediated:**
-
 - Agent synthesis: 1,000-2,000 tokens
-- **50-100x context savings** ✅
+- **50-100x context savings vs raw conversations** ✅
 
 ---
 
 ## Advanced Patterns
+
+### Progressive Disclosure (Recommended)
+
+```typescript
+// Layer 1: Search for observations
+{ query: "authentication" }
+// Returns: Compact observations (~30t each)
+
+// Layer 2: Get full details
+{ ids: ["obs-abc123", "obs-def456"] }
+// Returns: Full observations (~200-500t each)
+
+// Layer 3: Read raw conversation (only if needed)
+{ path: "/path/to/conversation.jsonl" }
+// Returns: Full transcript (~500-2000t)
+```
 
 ### Progressive Refinement
 
@@ -240,11 +399,11 @@ Based on previous discussions...
 // Step 1: Broad search
 { query: "authentication" }
 
-// Step 2: Narrow down
-{ query: ["authentication", "JWT"] }
+// Step 2: Filter by type
+{ query: "authentication", types: ["decision", "bug-fix"] }
 
-// Step 3: Specific framework
-{ query: ["authentication", "JWT", "Express"] }
+// Step 3: Filter by concepts
+{ query: "authentication", concepts: ["JWT", "middleware"] }
 ```
 
 ### Temporal Analysis
@@ -293,11 +452,12 @@ Based on previous discussions...
 
 | Aspect | Direct Tools | search-conversation Agent |
 |--------|--------------|---------------------------|
-| Context usage | 50,000+ tokens | 1,000-2,000 tokens |
-| Manual work | Search → Read → Synthesize | Fully automated |
+| Context usage | 50,000+ tokens (raw) | 1,000-2,000 tokens (synthesized) |
+| Progressive disclosure | Manual (search → get_observations → read) | Automatic |
 | Quality | Raw data dump | Curated insights |
 | Sources | Must track manually | Auto-included |
 | Workflow | Multi-step | Single dispatch |
+| Observation system | Manual navigation | Automatic layer selection |
 
 **The agent does everything automatically and uses 50-100x less context.**
 
@@ -307,10 +467,11 @@ Based on previous discussions...
 
 | Error | Cause | Solution |
 |-------|-------|----------|
-| "No conversations found" | No matches | Try broader query |
+| "No observations found" | No matches | Try broader query |
 | "Query must be string or array" | Invalid type | Use string or string[] |
 | "Query array must have 2-5 items" | Wrong array size | Add/remove concepts |
 | "Invalid date format" | Wrong format | Use YYYY-MM-DD |
+| "Invalid observation ID" | Bad ID | Verify ID from search results |
 | "File not found" | Bad path | Verify path from search |
 | "Invalid line range" | Bad startLine/endLine | Check line numbers |
 

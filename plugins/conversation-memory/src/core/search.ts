@@ -247,10 +247,27 @@ export function formatResults(results: CompactSearchResult[]): string {
   return output;
 }
 
+/**
+ * @deprecated Multi-concept search is legacy since v6.0. Use single-concept search with filters instead.
+ * @removal Version 7.0
+ *
+ * This function uses the old exchange-based search mechanism. The recommended approach is to use
+ * `searchObservations()` with filter parameters (types, concepts, files) for better results and
+ * performance.
+ *
+ * Example replacement:
+ * - Old: searchMultipleConcepts(['auth', 'JWT', 'error'], { projects: ['myapp'] })
+ * - New: searchObservations('auth JWT error', { concepts: ['auth', 'JWT', 'error'], projects: ['myapp'] })
+ */
 export async function searchMultipleConcepts(
   concepts: string[],
   options: Omit<SearchOptions, 'mode'> = {}
 ): Promise<CompactMultiConceptResult[]> {
+  // Emit deprecation warning to stderr
+  console.warn('[DEPRECATED] searchMultipleConcepts is legacy and will be removed in a future version.');
+  console.warn('[DEPRECATED] Use searchObservations() with filter parameters instead.');
+  console.warn('[DEPRECATED] Example: searchObservations("your query", { concepts: ["concept1", "concept2"] })');
+
   const { limit = 10, projects } = options;
 
   if (concepts.length === 0) {
@@ -350,6 +367,272 @@ export function formatMultiConceptResults(
     // File information without metadata
     const lineRange = `${result.lineStart}-${result.lineEnd}`;
     output += `   Lines ${lineRange} in ${result.archivePath}\n\n`;
+  }
+
+  return output;
+}
+
+// ============================================================================
+// Observation-based search (Layer 1 of progressive disclosure)
+// ============================================================================
+
+export interface ObservationSearchOptions {
+  limit?: number;
+  mode?: 'vector' | 'text' | 'both';
+  after?: string;  // ISO date string
+  before?: string; // ISO date string
+  projects?: string[]; // Filter by project names
+  types?: string[]; // Filter by observation types (decision, bugfix, etc.)
+  concepts?: string[]; // Filter by concepts
+  files?: string[]; // Filter by files (read or modified)
+}
+
+export interface CompactObservationResult {
+  id: string;
+  sessionId: string;
+  project: string;
+  timestamp: string;
+  type: string;
+  title: string;
+  subtitle?: string;
+  facts: string[];
+  concepts: string[];
+  filesRead: string[];
+  filesModified: string[];
+  similarity?: number;
+}
+
+/**
+ * Search observations using vector similarity, text matching, or both.
+ * Returns compact observations (Layer 1 of progressive disclosure).
+ */
+export async function searchObservations(
+  query: string,
+  options: ObservationSearchOptions = {}
+): Promise<CompactObservationResult[]> {
+  const { limit = 10, mode = 'both', after, before, projects, types, concepts, files } = options;
+
+  // Validate date parameters
+  if (after) validateISODate(after, '--after');
+  if (before) validateISODate(before, '--before');
+
+  const db = initDatabase();
+
+  let results: CompactObservationResult[] = [];
+
+  // Build WHERE clauses
+  const whereClauses: string[] = [];
+  const whereParams: any[] = [];
+
+  if (after) {
+    whereClauses.push('o.timestamp >= ?');
+    whereParams.push(after);
+  }
+  if (before) {
+    whereClauses.push('o.timestamp <= ?');
+    whereParams.push(before);
+  }
+  if (projects && projects.length > 0) {
+    whereClauses.push(`o.project IN (${projects.map(() => '?').join(',')})`);
+    whereParams.push(...projects);
+  }
+  if (types && types.length > 0) {
+    whereClauses.push(`o.type IN (${types.map(() => '?').join(',')})`);
+    whereParams.push(...types);
+  }
+  if (concepts && concepts.length > 0) {
+    // Filter by JSON array contains
+    whereClauses.push(`(
+      SELECT COUNT(*) FROM json_each(o.concepts)
+      WHERE json_each.value IN (${concepts.map(() => '?').join(',')})
+    ) > 0`);
+    whereParams.push(...concepts);
+  }
+  if (files && files.length > 0) {
+    // Filter by files_read or files_modified
+    whereClauses.push(`(
+      SELECT COUNT(*) FROM json_each(o.files_read)
+      WHERE json_each.value IN (${files.map(() => '?').join(',')})
+    ) > 0 OR (
+      SELECT COUNT(*) FROM json_each(o.files_modified)
+      WHERE json_each.value IN (${files.map(() => '?').join(',')})
+    ) > 0`);
+    whereParams.push(...files, ...files);
+  }
+
+  const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  if (mode === 'vector' || mode === 'both') {
+    // Vector similarity search using vec_observations
+    await initEmbeddings();
+    const queryEmbedding = await generateEmbedding(query);
+
+    const stmt = db.prepare(`
+      SELECT
+        o.id,
+        o.session_id as sessionId,
+        o.project,
+        o.timestamp,
+        o.type,
+        o.title,
+        o.subtitle,
+        o.facts,
+        o.concepts,
+        o.files_read as filesRead,
+        o.files_modified as filesModified,
+        v.distance
+      FROM observations o
+      INNER JOIN vec_observations v ON o.id = v.id
+      ${whereClause}
+      ORDER BY v.distance
+      LIMIT ?
+    `);
+
+    const vectorResults = stmt.all(...whereParams, limit * 2) as any[];
+
+    for (const row of vectorResults) {
+      // Convert distance to similarity (1 - distance for cosine distance)
+      const similarity = Math.max(0, 1 - row.distance);
+      const boostedSimilarity = applyRecencyBoost(similarity, row.timestamp);
+
+      results.push({
+        id: row.id,
+        sessionId: row.sessionId,
+        project: row.project,
+        timestamp: row.timestamp,
+        type: row.type,
+        title: row.title,
+        subtitle: row.subtitle,
+        facts: JSON.parse(row.facts),
+        concepts: JSON.parse(row.concepts),
+        filesRead: JSON.parse(row.filesRead),
+        filesModified: JSON.parse(row.filesModified),
+        similarity: boostedSimilarity
+      });
+    }
+  }
+
+  if (mode === 'text' || mode === 'both') {
+    // Text-based search using LIKE
+    const textStmt = db.prepare(`
+      SELECT
+        o.id,
+        o.session_id as sessionId,
+        o.project,
+        o.timestamp,
+        o.type,
+        o.title,
+        o.subtitle,
+        o.facts,
+        o.concepts,
+        o.files_read as filesRead,
+        o.files_modified as filesModified
+      FROM observations o
+      ${whereClause}
+      AND (
+        o.title LIKE ? OR
+        o.subtitle LIKE ? OR
+        o.narrative LIKE ?
+      )
+      ORDER BY o.timestamp DESC
+      LIMIT ?
+    `);
+
+    const likeQuery = `%${query}%`;
+    const textResults = textStmt.all(...whereParams, likeQuery, likeQuery, likeQuery, limit * 2) as any[];
+
+    for (const row of textResults) {
+      // Check if we already have this result from vector search
+      const existing = results.find(r => r.id === row.id);
+      if (existing) {
+        continue;
+      }
+
+      results.push({
+        id: row.id,
+        sessionId: row.sessionId,
+        project: row.project,
+        timestamp: row.timestamp,
+        type: row.type,
+        title: row.title,
+        subtitle: row.subtitle,
+        facts: JSON.parse(row.facts),
+        concepts: JSON.parse(row.concepts),
+        filesRead: JSON.parse(row.filesRead),
+        filesModified: JSON.parse(row.filesModified),
+        similarity: undefined // No similarity score for text-only results
+      });
+    }
+  }
+
+  // Sort by similarity (highest first) then by timestamp
+  results.sort((a, b) => {
+    if (a.similarity !== undefined && b.similarity !== undefined) {
+      return b.similarity - a.similarity;
+    }
+    if (a.similarity !== undefined) {
+      return -1;
+    }
+    if (b.similarity !== undefined) {
+      return 1;
+    }
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
+
+  // Apply limit
+  return results.slice(0, limit);
+}
+
+/**
+ * Format observation search results as markdown.
+ */
+export function formatObservationResults(results: CompactObservationResult[]): string {
+  if (results.length === 0) {
+    return 'No observations found matching your query.';
+  }
+
+  let output = `Found ${results.length} observation${results.length > 1 ? 's' : ''}:\n\n`;
+
+  for (let index = 0; index < results.length; index++) {
+    const result = results[index];
+    const date = new Date(result.timestamp).toISOString().split('T')[0];
+    const time = new Date(result.timestamp).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    // Header with similarity score if available
+    if (result.similarity !== undefined) {
+      const pct = Math.round(result.similarity * 100);
+      output += `${index + 1}. [${result.project}, ${date} ${time}] - ${pct}% match - **${result.type}**: ${result.title}\n`;
+    } else {
+      output += `${index + 1}. [${result.project}, ${date} ${time}] - **${result.type}**: ${result.title}\n`;
+    }
+
+    // Show subtitle if available
+    if (result.subtitle) {
+      output += `   ${result.subtitle}\n`;
+    }
+
+    // Show facts
+    if (result.facts.length > 0) {
+      output += `   Facts: ${result.facts.map(f => `\`${f}\``).join(', ')}\n`;
+    }
+
+    // Show concepts
+    if (result.concepts.length > 0) {
+      output += `   Concepts: ${result.concepts.map(c => `\`${c}\``).join(', ')}\n`;
+    }
+
+    // Show files
+    const allFiles = [...result.filesRead, ...result.filesModified];
+    if (allFiles.length > 0) {
+      const uniqueFiles = [...new Set(allFiles)];
+      output += `   Files: ${uniqueFiles.join(', ')}\n`;
+    }
+
+    output += `\n`;
   }
 
   return output;

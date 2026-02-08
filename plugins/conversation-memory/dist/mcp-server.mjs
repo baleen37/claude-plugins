@@ -17796,7 +17796,8 @@ function migrateSchema(db) {
     { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
     { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
     { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
-    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
+    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" },
+    { name: "project_pending_events", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
   ];
   let migrated = false;
   for (const migration of migrations) {
@@ -17861,6 +17862,61 @@ function initDatabase() {
       embedding FLOAT[768]
     )
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      prompt_number INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      narrative TEXT NOT NULL,
+      facts TEXT NOT NULL,
+      concepts TEXT NOT NULL,
+      files_read TEXT NOT NULL,
+      files_modified TEXT NOT NULL,
+      tool_name TEXT,
+      correlation_id TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS session_summaries (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      project TEXT NOT NULL,
+      request TEXT NOT NULL,
+      investigated TEXT NOT NULL,
+      learned TEXT NOT NULL,
+      completed TEXT NOT NULL,
+      next_steps TEXT NOT NULL,
+      notes TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      tool_name TEXT,
+      tool_input TEXT,
+      tool_response TEXT,
+      cwd TEXT,
+      project TEXT,
+      timestamp INTEGER NOT NULL,
+      processed BOOLEAN DEFAULT 0,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS vec_observations USING vec0(
+      id TEXT PRIMARY KEY,
+      embedding FLOAT[768]
+    )
+  `);
   migrateSchema(db);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_timestamp ON exchanges(timestamp DESC)
@@ -17882,6 +17938,24 @@ function initDatabase() {
   `);
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tool_exchange ON tool_calls(exchange_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_project ON observations(project)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_type ON observations(type)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_obs_timestamp ON observations(timestamp DESC)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_session ON pending_events(session_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pending_processed ON pending_events(processed)
   `);
   return db;
 }
@@ -18061,36 +18135,10 @@ async function searchConversations(query, options = {}) {
   }
   return compactResults;
 }
-function formatResults(results) {
-  if (results.length === 0) {
-    return "No results found.";
-  }
-  let output = `Found ${results.length} relevant conversation${results.length > 1 ? "s" : ""}:
-
-`;
-  for (let index = 0; index < results.length; index++) {
-    const result = results[index];
-    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
-    const simPct = result.similarity !== void 0 ? Math.round(result.similarity * 100) : null;
-    output += `${index + 1}. [${result.project}, ${date3}]`;
-    if (simPct !== null) {
-      output += ` - ${simPct}% match`;
-    }
-    output += "\n";
-    output += `   "${result.snippet}"
-`;
-    if (result.compressedToolSummary) {
-      output += `   Actions: ${result.compressedToolSummary}
-`;
-    }
-    const lineRange = `${result.lineStart}-${result.lineEnd}`;
-    output += `   Lines ${lineRange} in ${result.archivePath}
-
-`;
-  }
-  return output;
-}
 async function searchMultipleConcepts(concepts, options = {}) {
+  console.warn("[DEPRECATED] searchMultipleConcepts is legacy and will be removed in a future version.");
+  console.warn("[DEPRECATED] Use searchObservations() with filter parameters instead.");
+  console.warn('[DEPRECATED] Example: searchObservations("your query", { concepts: ["concept1", "concept2"] })');
   const { limit = 10, projects } = options;
   if (concepts.length === 0) {
     return [];
@@ -18160,6 +18208,199 @@ function formatMultiConceptResults(results, concepts) {
     const lineRange = `${result.lineStart}-${result.lineEnd}`;
     output += `   Lines ${lineRange} in ${result.archivePath}
 
+`;
+  }
+  return output;
+}
+async function searchObservations(query, options = {}) {
+  const { limit = 10, mode = "both", after, before, projects, types, concepts, files } = options;
+  if (after) validateISODate(after, "--after");
+  if (before) validateISODate(before, "--before");
+  const db = initDatabase();
+  let results = [];
+  const whereClauses = [];
+  const whereParams = [];
+  if (after) {
+    whereClauses.push("o.timestamp >= ?");
+    whereParams.push(after);
+  }
+  if (before) {
+    whereClauses.push("o.timestamp <= ?");
+    whereParams.push(before);
+  }
+  if (projects && projects.length > 0) {
+    whereClauses.push(`o.project IN (${projects.map(() => "?").join(",")})`);
+    whereParams.push(...projects);
+  }
+  if (types && types.length > 0) {
+    whereClauses.push(`o.type IN (${types.map(() => "?").join(",")})`);
+    whereParams.push(...types);
+  }
+  if (concepts && concepts.length > 0) {
+    whereClauses.push(`(
+      SELECT COUNT(*) FROM json_each(o.concepts)
+      WHERE json_each.value IN (${concepts.map(() => "?").join(",")})
+    ) > 0`);
+    whereParams.push(...concepts);
+  }
+  if (files && files.length > 0) {
+    whereClauses.push(`(
+      SELECT COUNT(*) FROM json_each(o.files_read)
+      WHERE json_each.value IN (${files.map(() => "?").join(",")})
+    ) > 0 OR (
+      SELECT COUNT(*) FROM json_each(o.files_modified)
+      WHERE json_each.value IN (${files.map(() => "?").join(",")})
+    ) > 0`);
+    whereParams.push(...files, ...files);
+  }
+  const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  if (mode === "vector" || mode === "both") {
+    await initEmbeddings();
+    const queryEmbedding = await generateEmbedding(query);
+    const stmt = db.prepare(`
+      SELECT
+        o.id,
+        o.session_id as sessionId,
+        o.project,
+        o.timestamp,
+        o.type,
+        o.title,
+        o.subtitle,
+        o.facts,
+        o.concepts,
+        o.files_read as filesRead,
+        o.files_modified as filesModified,
+        v.distance
+      FROM observations o
+      INNER JOIN vec_observations v ON o.id = v.id
+      ${whereClause}
+      ORDER BY v.distance
+      LIMIT ?
+    `);
+    const vectorResults = stmt.all(...whereParams, limit * 2);
+    for (const row of vectorResults) {
+      const similarity = Math.max(0, 1 - row.distance);
+      const boostedSimilarity = applyRecencyBoost(similarity, row.timestamp);
+      results.push({
+        id: row.id,
+        sessionId: row.sessionId,
+        project: row.project,
+        timestamp: row.timestamp,
+        type: row.type,
+        title: row.title,
+        subtitle: row.subtitle,
+        facts: JSON.parse(row.facts),
+        concepts: JSON.parse(row.concepts),
+        filesRead: JSON.parse(row.filesRead),
+        filesModified: JSON.parse(row.filesModified),
+        similarity: boostedSimilarity
+      });
+    }
+  }
+  if (mode === "text" || mode === "both") {
+    const textStmt = db.prepare(`
+      SELECT
+        o.id,
+        o.session_id as sessionId,
+        o.project,
+        o.timestamp,
+        o.type,
+        o.title,
+        o.subtitle,
+        o.facts,
+        o.concepts,
+        o.files_read as filesRead,
+        o.files_modified as filesModified
+      FROM observations o
+      ${whereClause}
+      AND (
+        o.title LIKE ? OR
+        o.subtitle LIKE ? OR
+        o.narrative LIKE ?
+      )
+      ORDER BY o.timestamp DESC
+      LIMIT ?
+    `);
+    const likeQuery = `%${query}%`;
+    const textResults = textStmt.all(...whereParams, likeQuery, likeQuery, likeQuery, limit * 2);
+    for (const row of textResults) {
+      const existing = results.find((r) => r.id === row.id);
+      if (existing) {
+        continue;
+      }
+      results.push({
+        id: row.id,
+        sessionId: row.sessionId,
+        project: row.project,
+        timestamp: row.timestamp,
+        type: row.type,
+        title: row.title,
+        subtitle: row.subtitle,
+        facts: JSON.parse(row.facts),
+        concepts: JSON.parse(row.concepts),
+        filesRead: JSON.parse(row.filesRead),
+        filesModified: JSON.parse(row.filesModified),
+        similarity: void 0
+        // No similarity score for text-only results
+      });
+    }
+  }
+  results.sort((a, b2) => {
+    if (a.similarity !== void 0 && b2.similarity !== void 0) {
+      return b2.similarity - a.similarity;
+    }
+    if (a.similarity !== void 0) {
+      return -1;
+    }
+    if (b2.similarity !== void 0) {
+      return 1;
+    }
+    return new Date(b2.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
+  return results.slice(0, limit);
+}
+function formatObservationResults(results) {
+  if (results.length === 0) {
+    return "No observations found matching your query.";
+  }
+  let output = `Found ${results.length} observation${results.length > 1 ? "s" : ""}:
+
+`;
+  for (let index = 0; index < results.length; index++) {
+    const result = results[index];
+    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
+    const time3 = new Date(result.timestamp).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+    if (result.similarity !== void 0) {
+      const pct = Math.round(result.similarity * 100);
+      output += `${index + 1}. [${result.project}, ${date3} ${time3}] - ${pct}% match - **${result.type}**: ${result.title}
+`;
+    } else {
+      output += `${index + 1}. [${result.project}, ${date3} ${time3}] - **${result.type}**: ${result.title}
+`;
+    }
+    if (result.subtitle) {
+      output += `   ${result.subtitle}
+`;
+    }
+    if (result.facts.length > 0) {
+      output += `   Facts: ${result.facts.map((f) => `\`${f}\``).join(", ")}
+`;
+    }
+    if (result.concepts.length > 0) {
+      output += `   Concepts: ${result.concepts.map((c) => `\`${c}\``).join(", ")}
+`;
+    }
+    const allFiles = [...result.filesRead, ...result.filesModified];
+    if (allFiles.length > 0) {
+      const uniqueFiles = [...new Set(allFiles)];
+      output += `   Files: ${uniqueFiles.join(", ")}
+`;
+    }
+    output += `
 `;
   }
   return output;
@@ -19644,6 +19885,30 @@ ${JSON.stringify(value, null, 2)}
   return output;
 }
 
+// src/core/observations.ts
+function getObservationsByIds(db, ids) {
+  if (ids.length === 0) {
+    return [];
+  }
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, prompt_number as promptNumber,
+           timestamp, type, title, subtitle, narrative, facts, concepts,
+           files_read as filesRead, files_modified as filesModified,
+           tool_name as toolName, correlation_id as correlationId, created_at as createdAt
+    FROM observations
+    WHERE id IN (${ids.map(() => "?").join(",")})
+    ORDER BY timestamp DESC
+  `);
+  const rows = stmt.all(...ids);
+  return rows.map((row) => ({
+    ...row,
+    facts: JSON.parse(row.facts),
+    concepts: JSON.parse(row.concepts),
+    filesRead: JSON.parse(row.filesRead),
+    filesModified: JSON.parse(row.filesModified)
+  }));
+}
+
 // src/mcp/server.ts
 import fs3 from "fs";
 var SearchModeEnum = external_exports.enum(["vector", "text", "both"]);
@@ -19671,6 +19936,9 @@ var ShowConversationInputSchema = external_exports.object({
   startLine: external_exports.number().int().min(1).optional().describe("Starting line number (1-indexed, inclusive). Omit to start from beginning."),
   endLine: external_exports.number().int().min(1).optional().describe("Ending line number (1-indexed, inclusive). Omit to read to end.")
 }).strict();
+var GetObservationsInputSchema = external_exports.object({
+  ids: external_exports.array(external_exports.string().min(1)).min(1, "Must provide at least 1 observation ID").max(20, "Cannot get more than 20 observations at once").describe("Array of observation IDs to retrieve")
+}).strict();
 function handleError(error2) {
   if (error2 instanceof Error) {
     return `Error: ${error2.message}`;
@@ -19693,7 +19961,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "search",
-        description: `Gives you memory across sessions. You don't automatically remember past conversations - this tool restores context by searching them. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Single string for semantic search or array of 2-5 concepts for precise AND matching. Returns ranked results with project, date, snippets, and file paths.`,
+        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by type/concepts/files, and date ranges.`,
         inputSchema: {
           type: "object",
           properties: {
@@ -19708,6 +19976,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             after: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
             before: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
             projects: { type: "array", items: { type: "string" } },
+            types: { type: "array", items: { type: "string" } },
+            concepts: { type: "array", items: { type: "string" } },
+            files: { type: "array", items: { type: "string" } },
             response_format: { type: "string", enum: ["markdown", "json"], default: "markdown" }
           },
           required: ["query"],
@@ -19722,8 +19993,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         }
       },
       {
+        name: "get_observations",
+        description: `Get full observation details (Layer 2 of progressive disclosure). Use after search() to retrieve complete information including narrative, facts, concepts, and files. Returns ~200-500 tokens per observation. Essential for understanding the complete context behind decisions and discoveries.`,
+        inputSchema: {
+          type: "object",
+          properties: {
+            ids: {
+              type: "array",
+              items: { type: "string", minLength: 1 },
+              minItems: 1,
+              maxItems: 20
+            }
+          },
+          required: ["ids"],
+          additionalProperties: false
+        },
+        annotations: {
+          title: "Get Full Observation Details",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
+        }
+      },
+      {
         name: "read",
-        description: `Returns compressed conversation data from indexed DB. Tool inputs/results are summarized, not shown in full. Read full conversations to extract detailed context after finding relevant results with search. Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
+        description: `Returns compressed conversation data from indexed DB (Layer 3 of progressive disclosure). Use to extract detailed context after finding relevant observations with search() and getting full details with get_observations(). Essential for understanding the complete rationale, evolution, and gotchas behind past decisions. Use startLine/endLine pagination for large conversations to avoid context bloat (line numbers are 1-indexed).`,
         inputSchema: {
           type: "object",
           properties: {
@@ -19777,9 +20072,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           limit: params.limit,
           after: params.after,
           before: params.before,
-          projects: params.projects
+          projects: params.projects,
+          types: args.types,
+          concepts: args.concepts,
+          files: args.files
         };
-        const results = await searchConversations(params.query, options);
+        const results = await searchObservations(params.query, options);
         if (params.response_format === "json") {
           resultText = JSON.stringify(
             {
@@ -19791,7 +20089,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             2
           );
         } else {
-          resultText = formatResults(results);
+          resultText = formatObservationResults(results);
         }
       }
       return {
@@ -19802,6 +20100,63 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         ]
       };
+    }
+    if (name === "get_observations") {
+      const params = GetObservationsInputSchema.parse(args);
+      const db = initDatabase();
+      try {
+        const observations = getObservationsByIds(db, params.ids);
+        let output = `Retrieved ${observations.length} observation${observations.length > 1 ? "s" : ""}:
+
+`;
+        for (const obs of observations) {
+          const date3 = new Date(obs.timestamp).toISOString().split("T")[0];
+          const time3 = new Date(obs.timestamp).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+          });
+          output += `## [${obs.project}, ${date3} ${time3}] - ${obs.type}: ${obs.title}
+
+`;
+          if (obs.subtitle) {
+            output += `**${obs.subtitle}**
+
+`;
+          }
+          if (obs.narrative) {
+            output += `${obs.narrative}
+
+`;
+          }
+          if (obs.facts.length > 0) {
+            output += `**Facts:**
+`;
+            obs.facts.forEach((f) => output += `- ${f}
+`);
+            output += `
+`;
+          }
+          if (obs.concepts.length > 0) {
+            output += `**Concepts:** ${obs.concepts.map((c) => `\`${c}\``).join(", ")}
+
+`;
+          }
+          const allFiles = [...obs.filesRead, ...obs.filesModified];
+          if (allFiles.length > 0) {
+            const uniqueFiles = [...new Set(allFiles)];
+            output += `**Files:** ${uniqueFiles.join(", ")}
+
+`;
+          }
+          output += `---
+
+`;
+        }
+        return { content: [{ type: "text", text: output }] };
+      } finally {
+        db.close();
+      }
     }
     if (name === "read") {
       const params = ShowConversationInputSchema.parse(args);
