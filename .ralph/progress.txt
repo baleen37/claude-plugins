@@ -115,3 +115,22 @@ Started: 2025-02-08T00:00:00Z
   - Helper functions handle error messages internally (stderr output for missing items)
   - Refactoring reduces cognitive load - the test intent is clearer with just one function call
 
+## Iteration 5 - US-012: Add create_handoff_json to fixture factory
+- **Status**: Completed
+- **Date**: 2026-02-08
+- **Changes made**:
+  - Added `create_handoff_json()` function to tests/helpers/fixture_factory.bash
+  - Function supports all handoff JSON fields: id, created_at, loaded_at, project_name, project_path, branch, summary, references (plan_path, tasks_session_id), source_session_id
+  - Function handles null values correctly for optional fields
+  - Generates current timestamp automatically if created_at is not provided
+  - Added documentation comment to file header
+  - Fixed ShellCheck warning in ralph_loop_script_tests.bats (quoted command substitution in teardown)
+- **Files modified**: tests/helpers/fixture_factory.bash, tests/ralph_loop_script_tests.bats, plugins/ralph-loop/scripts/ralph.sh (from previous iteration)
+- **Tests verified**: All 231 tests pass
+- **Learnings**:
+  - Handoff JSON schema includes nested objects (references) and several optional fields that can be null
+  - Proper handling of null values in JSON generation requires conditional logic to distinguish between "null" string and actual JSON null
+  - Fixture factory functions should support both required positional args and optional args with defaults
+  - The pre-commit hook runs BATS tests and can fail if tests were modified, requiring those changes to be included in the commit
+  - ShellCheck warnings should be fixed even in test files to maintain code quality standards
+
