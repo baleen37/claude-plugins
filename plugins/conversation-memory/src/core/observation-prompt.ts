@@ -3,7 +3,7 @@ import {
   SessionSummary
 } from './types.js';
 
-const DEFAULT_SKIP_TOOLS_LIST = [
+const DEFAULT_SKIP_TOOLS = [
   'TodoWrite',
   'TodoRead',
   'TaskCreate',
@@ -15,7 +15,7 @@ const DEFAULT_SKIP_TOOLS_LIST = [
 ];
 
 // Current skip tools (can be configured)
-let skipTools = new Set(DEFAULT_SKIP_TOOLS_LIST);
+let skipTools = new Set(DEFAULT_SKIP_TOOLS);
 
 /**
  * Build the initial system prompt for the observer.
@@ -288,7 +288,7 @@ export function isLowValueTool(toolName: string): boolean {
  * Returns a copy of the default list.
  */
 export function getDefaultSkipTools(): string[] {
-  return [...DEFAULT_SKIP_TOOLS_LIST];
+  return [...DEFAULT_SKIP_TOOLS];
 }
 
 /**

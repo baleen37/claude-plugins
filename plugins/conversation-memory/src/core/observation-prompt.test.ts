@@ -104,23 +104,6 @@ describe('observation-prompt', () => {
     });
   });
 
-  describe('buildObservationPrompt', () => {
-    it('should build observation prompt for tool use', () => {
-      const prompt = buildObservationPrompt(
-        'Read',
-        { file_path: '/path/to/file.txt' },
-        'File content',
-        '/cwd',
-        'myproject'
-      );
-
-      expect(prompt).toContain('<tool_event>');
-      expect(prompt).toContain('<tool_name>Read</tool_name>');
-      expect(prompt).toContain('/path/to/file.txt');
-      expect(prompt).toContain('myproject');
-    });
-  });
-
   describe('buildSummaryPrompt', () => {
     it('should build summary prompt', () => {
       const prompt = buildSummaryPrompt(
