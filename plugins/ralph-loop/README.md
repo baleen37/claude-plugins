@@ -297,6 +297,287 @@ Each story should have clear pass/fail criteria:
 - "Tests pass (npm test)"
 - "Typecheck passes (npm run typecheck)"
 
+## Complete Example
+
+Let's walk through a complete session building a simple todo API feature.
+
+### Step 1: Initialize the PRD
+
+```bash
+/ralph-init "Add a simple todo API with POST /todos to create todos and GET /todos to list them. Use TypeScript, Express, and include tests."
+```
+
+Claude breaks this into stories and creates `.ralph/prd.json`:
+
+```json
+{
+  "project": "my-api",
+  "branchName": "ralph/add-todo-api",
+  "description": "Add a simple todo API with POST /todos to create todos and GET /todos to list them. Use TypeScript, Express, and include tests.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Setup Express server with TypeScript",
+      "description": "As a developer, I want an Express server with TypeScript configured so that I can build API endpoints.",
+      "acceptanceCriteria": [
+        "Express server listens on port 3000",
+        "TypeScript configured",
+        "ts-node for development",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "US-002",
+      "title": "Create todo model and interface",
+      "description": "As a developer, I want a todo model so that I can define the structure of todo data.",
+      "acceptanceCriteria": [
+        "Todo interface with id, title, completed fields",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "US-003",
+      "title": "Implement POST /todos endpoint",
+      "description": "As a user, I want to create todos so that I can track tasks.",
+      "acceptanceCriteria": [
+        "POST /todos accepts {title: string}",
+        "Returns created todo with id and completed: false",
+        "Input validation (title required)",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "US-004",
+      "title": "Implement GET /todos endpoint",
+      "description": "As a user, I want to list all todos so that I can see my tasks.",
+      "acceptanceCriteria": [
+        "GET /todos returns array of todos",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false
+    }
+  ]
+}
+```
+
+### Step 2: Start the Loop
+
+```bash
+/ralph-loop 20
+```
+
+### Step 3: Watch Progress
+
+In another terminal:
+
+```bash
+tail -f .ralph/progress.txt
+```
+
+### Step 4: Iteration Walkthrough
+
+#### Iteration 1 - US-001: Setup Express server
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - finds US-001 is highest priority with `passes: false`
+3. Reads `.ralph/progress.txt` - empty (first iteration)
+4. Implements Express server setup
+5. Runs tests: **FAILS** - test file not created yet
+
+**Progress.txt after iteration 1:**
+
+```text
+# Ralph Progress Log
+Started: 2026-02-08T12:00:00Z
+
+## Codebase Patterns
+(No patterns discovered yet)
+
+## Iteration 1 - US-001: Setup Express server with TypeScript
+
+### Attempted
+- Created src/server.ts with Express app
+- Added tsconfig.json
+- Added package.json with dependencies
+
+### Issues
+- Tests failed: No test file found
+- Need to add test framework (Jest or similar)
+
+### Next Steps
+- Add test framework setup
+- Create basic test file
+
+---
+```
+
+**prd.json after iteration 1:** US-001 still has `"passes": false` because tests failed.
+
+#### Iteration 2 - US-001: Setup Express server (retry)
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - US-001 still has `passes: false`
+3. Reads `.ralph/progress.txt` - sees that test framework was missing
+4. Adds Jest configuration and creates test file
+5. Runs tests: **PASS**
+6. Commits: `feat: US-001 - Setup Express server with TypeScript`
+7. Updates `prd.json`: US-001 now has `"passes": true`
+8. Appends to `progress.txt`
+
+**Progress.txt after iteration 2:**
+
+```text
+## Iteration 2 - US-001: Setup Express server with TypeScript
+
+### Successful
+- Added Jest configuration
+- Created src/server.test.ts with basic test
+- All tests passing
+- Typecheck passing
+
+### Committed
+- feat: US-001 - Setup Express server with TypeScript
+
+### Learnings
+- Project uses Jest for testing
+- Test command: npm test
+- Typecheck command: npm run typecheck
+
+---
+```
+
+**prd.json after iteration 2:** US-001 now has `"passes": true`.
+
+#### Iteration 3 - US-002: Create todo model
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - US-002 is next highest priority with `passes: false`
+3. Reads `.ralph/progress.txt` - learns test commands and patterns
+4. Creates Todo interface
+5. Runs typecheck: **PASS**
+6. Commits: `feat: US-002 - Create todo model and interface`
+7. Updates `prd.json`: US-002 now has `"passes": true`
+
+**Progress.txt after iteration 3:**
+
+```text
+## Iteration 3 - US-002: Create todo model and interface
+
+### Successful
+- Created src/models/Todo.ts with interface
+- Typecheck passing
+
+### Committed
+- feat: US-002 - Create todo model and interface
+
+---
+```
+
+#### Iteration 4 - US-003: Implement POST /todos
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - US-003 is next with `passes: false`
+3. Reads `.ralph/progress.txt` - learns project structure
+4. Implements POST /todos endpoint
+5. Runs tests: **FAILS** - missing input validation
+
+**Progress.txt after iteration 4:**
+
+```text
+## Iteration 4 - US-003: Implement POST /todos endpoint
+
+### Attempted
+- Created POST /todos endpoint in src/routes/todos.ts
+- Added in-memory todo storage
+
+### Issues
+- Tests failing: Missing input validation for title field
+- Need to validate title is not empty
+- Need to validate title max length
+
+---
+```
+
+#### Iteration 5 - US-003: Fix POST /todos validation
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - US-003 still has `passes: false`
+3. Reads `.ralph/progress.txt` - sees validation issues
+4. Adds input validation middleware
+5. Runs tests: **PASS**
+6. Commits: `feat: US-003 - Implement POST /todos endpoint`
+7. Updates `prd.json`: US-003 now has `"passes": true`
+
+#### Iteration 6 - US-004: Implement GET /todos
+
+**What happens:**
+
+1. Fresh Claude instance starts
+2. Reads `.ralph/prd.json` - US-004 is last story with `passes: false`
+3. Reads `.ralph/progress.txt` - learns patterns
+4. Implements GET /todos endpoint
+5. Runs tests: **PASS**
+6. Commits: `feat: US-004 - Implement GET /todos endpoint`
+7. Updates `prd.json`: US-004 now has `"passes": true`
+8. Checks if ALL stories pass: **YES**
+9. Outputs: `<promise>COMPLETE</promise>`
+
+**Loop exits successfully.**
+
+### Final State
+
+**prd.json:** All stories have `"passes": true`
+
+**Git history:**
+```
+d69aec5 feat: US-004 - Implement GET /todos endpoint
+c8f4b2a feat: US-003 - Implement POST /todos endpoint
+a3e7d1c feat: US-002 - Create todo model and interface
+7b2c9e0 feat: US-001 - Setup Express server with TypeScript
+```
+
+**progress.txt:** Complete log of all iterations with learnings
+
+### Key Observations
+
+**When a story fails tests:**
+- Story remains marked as `passes: false`
+- Next iteration retries the SAME story
+- Progress.txt captures what went wrong
+- Each iteration builds on previous work
+
+**When a story passes tests:**
+- Story is marked as `passes: true`
+- Work is committed
+- Next iteration moves to the next story
+- Progress.txt captures what was learned
+
+**Fresh instance benefits:**
+- Each iteration starts with clean state
+- No conversation context pollution
+- Progress.txt provides continuity
+- Failures are isolated to single iterations
+
 ## Philosophy
 
 Ralph embodies several key principles:
