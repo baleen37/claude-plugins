@@ -328,6 +328,42 @@ EOF
   [ $status -eq 0 ]
 }
 
+# Test: prompt.md template has Progress Report Format section
+@test "prompt.md: has Progress Report Format section" {
+  run grep -q "Progress Report Format" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template has Consolidate Patterns section
+@test "prompt.md: has Consolidate Patterns section" {
+  run grep -q "Consolidate Patterns" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template has Codebase Patterns section
+@test "prompt.md: mentions Codebase Patterns section" {
+  run grep -q "Codebase Patterns" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template has Update CLAUDE.md Files section
+@test "prompt.md: has Update CLAUDE.md Files section" {
+  run grep -q "Update CLAUDE.md Files" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template has Quality Requirements section
+@test "prompt.md: has Quality Requirements section" {
+  run grep -q "Quality Requirements" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template has Browser Testing section
+@test "prompt.md: has Browser Testing section" {
+  run grep -q "Browser Testing" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
 # Test: Script substitutes template variables
 @test "ralph.sh: substitutes {{ITERATION}} and {{MAX}} in prompt" {
   run grep 'sed "s/{{ITERATION}}/' "$RALPH_SCRIPT"
