@@ -25,7 +25,7 @@ You are executing iteration {{ITERATION}} of {{MAX}} in a Ralph loop.
 
 APPEND to .ralph/progress.txt (never replace, always append):
 
-```
+```text
 ## [Date/Time] - [Story ID]
 
 - What was implemented
@@ -43,9 +43,12 @@ The learnings section is critical - it helps future iterations avoid repeating m
 
 ## Consolidate Patterns
 
-If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of .ralph/progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
+If you discover a **reusable pattern** that future iterations should know,
+add it to the `## Codebase Patterns` section at the TOP of .ralph/progress.txt
+(create it if it doesn't exist). This section should consolidate the most
+important learnings:
 
-```
+```text
 ## Codebase Patterns
 
 - Example: Use `sql` template for aggregations
@@ -69,12 +72,14 @@ Before committing, check if any edited files have learnings worth preserving in 
    - Configuration or environment requirements
 
 **Examples of good CLAUDE.md additions:**
+
 - "When modifying X, also update Y to keep them in sync"
 - "This module uses pattern Z for all API calls"
 - "Tests require the dev server running on PORT 3000"
 - "Field names must match the template exactly"
 
 **Do NOT add:**
+
 - Story-specific implementation details
 - Temporary debugging notes
 - Information already in .ralph/progress.txt
