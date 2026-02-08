@@ -1,17 +1,41 @@
 ---
-description: "Start Ralph Wiggum loop in current session"
-argument-hint: "PROMPT [--max-iterations N] [--completion-promise TEXT]"
-hide-from-slash-command-tool: "true"
+description: "Start Ralph loop in current session"
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh*)"]
 ---
 
-# Ralph Loop Command
+# Ralph Loop
 
-<!-- TODO: Update this command to use the new architecture (see Task #5) -->
-<!-- The Stop hook mechanism has been removed. This command needs to be rewritten to -->
-<!-- use the new bash loop + fresh Claude instance approach. -->
+Execute the Ralph loop script. This will spawn fresh Claude instances in a bash loop.
 
-NOTE: This command is currently being refactored. The old Stop hook mechanism has been
-removed and will be replaced with a simpler architecture that uses fresh Claude instances
-with file-system continuity instead of in-session context accumulation.
+## Prerequisites
 
-Please see the plugin README for current usage instructions.
+- `.ralph/prd.json` must exist (run `/ralph-init` first)
+
+## Usage
+
+Default (10 iterations):
+```!
+"${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh"
+```
+
+With custom max iterations:
+```!
+"${CLAUDE_PLUGIN_ROOT}/scripts/ralph.sh" $ARGUMENTS
+```
+
+## What Happens
+
+1. Script reads `.ralph/prd.json` for user stories
+2. For each iteration, spawns a fresh `claude --print` instance
+3. Each instance implements one user story, runs tests, commits if passing
+4. Loop exits when all stories pass or max iterations reached
+5. Progress is tracked in `.ralph/progress.txt`
+
+## Monitoring
+
+Watch progress in another terminal:
+```bash
+tail -f .ralph/progress.txt
+```
+
+To cancel: `/cancel-ralph`
