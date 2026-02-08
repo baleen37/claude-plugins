@@ -598,7 +598,3 @@ EOF
   # Should NOT show iteration 2 or beyond
   ! [[ "$output" == *"iteration 2/"* ]]
 }
-
-# TODO: After Task 4 (Improve prompt template), verify the prompt.md tests (lines 283-329)
-# still match the new content. Update tests as needed to reflect any changes to
-# the prompt.md template structure or content.
