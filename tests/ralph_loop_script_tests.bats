@@ -388,6 +388,40 @@ EOF
   [ $status -eq 0 ]
 }
 
+# Test: Script creates log directory for iteration archives
+@test "ralph.sh: creates log directory for iteration archives" {
+  run grep -q "mkdir -p \"\$LOG_DIR\"" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has LOG_DIR variable configured
+@test "ralph.sh: has LOG_DIR variable" {
+  run grep -q 'LOG_DIR=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'LOG_DIR="\$RALPH_DIR/logs"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script writes iteration logs to archive directory
+@test "ralph.sh: writes iteration logs to archive directory" {
+  run grep -q 'ITERATION_LOG=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'ITERATION_LOG="\$LOG_DIR/iteration-' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script supports --dangerously-skip-permissions flag
+@test "ralph.sh: supports --dangerously-skip-permissions flag" {
+  run grep -q 'dangerously-skip-permissions' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script passes --dangerously-skip-permissions to claude command
+@test "ralph.sh: passes --dangerously-skip-permissions to claude" {
+  run grep 'claude.*--print.*--dangerously-skip-permissions' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
 # Functional Test: cancel-ralph PID kill behavior
 @test "cancel-ralph: kills ralph.sh process and removes PID file" {
   # Skip this test on CI due to timing issues
@@ -564,3 +598,7 @@ EOF
   # Should NOT show iteration 2 or beyond
   ! [[ "$output" == *"iteration 2/"* ]]
 }
+
+# TODO: After Task 4 (Improve prompt template), verify the prompt.md tests (lines 283-329)
+# still match the new content. Update tests as needed to reflect any changes to
+# the prompt.md template structure or content.
