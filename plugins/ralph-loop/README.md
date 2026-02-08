@@ -1,5 +1,9 @@
 # Ralph Wiggum Plugin
 
+<!-- TODO: Update README to reflect new architecture (see Task #8) -->
+<!-- The Stop hook mechanism has been removed. This documentation needs to be -->
+<!-- updated to describe the new bash loop + fresh Claude instance approach. -->
+
 Implementation of the Ralph Wiggum technique for iterative, self-referential AI development loops in Claude Code.
 
 ## What is Ralph?
@@ -13,7 +17,10 @@ The technique is named after Ralph Wiggum from The Simpsons, embodying the philo
 
 ### Core Concept
 
-This plugin implements Ralph using a **Stop hook** that intercepts Claude's exit attempts:
+<!-- NOTE: The Stop hook mechanism described below has been removed. -->
+<!-- This section will be updated in Task #8 to describe the new architecture. -->
+
+This plugin previously implemented Ralph using a **Stop hook** that intercepted Claude's exit attempts:
 
 ```bash
 # You run ONCE:
@@ -27,9 +34,8 @@ This plugin implements Ralph using a **Stop hook** that intercepts Claude's exit
 # 5. Repeat until completion
 ```
 
-The loop happens **inside your current session** - you don't need external bash loops.
-The Stop hook in `hooks/stop-hook.sh` creates the self-referential feedback loop by
-blocking normal session exit.
+The loop happened **inside your current session** - external bash loops were not needed.
+The Stop hook created the self-referential feedback loop by blocking normal session exit.
 
 This creates a **self-referential feedback loop** where:
 
