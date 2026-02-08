@@ -2,7 +2,16 @@
 set -euo pipefail
 
 # === Configuration ===
-MAX_ITERATIONS="${1:-10}"
+# Validate and set max iterations
+if [[ -n "${1:-}" ]]; then
+  if ! [[ "$1" =~ ^[0-9]+$ ]]; then
+    echo "Error: MAX_ITERATIONS must be a positive integer (got: '$1')" >&2
+    exit 1
+  fi
+  MAX_ITERATIONS="$1"
+else
+  MAX_ITERATIONS=10
+fi
 RALPH_DIR=".ralph"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_TEMPLATE="$SCRIPT_DIR/prompt.md"

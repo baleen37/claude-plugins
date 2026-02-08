@@ -111,17 +111,18 @@ EOF
 
 # Test: Script accepts custom max iterations
 @test "ralph.sh: accepts custom max iterations argument" {
-  # This test just verifies the script accepts the argument
-  # The actual iteration count is validated by the default test
-  run grep 'MAX_ITERATIONS="\${1' "$RALPH_SCRIPT"
+  # This test verifies the script accepts the argument and has input validation
+  # The script should validate that MAX_ITERATIONS is a positive integer
+  run grep -E 'MAX_ITERATIONS.*\$1' "$RALPH_SCRIPT"
   [ $status -eq 0 ]
-  run grep 'MAX_ITERATIONS="\${1:-10}"' "$RALPH_SCRIPT"
+  run grep 'MAX_ITERATIONS=10' "$RALPH_SCRIPT"
   [ $status -eq 0 ]
 }
 
 # Test: Script default iterations
 @test "ralph.sh: default iterations is 10" {
-  run grep 'MAX_ITERATIONS="\${1:-10}"' "$RALPH_SCRIPT"
+  # Check that default of 10 is set (either with validation or simple default)
+  run grep -E 'MAX_ITERATIONS=10|MAX_ITERATIONS="\$\{1:-10\}"' "$RALPH_SCRIPT"
   [ $status -eq 0 ]
 }
 
