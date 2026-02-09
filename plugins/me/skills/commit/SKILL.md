@@ -1,53 +1,32 @@
 ---
 name: commit
-description: Use when user asks to create a git commit - stages files and creates a commit based on git status, diff, and recent commits
+description: "Read this skill before making git commits"
 ---
+Create a git commit for the current changes using a concise Conventional Commits-style subject.
 
-# Commit
+## Format
+`<type>(<scope>): <summary>`
 
-## Overview
+- `<type>` REQUIRED. Use `feat` for new features, `fix` for bug fixes. Other common types: `docs`, `refactor`, `chore`, `test`, `perf`.
+- `<scope>` OPTIONAL. Short noun in parentheses for the affected area (e.g., `api`, `parser`, `ui`).
+- `<summary>` REQUIRED. Short, imperative, <= 72 chars, no trailing period.
 
-Create a git commit based on current changes.
+## Notes
+- Body is OPTIONAL. If needed, add a blank line after the subject and write short paragraphs.
+- Do NOT include breaking-change markers or footers.
+- Do NOT add sign-offs (no `Signed-off-by`).
+- Only commit; do NOT push.
+- If it is unclear whether a file should be included, ask the user which files to commit.
 
-**Core principle:** Stage and commit using a single message. No other tools or text output.
+Treat any caller-provided arguments as additional commit guidance. Common patterns:
+- Freeform instructions should influence scope, summary, and body.
+- File paths or globs should limit which files to commit. If files are specified, only stage/commit those unless the user explicitly asks otherwise.
+- If arguments combine files and instructions, honor both.
 
-**Announce at start:** "I'm using the commit skill to create a git commit."
-
-## Context Gathering
-
-Before creating the commit, gather the following context:
-
-```bash
-# Current git status
-git status
-
-# Current git diff (staged and unstaged changes)
-git diff HEAD
-
-# Current branch
-git branch --show-current
-
-# Recent commits (for message style reference)
-git log --oneline -10
-```
-
-## Your Task
-
-Based on the above changes, create a single git commit.
-
-**You have the capability to call multiple tools in a single response. Stage and create the commit using a single message.**
-
-**Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.**
-
-## Allowed Tools
-
-- `Bash(git add:*)` - Stage files
-- `Bash(git status:*)` - Check git status
-- `Bash(git commit:*)` - Create commit
-
-## Important Notes
-
-- Review the changes to create an appropriate commit message
-- Follow the project's commit message style (check recent commits for patterns)
-- Stage specific files - avoid `git add -A` unless intentional
-- Always use `git status` before staging to ensure correct files are selected
+## Steps
+1. Infer from the prompt if the user provided specific file paths/globs and/or additional instructions.
+2. Review `git status` and `git diff` to understand the current changes (limit to argument-specified files if provided).
+3. (Optional) Run `git log -n 50 --pretty=format:%s` to see commonly used scopes.
+4. If there are ambiguous extra files, ask the user for clarification before committing.
+5. Stage only the intended files (all changes if no files specified).
+6. Run `git commit -m "<subject>"` (and `-m "<body>"` if needed).
