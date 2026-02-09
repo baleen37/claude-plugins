@@ -19,8 +19,6 @@
  * 2. **conversation-memory__read tool**:
  *   - Path parameter validation
  *   - Pagination parameters (startLine/endLine)
- *   - DB hit path (indexed data)
- *   - Fallback path (unindexed data)
  *   - Error handling
  *   - Output formatting
  *   - Strict schema validation
@@ -38,11 +36,14 @@
  *
  * Note: The schemas are re-defined here for testing to avoid build dependencies.
  * In production, these are defined in server.ts and should be kept in sync.
+ *
+ * V3 Architecture Note:
+ * - DB integration tests removed (V3 reads conversations directly from JSONL files)
+ * - Multi-concept search removed (V3 uses single-string query with full-text search)
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { z } from 'zod';
-import Database from 'better-sqlite3';
 
 // Re-define schemas for testing (in production these would be imported from server.ts)
 const SearchModeEnum = z.enum(['vector', 'text', 'both']);
@@ -51,18 +52,11 @@ const ResponseFormatEnum = z.enum(['markdown', 'json']);
 const SearchInputSchema = z
   .object({
     query: z
-      .union([
-        z.string().min(2, 'Query must be at least 2 characters'),
-        z
-          .array(z.string().min(2))
-          .min(2, 'Must provide at least 2 concepts for multi-concept search')
-          .max(5, 'Cannot search more than 5 concepts at once'),
-      ])
-      .describe(
-        'Search query - string for single concept, array of strings for multi-concept AND search'
-      ),
+      .string()
+      .min(2, 'Query must be at least 2 characters')
+      .describe('Search query for observations'),
     mode: SearchModeEnum.default('both').describe(
-      'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined (default: "both"). Only used for single-concept searches.'
+      'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined (default: "both")'
     ),
     limit: z
       .number()
@@ -189,42 +183,6 @@ describe('MCP Server - conversation-memory__search tool', () => {
       const result = await mockToolCall('search', { query: 'test query' });
 
       expect(result.isError).toBe(false);
-    });
-
-    test('rejects array with single concept (min 2 required)', async () => {
-      const result = await mockToolCall('search', { query: ['only-one'] });
-
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Must provide at least 2 concepts');
-    });
-
-    test('rejects array with more than 5 concepts', async () => {
-      const result = await mockToolCall('search', {
-        query: ['one', 'two', 'three', 'four', 'five', 'six']
-      });
-
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Cannot search more than 5 concepts');
-    });
-
-    test('accepts array with exactly 2 concepts', async () => {
-      const result = await mockToolCall('search', { query: ['concept1', 'concept2'] });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('accepts array with exactly 5 concepts', async () => {
-      const result = await mockToolCall('search', {
-        query: ['one', 'two', 'three', 'four', 'five']
-      });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('rejects array with concept shorter than 2 characters', async () => {
-      const result = await mockToolCall('search', { query: ['valid', 'x'] });
-
-      expect(result.isError).toBe(true);
     });
   });
 
@@ -451,16 +409,6 @@ describe('MCP Server - conversation-memory__search tool', () => {
       expect(result.content[0].type).toBe('text');
     });
 
-    test('returns formatted search results for multi-concept', async () => {
-      const result = await mockToolCall('search', {
-        query: ['concept1', 'concept2']
-      });
-
-      expect(result.isError).toBe(false);
-      expect(result.content).toHaveLength(1);
-      expect(result.content[0].type).toBe('text');
-    });
-
     test('returns JSON format when requested', async () => {
       const result = await mockToolCall('search', {
         query: 'test',
@@ -599,441 +547,6 @@ describe('MCP Server - conversation-memory__read tool', () => {
       expect(result.isError).toBe(true);
     });
   });
-
-  describe('DB integration with fallback', () => {
-    // These tests require actual database integration
-    // They test the full handler flow with real DB operations
-
-    // Set up test-specific database path
-    const originalDbPath = process.env.CONVERSATION_MEMORY_DB_PATH;
-    const testDbDir = '/tmp/conversation-memory-test-' + Date.now();
-
-    beforeEach(() => {
-      // Set test database path
-      process.env.CONVERSATION_MEMORY_CONFIG_DIR = testDbDir;
-    });
-
-    afterEach(() => {
-      // Restore original database path
-      if (originalDbPath) {
-        process.env.CONVERSATION_MEMORY_DB_PATH = originalDbPath;
-      } else {
-        delete process.env.CONVERSATION_MEMORY_DB_PATH;
-      }
-      delete process.env.CONVERSATION_MEMORY_CONFIG_DIR;
-    });
-
-    test('returns DB data when conversation is indexed', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Insert test data
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        stmt.run(
-          'db-data-test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'Test user message',
-          'Test assistant message',
-          '/test/path',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          'Used: Bash, Read'
-        );
-
-        // Test reading from DB
-        const result = readConversationFromDb(db, '/test/path', 1, 10);
-
-        expect(result).not.toBeNull();
-        expect(result).toContain('# Conversation');
-        expect(result).toContain('Test user message');
-        expect(result).toContain('Test assistant message');
-        expect(result).toContain('**Session ID:** session-123');
-        expect(result).toContain('Used: Bash, Read');
-      } finally {
-        db.close();
-      }
-    });
-
-    test('returns null when conversation is not in DB', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Don't insert any data - query should return null
-        const result = readConversationFromDb(db, '/nonexistent/path');
-
-        expect(result).toBeNull();
-      } finally {
-        db.close();
-      }
-    });
-
-    test('respects pagination parameters', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Insert multiple exchanges
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        // First exchange (lines 1-10)
-        stmt.run(
-          'pagination-test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'First message',
-          'First response',
-          '/test/path',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          'Used: Bash'
-        );
-
-        // Second exchange (lines 11-20)
-        stmt.run(
-          'pagination-test-id-2',
-          'test-project',
-          '2024-01-01T01:00:00.000Z',
-          'Second message',
-          'Second response',
-          '/test/path',
-          11,
-          20,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          'Used: Read'
-        );
-
-        // Third exchange (lines 21-30)
-        stmt.run(
-          'pagination-test-id-3',
-          'test-project',
-          '2024-01-01T02:00:00.000Z',
-          'Third message',
-          'Third response',
-          '/test/path',
-          21,
-          30,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          'Used: Write'
-        );
-
-        // Test pagination: only get second exchange
-        const result = readConversationFromDb(db, '/test/path', 11, 20);
-
-        expect(result).not.toBeNull();
-        expect(result).toContain('Second message');
-        expect(result).toContain('Second response');
-        expect(result).not.toContain('First message');
-        expect(result).not.toContain('Third message');
-      } finally {
-        db.close();
-      }
-    });
-
-    test('filters by archive path', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        // Insert data for different paths
-        stmt.run(
-          'filter-test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'Message from path A',
-          'Response A',
-          '/test/path-a',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          null
-        );
-
-        stmt.run(
-          'filter-test-id-2',
-          'test-project',
-          '2024-01-01T01:00:00.000Z',
-          'Message from path B',
-          'Response B',
-          '/test/path-b',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          null
-        );
-
-        // Query path-a should only return data from path-a
-        const resultA = readConversationFromDb(db, '/test/path-a');
-        expect(resultA).toContain('Message from path A');
-        expect(resultA).not.toContain('Message from path B');
-
-        // Query path-b should only return data from path-b
-        const resultB = readConversationFromDb(db, '/test/path-b');
-        expect(resultB).toContain('Message from path B');
-        expect(resultB).not.toContain('Message from path A');
-      } finally {
-        db.close();
-      }
-    });
-  });
-
-  describe('Handler integration tests', () => {
-    // These tests verify the actual handler flow from server.ts
-
-    // Set up test-specific database path
-    const originalDbPath = process.env.CONVERSATION_MEMORY_DB_PATH;
-    const testDbDir = '/tmp/conversation-memory-handler-test-' + Date.now();
-
-    beforeEach(() => {
-      // Set test database path
-      process.env.CONVERSATION_MEMORY_CONFIG_DIR = testDbDir;
-    });
-
-    afterEach(() => {
-      // Restore original database path
-      if (originalDbPath) {
-        process.env.CONVERSATION_MEMORY_DB_PATH = originalDbPath;
-      } else {
-        delete process.env.CONVERSATION_MEMORY_DB_PATH;
-      }
-      delete process.env.CONVERSATION_MEMORY_CONFIG_DIR;
-    });
-
-    test('read handler calls DB and returns compressed data', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Insert test data
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        stmt.run(
-          'test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'Test user message',
-          'Test assistant message',
-          '/test/path',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          'Used: Bash, Read'
-        );
-
-        // Simulate the handler flow
-        const dbResult = readConversationFromDb(db, '/test/path', 1, 10);
-
-        expect(dbResult).not.toBeNull();
-        expect(dbResult).toContain('# Conversation');
-        expect(dbResult).toContain('Test user message');
-        expect(dbResult).toContain('Test assistant message');
-
-        // Verify the handler would return this as content
-        expect(dbResult).toMatch(/## Metadata/);
-        expect(dbResult).toMatch(/## Messages/);
-      } finally {
-        db.close();
-      }
-    });
-
-    test('read handler falls back to null when DB has no data', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Don't insert any data
-        const dbResult = readConversationFromDb(db, '/nonexistent/path');
-
-        // Verify DB returns null (triggering fallback in handler)
-        expect(dbResult).toBeNull();
-      } finally {
-        db.close();
-      }
-    });
-
-    test('DB connection is properly closed after read', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Insert test data
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        stmt.run(
-          'handler-close-test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'Test user message',
-          'Test assistant message',
-          '/test/path',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          null
-        );
-
-        // Mock close to verify it's called
-        const closeSpy = vi.spyOn(db, 'close');
-
-        // Simulate handler flow (read but don't close yet)
-        readConversationFromDb(db, '/test/path');
-
-        // The handler would close the DB here
-        db.close();
-
-        // Verify close was called
-        expect(closeSpy).toHaveBeenCalled();
-      } finally {
-        // Ensure DB is closed even if test fails (idempotent close)
-        try {
-          db.close();
-        } catch {
-          // Already closed, ignore error
-        }
-      }
-    });
-
-    test('read handler integration flow with DB close', async () => {
-      const { initDatabase } = await import('../core/db.js');
-      const { readConversationFromDb } = await import('../core/show.js');
-
-      // Create a real database for testing
-      const db = initDatabase();
-
-      try {
-        // Insert test data
-        const stmt = db.prepare(`
-          INSERT INTO exchanges
-          (id, project, timestamp, user_message, assistant_message, archive_path, line_start, line_end,
-           session_id, cwd, git_branch, claude_version, is_sidechain, compressed_tool_summary)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        stmt.run(
-          'handler-flow-test-id-1',
-          'test-project',
-          '2024-01-01T00:00:00.000Z',
-          'Test user message',
-          'Test assistant message',
-          '/test/path',
-          1,
-          10,
-          'session-123',
-          '/test/dir',
-          'main',
-          '1.0.0',
-          0,
-          null
-        );
-
-        // Simulate the handler flow from server.ts:
-        // const db = initDatabase();
-        // try {
-        //   const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
-        //   if (dbResult) { return { content: [{ type: 'text', text: dbResult }] }; }
-        // } finally {
-        //   db.close();
-        // }
-
-        const dbResult = readConversationFromDb(db, '/test/path', 1, 10);
-
-        expect(dbResult).not.toBeNull();
-        expect(dbResult).toContain('Test user message');
-        expect(dbResult).toContain('Test assistant message');
-
-        // The handler would return this as content
-        // return { content: [{ type: 'text', text: dbResult }] };
-      } finally {
-        // Handler always closes DB in finally block
-        db.close();
-      }
-    });
-  });
 });
 
 describe('MCP Server - Error handling', () => {
@@ -1087,17 +600,6 @@ describe('SearchInput Schema - Direct validation', () => {
       expect(result.data.limit).toBe(10);
       expect(result.data.response_format).toBe('markdown');
     }
-  });
-
-  test('handles multi-concept search with all parameters', () => {
-    const result = SearchInputSchema.safeParse({
-      query: ['concept1', 'concept2', 'concept3'],
-      limit: 20,
-      after: '2024-01-01',
-      response_format: 'markdown'
-    });
-
-    expect(result.success).toBe(true);
   });
 });
 

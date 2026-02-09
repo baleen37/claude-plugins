@@ -11,21 +11,6 @@
             "timeout": 10000
           }
         ]
-      },
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs sync",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/cli.mjs observer start",
-            "async": true
-          }
-        ]
       }
     ],
     "PostToolUse": [

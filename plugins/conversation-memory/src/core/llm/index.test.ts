@@ -9,8 +9,6 @@ import { describe, it, expect } from 'vitest';
 import {
   // Classes from gemini-provider.ts
   GeminiProvider,
-  // Classes from round-robin-provider.ts
-  RoundRobinProvider,
   // Functions from config.ts
   loadConfig,
   createProvider,
@@ -73,25 +71,6 @@ describe('LLM Module Barrel Export', () => {
     });
   });
 
-  describe('RoundRobinProvider export', () => {
-    it('should export RoundRobinProvider class', () => {
-      expect(RoundRobinProvider).toBeDefined();
-      expect(typeof RoundRobinProvider).toBe('function');
-    });
-
-    it('should create RoundRobinProvider instance', () => {
-      const mockProvider: LLMProvider = {
-        complete: async () => ({
-          text: 'test',
-          usage: { input_tokens: 1, output_tokens: 1 },
-        }),
-      };
-      const provider = new RoundRobinProvider([mockProvider]);
-      expect(provider).toBeInstanceOf(RoundRobinProvider);
-      expect(provider.complete).toBeDefined();
-    });
-  });
-
   describe('config exports', () => {
     it('should export LLMConfig type', () => {
       const config: LLMConfig = {
@@ -118,15 +97,13 @@ describe('LLM Module Barrel Export', () => {
       // Types are verified through TypeScript compilation (separate type-level tests above)
       const runtimeExports = {
         GeminiProvider,
-        RoundRobinProvider,
         loadConfig,
         createProvider,
       };
 
       // Verify all runtime imports are present
-      expect(Object.keys(runtimeExports)).toHaveLength(4);
+      expect(Object.keys(runtimeExports)).toHaveLength(3);
       expect(runtimeExports.GeminiProvider).toBeDefined();
-      expect(runtimeExports.RoundRobinProvider).toBeDefined();
       expect(runtimeExports.loadConfig).toBeDefined();
       expect(runtimeExports.createProvider).toBeDefined();
     });

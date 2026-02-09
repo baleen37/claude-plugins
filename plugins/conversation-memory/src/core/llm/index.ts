@@ -22,9 +22,6 @@ export type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js'
 // Classes from gemini-provider.ts
 export { GeminiProvider } from './gemini-provider.js';
 
-// Classes from round-robin-provider.ts
-export { RoundRobinProvider } from './round-robin-provider.js';
-
 // Types and functions from config.ts
 export type { LLMConfig } from './config.js';
 export { loadConfig, createProvider } from './config.js';

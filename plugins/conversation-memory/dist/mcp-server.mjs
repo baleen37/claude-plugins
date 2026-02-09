@@ -17789,7 +17789,7 @@ function isoToTimestamp(isoDate) {
   return new Date(isoDate).getTime();
 }
 async function search(query, options) {
-  const { db, limit = 10, mode = "both", after, before, projects } = options;
+  const { db, limit = 10, mode = "both", after, before, projects, files } = options;
   if (after) validateISODate(after, "--after");
   if (before) validateISODate(before, "--before");
   let results = [];
@@ -17812,6 +17812,12 @@ async function search(query, options) {
     projectFilterParams.push(...projects);
   }
   const projectClause = projectFilter.length > 0 ? `AND ${projectFilter.join(" AND ")}` : "";
+  function matchesFiles(content) {
+    if (!files || files.length === 0) {
+      return true;
+    }
+    return files.some((filePath) => content.includes(filePath));
+  }
   if (mode === "vector" || mode === "both") {
     await initEmbeddings();
     const queryEmbedding = await generateEmbedding(query);
@@ -17819,6 +17825,7 @@ async function search(query, options) {
       SELECT
         o.id,
         o.title,
+        o.content,
         o.project,
         o.timestamp,
         vec.distance
@@ -17838,6 +17845,9 @@ async function search(query, options) {
     ];
     const vectorResults = stmt.all(...vectorParams);
     for (const row of vectorResults) {
+      if (!matchesFiles(row.content)) {
+        continue;
+      }
       results.push({
         id: row.id,
         title: row.title,
@@ -17868,6 +17878,7 @@ async function search(query, options) {
       SELECT
         o.id,
         o.title,
+        o.content,
         o.project,
         o.timestamp
       FROM observations o
@@ -17886,6 +17897,9 @@ async function search(query, options) {
     for (const row of textResults) {
       const existing = results.find((r) => r.id === row.id);
       if (existing) {
+        continue;
+      }
+      if (!matchesFiles(row.content)) {
         continue;
       }
       results.push({
@@ -18277,7 +18291,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "search",
-        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by type/concepts/files, and date ranges.`,
+        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by projects/files, and date ranges.`,
         inputSchema: {
           type: "object",
           properties: {
@@ -18405,7 +18419,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           mode: params.mode,
           after: params.after,
           before: params.before,
-          projects: params.projects
+          projects: params.projects,
+          files: params.files
         });
         return {
           content: [
@@ -18417,8 +18432,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   title: r.title,
                   project: r.project,
                   timestamp: r.timestamp
-                })),
-                count: results.length
+                }))
               }, null, 2)
             }
           ]

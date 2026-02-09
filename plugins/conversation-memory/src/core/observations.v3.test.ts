@@ -26,6 +26,7 @@ describe('observations.v3', () => {
   beforeEach(() => {
     // Use in-memory database for tests
     testDbPath = ':memory:';
+    process.env.CONVERSATION_MEMORY_DB_PATH = testDbPath;
     db = initDatabaseV3();
   });
 

@@ -19,6 +19,7 @@ describe('PostToolUse Hook', () => {
 
   beforeEach(() => {
     // Use in-memory database for testing
+    process.env.CONVERSATION_MEMORY_DB_PATH = ':memory:';
     db = initDatabaseV3();
   });
 
