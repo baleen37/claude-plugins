@@ -2,6 +2,16 @@
 set -euo pipefail
 
 # === Configuration ===
+# Load user configuration if it exists
+CONFIG_FILE=".agents/ralph/config.sh"
+if [[ -f "$CONFIG_FILE" ]]; then
+  # shellcheck source=/dev/null
+  source "$CONFIG_FILE"
+fi
+
+# Default STALE_SECONDS (24 hours) - can be overridden in config.sh
+STALE_SECONDS="${STALE_SECONDS:-86400}"
+
 # Validate and set max iterations
 if [[ -n "${1:-}" ]]; then
   if ! [[ "$1" =~ ^[0-9]+$ ]]; then

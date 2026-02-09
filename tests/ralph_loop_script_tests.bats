@@ -1419,3 +1419,33 @@ EOF
   run grep "# Errors log" "$RALPH_SCRIPT"
   [ $status -eq 0 ]
 }
+
+# === Configuration File Tests ===
+
+# Test: Script sources .agents/ralph/config.sh if it exists
+@test "ralph.sh: sources .agents/ralph/config.sh if it exists" {
+  run grep -q '\.agents/ralph/config\.sh' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep -q 'source.*"\$CONFIG_FILE"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has STALE_SECONDS variable with default
+@test "ralph.sh: has STALE_SECONDS variable with default" {
+  run grep -q 'STALE_SECONDS=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'STALE_SECONDS=' "$RALPH_SCRIPT"
+  [[ "$output" == *"86400"* ]]  # Default should be 86400 (24 hours)
+}
+
+# Test: Script sources config file safely (checks existence first)
+@test "ralph.sh: sources config file safely with existence check" {
+  run grep -B 2 'source.*"\$CONFIG_FILE"' "$RALPH_SCRIPT"
+  [[ "$output" == *"[ -f "* ]] || [[ "$output" == *"[[ -f "* ]]
+}
+
+# Test: Config file sourcing uses correct path
+@test "ralph.sh: config file path is .agents/ralph/config.sh" {
+  run grep '\.agents/ralph/config\.sh' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
