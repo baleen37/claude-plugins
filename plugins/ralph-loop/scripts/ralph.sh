@@ -32,7 +32,15 @@ PID_FILE="$RALPH_DIR/ralph.pid"
 LOG_DIR="$RALPH_DIR/logs"
 LAST_BRANCH_FILE="$RALPH_DIR/.last-branch"
 ARCHIVE_DIR="$RALPH_DIR/archive"
-PROMPT_TEMPLATE="$SCRIPT_DIR/prompt.md"
+
+# Prompt template: check for user customization first, fall back to default
+CUSTOM_PROMPT_TEMPLATE=".agents/ralph/prompts/loop.md"
+if [[ -f "$CUSTOM_PROMPT_TEMPLATE" ]]; then
+  PROMPT_TEMPLATE="$CUSTOM_PROMPT_TEMPLATE"
+else
+  PROMPT_TEMPLATE="$SCRIPT_DIR/prompt.md"
+fi
+
 # Guardrails file stores lessons learned and patterns discovered during iterations
 GUARDRAILS_FILE="$RALPH_DIR/guardrails.md"
 # Activity log tracks iteration timestamps and completion status

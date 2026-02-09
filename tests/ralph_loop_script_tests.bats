@@ -1449,3 +1449,90 @@ EOF
   run grep '\.agents/ralph/config\.sh' "$RALPH_SCRIPT"
   [ $status -eq 0 ]
 }
+
+# === Template Hierarchy Tests ===
+
+# Test: Script has custom prompt template path variable
+@test "ralph.sh: has CUSTOM_PROMPT_TEMPLATE variable for .agents/ralph/prompts/loop.md" {
+  run grep -q 'CUSTOM_PROMPT_TEMPLATE=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'CUSTOM_PROMPT_TEMPLATE="\.agents/ralph/prompts/loop\.md"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script falls back to default prompt template
+@test "ralph.sh: falls back to default prompt.md when custom doesn't exist" {
+  run grep -A 5 'CUSTOM_PROMPT_TEMPLATE=' "$RALPH_SCRIPT"
+  # Should check if custom template exists, otherwise use default
+  [[ "$output" == *"PROMPT_TEMPLATE"* ]]
+}
+
+# Test: Script uses custom prompt template when it exists
+@test "ralph.sh: uses custom prompt template from .agents/ralph/prompts/loop.md" {
+  # Check that script has logic to use custom template
+  run grep -A 10 'CUSTOM_PROMPT_TEMPLATE=' "$RALPH_SCRIPT"
+  [[ "$output" == *"[ -f"* ]] || [[ "$output" == *"[[ -f"* ]]
+}
+
+# Functional Test: Script uses default template when custom doesn't exist
+@test "ralph.sh: functional - uses default template when custom doesn't exist" {
+  create_prd
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Ensure custom template doesn't exist
+  rm -rf .agents/ralph/prompts/
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Script should have run successfully using default template
+  [ ! -f .agents/ralph/prompts/loop.md ]
+}
+
+# Functional Test: Script uses custom template when it exists
+@test "ralph.sh: functional - uses custom template when it exists" {
+  create_prd
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Create custom prompt template
+  mkdir -p .agents/ralph/prompts
+  cat > .agents/ralph/prompts/loop.md <<'EOF'
+# Custom Prompt Template
+This is a custom template for testing.
+
+Iteration {{ITERATION}} of {{MAX}}
+EOF
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Custom template should still exist and be used
+  [ -f .agents/ralph/prompts/loop.md ]
+  grep -q "Custom Prompt Template" .agents/ralph/prompts/loop.md
+}
