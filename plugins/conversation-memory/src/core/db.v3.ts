@@ -220,6 +220,24 @@ export function insertObservationV3(
 }
 
 /**
+ * Get all pending events for a session (no limit).
+ * Used by Stop hook for batch extraction.
+ */
+export function getAllPendingEventsV3(
+  db: Database.Database,
+  sessionId: string
+): Array<PendingEventV3 & { id: number }> {
+  const stmt = db.prepare(`
+    SELECT id, session_id as sessionId, project, tool_name as toolName, compressed, timestamp, created_at as createdAt
+    FROM pending_events
+    WHERE session_id = ?
+    ORDER BY created_at ASC
+  `);
+
+  return stmt.all(sessionId) as Array<PendingEventV3 & { id: number }>;
+}
+
+/**
  * Get pending events for a session
  */
 export function getPendingEventsV3(
