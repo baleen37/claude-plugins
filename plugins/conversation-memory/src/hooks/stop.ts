@@ -66,7 +66,7 @@ export async function handleStop(
   const { provider, sessionId, project, batchSize = DEFAULT_BATCH_SIZE } = options;
 
   // Step 1: Collect all pending_events for this session
-  const allEvents = getAllPendingEventsV3(db, sessionId);
+  const allEvents: Array<PendingEventV3 & { id: number }> = getAllPendingEventsV3(db, sessionId);
 
   // Step 2: Skip if < 3 events (too short to be useful)
   if (allEvents.length < MIN_EVENT_THRESHOLD) {
@@ -83,7 +83,7 @@ export async function handleStop(
   for (const batch of batches) {
     try {
       // Convert to CompressedEvent format
-      const compressedEvents: CompressedEvent[] = batch.map(event => ({
+      const compressedEvents: CompressedEvent[] = batch.map((event: PendingEventV3 & { id: number }) => ({
         toolName: event.toolName,
         compressed: event.compressed,
         timestamp: event.timestamp,
