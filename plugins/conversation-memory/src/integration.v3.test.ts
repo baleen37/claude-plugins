@@ -10,7 +10,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
-import { initDatabaseV3, getPendingEventsV3, getObservationV3, searchObservationsV3, getPendingEventCountV3, getObservationCountV3 } from './core/db.v3.js';
+import { initDatabaseV3, getPendingEventsV3, getObservationV3, getObservationCountV3 } from './core/db.v3.js';
 import { handlePostToolUse } from './hooks/post-tool-use.js';
 import { handleStop, type StopHookOptions } from './hooks/stop.js';
 import { handleSessionStart, type SessionStartConfig } from './hooks/session-start.js';
@@ -21,13 +21,14 @@ import type { LLMProvider } from './core/llm/types.js';
 // Mock LLM provider
 const createMockLLMProvider = (responses: Array<{ text: string; usage?: { input_tokens: number; output_tokens: number } }>) => {
   let callCount = 0;
+  const mockComplete = vi.fn(async () => {
+    const response = responses[Math.min(callCount, responses.length - 1)];
+    callCount++;
+    return response;
+  });
   return {
-    complete: vi.fn(async () => {
-      const response = responses[Math.min(callCount, responses.length - 1)];
-      callCount++;
-      return response;
-    }),
-  } as unknown as LLMProvider;
+    complete: mockComplete,
+  } as unknown as LLMProvider & { complete: ReturnType<typeof vi.fn> };
 };
 
 // Mock embeddings module
@@ -35,8 +36,6 @@ vi.mock('./core/embeddings.js', () => ({
   initEmbeddings: vi.fn().mockResolvedValue(undefined),
   generateEmbedding: vi.fn().mockResolvedValue(new Array(768).fill(0.1)),
 }));
-
-const mockEmbedding = new Array(768).fill(0.1);
 
 describe('V3 Integration Tests', () => {
   let db: Database.Database;
