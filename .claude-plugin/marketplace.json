@@ -17,7 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "git-guard",
@@ -31,7 +31,7 @@
         "pr",
         "security"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-bash",
@@ -44,7 +44,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-typescript",
@@ -58,7 +58,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-python",
@@ -71,7 +71,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-go",
@@ -84,7 +84,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-kotlin",
@@ -97,7 +97,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-lua",
@@ -110,7 +110,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "lsp-nix",
@@ -123,7 +123,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "me",
@@ -138,7 +138,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "ralph-loop",
@@ -151,7 +151,7 @@
         "loop",
         "ai"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "handoff",
@@ -164,7 +164,7 @@
         "context",
         "pickup"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "databricks-devtools",
@@ -178,7 +178,7 @@
         "mcp",
         "cli"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     },
     {
       "name": "conversation-memory",
@@ -192,7 +192,7 @@
         "semantic",
         "mcp"
       ],
-      "version": "5.14.1"
+      "version": "5.14.2"
     }
   ]
 }
