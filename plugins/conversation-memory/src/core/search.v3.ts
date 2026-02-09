@@ -22,6 +22,7 @@ export interface SearchOptions {
   after?: string;  // ISO date string
   before?: string; // ISO date string
   projects?: string[]; // Filter by project names
+  files?: string[]; // Filter by file paths mentioned in content
 }
 
 /**
@@ -65,7 +66,7 @@ export async function search(
   query: string,
   options: SearchOptions & { db: Database.Database }
 ): Promise<CompactObservationResult[]> {
-  const { db, limit = 10, mode = 'both', after, before, projects } = options;
+  const { db, limit = 10, mode = 'both', after, before, projects, files } = options;
 
   // Validate date parameters
   if (after) validateISODate(after, '--after');
@@ -96,6 +97,14 @@ export async function search(
   }
   const projectClause = projectFilter.length > 0 ? `AND ${projectFilter.join(' AND ')}` : '';
 
+  // Helper function to check if content matches any of the file paths
+  function matchesFiles(content: string): boolean {
+    if (!files || files.length === 0) {
+      return true; // No files filter, always match
+    }
+    return files.some(filePath => content.includes(filePath));
+  }
+
   if (mode === 'vector' || mode === 'both') {
     // Vector similarity search
     await initEmbeddings();
@@ -105,6 +114,7 @@ export async function search(
       SELECT
         o.id,
         o.title,
+        o.content,
         o.project,
         o.timestamp,
         vec.distance
@@ -127,6 +137,11 @@ export async function search(
     const vectorResults = stmt.all(...vectorParams) as any[];
 
     for (const row of vectorResults) {
+      // Filter by files if specified
+      if (!matchesFiles(row.content)) {
+        continue;
+      }
+
       results.push({
         id: row.id,
         title: row.title,
@@ -167,6 +182,7 @@ export async function search(
       SELECT
         o.id,
         o.title,
+        o.content,
         o.project,
         o.timestamp
       FROM observations o
@@ -189,6 +205,11 @@ export async function search(
       // Check if we already have this result from vector search
       const existing = results.find(r => r.id === row.id);
       if (existing) {
+        continue;
+      }
+
+      // Filter by files if specified
+      if (!matchesFiles(row.content)) {
         continue;
       }
 

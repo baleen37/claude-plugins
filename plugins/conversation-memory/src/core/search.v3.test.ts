@@ -454,4 +454,87 @@ describe('search.v3 - observation-only search', () => {
       expect(Array.isArray(results)).toBe(true);
     });
   });
+
+  describe('search - files filter', () => {
+    beforeEach(() => {
+      const now = Date.now();
+
+      insertTestObservation(db, {
+        title: 'File A implementation',
+        content: 'Implemented feature in src/file-a.ts',
+        project: 'test-project',
+        timestamp: now - 2000
+      }, createTestEmbedding(1));
+
+      insertTestObservation(db, {
+        title: 'File B implementation',
+        content: 'Fixed bug in lib/file-b.ts',
+        project: 'test-project',
+        timestamp: now - 1000
+      }, createTestEmbedding(2));
+
+      insertTestObservation(db, {
+        title: 'No files mentioned',
+        content: 'General architectural decision without files',
+        project: 'test-project',
+        timestamp: now
+      }, createTestEmbedding(3));
+    });
+
+    test('should filter by single file path in text mode', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'text', files: ['src/file-a.ts'] });
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe('File A implementation');
+    });
+
+    test('should filter by multiple file paths', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'text', files: ['src/file-a.ts', 'lib/file-b.ts'] });
+      expect(results.length).toBe(2);
+      const titles = results.map(r => r.title);
+      expect(titles).toContain('File A implementation');
+      expect(titles).toContain('File B implementation');
+    });
+
+    test('should return empty when no matching files', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'text', files: ['nonexistent/file.ts'] });
+      expect(results.length).toBe(0);
+    });
+
+    test('should filter by files in vector mode', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'vector', files: ['src/file-a.ts'] });
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe('File A implementation');
+    });
+
+    test('should filter by files in both mode', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'both', files: ['src/file-a.ts'] });
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe('File A implementation');
+    });
+
+    test('should handle empty files array', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'text', files: [] });
+      expect(results.length).toBe(2);
+    });
+
+    test('should handle partial file path matches', async () => {
+      mockGenerateEmbedding = () => createTestEmbedding();
+
+      const results = await search('implementation', { db, mode: 'text', files: ['file-a'] });
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe('File A implementation');
+    });
+  });
 });

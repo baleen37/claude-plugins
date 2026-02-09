@@ -135,7 +135,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'search',
-        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by type/concepts/files, and date ranges.`,
+        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by projects/files, and date ranges.`,
         inputSchema: {
           type: 'object',
           properties: {
@@ -271,6 +271,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           after: params.after,
           before: params.before,
           projects: params.projects,
+          files: params.files,
         });
 
         // Return compact observations as JSON
@@ -285,7 +286,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   project: r.project,
                   timestamp: r.timestamp,
                 })),
-                count: results.length,
               }, null, 2),
             },
           ],
