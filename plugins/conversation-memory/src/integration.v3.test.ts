@@ -28,7 +28,8 @@ const createMockLLMProvider = (responses: Array<{ text: string; usage?: { input_
   });
   return {
     complete: mockComplete,
-  } as unknown as LLMProvider & { complete: ReturnType<typeof vi.fn> };
+    __mockFn: mockComplete, // Expose mock function for testing
+  } as unknown as LLMProvider & { __mockFn: ReturnType<typeof vi.fn> };
 };
 
 // Mock embeddings module
@@ -108,8 +109,8 @@ describe('V3 Integration Tests', () => {
       expect(obs2?.project).toBe(project);
 
       // Step 5: Verify LLM was called with correct context
-      expect(mockProvider.complete).toHaveBeenCalledTimes(1);
-      const callArgs = mockProvider.complete.mock.calls[0];
+      expect(mockProvider.__mockFn).toHaveBeenCalledTimes(1);
+      const callArgs = mockProvider.__mockFn.mock.calls[0];
       const prompt = callArgs[0] as string;
       expect(prompt).toContain('/src/auth.ts');
       expect(prompt).toContain('/src/login.ts');
