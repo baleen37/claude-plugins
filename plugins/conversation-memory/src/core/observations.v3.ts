@@ -26,13 +26,13 @@ export interface Observation {
   project: string;
   sessionId: string | null;
   timestamp: number;
-  createdAt: number;
 }
 
 /**
  * Observation with similarity score from vector search
+ * Internal type used for vector search results
  */
-export interface ObservationWithSimilarity extends Observation {
+interface ObservationWithSimilarity extends Observation {
   similarity: number;
 }
 
@@ -101,8 +101,7 @@ export async function findById(
     content: result.content,
     project: result.project,
     sessionId: result.sessionId,
-    timestamp: result.timestamp,
-    createdAt: result.createdAt
+    timestamp: result.timestamp
   };
 }
 
@@ -123,7 +122,7 @@ export async function findByIds(
 
   const placeholders = ids.map(() => '?').join(',');
   const stmt = db.prepare(`
-    SELECT id, title, content, project, session_id as sessionId, timestamp, created_at as createdAt
+    SELECT id, title, content, project, session_id as sessionId, timestamp
     FROM observations
     WHERE id IN (${placeholders})
     ORDER BY timestamp DESC
@@ -137,8 +136,7 @@ export async function findByIds(
     content: r.content,
     project: r.project,
     sessionId: r.sessionId,
-    timestamp: r.timestamp,
-    createdAt: r.createdAt
+    timestamp: r.timestamp
   }));
 }
 
@@ -163,8 +161,7 @@ export async function findByProject(
     content: r.content,
     project: r.project,
     sessionId: r.sessionId,
-    timestamp: r.timestamp,
-    createdAt: r.createdAt
+    timestamp: r.timestamp
   }));
 }
 
@@ -198,7 +195,6 @@ export async function searchByVector(
       o.project,
       o.session_id as sessionId,
       o.timestamp,
-      o.created_at as createdAt,
       v.distance
     FROM observations o
     INNER JOIN vec_observations v ON CAST(o.id AS TEXT) = v.id
@@ -225,7 +221,6 @@ export async function searchByVector(
     project: row.project,
     sessionId: row.sessionId,
     timestamp: row.timestamp,
-    createdAt: row.createdAt,
     similarity: Math.max(0, 1 - row.distance)
   }));
 }
@@ -241,9 +236,12 @@ export async function searchByVector(
  * @param db - Database instance
  * @param id - Observation ID
  */
-export async function deleteObservation(
+async function deleteImpl(
   db: Database.Database,
   id: number
 ): Promise<void> {
   deleteObservationV3(db, id);
 }
+
+// Export as 'delete' (reserved word workaround)
+export { deleteImpl as delete };
