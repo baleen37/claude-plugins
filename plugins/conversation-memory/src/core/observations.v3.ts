@@ -125,7 +125,7 @@ export async function findByIds(
     SELECT id, title, content, project, session_id as sessionId, timestamp
     FROM observations
     WHERE id IN (${placeholders})
-    ORDER BY timestamp DESC
+    ORDER BY timestamp DESC, id DESC
   `);
 
   const results = stmt.all(...ids) as ObservationResultV3[];
