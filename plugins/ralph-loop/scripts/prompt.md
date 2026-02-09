@@ -6,20 +6,27 @@ You are executing iteration {{ITERATION}} of {{MAX}} in a Ralph loop.
 
 1. Read the PRD at `.ralph/prd.json` to find user stories
 2. Read the progress log at `.ralph/progress.txt` (check Codebase Patterns section first)
-3. Find the **highest priority** story where `passes` is `false`
-4. Implement ONLY that one story
-5. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
-6. Update CLAUDE.md files if you discover reusable patterns (see below)
-7. If checks pass:
+3. Read the guardrails at `.ralph/guardrails.md` (check Lessons Learned and Patterns Discovered sections)
+4. Find the **highest priority** story where `status` is not `"done"`
+5. When starting work on a story:
+   - Update `.ralph/prd.json`: set `status: "in_progress"` and
+     `startedAt: "<current ISO timestamp>"` for this story
+6. Implement ONLY that one story
+7. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
+8. Update CLAUDE.md files if you discover reusable patterns (see below)
+9. If checks pass:
    - Commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-   - Update `.ralph/prd.json`: set `passes: true` for this story
+   - Update `.ralph/prd.json`: set `status: "done"`,
+     `completedAt: "<current ISO timestamp>"`, and `passes: true` for this story
    - Append your progress to `.ralph/progress.txt`
-8. If checks fail:
-   - Append what went wrong to `.ralph/progress.txt`
-   - Do NOT mark the story as passing
-9. After processing one story, check if ALL stories have `passes: true`
-   - If yes: output exactly `<promise>COMPLETE</promise>`
-   - If no: stop (next iteration will pick up the next story)
+
+10. If checks fail:
+    - Append what went wrong to `.ralph/progress.txt`
+    - Do NOT mark the story as done (keep status as "in_progress" or revert to "open" if appropriate)
+
+11. After processing one story, check if ALL stories have `status: "done"`
+    - If yes: output exactly `<promise>COMPLETE</promise>`
+    - If no: stop (next iteration will pick up the next story)
 
 ## Progress Report Format
 
@@ -40,6 +47,27 @@ APPEND to .ralph/progress.txt (never replace, always append):
 ```
 
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
+
+## Guardrails Update Format
+
+APPEND to .ralph/guardrails.md (never replace, always append) when you discover important lessons or patterns:
+
+```text
+## [Date/Time]
+
+### Lessons Learned
+- Example: Component X requires prop Y to render correctly
+- Example: Tests fail if service Z is not mocked properly
+
+### Patterns Discovered
+- Example: All API calls go through the service layer
+- Example: State management uses pattern X for async operations
+
+---
+```
+
+Only add entries to guardrails.md when you discover **generalizable lessons** that would help
+future iterations avoid common pitfalls or understand the codebase architecture better.
 
 ## Consolidate Patterns
 
@@ -112,3 +140,5 @@ If no browser tools are available, note in your progress report that manual brow
 - Commit frequently.
 - Keep CI green.
 - Read the Codebase Patterns section in .ralph/progress.txt before starting.
+- Read .ralph/guardrails.md before starting to avoid repeating past mistakes.
+- Append lessons learned and patterns discovered to .ralph/guardrails.md after each story.
