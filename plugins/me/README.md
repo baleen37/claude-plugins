@@ -4,10 +4,9 @@ Personal Claude Code configuration - TDD, systematic debugging, git workflow, co
 
 ## Components
 
-### Commands (11)
+### Commands (10)
 
 - **brainstorm**: Brainstorming and planning
-- **claude-isolated-test**: Run isolated tests in a controlled environment
 - **create-pr**: Commit, push, and create/update pull requests
 - **debug**: Systematic debugging process
 - **orchestrate**: Execute sequential agent workflows
@@ -47,8 +46,11 @@ This plugin provides a comprehensive set of tools for:
 
 ## Philosophy
 
-Following strict TDD and systematic debugging practices. All features and bugfixes follow test-driven development, and root cause analysis is mandatory for any issue resolution.
+Following strict TDD and systematic debugging practices. All features and bugfixes
+follow test-driven development, and root cause analysis is mandatory for any issue
+resolution.
 
 ## Repository
 
-Part of the [dotfiles](https://github.com/baleen37/dotfiles) project - Nix flakes-based reproducible development environments for macOS and NixOS.
+Part of the [dotfiles](https://github.com/baleen37/dotfiles) project - Nix
+flakes-based reproducible development environments for macOS and NixOS.
