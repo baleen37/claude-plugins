@@ -888,3 +888,341 @@ EOF
   [ -f .ralph/.last-branch ]
   [ "$(cat .ralph/.last-branch)" = "null" ]
 }
+
+# Test: Script validates prd.json is valid JSON
+@test "ralph.sh: validates prd.json is valid JSON" {
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+
+  # Create invalid JSON file
+  echo "{ invalid json" > .ralph/prd.json
+
+  run bash "$RALPH_SCRIPT" 2
+  [ $status -ne 0 ]
+  [[ "$output" == *"not valid JSON"* ]]
+}
+
+# Test: Script validates prd.json has required fields
+@test "ralph.sh: validates prd.json has required fields" {
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+
+  # Create valid JSON but missing required field
+  echo '{"project": "test"}' > .ralph/prd.json
+
+  run bash "$RALPH_SCRIPT" 2
+  [ $status -ne 0 ]
+  [[ "$output" == *"missing required field"* ]]
+}
+
+# Test: Script has proper cleanup on SIGINT
+@test "ralph.sh: cleanup function removes PID file and shows exit info" {
+  run grep -A 5 "^cleanup()" "$RALPH_SCRIPT"
+  [[ "$output" == *"rm -f"* ]]
+  [[ "$output" == *"PID_FILE"* ]]
+}
+
+# Test: Script has INT signal handler
+@test "ralph.sh: has INT signal handler" {
+  run grep "trap.*INT" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has TERM signal handler
+@test "ralph.sh: has TERM signal handler" {
+  run grep "trap.*TERM" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has show_progress_summary function
+@test "ralph.sh: has show_progress_summary function" {
+  run grep "show_progress_summary()" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script calls show_progress_summary after iteration
+@test "ralph.sh: calls show_progress_summary after iteration" {
+  run grep -A 3 "Iteration.*finished, continuing" "$RALPH_SCRIPT"
+  [[ "$output" == *"show_progress_summary"* ]]
+}
+
+# Test: Script calls show_progress_summary on completion
+@test "ralph.sh: calls show_progress_summary on completion" {
+  run grep -B 3 -A 3 "Ralph completed" "$RALPH_SCRIPT"
+  [[ "$output" == *"show_progress_summary"* ]]
+}
+
+# === New State File Tests ===
+
+# Test: Script creates guardrails.md if missing
+@test "ralph.sh: creates guardrails.md if missing" {
+  create_prd
+  # Don't create guardrails.md
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # guardrails.md should be created
+  [ -f .ralph/guardrails.md ]
+  grep -q "# Ralph Guardrails" .ralph/guardrails.md
+}
+
+# Test: Script creates activity.log if missing
+@test "ralph.sh: creates activity.log if missing" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # activity.log should be created
+  [ -f .ralph/activity.log ]
+}
+
+# Test: Script creates errors.log if missing
+@test "ralph.sh: creates errors.log if missing" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # errors.log should be created
+  [ -f .ralph/errors.log ]
+}
+
+# Test: Script has guardrails file variable
+@test "ralph.sh: has GUARDRAILS_FILE variable" {
+  run grep -q 'GUARDRAILS_FILE=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'GUARDRAILS_FILE="\$RALPH_DIR/guardrails.md"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has activity log file variable
+@test "ralph.sh: has ACTIVITY_LOG variable" {
+  run grep -q 'ACTIVITY_LOG=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'ACTIVITY_LOG="\$RALPH_DIR/activity.log"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has errors log file variable
+@test "ralph.sh: has ERRORS_LOG variable" {
+  run grep -q 'ERRORS_LOG=' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  run grep 'ERRORS_LOG="\$RALPH_DIR/errors.log"' "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: Script has ensure_guardrails_file function
+@test "ralph.sh: has ensure_guardrails_file function" {
+  run grep "ensure_guardrails_file()" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: guardrails.md has proper header
+@test "ralph.sh: guardrails.md has proper header when created" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Check guardrails.md has proper structure
+  grep -q "# Ralph Guardrails" .ralph/guardrails.md
+  grep -q "Lessons Learned" .ralph/guardrails.md
+}
+
+# Test: Script archives guardrails.md when branch changes
+@test "ralph.sh: archives guardrails.md when branch changes" {
+  local first_branch="ralph/first-feature"
+  local second_branch="ralph/second-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Add custom content to guardrails.md
+  echo "## Custom guardrail" >> .ralph/guardrails.md
+
+  # Update PRD for second run with different branch
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive should contain guardrails.md
+  local archive_dir
+  archive_dir=$(find .ralph/archive -type d -name "*-first-feature" | head -1)
+  [ -f "$archive_dir/guardrails.md" ]
+
+  # Archived guardrails.md should contain our custom content
+  grep -q "Custom guardrail" "$archive_dir/guardrails.md"
+}
+
+# Test: Script archives activity.log when branch changes
+@test "ralph.sh: archives activity.log when branch changes" {
+  local first_branch="ralph/first-feature"
+  local second_branch="ralph/second-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Add custom content to activity.log
+  echo "2026-02-09T12:00:00Z - Iteration 1 started" >> .ralph/activity.log
+
+  # Update PRD for second run with different branch
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive should contain activity.log
+  local archive_dir
+  archive_dir=$(find .ralph/archive -type d -name "*-first-feature" | head -1)
+  [ -f "$archive_dir/activity.log" ]
+
+  # Archived activity.log should contain our custom content
+  grep -q "2026-02-09T12:00:00Z - Iteration 1 started" "$archive_dir/activity.log"
+}
+
+# Test: Script archives errors.log when branch changes
+@test "ralph.sh: archives errors.log when branch changes" {
+  local first_branch="ralph/first-feature"
+  local second_branch="ralph/second-feature"
+
+  # First run
+  create_prd "$first_branch"
+  create_progress
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/"* .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run first time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Add custom content to errors.log
+  echo "2026-02-09T12:00:00Z - ERROR: Test failure" >> .ralph/errors.log
+
+  # Update PRD for second run with different branch
+  create_prd "$second_branch"
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Run second time
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # Archive should contain errors.log
+  local archive_dir
+  archive_dir=$(find .ralph/archive -type d -name "*-first-feature" | head -1)
+  [ -f "$archive_dir/errors.log" ]
+
+  # Archived errors.log should contain our custom content
+  grep -q "2026-02-09T12:00:00Z - ERROR: Test failure" "$archive_dir/errors.log"
+}
