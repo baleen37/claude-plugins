@@ -1,16 +1,16 @@
 /**
  * V3 Observation-Only Search
  *
- * Simplified search using only observations table.
+ * Simplified search using only observations table with vector similarity.
  * Removed:
  * - exchange-based search
  * - multi-concept (array query) search
  * - vec_exchanges table usage
+ * - observations_fts table (full-text search)
  *
  * Uses:
  * - observations table (main storage)
  * - vec_observations table (vector embeddings)
- * - observations_fts table (full-text search)
  */
 
 import Database from 'better-sqlite3';
@@ -18,7 +18,6 @@ import { generateEmbedding, initEmbeddings } from './embeddings.js';
 
 export interface SearchOptions {
   limit?: number;
-  mode?: 'vector' | 'text' | 'both';
   after?: string;  // ISO date string
   before?: string; // ISO date string
   projects?: string[]; // Filter by project names
@@ -55,7 +54,7 @@ function isoToTimestamp(isoDate: string): number {
 }
 
 /**
- * Search observations using vector similarity, text matching, or both.
+ * Search observations using vector similarity search.
  * Returns compact observations (Layer 1 of progressive disclosure).
  *
  * @param query - Search query string
@@ -66,8 +65,7 @@ export async function search(
   query: string,
   options: SearchOptions & { db: Database.Database }
 ): Promise<CompactObservationResult[]> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { db, limit = 10, mode = 'both', after, before, projects, files } = options;
+  const { db, limit = 10, after, before, projects, files } = options;
 
   // Validate date parameters
   if (after) validateISODate(after, '--after');
@@ -106,121 +104,48 @@ export async function search(
     return files.some(filePath => content.includes(filePath));
   }
 
-  if (mode === 'vector' || mode === 'both') {
-    // Vector similarity search
-    await initEmbeddings();
-    const queryEmbedding = await generateEmbedding(query);
+  // Vector similarity search
+  await initEmbeddings();
+  const queryEmbedding = await generateEmbedding(query);
 
-    const stmt = db.prepare(`
-      SELECT
-        o.id,
-        o.title,
-        o.content,
-        o.project,
-        o.timestamp,
-        vec.distance
-      FROM observations o
-      INNER JOIN vec_observations vec ON CAST(o.id AS TEXT) = vec.id
-      WHERE vec.embedding MATCH ?
-        AND vec.k = ?
-        ${timeClause}
-        ${projectClause}
-      ORDER BY vec.distance ASC
-    `);
+  const stmt = db.prepare(`
+    SELECT
+      o.id,
+      o.title,
+      o.content,
+      o.project,
+      o.timestamp,
+      vec.distance
+    FROM observations o
+    INNER JOIN vec_observations vec ON CAST(o.id AS TEXT) = vec.id
+    WHERE vec.embedding MATCH ?
+      AND vec.k = ?
+      ${timeClause}
+      ${projectClause}
+    ORDER BY vec.distance ASC
+  `);
 
-    const vectorParams = [
-      Buffer.from(new Float32Array(queryEmbedding).buffer),
-      limit,
-      ...timeFilterParams,
-      ...projectFilterParams
-    ];
+  const vectorParams = [
+    Buffer.from(new Float32Array(queryEmbedding).buffer),
+    limit,
+    ...timeFilterParams,
+    ...projectFilterParams
+  ];
 
-    const vectorResults = stmt.all(...vectorParams) as any[];
+  const vectorResults = stmt.all(...vectorParams) as any[];
 
-    for (const row of vectorResults) {
-      // Filter by files if specified
-      if (!matchesFiles(row.content)) {
-        continue;
-      }
-
-      results.push({
-        id: row.id,
-        title: row.title,
-        project: row.project,
-        timestamp: row.timestamp
-      });
-    }
-  }
-
-  if (mode === 'text' || mode === 'both') {
-    // Text-based search using FTS
-    // Build filter conditions with proper table alias
-    const filterConditions: string[] = [];
-    const filterParams: (number | string)[] = [];
-
-    if (after) {
-      filterConditions.push('o.timestamp >= ?');
-      filterParams.push(isoToTimestamp(after));
-    }
-    if (before) {
-      filterConditions.push('o.timestamp <= ?');
-      filterParams.push(isoToTimestamp(before));
-    }
-    if (projects && projects.length > 0) {
-      const projectPlaceholders = projects.map(() => '?').join(',');
-      filterConditions.push(`o.project IN (${projectPlaceholders})`);
-      filterParams.push(...projects);
+  for (const row of vectorResults) {
+    // Filter by files if specified
+    if (!matchesFiles(row.content)) {
+      continue;
     }
 
-    const whereClause = filterConditions.length > 0 ? `AND ${filterConditions.join(' AND ')}` : '';
-
-    // Escape special FTS5 characters in the query
-    // FTS5 special characters: - " * ( ) < > AND OR NOT
-    // We'll wrap terms containing dots in quotes for exact phrase matching
-    const ftsQuery = query.includes('.') ? `"${query}"` : query;
-
-    const textStmt = db.prepare(`
-      SELECT
-        o.id,
-        o.title,
-        o.content,
-        o.project,
-        o.timestamp
-      FROM observations o
-      INNER JOIN observations_fts fts ON o.id = fts.rowid
-      WHERE observations_fts MATCH ?
-        ${whereClause}
-      ORDER BY o.timestamp DESC
-      LIMIT ?
-    `);
-
-    const textParams = [
-      ftsQuery,
-      ...filterParams,
-      limit
-    ];
-
-    const textResults = textStmt.all(...textParams) as any[];
-
-    for (const row of textResults) {
-      // Check if we already have this result from vector search
-      const existing = results.find(r => r.id === row.id);
-      if (existing) {
-        continue;
-      }
-
-      // Filter by files if specified
-      if (!matchesFiles(row.content)) {
-        continue;
-      }
-
-      results.push({
-        id: row.id,
-        title: row.title,
-        project: row.project,
-        timestamp: row.timestamp
-      });
-    }
+    results.push({
+      id: row.id,
+      title: row.title,
+      project: row.project,
+      timestamp: row.timestamp
+    });
   }
 
   return results;
