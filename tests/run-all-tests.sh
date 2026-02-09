@@ -4,6 +4,7 @@
 # This script runs all tests in the project:
 # 1. Root tests in tests/
 # 2. Plugin tests in plugins/*/tests/
+# 3. All tests run sequentially (no parallel execution)
 #
 # Exit code: 0 if all tests pass, 1 if any test fails
 
@@ -42,25 +43,25 @@ run_tests() {
     fi
 }
 
-# Function to run plugin tests in background
-run_plugin_tests_parallel() {
+# Function to run plugin tests sequentially
+run_plugin_tests() {
     local plugin_dir="$1"
     local plugin_name
     plugin_name=$(basename "${plugin_dir}")
 
     if [ -d "${plugin_dir}tests" ]; then
-        (
-            echo "========================================"
-            echo "Running plugin tests: ${plugin_name}"
-            echo "========================================"
+        echo "========================================"
+        echo "Running plugin tests: ${plugin_name}"
+        echo "========================================"
 
-            if bats "${plugin_dir}tests"; then
-                echo -e "${GREEN}✓ ${plugin_name} tests passed${NC}"
-            else
-                echo -e "${RED}✗ ${plugin_name} tests failed${NC}"
-                exit 1
-            fi
-        ) &
+        if bats "${plugin_dir}tests"; then
+            echo -e "${GREEN}✓ ${plugin_name} tests passed${NC}"
+        else
+            echo -e "${RED}✗ ${plugin_name} tests failed${NC}"
+            FAILED_TESTS+=("${plugin_name}")
+            FAILED_PLUGINS+=("${plugin_name}")
+            return 1
+        fi
     fi
 }
 
@@ -72,21 +73,14 @@ main() {
     # 1. Run root tests
     run_tests "${SCRIPT_DIR}" "Root tests"
 
-    # 2. Run plugin tests in parallel
+    # 2. Run plugin tests sequentially
     for plugin_dir in "${PROJECT_ROOT}"/plugins/*/; do
         if [ -d "${plugin_dir}" ]; then
-            run_plugin_tests_parallel "${plugin_dir}"
+            run_plugin_tests "${plugin_dir}"
         fi
     done
 
-    # 3. Wait for all background jobs and collect failures
-    for job in $(jobs -p); do
-        if ! wait "$job"; then
-            FAILED_TESTS+=("Plugin tests (background job)")
-        fi
-    done
-
-    # 4. Report results
+    # 3. Report results
     echo ""
     echo "========================================"
     echo "Test Results Summary"
@@ -101,7 +95,7 @@ main() {
             echo "  - ${failed_test}"
         done
         echo ""
-        echo -e "${RED}Failed plugins: ${FAILED_PLUGINS[*]}${NC}"
+        echo -e "${RED}Failed plugins: ${FAILED_PLUGINS[*]:-None}${NC}"
         exit 1
     fi
 }
