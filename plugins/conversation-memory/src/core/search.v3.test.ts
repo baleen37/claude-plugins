@@ -15,8 +15,8 @@ let mockGenerateEmbedding: (() => Promise<number[]>) | null = null;
 
 // Set up top-level mocks
 vi.mock('./embeddings.js', () => ({
-  initEmbeddings: vi.fn((): Promise<void> => Promise.resolve()),
-  generateEmbedding: vi.fn((): Promise<number[]> => Promise.resolve(mockGenerateEmbedding?.() ?? []))
+  initEmbeddings: vi.fn(() => Promise.resolve()),
+  generateEmbedding: vi.fn(() => Promise.resolve(mockGenerateEmbedding?.() ?? []))
 }));
 
 describe('search.v3 - observation-only search', () => {
