@@ -34,11 +34,26 @@ The user's task description: $ARGUMENTS
         "Typecheck passes"
       ],
       "priority": 1,
+      "status": "open",
+      "startedAt": null,
+      "completedAt": null,
       "passes": false
     }
   ]
 }
 ```
+
+**Status field values:**
+
+- `"open"` - Story not yet started (default)
+- `"in_progress"` - AI is actively working on this story
+- `"done"` - Story completed successfully
+
+**Timestamp fields:**
+
+- `startedAt` - ISO timestamp when status changes to "in_progress", null otherwise
+- `completedAt` - ISO timestamp when status changes to "done", null otherwise
+- `passes` - Boolean, true when story passes all acceptance criteria (kept for backward compatibility)
 
 ## `.ralph/progress.txt` Initial Content
 
