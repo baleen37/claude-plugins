@@ -19,10 +19,9 @@ import {
   formatObservationResults,
   ObservationSearchOptions,
 } from '../core/search.js';
-import { formatConversationAsMarkdown, readConversationFromDb } from '../core/show.js';
+import { readConversation } from '../core/read.js';
 import { initDatabase } from '../core/db.js';
 import { getObservationsByIds } from '../core/observations.js';
-import fs from 'fs';
 
 // Zod Schemas for Input Validation
 
@@ -353,15 +352,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const params = ShowConversationInputSchema.parse(args);
       const db = initDatabase();
       try {
-        // Try DB first (compressed, token-efficient)
-        const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
-        if (dbResult) {
-          return { content: [{ type: 'text', text: dbResult }] };
+        const result = readConversation(db, params.path, params.startLine, params.endLine);
+        if (result === null) {
+          throw new Error(`File not found: ${params.path}`);
         }
-        // Fallback: JSONL parsing for unindexed data
-        if (!fs.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
-        const jsonlContent = fs.readFileSync(params.path, 'utf-8');
-        return { content: [{ type: 'text', text: formatConversationAsMarkdown(jsonlContent, params.startLine, params.endLine) }] };
+        return { content: [{ type: 'text', text: result }] };
       } finally {
         db.close();
       }
