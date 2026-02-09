@@ -5,13 +5,13 @@
  * - pending_events: Temporary storage for tool events before LLM extraction
  * - observations: Long-term storage for extracted insights
  * - vec_observations: Vector embeddings for semantic search
- * - observations_fts: Full-text search index
  *
  * Removed tables (no migration):
  * - exchanges (use conversation-archive directly)
  * - vec_exchanges (no longer needed)
  * - tool_calls (no longer needed)
  * - session_summaries (moved to observations)
+ * - observations_fts (full-text search removed - use vector search only)
  */
 
 import Database from 'better-sqlite3';
@@ -54,7 +54,6 @@ export interface SearchOptionsV3 {
   after?: number;
   before?: number;
   limit?: number;
-  query?: string; // Full-text search query
 }
 
 /**
@@ -117,11 +116,6 @@ export function initDatabaseV3(): Database.Database {
       id TEXT PRIMARY KEY,
       embedding float[768]
     )
-  `);
-
-  // Create full-text search table for observations
-  db.exec(`
-    CREATE VIRTUAL TABLE observations_fts USING fts5(title, content)
   `);
 
   // Create indexes for pending_events
@@ -209,13 +203,6 @@ export function insertObservationV3(
     vecStmt.run(String(rowid), Buffer.from(new Float32Array(embedding).buffer));
   }
 
-  // Insert into FTS table
-  const ftsStmt = db.prepare(`
-    INSERT INTO observations_fts (rowid, title, content)
-    VALUES (?, ?, ?)
-  `);
-  ftsStmt.run(rowid, observation.title, observation.content);
-
   return rowid;
 }
 
@@ -286,74 +273,39 @@ export function searchObservationsV3(
   db: Database.Database,
   options: SearchOptionsV3 = {}
 ): ObservationResultV3[] {
-  const { project, sessionId, after, before, limit = 100, query } = options;
+  const { project, sessionId, after, before, limit = 100 } = options;
 
-  let sql: string;
   const params: any[] = [];
 
-  if (query) {
-    // Use full-text search
-    sql = `
-      SELECT o.id, o.title, o.content, o.project, o.session_id as sessionId, o.timestamp, o.created_at as createdAt
-      FROM observations o
-      INNER JOIN observations_fts fts ON o.id = fts.rowid
-      WHERE observations_fts MATCH ?
-    `;
-    params.push(query);
+  // Build query with optional filters
+  let sql = `
+    SELECT id, title, content, project, session_id as sessionId, timestamp, created_at as createdAt
+    FROM observations
+    WHERE 1=1
+  `;
 
-    if (project) {
-      sql += ' AND o.project = ?';
-      params.push(project);
-    }
-
-    if (sessionId) {
-      sql += ' AND o.session_id = ?';
-      params.push(sessionId);
-    }
-
-    if (after) {
-      sql += ' AND o.timestamp >= ?';
-      params.push(after);
-    }
-
-    if (before) {
-      sql += ' AND o.timestamp <= ?';
-      params.push(before);
-    }
-
-    sql += ' ORDER BY o.timestamp DESC LIMIT ?';
-    params.push(limit);
-  } else {
-    // Regular query without full-text search
-    sql = `
-      SELECT id, title, content, project, session_id as sessionId, timestamp, created_at as createdAt
-      FROM observations
-      WHERE 1=1
-    `;
-
-    if (project) {
-      sql += ' AND project = ?';
-      params.push(project);
-    }
-
-    if (sessionId) {
-      sql += ' AND session_id = ?';
-      params.push(sessionId);
-    }
-
-    if (after) {
-      sql += ' AND timestamp >= ?';
-      params.push(after);
-    }
-
-    if (before) {
-      sql += ' AND timestamp <= ?';
-      params.push(before);
-    }
-
-    sql += ' ORDER BY timestamp DESC LIMIT ?';
-    params.push(limit);
+  if (project) {
+    sql += ' AND project = ?';
+    params.push(project);
   }
+
+  if (sessionId) {
+    sql += ' AND session_id = ?';
+    params.push(sessionId);
+  }
+
+  if (after) {
+    sql += ' AND timestamp >= ?';
+    params.push(after);
+  }
+
+  if (before) {
+    sql += ' AND timestamp <= ?';
+    params.push(before);
+  }
+
+  sql += ' ORDER BY timestamp DESC LIMIT ?';
+  params.push(limit);
 
   const stmt = db.prepare(sql);
   return stmt.all(...params) as ObservationResultV3[];
@@ -387,9 +339,6 @@ export function deleteObservationV3(
 
   // Delete from vector table
   db.prepare('DELETE FROM vec_observations WHERE id = ?').run(idStr);
-
-  // Delete from FTS table
-  db.prepare('DELETE FROM observations_fts WHERE rowid = ?').run(id);
 
   // Delete from main table
   const stmt = db.prepare('DELETE FROM observations WHERE id = ?');

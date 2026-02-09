@@ -25,7 +25,6 @@ describe('Database V3 Schema', () => {
       expect(tableNames).toContain('observations');
       expect(tableNames).toContain('pending_events');
       expect(tableNames).toContain('vec_observations');
-      expect(tableNames).toContain('observations_fts');
 
       // Old tables should NOT exist
       expect(tableNames).not.toContain('exchanges');
@@ -89,16 +88,6 @@ describe('Database V3 Schema', () => {
       expect(tableInfo?.sql).toContain('embedding');
     });
 
-    test('creates observations_fts full-text search table', () => {
-      const tableInfo = db.prepare(`
-        SELECT sql FROM sqlite_master WHERE type='table' AND name='observations_fts'
-      `).get() as { sql: string } | undefined;
-
-      expect(tableInfo).toBeDefined();
-      expect(tableInfo?.sql).toContain('fts5');
-      expect(tableInfo?.sql).toContain('title');
-      expect(tableInfo?.sql).toContain('content');
-    });
 
     test('creates proper indexes', () => {
       const indexes = db.prepare(`
@@ -271,24 +260,6 @@ describe('Database V3 Schema', () => {
       expect(vecRow.embedding.length).toBe(768 * 4); // 768 floats * 4 bytes
     });
 
-    test('inserts into observations_fts for full-text search', () => {
-      insertObservationV3(db, {
-        title: 'Searchable Title',
-        content: 'Searchable content with keywords',
-        project: 'project',
-        timestamp: Date.now(),
-        createdAt: Date.now(),
-      });
-
-      // FTS5 table should have the content
-      const ftsRow = db.prepare(`
-        SELECT * FROM observations_fts WHERE rowid = 1
-      `).get() as any;
-
-      expect(ftsRow).toBeDefined();
-      expect(ftsRow.title).toBe('Searchable Title');
-      expect(ftsRow.content).toBe('Searchable content with keywords');
-    });
 
     test('handles multi-byte UTF-8 characters', () => {
       const utf8Data = 'Hello 世界 🌍 Korean: 한국어';
@@ -568,15 +539,6 @@ describe('Database V3 Schema', () => {
       expect(results[0]).toHaveProperty('sessionId');
       expect(results[0]).toHaveProperty('timestamp');
       expect(results[0]).toHaveProperty('createdAt');
-    });
-
-    test('performs full-text search on title and content', () => {
-      const results = searchObservationsV3(db, {
-        query: 'database',
-      });
-
-      expect(results.length).toBeGreaterThanOrEqual(1);
-      expect(results.some(r => r.title.toLowerCase().includes('database') || r.content.toLowerCase().includes('database'))).toBe(true);
     });
   });
 

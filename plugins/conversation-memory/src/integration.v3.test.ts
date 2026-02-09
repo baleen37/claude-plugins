@@ -372,7 +372,6 @@ describe('V3 Integration Tests', () => {
       const results = await searchV3('authentication', {
         db,
         limit: 10,
-        mode: 'both',
       });
 
       // Should return compact results
@@ -449,7 +448,6 @@ describe('V3 Integration Tests', () => {
       const results = await searchV3('feature', {
         db,
         limit: 10,
-        mode: 'both',
         projects: ['project-a'],
       });
 
@@ -489,7 +487,6 @@ describe('V3 Integration Tests', () => {
       const results = await searchV3('observation', {
         db,
         limit: 10,
-        mode: 'both',
         after: afterDate,
         before: beforeDate,
       });
@@ -525,7 +522,6 @@ describe('V3 Integration Tests', () => {
       const results = await searchV3('auth', {
         db,
         limit: 10,
-        mode: 'both',
         files: ['/src/auth.ts'],
       });
 
@@ -616,7 +612,6 @@ describe('V3 Integration Tests', () => {
       const searchResults = await searchV3('auth verify', {
         db,
         limit: 10,
-        mode: 'both',
       });
 
       expect(searchResults).toHaveLength(3);
@@ -661,14 +656,12 @@ describe('V3 Integration Tests', () => {
       const resultsA = await searchV3('fix', {
         db,
         limit: 10,
-        mode: 'both',
         projects: ['project-a'],
       });
 
       const resultsB = await searchV3('fix', {
         db,
         limit: 10,
-        mode: 'both',
         projects: ['project-b'],
       });
 

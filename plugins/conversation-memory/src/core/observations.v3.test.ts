@@ -86,14 +86,6 @@ describe('observations.v3', () => {
       expect(vecResult).toBeDefined();
       expect(Buffer.isBuffer(vecResult.embedding)).toBe(true);
       expect(vecResult.embedding.length).toBe(768 * 4); // 768 floats * 4 bytes
-
-      // Check FTS table
-      const ftsStmt = db.prepare('SELECT * FROM observations_fts WHERE rowid = ?');
-      const ftsResult = ftsStmt.get(id);
-
-      expect(ftsResult).toBeDefined();
-      expect(ftsResult.title).toBe('Test');
-      expect(ftsResult.content).toBe('Content');
     });
 
     it('should use provided timestamp', async () => {
@@ -301,10 +293,6 @@ describe('observations.v3', () => {
       // Check vector table
       const vec = db.prepare('SELECT * FROM vec_observations WHERE id = ?').get(String(id));
       expect(vec).toBeUndefined();
-
-      // Check FTS table
-      const fts = db.prepare('SELECT * FROM observations_fts WHERE rowid = ?').get(id);
-      expect(fts).toBeUndefined();
     });
 
     it('should handle deleting non-existent id', async () => {

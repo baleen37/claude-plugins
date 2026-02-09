@@ -13,17 +13,12 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { z } from 'zod';
 
 // Re-define V3 schemas for testing
-const SearchModeEnum = z.enum(['vector', 'text', 'both']);
-
 const SearchInputSchemaV3 = z
   .object({
     query: z
       .string()
       .min(2, 'Query must be at least 2 characters')
       .describe('Search query string'),
-    mode: SearchModeEnum.default('both').describe(
-      'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
-    ),
     limit: z
       .number()
       .int()
@@ -181,38 +176,6 @@ describe('V3 MCP Server - search tool', () => {
 
     test('rejects array query (V3 only accepts strings)', async () => {
       const result = await mockToolCallV3('search', { query: ['concept1', 'concept2'] } as any);
-
-      expect(result.isError).toBe(true);
-    });
-  });
-
-  describe('Mode parameter validation', () => {
-    test('accepts "vector" mode', async () => {
-      const result = await mockToolCallV3('search', { query: 'test', mode: 'vector' });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('accepts "text" mode', async () => {
-      const result = await mockToolCallV3('search', { query: 'test', mode: 'text' });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('accepts "both" mode', async () => {
-      const result = await mockToolCallV3('search', { query: 'test', mode: 'both' });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('defaults to "both" mode when not specified', async () => {
-      const result = await mockToolCallV3('search', { query: 'test' });
-
-      expect(result.isError).toBe(false);
-    });
-
-    test('rejects invalid mode value', async () => {
-      const result = await mockToolCallV3('search', { query: 'test', mode: 'invalid' as any });
 
       expect(result.isError).toBe(true);
     });
