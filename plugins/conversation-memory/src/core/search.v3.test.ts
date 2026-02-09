@@ -8,7 +8,7 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { initDatabaseV3, insertObservationV3 } from './db.v3.js';
-import { applyRecencyBoost, search, type SearchOptions } from './search.v3.js';
+import { search, type SearchOptions } from './search.v3.js';
 
 // Global mock factory that can be controlled per test
 let mockGenerateEmbedding: (() => Promise<number[]>) | null = null;
@@ -58,91 +58,6 @@ describe('search.v3 - observation-only search', () => {
       createdAt: observation.timestamp
     }, embedding);
   }
-
-  describe('applyRecencyBoost', () => {
-    // Fixed reference date for consistent testing
-    const fixedReferenceDate = new Date('2026-02-08T00:00:00Z').getTime();
-
-    beforeEach(() => {
-      vi.useFakeTimers();
-      vi.setSystemTime(fixedReferenceDate);
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    test('should boost by 1.15 for today (days=0)', () => {
-      const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-      const result = applyRecencyBoost(0.8, today);
-      // Boost = 1.15, so 0.8 * 1.15 = 0.92
-      expect(result).toBeCloseTo(0.92, 2);
-    });
-
-    test('should have boost of 1.15 for days=0', () => {
-      const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, today);
-      // Boost = 1.15, so 1.0 * 1.15 = 1.15
-      expect(result).toBeCloseTo(1.15, 2);
-    });
-
-    test('should have boost of 1.0 for days=90', () => {
-      // 90 days ago from fixed reference date
-      const ninetyDaysAgo = new Date(fixedReferenceDate - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, ninetyDaysAgo);
-      // Boost = 1.0, so 1.0 * 1.0 = 1.0
-      expect(result).toBeCloseTo(1.0, 2);
-    });
-
-    test('should have boost of 0.85 for days=180', () => {
-      // 180 days ago from fixed reference date
-      const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
-      // Boost = 0.85, so 1.0 * 0.85 = 0.85
-      expect(result).toBeCloseTo(0.85, 2);
-    });
-
-    test('should clamp boost to 0.85 for days=270 (beyond 180)', () => {
-      // 270 days ago from fixed reference date
-      const twoSeventyDaysAgo = new Date(fixedReferenceDate - 270 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, twoSeventyDaysAgo);
-      // Boost should be clamped at 0.85
-      expect(result).toBeCloseTo(0.85, 2);
-    });
-
-    test('should interpolate boost correctly for days=45', () => {
-      // 45 days ago from fixed reference date
-      const fortyFiveDaysAgo = new Date(fixedReferenceDate - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, fortyFiveDaysAgo);
-      // Boost = 1.075, so 1.0 * 1.075 = 1.075
-      expect(result).toBeCloseTo(1.075, 2);
-    });
-
-    test('should apply boost correctly with similarity=0.8 and days=0', () => {
-      const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-      const result = applyRecencyBoost(0.8, today);
-      // Boost = 1.15, so 0.8 * 1.15 = 0.92
-      expect(result).toBeCloseTo(0.92, 2);
-    });
-
-    test('should handle edge case of very old dates (beyond 180 days)', () => {
-      // Very old date - should be clamped at 0.85
-      const result = applyRecencyBoost(0.5, '2020-01-01');
-      expect(result).toBeCloseTo(0.425, 2);
-    });
-
-    test('should handle similarity of 0', () => {
-      const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-      const result = applyRecencyBoost(0, today);
-      expect(result).toBe(0);
-    });
-
-    test('should handle similarity of 1 with no boost effect on product', () => {
-      const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
-      expect(result).toBeCloseTo(0.85, 2);
-    });
-  });
 
   describe('validateISODate (via search)', () => {
     test('should accept valid ISO date format', async () => {
@@ -242,7 +157,7 @@ describe('search.v3 - observation-only search', () => {
       const results = await search('authentication', { db, mode: 'text' });
 
       expect(results.length).toBeGreaterThanOrEqual(1);
-      expect(results.some(r => r.title.toLowerCase().includes('authentication') || r.content.toLowerCase().includes('authentication'))).toBe(true);
+      expect(results.some(r => r.title.toLowerCase().includes('authentication'))).toBe(true);
     });
 
     test('should search in both title and content', async () => {
@@ -356,38 +271,6 @@ describe('search.v3 - observation-only search', () => {
       const results = await search('authentication', { db, mode: 'vector' });
 
       expect(results.length).toBeGreaterThan(0);
-      expect(results[0]).toHaveProperty('similarity');
-      expect(typeof results[0].similarity).toBe('number');
-    });
-
-    test('should apply recency boost to vector results', async () => {
-      // Fixed reference date for testing
-      const fixedReferenceDate = new Date('2026-02-08T00:00:00Z').getTime();
-      vi.useFakeTimers();
-      vi.setSystemTime(fixedReferenceDate);
-
-      const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-
-      // Insert an observation from today
-      insertTestObservation(db, {
-        title: 'Recent observation',
-        content: 'Content from today',
-        project: 'test-project',
-        timestamp: fixedReferenceDate
-      }, createTestEmbedding(4));
-
-      mockGenerateEmbedding = () => createTestEmbedding(4);
-
-      const results = await search('recent', { db, mode: 'vector' });
-
-      const recentResult = results.find(r => r.title === 'Recent observation');
-      expect(recentResult).toBeDefined();
-      // The similarity should be boosted (> base similarity)
-      if (recentResult && recentResult.similarity !== undefined) {
-        expect(recentResult.similarity).toBeGreaterThan(0.8);
-      }
-
-      vi.useRealTimers();
     });
 
     test('should respect limit in vector mode', async () => {
@@ -460,21 +343,15 @@ describe('search.v3 - observation-only search', () => {
       expect(uniqueIds.size).toBe(ids.length);
     });
 
-    test('should prioritize vector results with similarity scores', async () => {
+    test('should combine vector and text results without duplicates', async () => {
       mockGenerateEmbedding = () => createTestEmbedding(30);
 
       const results = await search('both', { db, mode: 'both' });
 
-      // Results with similarity should come first
-      const hasSimilarity = results.filter(r => r.similarity !== undefined);
-      const noSimilarity = results.filter(r => r.similarity === undefined);
-
-      // All vector results should appear before text-only results
-      if (hasSimilarity.length > 0 && noSimilarity.length > 0) {
-        const lastWithSim = results.lastIndexOf(hasSimilarity[hasSimilarity.length - 1]);
-        const firstWithoutSim = results.indexOf(noSimilarity[0]);
-        expect(lastWithSim).toBeLessThan(firstWithoutSim);
-      }
+      // Check that there are no duplicate IDs
+      const ids = results.map(r => r.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
     });
   });
 
@@ -499,7 +376,8 @@ describe('search.v3 - observation-only search', () => {
       expect(results[0]).toHaveProperty('title');
       expect(results[0]).toHaveProperty('project');
       expect(results[0]).toHaveProperty('timestamp');
-      expect(results[0]).toHaveProperty('similarity');
+      // Should NOT have similarity field
+      expect(results[0]).not.toHaveProperty('similarity');
     });
 
     test('should not include content in compact results', async () => {
@@ -518,62 +396,15 @@ describe('search.v3 - observation-only search', () => {
       expect(results[0]).not.toHaveProperty('sessionId');
     });
 
-    test('should return similarity as number for vector mode', async () => {
+    test('should not include similarity field in results', async () => {
       mockGenerateEmbedding = () => createTestEmbedding(1);
 
-      const results = await search('test', { db, mode: 'vector' });
+      const vectorResults = await search('test', { db, mode: 'vector' });
+      const textResults = await search('test', { db, mode: 'text' });
 
-      expect(results[0].similarity).toBeDefined();
-      expect(typeof results[0].similarity).toBe('number');
-    });
-
-    test('should return undefined similarity for text mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
-
-      const results = await search('test', { db, mode: 'text' });
-
-      expect(results[0].similarity).toBeUndefined();
-    });
-
-    test('should order results by similarity (vector mode)', async () => {
-      const now = Date.now();
-
-      insertTestObservation(db, {
-        title: 'Low similarity',
-        content: 'Low',
-        project: 'test-project',
-        timestamp: now - 2000
-      }, createTestEmbedding(100));
-
-      insertTestObservation(db, {
-        title: 'High similarity',
-        content: 'High',
-        project: 'test-project',
-        timestamp: now - 1000
-      }, createTestEmbedding(1));
-
-      // Mock embedding similar to "High similarity"
-      mockGenerateEmbedding = () => createTestEmbedding(1);
-
-      const results = await search('test', { db, mode: 'vector' });
-
-      // Results should be ordered by similarity (highest first)
-      for (let i = 1; i < results.length; i++) {
-        if (results[i].similarity !== undefined && results[i - 1].similarity !== undefined) {
-          expect(results[i].similarity).toBeLessThanOrEqual(results[i - 1].similarity);
-        }
-      }
-    });
-
-    test('should order text results by timestamp (newest first)', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
-
-      const results = await search('test', { db, mode: 'text' });
-
-      // Text results should be ordered by timestamp descending
-      for (let i = 1; i < results.length; i++) {
-        expect(results[i].timestamp).toBeLessThanOrEqual(results[i - 1].timestamp);
-      }
+      // Neither mode should include similarity
+      vectorResults.forEach(r => expect(r).not.toHaveProperty('similarity'));
+      textResults.forEach(r => expect(r).not.toHaveProperty('similarity'));
     });
   });
 

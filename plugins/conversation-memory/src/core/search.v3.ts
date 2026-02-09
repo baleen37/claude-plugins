@@ -16,10 +16,6 @@
 import Database from 'better-sqlite3';
 import { generateEmbedding, initEmbeddings } from './embeddings.js';
 
-// Constants for recency boost calculation
-const BOOST_FACTOR = 0.3;
-const BOOST_MIDPOINT = 0.5;
-
 export interface SearchOptions {
   limit?: number;
   mode?: 'vector' | 'text' | 'both';
@@ -36,7 +32,6 @@ export interface CompactObservationResult {
   title: string;
   project: string;
   timestamp: number;
-  similarity?: number;
 }
 
 function validateISODate(dateStr: string, paramName: string): void {
@@ -56,32 +51,6 @@ function validateISODate(dateStr: string, paramName: string): void {
  */
 function isoToTimestamp(isoDate: string): number {
   return new Date(isoDate).getTime();
-}
-
-/**
- * Apply recency boost to similarity scores based on timestamp.
- * Uses linear decay: today = ×1.15, 90 days = ×1.0, 180+ days = ×0.85
- *
- * @param similarity - The base similarity score (0-1)
- * @param isoTimestamp - ISO timestamp string of the observation
- * @returns The boosted similarity score
- */
-export function applyRecencyBoost(similarity: number, isoTimestamp: string): number {
-  const now = new Date();
-  const then = new Date(isoTimestamp);
-  const diffTime = Math.abs(now.getTime() - then.getTime());
-  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  // Clamp days to maximum of 180 for the boost calculation
-  const t = Math.min(days / 180, 1);
-
-  // Formula: similarity * (1 + BOOST_FACTOR * (BOOST_MIDPOINT - t))
-  // When t=0 (today): 1 + BOOST_FACTOR * BOOST_MIDPOINT = 1.15
-  // When t=0.5 (90 days): 1 + BOOST_FACTOR * 0 = 1.0
-  // When t=1.0 (180+ days): 1 + BOOST_FACTOR * (-BOOST_MIDPOINT) = 0.85
-  const boost = 1 + BOOST_FACTOR * (BOOST_MIDPOINT - t);
-
-  return similarity * boost;
 }
 
 /**
@@ -150,7 +119,7 @@ export async function search(
 
     const vectorParams = [
       Buffer.from(new Float32Array(queryEmbedding).buffer),
-      limit * 2, // Get more results for better recency boost sorting
+      limit,
       ...timeFilterParams,
       ...projectFilterParams
     ];
@@ -158,17 +127,11 @@ export async function search(
     const vectorResults = stmt.all(...vectorParams) as any[];
 
     for (const row of vectorResults) {
-      // Convert distance to similarity (1 - distance for cosine distance)
-      const similarity = Math.max(0, 1 - row.distance);
-      const isoTimestamp = new Date(row.timestamp).toISOString();
-      const boostedSimilarity = applyRecencyBoost(similarity, isoTimestamp);
-
       results.push({
         id: row.id,
         title: row.title,
         project: row.project,
-        timestamp: row.timestamp,
-        similarity: boostedSimilarity
+        timestamp: row.timestamp
       });
     }
   }
@@ -217,7 +180,7 @@ export async function search(
     const textParams = [
       ftsQuery,
       ...filterParams,
-      limit * 2
+      limit
     ];
 
     const textResults = textStmt.all(...textParams) as any[];
@@ -233,26 +196,10 @@ export async function search(
         id: row.id,
         title: row.title,
         project: row.project,
-        timestamp: row.timestamp,
-        similarity: undefined // No similarity score for text-only results
+        timestamp: row.timestamp
       });
     }
   }
 
-  // Sort by similarity (highest first) then by timestamp
-  results.sort((a, b) => {
-    if (a.similarity !== undefined && b.similarity !== undefined) {
-      return b.similarity - a.similarity;
-    }
-    if (a.similarity !== undefined) {
-      return -1;
-    }
-    if (b.similarity !== undefined) {
-      return 1;
-    }
-    return b.timestamp - a.timestamp;
-  });
-
-  // Apply limit
-  return results.slice(0, limit);
+  return results;
 }
