@@ -1,9 +1,8 @@
 /**
  * Read tool for Layer 3 of progressive disclosure - reading raw conversation transcripts.
  *
- * This module provides functions to read conversation data from either:
- * 1. Legacy database (exchanges table) for backward compatibility
- * 2. JSONL files directly (primary method for V3)
+ * This module provides functions to read conversation data from JSONL files.
+ * In V3, raw conversation data is stored directly in JSONL files, not in the database.
  *
  * The read tool supports startLine/endLine pagination for large conversations
  * using 1-indexed line numbers as per spec.
@@ -35,31 +34,14 @@ interface ConversationMessage {
   toolUseResult?: Array<{ type: string; text: string }> | string;
 }
 
-interface DbExchange {
-  id: string;
-  timestamp: string;
-  user_message: string;
-  assistant_message: string;
-  archive_path: string;
-  line_start: number;
-  line_end: number;
-  session_id: string | null;
-  cwd: string | null;
-  git_branch: string | null;
-  claude_version: string | null;
-  is_sidechain: 0 | 1;
-  compressed_tool_summary: string | null;
-}
-
 /**
- * Read conversation from either DB or JSONL file.
+ * Read conversation from JSONL file.
  *
- * Priority:
- * 1. Try reading from legacy DB (exchanges table) if available
- * 2. Fall back to reading JSONL file directly
+ * In V3, conversations are read directly from JSONL files.
+ * The database is not used for storing raw conversation data.
  *
- * @param db - Database instance (may have legacy exchanges table)
- * @param path - Path to conversation (archive path or JSONL file path)
+ * @param db - Database instance (unused, kept for API compatibility)
+ * @param path - Path to JSONL file
  * @param startLine - Starting line number (1-indexed, inclusive)
  * @param endLine - Ending line number (1-indexed, inclusive)
  * @returns Markdown formatted conversation or null if not found
@@ -70,162 +52,18 @@ export function readConversation(
   startLine?: number,
   endLine?: number
 ): string | null {
-  // First, try to read from legacy DB (exchanges table)
-  const dbResult = readConversationFromDb(db, path, startLine, endLine);
-  if (dbResult) {
-    return dbResult;
-  }
-
-  // Fall back to JSONL file reading
+  // Check if file exists
   if (!fs.existsSync(path)) {
     return null;
   }
 
+  // Read and format JSONL file
   const jsonlContent = fs.readFileSync(path, 'utf-8');
   return formatConversationAsMarkdown(jsonlContent, startLine, endLine);
 }
 
 /**
- * Read conversation from legacy database (exchanges table).
- *
- * This is kept for backward compatibility with existing databases.
- * In V3, conversations are not stored in the DB - they are read directly from JSONL files.
- *
- * @param db - Database instance with exchanges table
- * @param archivePath - Archive path to look up in exchanges table
- * @param startLine - Starting line number (1-indexed, inclusive)
- * @param endLine - Ending line number (1-indexed, inclusive)
- * @returns Markdown formatted conversation or null if not found
- */
-export function readConversationFromDb(
-  db: Database.Database,
-  archivePath: string,
-  startLine?: number,
-  endLine?: number
-): string | null {
-  // Check if exchanges table exists
-  const tableExists = db.prepare(`
-    SELECT name FROM sqlite_master WHERE type='table' AND name='exchanges'
-  `).get() as { name: string } | undefined;
-
-  if (!tableExists) {
-    return null;
-  }
-
-  // Build query with line range filters if provided
-  let whereClause = 'WHERE archive_path = ?';
-  const params: (string | number)[] = [archivePath];
-
-  if (startLine !== undefined) {
-    whereClause += ' AND line_end >= ?';
-    params.push(startLine);
-  }
-  if (endLine !== undefined) {
-    whereClause += ' AND line_start <= ?';
-    params.push(endLine);
-  }
-
-  const query = `
-    SELECT
-      id,
-      timestamp,
-      user_message,
-      assistant_message,
-      archive_path,
-      line_start,
-      line_end,
-      session_id,
-      cwd,
-      git_branch,
-      claude_version,
-      is_sidechain,
-      compressed_tool_summary
-    FROM exchanges
-    ${whereClause}
-    ORDER BY line_start ASC
-  `;
-
-  const exchanges = db.prepare(query).all(...params) as DbExchange[];
-
-  if (exchanges.length === 0) {
-    return null;
-  }
-
-  // Build output starting with header
-  let output = '# Conversation\n\n';
-
-  // Add metadata from first exchange
-  const firstExchange = exchanges[0];
-  output += '## Metadata\n\n';
-  if (firstExchange.session_id) {
-    output += `**Session ID:** ${firstExchange.session_id}\n\n`;
-  }
-  if (firstExchange.git_branch) {
-    output += `**Git Branch:** ${firstExchange.git_branch}\n\n`;
-  }
-  if (firstExchange.cwd) {
-    output += `**Working Directory:** ${firstExchange.cwd}\n\n`;
-  }
-  if (firstExchange.claude_version) {
-    output += `**Claude Code Version:** ${firstExchange.claude_version}\n\n`;
-  }
-
-  output += '---\n\n';
-  output += '## Messages\n\n';
-
-  let inSidechain = false;
-
-  for (const exchange of exchanges) {
-    const timestamp = new Date(exchange.timestamp).toLocaleString();
-
-    // Handle sidechain grouping
-    if (exchange.is_sidechain && !inSidechain) {
-      output += '\n---\n';
-      output += '**🔀 SIDECHAIN START**\n';
-      output += '---\n\n';
-      inSidechain = true;
-    } else if (!exchange.is_sidechain && inSidechain) {
-      output += '\n---\n';
-      output += '**🔀 SIDECHAIN END**\n';
-      output += '---\n\n';
-      inSidechain = false;
-    }
-
-    // Determine role label
-    const roleLabel = exchange.is_sidechain ? 'Agent' : 'User';
-
-    // User message
-    output += `### **${roleLabel}** (${timestamp})\n\n`;
-    output += `${exchange.user_message}\n\n`;
-
-    // Assistant message
-    const agentRoleLabel = exchange.is_sidechain ? 'Subagent' : 'Agent';
-    output += `### **${agentRoleLabel}** (${timestamp})\n\n`;
-    output += `${exchange.assistant_message}\n\n`;
-
-    // Add compressed tool summary if available
-    if (exchange.compressed_tool_summary) {
-      output += '**Tools:** ' + exchange.compressed_tool_summary + '\n\n';
-    }
-
-    output += '---\n\n';
-  }
-
-  // Close sidechain if still open
-  if (inSidechain) {
-    output += '\n---\n';
-    output += '**🔀 SIDECHAIN END**\n';
-    output += '---\n\n';
-  }
-
-  return output;
-}
-
-/**
  * Format JSONL conversation as markdown.
- *
- * This is the primary method for reading conversations in V3,
- * as raw conversation data is stored in JSONL files, not in the database.
  *
  * @param jsonl - JSONL string containing conversation messages
  * @param startLine - Starting line number (1-indexed, inclusive)
