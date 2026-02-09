@@ -26,17 +26,12 @@ import { initDatabaseV3 } from '../core/db.v3.js';
 
 // Zod Schemas for Input Validation
 
-const SearchModeEnum = z.enum(['vector', 'text', 'both']);
-
 const SearchInputSchema = z
   .object({
     query: z
       .string()
       .min(2, 'Query must be at least 2 characters')
       .describe('Search query string'),
-    mode: SearchModeEnum.default('both').describe(
-      'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
-    ),
     limit: z
       .number()
       .int()
@@ -143,12 +138,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: 'string',
               minLength: 2,
               description: 'Search query string'
-            },
-            mode: {
-              type: 'string',
-              enum: ['vector', 'text', 'both'],
-              default: 'both',
-              description: 'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
             },
             limit: {
               type: 'number',
@@ -267,7 +256,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const results = await searchV3(params.query, {
           db,
           limit: params.limit,
-          mode: params.mode,
           after: params.after,
           before: params.before,
           projects: params.projects,
