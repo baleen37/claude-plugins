@@ -540,15 +540,6 @@ describe('Database V3 Schema', () => {
       expect(results[0]).toHaveProperty('timestamp');
       expect(results[0]).toHaveProperty('createdAt');
     });
-
-    test('performs full-text search on title and content', () => {
-      const results = searchObservationsV3(db, {
-        query: 'database',
-      });
-
-      expect(results.length).toBeGreaterThanOrEqual(1);
-      expect(results.some(r => r.title.toLowerCase().includes('database') || r.content.toLowerCase().includes('database'))).toBe(true);
-    });
   });
 
   describe('getObservationV3', () => {

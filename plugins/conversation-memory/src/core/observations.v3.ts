@@ -228,10 +228,9 @@ export async function searchByVector(
 /**
  * Delete an observation by ID.
  *
- * Deletes from all three tables:
+ * Deletes from both tables:
  * - observations (main table)
  * - vec_observations (vector embeddings)
- * - observations_fts (full-text search index)
  *
  * Note: Named 'deleteObservation' instead of 'delete' because delete is a reserved word.
  *
