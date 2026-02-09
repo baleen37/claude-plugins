@@ -1226,3 +1226,157 @@ EOF
   # Archived errors.log should contain our custom content
   grep -q "2026-02-09T12:00:00Z - ERROR: Test failure" "$archive_dir/errors.log"
 }
+
+# Test: Script logs successful iteration to activity.log
+@test "ralph.sh: logs successful iteration to activity.log" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it after it starts
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # activity.log should exist and have a success entry
+  [ -f .ralph/activity.log ]
+  # Check for SUCCESS status in the log
+  grep -q "STATUS=SUCCESS" .ralph/activity.log
+}
+
+# Test: Script logs failed iteration with ERROR status
+@test "ralph.sh: logs failed iteration with ERROR status" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Create a mock claude that exits with code 1 (transient error)
+  cat > "$MOCK_CLAUDE" <<'EOF'
+#!/bin/bash
+# Mock claude that fails with exit code 1
+if [[ "$*" == *"--print"* ]]; then
+  cat >/dev/null
+  exit 1
+fi
+echo "Mock claude command"
+EOF
+  chmod +x "$MOCK_CLAUDE"
+
+  # Run ralph.sh - it should continue after exit code 1
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # activity.log should have ERROR status entry
+  [ -f .ralph/activity.log ]
+  grep -q "STATUS=ERROR" .ralph/activity.log
+}
+
+# Test: Script logs iteration with START and END timestamps
+@test "ralph.sh: logs iteration with START and END timestamps" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Run ralph.sh in background and kill it
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # activity.log should have START and END timestamps
+  [ -f .ralph/activity.log ]
+  # Check for START= timestamp format
+  grep -q "START=" .ralph/activity.log
+  # Check for END= timestamp format
+  grep -q "END=" .ralph/activity.log
+}
+
+# Test: Script logs Claude command failure to errors.log
+@test "ralph.sh: logs Claude command failure to errors.log" {
+  create_prd
+
+  cd "$TEST_GIT_DIR"
+  mkdir -p .ralph
+  cp "$TEST_RALPH_DIR/prd.json" .ralph/
+
+  # Create an initial commit
+  echo "test" > test.txt
+  git add test.txt
+  git commit -q -m "Initial commit" 2>/dev/null || true
+
+  # Create a mock claude that exits with code 1
+  cat > "$MOCK_CLAUDE" <<'EOF'
+#!/bin/bash
+# Mock claude that fails with exit code 1
+if [[ "$*" == *"--print"* ]]; then
+  cat >/dev/null
+  exit 1
+fi
+echo "Mock claude command"
+EOF
+  chmod +x "$MOCK_CLAUDE"
+
+  # Run ralph.sh - it should continue after exit code 1
+  bash "$RALPH_SCRIPT" 1 >/dev/null 2>&1 &
+  ralph_pid=$!
+  sleep 0.5
+  kill $ralph_pid 2>/dev/null || true
+  wait $ralph_pid 2>/dev/null || true
+
+  # errors.log should have an entry about the failure
+  [ -f .ralph/errors.log ]
+  # Check for error log entry with exit code
+  grep -q "failed with exit code" .ralph/errors.log
+}
+
+# Test: Script uses get_guardrails_template helper
+@test "ralph.sh: has get_guardrails_template helper function" {
+  run grep "get_guardrails_template()" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}
+
+# Test: ensure_guardrails_file calls get_guardrails_template
+@test "ralph.sh: ensure_guardrails_file uses get_guardrails_template" {
+  run grep -A 10 "^ensure_guardrails_file()" "$RALPH_SCRIPT"
+  [[ "$output" == *"get_guardrails_template"* ]]
+}
+
+# Test: Script has inline comments for new state file variables
+@test "ralph.sh: has inline comments for state file variables" {
+  # Check for comment explaining GUARDRAILS_FILE
+  run grep "# Guardrails file" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  # Check for comment explaining ACTIVITY_LOG
+  run grep "# Activity log" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+  # Check for comment explaining ERRORS_LOG
+  run grep "# Errors log" "$RALPH_SCRIPT"
+  [ $status -eq 0 ]
+}

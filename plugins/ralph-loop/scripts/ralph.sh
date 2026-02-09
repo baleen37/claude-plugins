@@ -23,8 +23,11 @@ LOG_DIR="$RALPH_DIR/logs"
 LAST_BRANCH_FILE="$RALPH_DIR/.last-branch"
 ARCHIVE_DIR="$RALPH_DIR/archive"
 PROMPT_TEMPLATE="$SCRIPT_DIR/prompt.md"
+# Guardrails file stores lessons learned and patterns discovered during iterations
 GUARDRAILS_FILE="$RALPH_DIR/guardrails.md"
+# Activity log tracks iteration timestamps and completion status
 ACTIVITY_LOG="$RALPH_DIR/activity.log"
+# Errors log records iteration failures and error details
 ERRORS_LOG="$RALPH_DIR/errors.log"
 
 # === Validation ===
@@ -149,36 +152,30 @@ ensure_progress_file() {
   fi
 }
 
+# Template for guardrails.md content
+get_guardrails_template() {
+  cat <<'EOF'
+# Ralph Guardrails
+
+Lessons learned and patterns discovered during Ralph loop iterations.
+
+## Lessons Learned
+(No lessons recorded yet)
+
+## Patterns Discovered
+(No patterns discovered yet)
+
+EOF
+}
+
 # Ensure guardrails.md has proper structure
 ensure_guardrails_file() {
   if [[ ! -f "$GUARDRAILS_FILE" ]]; then
-    cat > "$GUARDRAILS_FILE" <<EOF
-# Ralph Guardrails
-
-Lessons learned and patterns discovered during Ralph loop iterations.
-
-## Lessons Learned
-(No lessons recorded yet)
-
-## Patterns Discovered
-(No patterns discovered yet)
-
-EOF
+    get_guardrails_template > "$GUARDRAILS_FILE"
   elif ! grep -q "# Ralph Guardrails" "$GUARDRAILS_FILE"; then
     echo "Warning: guardrails.md missing header, re-initializing" >&2
     mv "$GUARDRAILS_FILE" "${GUARDRAILS_FILE}.bak"
-    cat > "$GUARDRAILS_FILE" <<EOF
-# Ralph Guardrails
-
-Lessons learned and patterns discovered during Ralph loop iterations.
-
-## Lessons Learned
-(No lessons recorded yet)
-
-## Patterns Discovered
-(No patterns discovered yet)
-
-EOF
+    get_guardrails_template > "$GUARDRAILS_FILE"
   fi
 }
 
@@ -283,7 +280,6 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     # Continue on transient errors (exit code 1), abort on fatal errors (> 1)
     if [[ $exit_code -gt 1 ]]; then
       # Log activity before exiting
-      iteration_end=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
       echo "${iteration_end} - Iteration $i: START=${iteration_start}, END=${iteration_end}, STATUS=FATAL_ERROR" >> "$ACTIVITY_LOG"
       exit $exit_code
     fi
