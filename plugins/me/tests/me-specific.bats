@@ -16,7 +16,6 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     [ -f "${PLUGIN_DIR}/commands/verify.md" ]
     [ -f "${PLUGIN_DIR}/commands/tdd.md" ]
     [ -f "${PLUGIN_DIR}/commands/spawn.md" ]
-    [ -f "${PLUGIN_DIR}/commands/claude-isolated-test.md" ]
 }
 
 @test "me: code-reviewer agent exists with proper model" {
