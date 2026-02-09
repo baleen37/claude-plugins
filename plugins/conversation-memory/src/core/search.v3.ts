@@ -66,6 +66,7 @@ export async function search(
   query: string,
   options: SearchOptions & { db: Database.Database }
 ): Promise<CompactObservationResult[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { db, limit = 10, mode = 'both', after, before, projects, files } = options;
 
   // Validate date parameters

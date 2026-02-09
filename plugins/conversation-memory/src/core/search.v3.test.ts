@@ -15,8 +15,8 @@ let mockGenerateEmbedding: (() => Promise<number[]>) | null = null;
 
 // Set up top-level mocks
 vi.mock('./embeddings.js', () => ({
-  initEmbeddings: vi.fn(async () => {}),
-  generateEmbedding: vi.fn(async () => mockGenerateEmbedding?.() ?? [])
+  initEmbeddings: vi.fn((): Promise<void> => Promise.resolve()),
+  generateEmbedding: vi.fn((): Promise<number[]> => Promise.resolve(mockGenerateEmbedding?.() ?? []))
 }));
 
 describe('search.v3 - observation-only search', () => {
@@ -53,7 +53,7 @@ describe('search.v3 - observation-only search', () => {
       title: observation.title,
       content: observation.content,
       project: observation.project,
-      sessionId: observation.sessionId ?? null,
+      sessionId: observation.sessionId ?? undefined,
       timestamp: observation.timestamp,
       createdAt: observation.timestamp
     }, embedding);
@@ -61,7 +61,7 @@ describe('search.v3 - observation-only search', () => {
 
   describe('validateISODate (via search)', () => {
     test('should accept valid ISO date format', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       try {
         await search('test query', { db, after: '2025-01-15', before: '2025-01-20', mode: 'text' });
@@ -76,7 +76,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should reject invalid date format - missing leading zeros', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       await expect(
         search('test query', { db, after: '2025-1-5', mode: 'text' })
@@ -84,7 +84,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should reject invalid date format - wrong separator', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       await expect(
         search('test query', { db, after: '2025/01/15', mode: 'text' })
@@ -92,7 +92,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should reject invalid calendar date - truly invalid date', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       await expect(
         search('test query', { db, after: 'invalid-date', mode: 'text' })
@@ -100,7 +100,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should reject invalid month', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       await expect(
         search('test query', { db, after: '2025-13-01', mode: 'text' })
@@ -108,7 +108,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should accept leap year date', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       try {
         await search('test query', { db, after: '2024-02-29', mode: 'text' });
@@ -152,7 +152,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should perform text search using FTS', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('authentication', { db, mode: 'text' });
 
@@ -161,7 +161,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should search in both title and content', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('passport.js', { db, mode: 'text' });
       expect(results.length).toBeGreaterThanOrEqual(1);
@@ -171,14 +171,14 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should respect limit in text mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('test', { db, mode: 'text', limit: 2 });
       expect(results.length).toBeLessThanOrEqual(2);
     });
 
     test('should return empty array for no matches', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('nonexistentterm12345', { db, mode: 'text' });
       expect(results).toEqual([]);
@@ -195,7 +195,7 @@ describe('search.v3 - observation-only search', () => {
         timestamp: now + 1000
       });
 
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('content', { db, mode: 'text', projects: ['project-a'] });
       expect(results.every(r => r.project === 'project-a')).toBe(true);
@@ -221,7 +221,7 @@ describe('search.v3 - observation-only search', () => {
         timestamp: newDate
       });
 
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('content', {
         db,
@@ -266,7 +266,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should perform vector similarity search', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1); // Similar to first observation
+      mockGenerateEmbedding = async () => createTestEmbedding(1); // Similar to first observation
 
       const results = await search('authentication', { db, mode: 'vector' });
 
@@ -274,7 +274,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should respect limit in vector mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
+      mockGenerateEmbedding = async () => createTestEmbedding(1);
 
       const results = await search('test', { db, mode: 'vector', limit: 2 });
       expect(results.length).toBeLessThanOrEqual(2);
@@ -290,7 +290,7 @@ describe('search.v3 - observation-only search', () => {
         timestamp: now + 1000
       }, createTestEmbedding(5));
 
-      mockGenerateEmbedding = () => createTestEmbedding(5);
+      mockGenerateEmbedding = async () => createTestEmbedding(5);
 
       const results = await search('project', { db, mode: 'vector', projects: ['project-a'] });
       expect(results.every(r => r.project === 'project-a')).toBe(true);
@@ -324,7 +324,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should combine vector and text results', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(10);
+      mockGenerateEmbedding = async () => createTestEmbedding(10);
 
       const results = await search('match', { db, mode: 'both' });
 
@@ -333,7 +333,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should deduplicate results by ID', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(30);
+      mockGenerateEmbedding = async () => createTestEmbedding(30);
 
       const results = await search('both match', { db, mode: 'both' });
 
@@ -344,7 +344,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should combine vector and text results without duplicates', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(30);
+      mockGenerateEmbedding = async () => createTestEmbedding(30);
 
       const results = await search('both', { db, mode: 'both' });
 
@@ -367,7 +367,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should return compact observations with correct structure', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
+      mockGenerateEmbedding = async () => createTestEmbedding(1);
 
       const results = await search('test', { db, mode: 'vector' });
 
@@ -381,7 +381,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should not include content in compact results', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
+      mockGenerateEmbedding = async () => createTestEmbedding(1);
 
       const results = await search('test', { db, mode: 'vector' });
 
@@ -389,7 +389,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should not include sessionId in compact results', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
+      mockGenerateEmbedding = async () => createTestEmbedding(1);
 
       const results = await search('test', { db, mode: 'vector' });
 
@@ -397,7 +397,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should not include similarity field in results', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding(1);
+      mockGenerateEmbedding = async () => createTestEmbedding(1);
 
       const vectorResults = await search('test', { db, mode: 'vector' });
       const textResults = await search('test', { db, mode: 'text' });
@@ -410,7 +410,7 @@ describe('search.v3 - observation-only search', () => {
 
   describe('search - edge cases', () => {
     test('should handle empty database', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('test', { db, mode: 'text' });
       expect(results).toEqual([]);
@@ -424,7 +424,7 @@ describe('search.v3 - observation-only search', () => {
         timestamp: Date.now()
       });
 
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('special', { db, mode: 'text' });
       expect(results.length).toBeGreaterThanOrEqual(1);
@@ -438,7 +438,7 @@ describe('search.v3 - observation-only search', () => {
         timestamp: Date.now()
       });
 
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('unicode', { db, mode: 'text' });
       expect(results.length).toBeGreaterThanOrEqual(1);
@@ -447,7 +447,7 @@ describe('search.v3 - observation-only search', () => {
     test('should handle very long queries', async () => {
       const longQuery = 'a'.repeat(1000);
 
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       // Should not throw
       const results = await search(longQuery, { db, mode: 'text' });
@@ -482,7 +482,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should filter by single file path in text mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'text', files: ['src/file-a.ts'] });
       expect(results.length).toBe(1);
@@ -490,7 +490,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should filter by multiple file paths', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'text', files: ['src/file-a.ts', 'lib/file-b.ts'] });
       expect(results.length).toBe(2);
@@ -500,14 +500,14 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should return empty when no matching files', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'text', files: ['nonexistent/file.ts'] });
       expect(results.length).toBe(0);
     });
 
     test('should filter by files in vector mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'vector', files: ['src/file-a.ts'] });
       expect(results.length).toBe(1);
@@ -515,7 +515,7 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should filter by files in both mode', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'both', files: ['src/file-a.ts'] });
       expect(results.length).toBe(1);
@@ -523,14 +523,14 @@ describe('search.v3 - observation-only search', () => {
     });
 
     test('should handle empty files array', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'text', files: [] });
       expect(results.length).toBe(2);
     });
 
     test('should handle partial file path matches', async () => {
-      mockGenerateEmbedding = () => createTestEmbedding();
+      mockGenerateEmbedding = async () => createTestEmbedding();
 
       const results = await search('implementation', { db, mode: 'text', files: ['file-a'] });
       expect(results.length).toBe(1);
