@@ -1881,45 +1881,6 @@ var init_gemini_provider = __esm({
   }
 });
 
-// src/core/llm/round-robin-provider.ts
-var RoundRobinProvider;
-var init_round_robin_provider = __esm({
-  "src/core/llm/round-robin-provider.ts"() {
-    "use strict";
-    RoundRobinProvider = class {
-      /**
-       * Creates a new RoundRobinProvider instance.
-       *
-       * @param providers - Array of LLM providers to distribute requests across
-       */
-      constructor(providers) {
-        this.providers = providers;
-      }
-      index = 0;
-      /**
-       * Completes a prompt using the next provider in the round-robin cycle.
-       *
-       * Providers are selected using modulo arithmetic: `index % providers.length`
-       * The index increments after each call, ensuring even distribution.
-       *
-       * @param prompt - The user prompt to complete
-       * @param options - Optional configuration for the completion
-       * @returns Promise resolving to the completion result with token usage
-       * @throws {Error} If no providers are configured
-       * @throws {Error} If the selected provider fails (no retry/failover)
-       */
-      async complete(prompt, options) {
-        if (this.providers.length === 0) {
-          throw new Error("No providers configured");
-        }
-        const provider = this.providers[this.index % this.providers.length];
-        this.index++;
-        return provider.complete(prompt, options);
-      }
-    };
-  }
-});
-
 // src/core/llm/config.ts
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
@@ -1932,8 +1893,8 @@ function loadConfig() {
   try {
     const configContent = readFileSync(configPath, "utf-8");
     const config = JSON.parse(configContent);
-    if (!config.provider) {
-      console.warn("Invalid config: missing provider field");
+    if (!config.apiKey) {
+      console.warn("Invalid config: missing apiKey field");
       return null;
     }
     return config;
@@ -1945,29 +1906,17 @@ function loadConfig() {
   }
 }
 function createProvider(config) {
-  switch (config.provider) {
-    case "gemini": {
-      const geminiConfig = config.gemini;
-      if (!geminiConfig) {
-        throw new Error("Gemini provider requires gemini configuration");
-      }
-      const { apiKeys, model = DEFAULT_MODEL2 } = geminiConfig;
-      if (apiKeys.length === 0) {
-        throw new Error("Gemini provider requires at least one API key");
-      }
-      const providers = apiKeys.map((apiKey) => new GeminiProvider(apiKey, model));
-      return new RoundRobinProvider(providers);
-    }
-    default:
-      throw new Error(`Unknown provider: ${config.provider}`);
+  const { apiKey, model = DEFAULT_MODEL2 } = config;
+  if (!apiKey) {
+    throw new Error("Gemini provider requires an apiKey");
   }
+  return new GeminiProvider(apiKey, model);
 }
 var DEFAULT_MODEL2;
 var init_config = __esm({
   "src/core/llm/config.ts"() {
     "use strict";
     init_gemini_provider();
-    init_round_robin_provider();
     DEFAULT_MODEL2 = "gemini-2.0-flash";
   }
 });
