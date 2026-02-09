@@ -86,7 +86,7 @@ var require_code = __commonJS({
     };
     exports._Code = _Code;
     exports.nil = new _Code("");
-    function _2(strs, ...args) {
+    function _(strs, ...args) {
       const code = [strs[0]];
       let i = 0;
       while (i < args.length) {
@@ -95,7 +95,7 @@ var require_code = __commonJS({
       }
       return new _Code(code);
     }
-    exports._ = _2;
+    exports._ = _;
     var plus = new _Code("+");
     function str(strs, ...args) {
       const expr = [safeStringify(strs[0])];
@@ -132,41 +132,41 @@ var require_code = __commonJS({
         i++;
       }
     }
-    function mergeExprItems(a, b2) {
-      if (b2 === '""')
+    function mergeExprItems(a, b) {
+      if (b === '""')
         return a;
       if (a === '""')
-        return b2;
+        return b;
       if (typeof a == "string") {
-        if (b2 instanceof Name || a[a.length - 1] !== '"')
+        if (b instanceof Name || a[a.length - 1] !== '"')
           return;
-        if (typeof b2 != "string")
-          return `${a.slice(0, -1)}${b2}"`;
-        if (b2[0] === '"')
-          return a.slice(0, -1) + b2.slice(1);
+        if (typeof b != "string")
+          return `${a.slice(0, -1)}${b}"`;
+        if (b[0] === '"')
+          return a.slice(0, -1) + b.slice(1);
         return;
       }
-      if (typeof b2 == "string" && b2[0] === '"' && !(a instanceof Name))
-        return `"${a}${b2.slice(1)}`;
+      if (typeof b == "string" && b[0] === '"' && !(a instanceof Name))
+        return `"${a}${b.slice(1)}`;
       return;
     }
     function strConcat(c1, c2) {
       return c2.emptyStr() ? c1 : c1.emptyStr() ? c2 : str`${c1}${c2}`;
     }
     exports.strConcat = strConcat;
-    function interpolate(x2) {
-      return typeof x2 == "number" || typeof x2 == "boolean" || x2 === null ? x2 : safeStringify(Array.isArray(x2) ? x2.join(",") : x2);
+    function interpolate(x) {
+      return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
     }
-    function stringify(x2) {
-      return new _Code(safeStringify(x2));
+    function stringify(x) {
+      return new _Code(safeStringify(x));
     }
     exports.stringify = stringify;
-    function safeStringify(x2) {
-      return JSON.stringify(x2).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+    function safeStringify(x) {
+      return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
     exports.safeStringify = safeStringify;
     function getProperty(key) {
-      return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _2`[${key}]`;
+      return typeof key == "string" && exports.IDENTIFIER.test(key) ? new _Code(`.${key}`) : _`[${key}]`;
     }
     exports.getProperty = getProperty;
     function getEsmExportName(key) {
@@ -1025,8 +1025,8 @@ var require_codegen = __commonJS({
       for (const n in from)
         names[n] = (names[n] || 0) - (from[n] || 0);
     }
-    function not(x2) {
-      return typeof x2 == "boolean" || typeof x2 == "number" || x2 === null ? !x2 : (0, code_1._)`!${par(x2)}`;
+    function not(x) {
+      return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
     }
     exports.not = not;
     var andCode = mappend(exports.operators.AND);
@@ -1040,10 +1040,10 @@ var require_codegen = __commonJS({
     }
     exports.or = or;
     function mappend(op) {
-      return (x2, y2) => x2 === code_1.nil ? y2 : y2 === code_1.nil ? x2 : (0, code_1._)`${par(x2)} ${op} ${par(y2)}`;
+      return (x, y) => x === code_1.nil ? y : y === code_1.nil ? x : (0, code_1._)`${par(x)} ${op} ${par(y)}`;
     }
-    function par(x2) {
-      return x2 instanceof code_1.Name ? x2 : (0, code_1._)`(${x2})`;
+    function par(x) {
+      return x instanceof code_1.Name ? x : (0, code_1._)`(${x})`;
     }
   }
 });
@@ -1133,8 +1133,8 @@ var require_util = __commonJS({
     exports.unescapeJsonPointer = unescapeJsonPointer;
     function eachItem(xs, f) {
       if (Array.isArray(xs)) {
-        for (const x2 of xs)
-          f(x2);
+        for (const x of xs)
+          f(x);
       } else {
         f(xs);
       }
@@ -1324,7 +1324,7 @@ var require_errors = __commonJS({
         gen.return(false);
       }
     }
-    var E2 = {
+    var E = {
       keyword: new codegen_1.Name("keyword"),
       schemaPath: new codegen_1.Name("schemaPath"),
       // also used in JTD errors
@@ -1358,20 +1358,20 @@ var require_errors = __commonJS({
       if (schemaPath) {
         schPath = (0, codegen_1.str)`${schPath}${(0, util_1.getErrorPath)(schemaPath, util_1.Type.Str)}`;
       }
-      return [E2.schemaPath, schPath];
+      return [E.schemaPath, schPath];
     }
     function extraErrorProps(cxt, { params, message }, keyValues) {
       const { keyword, data, schemaValue, it } = cxt;
       const { opts, propertyName, topSchemaRef, schemaPath } = it;
-      keyValues.push([E2.keyword, keyword], [E2.params, typeof params == "function" ? params(cxt) : params || (0, codegen_1._)`{}`]);
+      keyValues.push([E.keyword, keyword], [E.params, typeof params == "function" ? params(cxt) : params || (0, codegen_1._)`{}`]);
       if (opts.messages) {
-        keyValues.push([E2.message, typeof message == "function" ? message(cxt) : message]);
+        keyValues.push([E.message, typeof message == "function" ? message(cxt) : message]);
       }
       if (opts.verbose) {
-        keyValues.push([E2.schema, schemaValue], [E2.parentSchema, (0, codegen_1._)`${topSchemaRef}${schemaPath}`], [names_1.default.data, data]);
+        keyValues.push([E.schema, schemaValue], [E.parentSchema, (0, codegen_1._)`${topSchemaRef}${schemaPath}`], [names_1.default.data, data]);
       }
       if (propertyName)
-        keyValues.push([E2.propertyName, propertyName]);
+        keyValues.push([E.propertyName, propertyName]);
     }
   }
 });
@@ -1435,8 +1435,8 @@ var require_rules = __commonJS({
     exports.getRules = exports.isJSONType = void 0;
     var _jsonTypes = ["string", "number", "integer", "boolean", "null", "object", "array"];
     var jsonTypes = new Set(_jsonTypes);
-    function isJSONType(x2) {
-      return typeof x2 == "string" && jsonTypes.has(x2);
+    function isJSONType(x) {
+      return typeof x == "string" && jsonTypes.has(x);
     }
     exports.isJSONType = isJSONType;
     function getRules() {
@@ -1775,13 +1775,13 @@ var require_code2 = __commonJS({
     exports.callValidateCode = callValidateCode;
     var newRegExp = (0, codegen_1._)`new RegExp`;
     function usePattern({ gen, it: { opts } }, pattern) {
-      const u3 = opts.unicodeRegExp ? "u" : "";
+      const u = opts.unicodeRegExp ? "u" : "";
       const { regExp } = opts.code;
-      const rx = regExp(pattern, u3);
+      const rx = regExp(pattern, u);
       return gen.scopeValue("pattern", {
         key: rx.toString(),
         ref: rx,
-        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u3})`
+        code: (0, codegen_1._)`${regExp.code === "new RegExp" ? newRegExp : (0, util_2.useFunc)(gen, regExp)}(${pattern}, ${u})`
       });
     }
     exports.usePattern = usePattern;
@@ -2040,33 +2040,33 @@ var require_subschema = __commonJS({
 var require_fast_deep_equal = __commonJS({
   "node_modules/fast-deep-equal/index.js"(exports, module) {
     "use strict";
-    module.exports = function equal(a, b2) {
-      if (a === b2) return true;
-      if (a && b2 && typeof a == "object" && typeof b2 == "object") {
-        if (a.constructor !== b2.constructor) return false;
+    module.exports = function equal(a, b) {
+      if (a === b) return true;
+      if (a && b && typeof a == "object" && typeof b == "object") {
+        if (a.constructor !== b.constructor) return false;
         var length, i, keys;
         if (Array.isArray(a)) {
           length = a.length;
-          if (length != b2.length) return false;
+          if (length != b.length) return false;
           for (i = length; i-- !== 0; )
-            if (!equal(a[i], b2[i])) return false;
+            if (!equal(a[i], b[i])) return false;
           return true;
         }
-        if (a.constructor === RegExp) return a.source === b2.source && a.flags === b2.flags;
-        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b2.valueOf();
-        if (a.toString !== Object.prototype.toString) return a.toString() === b2.toString();
+        if (a.constructor === RegExp) return a.source === b.source && a.flags === b.flags;
+        if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b.valueOf();
+        if (a.toString !== Object.prototype.toString) return a.toString() === b.toString();
         keys = Object.keys(a);
         length = keys.length;
-        if (length !== Object.keys(b2).length) return false;
+        if (length !== Object.keys(b).length) return false;
         for (i = length; i-- !== 0; )
-          if (!Object.prototype.hasOwnProperty.call(b2, keys[i])) return false;
+          if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
         for (i = length; i-- !== 0; ) {
           var key = keys[i];
-          if (!equal(a[key], b2[key])) return false;
+          if (!equal(a[key], b[key])) return false;
         }
         return true;
       }
-      return a !== a && b2 !== b2;
+      return a !== a && b !== b;
     };
   }
 });
@@ -2263,7 +2263,7 @@ var require_resolve = __commonJS({
       const pathPrefix = getFullPath(uriResolver, schId, false);
       const localRefs = {};
       const schemaRefs = /* @__PURE__ */ new Set();
-      traverse(schema, { allKeys: true }, (sch, jsonPtr, _2, parentJsonPtr) => {
+      traverse(schema, { allKeys: true }, (sch, jsonPtr, _, parentJsonPtr) => {
         if (parentJsonPtr === void 0)
           return;
         const fullPath = pathPrefix + jsonPtr;
@@ -3913,14 +3913,14 @@ var require_core = __commonJS({
     };
     var MAX_EXPRESSION = 200;
     function requiredOptions(o) {
-      var _a, _b, _c, _d, _e2, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
       const s = o.strict;
       const _optz = (_a = o.code) === null || _a === void 0 ? void 0 : _a.optimize;
       const optimize = _optz === true || _optz === void 0 ? 1 : _optz || 0;
       const regExp = (_c = (_b = o.code) === null || _b === void 0 ? void 0 : _b.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
       const uriResolver = (_d = o.uriResolver) !== null && _d !== void 0 ? _d : uri_1.default;
       return {
-        strictSchema: (_f = (_e2 = o.strictSchema) !== null && _e2 !== void 0 ? _e2 : s) !== null && _f !== void 0 ? _f : true,
+        strictSchema: (_f = (_e = o.strictSchema) !== null && _e !== void 0 ? _e : s) !== null && _f !== void 0 ? _f : true,
         strictNumbers: (_h = (_g = o.strictNumbers) !== null && _g !== void 0 ? _g : s) !== null && _h !== void 0 ? _h : true,
         strictTypes: (_k = (_j = o.strictTypes) !== null && _j !== void 0 ? _j : s) !== null && _k !== void 0 ? _k : "log",
         strictTuples: (_m = (_l = o.strictTuples) !== null && _l !== void 0 ? _l : s) !== null && _m !== void 0 ? _m : "log",
@@ -3988,17 +3988,17 @@ var require_core = __commonJS({
         return this.opts.defaultMeta = typeof meta == "object" ? meta[schemaId] || meta : void 0;
       }
       validate(schemaKeyRef, data) {
-        let v2;
+        let v;
         if (typeof schemaKeyRef == "string") {
-          v2 = this.getSchema(schemaKeyRef);
-          if (!v2)
+          v = this.getSchema(schemaKeyRef);
+          if (!v)
             throw new Error(`no schema with key or ref "${schemaKeyRef}"`);
         } else {
-          v2 = this.compile(schemaKeyRef);
+          v = this.compile(schemaKeyRef);
         }
-        const valid = v2(data);
-        if (!("$async" in v2))
-          this.errors = v2.errors;
+        const valid = v(data);
+        if (!("$async" in v))
+          this.errors = v.errors;
         return valid;
       }
       compile(schema, _meta) {
@@ -4195,7 +4195,7 @@ var require_core = __commonJS({
           type: (0, dataType_1.getJSONTypes)(def.type),
           schemaType: (0, dataType_1.getJSONTypes)(def.schemaType)
         };
-        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k2) => addRule.call(this, k2, definition) : (k2) => definition.type.forEach((t) => addRule.call(this, k2, definition, t)));
+        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k) => addRule.call(this, k, definition) : (k) => definition.type.forEach((t) => addRule.call(this, k, definition, t)));
         return this;
       }
       getKeyword(keyword) {
@@ -4492,8 +4492,8 @@ var require_ref = __commonJS({
           return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root, root.$async);
         }
         function callValidate(sch) {
-          const v2 = getValidate(cxt, sch);
-          callRef(cxt, v2, sch, sch.$async);
+          const v = getValidate(cxt, sch);
+          callRef(cxt, v, sch, sch.$async);
         }
         function inlineRefSchema(sch) {
           const schName = gen.scopeValue("schema", opts.code.source === true ? { ref: sch, code: (0, codegen_1.stringify)(sch) } : { ref: sch });
@@ -4515,7 +4515,7 @@ var require_ref = __commonJS({
       return sch.validate ? gen.scopeValue("validate", { ref: sch.validate }) : (0, codegen_1._)`${gen.scopeValue("wrapper", { ref: sch })}.validate`;
     }
     exports.getValidate = getValidate;
-    function callRef(cxt, v2, sch, $async) {
+    function callRef(cxt, v, sch, $async) {
       const { gen, it } = cxt;
       const { allErrors, schemaEnv: env2, opts } = it;
       const passCxt = opts.passContext ? names_1.default.this : codegen_1.nil;
@@ -4528,8 +4528,8 @@ var require_ref = __commonJS({
           throw new Error("async schema referenced by sync schema");
         const valid = gen.let("valid");
         gen.try(() => {
-          gen.code((0, codegen_1._)`await ${(0, code_1.callValidateCode)(cxt, v2, passCxt)}`);
-          addEvaluatedFrom(v2);
+          gen.code((0, codegen_1._)`await ${(0, code_1.callValidateCode)(cxt, v, passCxt)}`);
+          addEvaluatedFrom(v);
           if (!allErrors)
             gen.assign(valid, true);
         }, (e) => {
@@ -4541,7 +4541,7 @@ var require_ref = __commonJS({
         cxt.ok(valid);
       }
       function callSyncRef() {
-        cxt.result((0, code_1.callValidateCode)(cxt, v2, passCxt), () => addEvaluatedFrom(v2), () => addErrorsFrom(v2));
+        cxt.result((0, code_1.callValidateCode)(cxt, v, passCxt), () => addEvaluatedFrom(v), () => addErrorsFrom(v));
       }
       function addErrorsFrom(source) {
         const errs = (0, codegen_1._)`${source}.errors`;
@@ -4738,8 +4738,8 @@ var require_pattern = __commonJS({
       error: error2,
       code(cxt) {
         const { data, $data, schema, schemaCode, it } = cxt;
-        const u3 = it.opts.unicodeRegExp ? "u" : "";
-        const regExp = $data ? (0, codegen_1._)`(new RegExp(${schemaCode}, ${u3}))` : (0, code_1.usePattern)(cxt, schema);
+        const u = it.opts.unicodeRegExp ? "u" : "";
+        const regExp = $data ? (0, codegen_1._)`(new RegExp(${schemaCode}, ${u}))` : (0, code_1.usePattern)(cxt, schema);
         cxt.fail$data((0, codegen_1._)`!${regExp}.test(${data})`);
       }
     };
@@ -4908,8 +4908,8 @@ var require_uniqueItems = __commonJS({
     var util_1 = require_util();
     var equal_1 = require_equal();
     var error2 = {
-      message: ({ params: { i, j: j2 } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j2} and ${i} are identical)`,
-      params: ({ params: { i, j: j2 } }) => (0, codegen_1._)`{i: ${i}, j: ${j2}}`
+      message: ({ params: { i, j } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j} and ${i} are identical)`,
+      params: ({ params: { i, j } }) => (0, codegen_1._)`{i: ${i}, j: ${j}}`
     };
     var def = {
       keyword: "uniqueItems",
@@ -4927,15 +4927,15 @@ var require_uniqueItems = __commonJS({
         cxt.ok(valid);
         function validateUniqueItems() {
           const i = gen.let("i", (0, codegen_1._)`${data}.length`);
-          const j2 = gen.let("j");
-          cxt.setParams({ i, j: j2 });
+          const j = gen.let("j");
+          cxt.setParams({ i, j });
           gen.assign(valid, true);
-          gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j2));
+          gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j));
         }
         function canOptimize() {
           return itemTypes.length > 0 && !itemTypes.some((t) => t === "object" || t === "array");
         }
-        function loopN(i, j2) {
+        function loopN(i, j) {
           const item = gen.name("item");
           const wrongType = (0, dataType_1.checkDataTypes)(itemTypes, item, it.opts.strictNumbers, dataType_1.DataType.Wrong);
           const indices = gen.const("indices", (0, codegen_1._)`{}`);
@@ -4945,16 +4945,16 @@ var require_uniqueItems = __commonJS({
             if (itemTypes.length > 1)
               gen.if((0, codegen_1._)`typeof ${item} == "string"`, (0, codegen_1._)`${item} += "_"`);
             gen.if((0, codegen_1._)`typeof ${indices}[${item}] == "number"`, () => {
-              gen.assign(j2, (0, codegen_1._)`${indices}[${item}]`);
+              gen.assign(j, (0, codegen_1._)`${indices}[${item}]`);
               cxt.error();
               gen.assign(valid, false).break();
             }).code((0, codegen_1._)`${indices}[${item}] = ${i}`);
           });
         }
-        function loopN2(i, j2) {
+        function loopN2(i, j) {
           const eql = (0, util_1.useFunc)(gen, equal_1.default);
           const outer = gen.name("outer");
-          gen.label(outer).for((0, codegen_1._)`;${i}--;`, () => gen.for((0, codegen_1._)`${j2} = ${i}; ${j2}--;`, () => gen.if((0, codegen_1._)`${eql}(${data}[${i}], ${data}[${j2}])`, () => {
+          gen.label(outer).for((0, codegen_1._)`;${i}--;`, () => gen.for((0, codegen_1._)`${j} = ${i}; ${j}--;`, () => gen.if((0, codegen_1._)`${eql}(${data}[${i}], ${data}[${j}])`, () => {
             cxt.error();
             gen.assign(valid, false).break(outer);
           })));
@@ -5031,7 +5031,7 @@ var require_enum = __commonJS({
         cxt.pass(valid);
         function loopEnum() {
           gen.assign(valid, false);
-          gen.forOf("v", schemaCode, (v2) => gen.if((0, codegen_1._)`${getEql()}(${data}, ${v2})`, () => gen.assign(valid, true).break()));
+          gen.forOf("v", schemaCode, (v) => gen.if((0, codegen_1._)`${getEql()}(${data}, ${v})`, () => gen.assign(valid, true).break()));
         }
         function equalCode(vSchema, i) {
           const sch = schema[i];
@@ -6417,7 +6417,7 @@ var require_ajv = __commonJS({
     var Ajv2 = class extends core_1.default {
       _addVocabularies() {
         super._addVocabularies();
-        draft7_1.default.forEach((v2) => this.addVocabulary(v2));
+        draft7_1.default.forEach((v) => this.addVocabulary(v));
         if (this.opts.discriminator)
           this.addKeyword(discriminator_1.default);
       }
@@ -6904,7 +6904,7 @@ __export(external_exports, {
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
-  util2.assertEqual = (_2) => {
+  util2.assertEqual = (_) => {
   };
   function assertIs2(_arg) {
   }
@@ -6921,10 +6921,10 @@ var util;
     return obj;
   };
   util2.getValidEnumValues = (obj) => {
-    const validKeys = util2.objectKeys(obj).filter((k2) => typeof obj[obj[k2]] !== "number");
+    const validKeys = util2.objectKeys(obj).filter((k) => typeof obj[obj[k]] !== "number");
     const filtered = {};
-    for (const k2 of validKeys) {
-      filtered[k2] = obj[k2];
+    for (const k of validKeys) {
+      filtered[k] = obj[k];
     }
     return util2.objectValues(filtered);
   };
@@ -6954,7 +6954,7 @@ var util;
     return array2.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
   util2.joinValues = joinValues2;
-  util2.jsonStringifyReplacer = (_2, value) => {
+  util2.jsonStringifyReplacer = (_, value) => {
     if (typeof value === "bigint") {
       return value.toString();
     }
@@ -7281,7 +7281,7 @@ var makeIssue = (params) => {
     };
   }
   let errorMessage = "";
-  const maps = errorMaps.filter((m2) => !!m2).slice().reverse();
+  const maps = errorMaps.filter((m) => !!m).slice().reverse();
   for (const map of maps) {
     errorMessage = map(fullIssue, { data, defaultError: errorMessage }).message;
   }
@@ -7307,7 +7307,7 @@ function addIssueToContext(ctx, issueData) {
       // then global override map
       overrideMap === en_default ? void 0 : en_default
       // then global default map
-    ].filter((x2) => !!x2)
+    ].filter((x) => !!x)
   });
   ctx.common.issues.push(issue2);
 }
@@ -7370,10 +7370,10 @@ var INVALID = Object.freeze({
 });
 var DIRTY = (value) => ({ status: "dirty", value });
 var OK = (value) => ({ status: "valid", value });
-var isAborted = (x2) => x2.status === "aborted";
-var isDirty = (x2) => x2.status === "dirty";
-var isValid = (x2) => x2.status === "valid";
-var isAsync = (x2) => typeof Promise !== "undefined" && x2 instanceof Promise;
+var isAborted = (x) => x.status === "aborted";
+var isDirty = (x) => x.status === "dirty";
+var isValid = (x) => x.status === "valid";
+var isAsync = (x) => typeof Promise !== "undefined" && x instanceof Promise;
 
 // node_modules/zod/v3/helpers/errorUtil.js
 var errorUtil;
@@ -9693,17 +9693,17 @@ var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
     });
   }
 };
-function mergeValues(a, b2) {
+function mergeValues(a, b) {
   const aType = getParsedType(a);
-  const bType = getParsedType(b2);
-  if (a === b2) {
+  const bType = getParsedType(b);
+  if (a === b) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-    const bKeys = util.objectKeys(b2);
+    const bKeys = util.objectKeys(b);
     const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
-    const newObj = { ...a, ...b2 };
+    const newObj = { ...a, ...b };
     for (const key of sharedKeys) {
-      const sharedValue = mergeValues(a[key], b2[key]);
+      const sharedValue = mergeValues(a[key], b[key]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
@@ -9711,13 +9711,13 @@ function mergeValues(a, b2) {
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
-    if (a.length !== b2.length) {
+    if (a.length !== b.length) {
       return { valid: false };
     }
     const newArray = [];
     for (let index = 0; index < a.length; index++) {
       const itemA = a[index];
-      const itemB = b2[index];
+      const itemB = b[index];
       const sharedValue = mergeValues(itemA, itemB);
       if (!sharedValue.valid) {
         return { valid: false };
@@ -9725,7 +9725,7 @@ function mergeValues(a, b2) {
       newArray.push(sharedValue.data);
     }
     return { valid: true, data: newArray };
-  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b2) {
+  } else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b) {
     return { valid: true, data: a };
   } else {
     return { valid: false };
@@ -9821,7 +9821,7 @@ var ZodTuple = class _ZodTuple extends ZodType {
       if (!schema)
         return null;
       return schema._parse(new ParseInputLazyPath(ctx, item, ctx.path, itemIndex));
-    }).filter((x2) => !!x2);
+    }).filter((x) => !!x);
     if (ctx.common.async) {
       return Promise.all(items).then((results) => {
         return ParseStatus.mergeArray(status, results);
@@ -10074,7 +10074,7 @@ var ZodFunction = class _ZodFunction extends ZodType {
       return makeIssue({
         data: args,
         path: ctx.path,
-        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x2) => !!x2),
+        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
         issueData: {
           code: ZodIssueCode.invalid_arguments,
           argumentsError: error2
@@ -10085,7 +10085,7 @@ var ZodFunction = class _ZodFunction extends ZodType {
       return makeIssue({
         data: returns,
         path: ctx.path,
-        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x2) => !!x2),
+        errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en_default].filter((x) => !!x),
         issueData: {
           code: ZodIssueCode.invalid_return_type,
           returnTypeError: error2
@@ -10095,29 +10095,29 @@ var ZodFunction = class _ZodFunction extends ZodType {
     const params = { errorMap: ctx.common.contextualErrorMap };
     const fn = ctx.data;
     if (this._def.returns instanceof ZodPromise) {
-      const me2 = this;
+      const me = this;
       return OK(async function(...args) {
         const error2 = new ZodError([]);
-        const parsedArgs = await me2._def.args.parseAsync(args, params).catch((e) => {
+        const parsedArgs = await me._def.args.parseAsync(args, params).catch((e) => {
           error2.addIssue(makeArgsIssue(args, e));
           throw error2;
         });
         const result = await Reflect.apply(fn, this, parsedArgs);
-        const parsedReturns = await me2._def.returns._def.type.parseAsync(result, params).catch((e) => {
+        const parsedReturns = await me._def.returns._def.type.parseAsync(result, params).catch((e) => {
           error2.addIssue(makeReturnsIssue(result, e));
           throw error2;
         });
         return parsedReturns;
       });
     } else {
-      const me2 = this;
+      const me = this;
       return OK(function(...args) {
-        const parsedArgs = me2._def.args.safeParse(args, params);
+        const parsedArgs = me._def.args.safeParse(args, params);
         if (!parsedArgs.success) {
           throw new ZodError([makeArgsIssue(args, parsedArgs.error)]);
         }
         const result = Reflect.apply(fn, this, parsedArgs.data);
-        const parsedReturns = me2._def.returns.safeParse(result, params);
+        const parsedReturns = me._def.returns.safeParse(result, params);
         if (!parsedReturns.success) {
           throw new ZodError([makeReturnsIssue(result, parsedReturns.error)]);
         }
@@ -10679,10 +10679,10 @@ var ZodPipeline = class _ZodPipeline extends ZodType {
       }
     }
   }
-  static create(a, b2) {
+  static create(a, b) {
     return new _ZodPipeline({
       in: a,
-      out: b2,
+      out: b,
       typeName: ZodFirstPartyTypeKind.ZodPipeline
     });
   }
@@ -10845,18 +10845,18 @@ function $constructor(name, initializer3, params) {
     (_a = inst._zod).traits ?? (_a.traits = /* @__PURE__ */ new Set());
     inst._zod.traits.add(name);
     initializer3(inst, def);
-    for (const k2 in _2.prototype) {
-      if (!(k2 in inst))
-        Object.defineProperty(inst, k2, { value: _2.prototype[k2].bind(inst) });
+    for (const k in _.prototype) {
+      if (!(k in inst))
+        Object.defineProperty(inst, k, { value: _.prototype[k].bind(inst) });
     }
-    inst._zod.constr = _2;
+    inst._zod.constr = _;
     inst._zod.def = def;
   }
   const Parent = params?.Parent ?? Object;
   class Definition extends Parent {
   }
   Object.defineProperty(Definition, "name", { value: name });
-  function _2(def) {
+  function _(def) {
     var _a;
     const inst = params?.Parent ? new Definition() : this;
     init(inst, def);
@@ -10866,16 +10866,16 @@ function $constructor(name, initializer3, params) {
     }
     return inst;
   }
-  Object.defineProperty(_2, "init", { value: init });
-  Object.defineProperty(_2, Symbol.hasInstance, {
+  Object.defineProperty(_, "init", { value: init });
+  Object.defineProperty(_, Symbol.hasInstance, {
     value: (inst) => {
       if (params?.Parent && inst instanceof params.Parent)
         return true;
       return inst?._zod?.traits?.has(name);
     }
   });
-  Object.defineProperty(_2, "name", { value: name });
-  return _2;
+  Object.defineProperty(_, "name", { value: name });
+  return _;
 }
 var $brand = Symbol("zod_brand");
 var $ZodAsyncError = class extends Error {
@@ -10954,17 +10954,17 @@ function assertIs(_arg) {
 function assertNever(_x) {
   throw new Error();
 }
-function assert(_2) {
+function assert(_) {
 }
 function getEnumValues(entries) {
-  const numericValues = Object.values(entries).filter((v2) => typeof v2 === "number");
-  const values = Object.entries(entries).filter(([k2, _2]) => numericValues.indexOf(+k2) === -1).map(([_2, v2]) => v2);
+  const numericValues = Object.values(entries).filter((v) => typeof v === "number");
+  const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
   return values;
 }
 function joinValues(array2, separator = "|") {
   return array2.map((val) => stringifyPrimitive(val)).join(separator);
 }
-function jsonStringifyReplacer(_2, value) {
+function jsonStringifyReplacer(_, value) {
   if (typeof value === "bigint")
     return value.toString();
   return value;
@@ -11009,9 +11009,9 @@ function defineLazy(object3, key, getter) {
       }
       throw new Error("cached value already set");
     },
-    set(v2) {
+    set(v) {
       Object.defineProperty(object3, key, {
-        value: v2
+        value: v
         // configurable: true,
       });
     },
@@ -11063,10 +11063,10 @@ var allowsEval = cached(() => {
     return false;
   }
   try {
-    const F2 = Function;
-    new F2("");
+    const F = Function;
+    new F("");
     return true;
-  } catch (_2) {
+  } catch (_) {
     return false;
   }
 });
@@ -11167,31 +11167,31 @@ function normalizeParams(_params) {
 function createTransparentProxy(getter) {
   let target;
   return new Proxy({}, {
-    get(_2, prop, receiver) {
+    get(_, prop, receiver) {
       target ?? (target = getter());
       return Reflect.get(target, prop, receiver);
     },
-    set(_2, prop, value, receiver) {
+    set(_, prop, value, receiver) {
       target ?? (target = getter());
       return Reflect.set(target, prop, value, receiver);
     },
-    has(_2, prop) {
+    has(_, prop) {
       target ?? (target = getter());
       return Reflect.has(target, prop);
     },
-    deleteProperty(_2, prop) {
+    deleteProperty(_, prop) {
       target ?? (target = getter());
       return Reflect.deleteProperty(target, prop);
     },
-    ownKeys(_2) {
+    ownKeys(_) {
       target ?? (target = getter());
       return Reflect.ownKeys(target);
     },
-    getOwnPropertyDescriptor(_2, prop) {
+    getOwnPropertyDescriptor(_, prop) {
       target ?? (target = getter());
       return Reflect.getOwnPropertyDescriptor(target, prop);
     },
-    defineProperty(_2, prop, descriptor) {
+    defineProperty(_, prop, descriptor) {
       target ?? (target = getter());
       return Reflect.defineProperty(target, prop, descriptor);
     }
@@ -11205,8 +11205,8 @@ function stringifyPrimitive(value) {
   return `${value}`;
 }
 function optionalKeys(shape) {
-  return Object.keys(shape).filter((k2) => {
-    return shape[k2]._zod.optin === "optional" && shape[k2]._zod.optout === "optional";
+  return Object.keys(shape).filter((k) => {
+    return shape[k]._zod.optin === "optional" && shape[k]._zod.optout === "optional";
   });
 }
 var NUMBER_FORMAT_RANGES = {
@@ -11270,15 +11270,15 @@ function extend(schema, shape) {
   };
   return clone(schema, def);
 }
-function merge(a, b2) {
+function merge(a, b) {
   return clone(a, {
     ...a._zod.def,
     get shape() {
-      const _shape = { ...a._zod.def.shape, ...b2._zod.def.shape };
+      const _shape = { ...a._zod.def.shape, ...b._zod.def.shape };
       assignProp(this, "shape", _shape);
       return _shape;
     },
-    catchall: b2._zod.def.catchall,
+    catchall: b._zod.def.catchall,
     checks: []
     // delete existing checks
   });
@@ -11342,9 +11342,9 @@ function required(Class2, schema, mask) {
     checks: []
   });
 }
-function aborted(x2, startIndex = 0) {
-  for (let i = startIndex; i < x2.issues.length; i++) {
-    if (x2.issues[i]?.continue !== true)
+function aborted(x, startIndex = 0) {
+  for (let i = startIndex; i < x.issues.length; i++) {
+    if (x.issues[i]?.continue !== true)
       return true;
   }
   return false;
@@ -11402,8 +11402,8 @@ function issue(...args) {
   return { ...iss };
 }
 function cleanEnum(obj) {
-  return Object.entries(obj).filter(([k2, _2]) => {
-    return Number.isNaN(Number.parseInt(k2, 10));
+  return Object.entries(obj).filter(([k, _]) => {
+    return Number.isNaN(Number.parseInt(k, 10));
   }).map((el) => el[1]);
 }
 var Class = class {
@@ -11999,19 +11999,19 @@ var Doc = class {
       return;
     }
     const content = arg;
-    const lines = content.split("\n").filter((x2) => x2);
-    const minIndent = Math.min(...lines.map((x2) => x2.length - x2.trimStart().length));
-    const dedented = lines.map((x2) => x2.slice(minIndent)).map((x2) => " ".repeat(this.indent * 2) + x2);
+    const lines = content.split("\n").filter((x) => x);
+    const minIndent = Math.min(...lines.map((x) => x.length - x.trimStart().length));
+    const dedented = lines.map((x) => x.slice(minIndent)).map((x) => " ".repeat(this.indent * 2) + x);
     for (const line of dedented) {
       this.content.push(line);
     }
   }
   compile() {
-    const F2 = Function;
+    const F = Function;
     const args = this?.args;
     const content = this?.content ?? [``];
-    const lines = [...content.map((x2) => `  ${x2}`)];
-    return new F2(...args, lines.join("\n"));
+    const lines = [...content.map((x) => `  ${x}`)];
+    return new F(...args, lines.join("\n"));
   }
 };
 
@@ -12056,13 +12056,13 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
           continue;
         }
         const currLen = payload.issues.length;
-        const _2 = ch._zod.check(payload);
-        if (_2 instanceof Promise && ctx?.async === false) {
+        const _ = ch._zod.check(payload);
+        if (_ instanceof Promise && ctx?.async === false) {
           throw new $ZodAsyncError();
         }
-        if (asyncResult || _2 instanceof Promise) {
+        if (asyncResult || _ instanceof Promise) {
           asyncResult = (asyncResult ?? Promise.resolve()).then(async () => {
-            await _2;
+            await _;
             const nextLen = payload.issues.length;
             if (nextLen === currLen)
               return;
@@ -12099,7 +12099,7 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
       try {
         const r = safeParse(inst, value);
         return r.success ? { value: r.data } : { issues: r.error?.issues };
-      } catch (_2) {
+      } catch (_) {
         return safeParseAsync(inst, value).then((r) => r.success ? { value: r.data } : { issues: r.error?.issues });
       }
     },
@@ -12110,11 +12110,11 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
 var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
   $ZodType.init(inst, def);
   inst._zod.pattern = [...inst?._zod.bag?.patterns ?? []].pop() ?? string(inst._zod.bag);
-  inst._zod.parse = (payload, _2) => {
+  inst._zod.parse = (payload, _) => {
     if (def.coerce)
       try {
         payload.value = String(payload.value);
-      } catch (_3) {
+      } catch (_2) {
       }
     if (typeof payload.value === "string")
       return payload;
@@ -12147,10 +12147,10 @@ var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def) => {
       v7: 7,
       v8: 8
     };
-    const v2 = versionMap[def.version];
-    if (v2 === void 0)
+    const v = versionMap[def.version];
+    if (v === void 0)
       throw new Error(`Invalid UUID version: "${def.version}"`);
-    def.pattern ?? (def.pattern = uuid(v2));
+    def.pattern ?? (def.pattern = uuid(v));
   } else
     def.pattern ?? (def.pattern = uuid());
   $ZodStringFormat.init(inst, def);
@@ -12200,7 +12200,7 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
         payload.value = href;
       }
       return;
-    } catch (_2) {
+    } catch (_) {
       payload.issues.push({
         code: "invalid_format",
         format: "url",
@@ -12413,7 +12413,7 @@ var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
     if (def.coerce)
       try {
         payload.value = Number(payload.value);
-      } catch (_2) {
+      } catch (_) {
       }
     const input = payload.value;
     if (typeof input === "number" && !Number.isNaN(input) && Number.isFinite(input)) {
@@ -12441,7 +12441,7 @@ var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
     if (def.coerce)
       try {
         payload.value = Boolean(payload.value);
-      } catch (_2) {
+      } catch (_) {
       }
     const input = payload.value;
     if (typeof input === "boolean")
@@ -12555,9 +12555,9 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
   $ZodType.init(inst, def);
   const _normalized = cached(() => {
     const keys = Object.keys(def.shape);
-    for (const k2 of keys) {
-      if (!(def.shape[k2] instanceof $ZodType)) {
-        throw new Error(`Invalid element at key "${k2}": expected a Zod schema`);
+    for (const k of keys) {
+      if (!(def.shape[k] instanceof $ZodType)) {
+        throw new Error(`Invalid element at key "${k}": expected a Zod schema`);
       }
     }
     const okeys = optionalKeys(def.shape);
@@ -12576,8 +12576,8 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
       const field = shape[key]._zod;
       if (field.values) {
         propValues[key] ?? (propValues[key] = /* @__PURE__ */ new Set());
-        for (const v2 of field.values)
-          propValues[key].add(v2);
+        for (const v of field.values)
+          propValues[key].add(v);
       }
     }
     return propValues;
@@ -12586,8 +12586,8 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     const doc = new Doc(["shape", "payload", "ctx"]);
     const normalized = _normalized.value;
     const parseStr = (key) => {
-      const k2 = esc(key);
-      return `shape[${k2}]._zod.run({ value: input[${k2}], issues: [] }, ctx)`;
+      const k = esc(key);
+      return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
     };
     doc.write(`const input = payload.value;`);
     const ids = /* @__PURE__ */ Object.create(null);
@@ -12600,25 +12600,25 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
       if (normalized.optionalKeys.has(key)) {
         const id = ids[key];
         doc.write(`const ${id} = ${parseStr(key)};`);
-        const k2 = esc(key);
+        const k = esc(key);
         doc.write(`
         if (${id}.issues.length) {
-          if (input[${k2}] === undefined) {
-            if (${k2} in input) {
-              newResult[${k2}] = undefined;
+          if (input[${k}] === undefined) {
+            if (${k} in input) {
+              newResult[${k}] = undefined;
             }
           } else {
             payload.issues = payload.issues.concat(
               ${id}.issues.map((iss) => ({
                 ...iss,
-                path: iss.path ? [${k2}, ...iss.path] : [${k2}],
+                path: iss.path ? [${k}, ...iss.path] : [${k}],
               }))
             );
           }
         } else if (${id}.value === undefined) {
-          if (${k2} in input) newResult[${k2}] = undefined;
+          if (${k} in input) newResult[${k}] = undefined;
         } else {
-          newResult[${k2}] = ${id}.value;
+          newResult[${k}] = ${id}.value;
         }
         `);
       } else {
@@ -12778,11 +12778,11 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
       const pv = option._zod.propValues;
       if (!pv || Object.keys(pv).length === 0)
         throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(option)}"`);
-      for (const [k2, v2] of Object.entries(pv)) {
-        if (!propValues[k2])
-          propValues[k2] = /* @__PURE__ */ new Set();
-        for (const val of v2) {
-          propValues[k2].add(val);
+      for (const [k, v] of Object.entries(pv)) {
+        if (!propValues[k])
+          propValues[k] = /* @__PURE__ */ new Set();
+        for (const val of v) {
+          propValues[k].add(val);
         }
       }
     }
@@ -12795,11 +12795,11 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
       const values = o._zod.propValues[def.discriminator];
       if (!values || values.size === 0)
         throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(o)}"`);
-      for (const v2 of values) {
-        if (map.has(v2)) {
-          throw new Error(`Duplicate discriminator value "${String(v2)}"`);
+      for (const v of values) {
+        if (map.has(v)) {
+          throw new Error(`Duplicate discriminator value "${String(v)}"`);
         }
-        map.set(v2, o);
+        map.set(v, o);
       }
     }
     return map;
@@ -12848,19 +12848,19 @@ var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, d
     return handleIntersectionResults(payload, left, right);
   };
 });
-function mergeValues2(a, b2) {
-  if (a === b2) {
+function mergeValues2(a, b) {
+  if (a === b) {
     return { valid: true, data: a };
   }
-  if (a instanceof Date && b2 instanceof Date && +a === +b2) {
+  if (a instanceof Date && b instanceof Date && +a === +b) {
     return { valid: true, data: a };
   }
-  if (isPlainObject(a) && isPlainObject(b2)) {
-    const bKeys = Object.keys(b2);
+  if (isPlainObject(a) && isPlainObject(b)) {
+    const bKeys = Object.keys(b);
     const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
-    const newObj = { ...a, ...b2 };
+    const newObj = { ...a, ...b };
     for (const key of sharedKeys) {
-      const sharedValue = mergeValues2(a[key], b2[key]);
+      const sharedValue = mergeValues2(a[key], b[key]);
       if (!sharedValue.valid) {
         return {
           valid: false,
@@ -12871,14 +12871,14 @@ function mergeValues2(a, b2) {
     }
     return { valid: true, data: newObj };
   }
-  if (Array.isArray(a) && Array.isArray(b2)) {
-    if (a.length !== b2.length) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) {
       return { valid: false, mergeErrorPath: [] };
     }
     const newArray = [];
     for (let index = 0; index < a.length; index++) {
       const itemA = a[index];
-      const itemB = b2[index];
+      const itemB = b[index];
       const sharedValue = mergeValues2(itemA, itemB);
       if (!sharedValue.valid) {
         return {
@@ -13005,7 +13005,7 @@ var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
   $ZodType.init(inst, def);
   const values = getEnumValues(def.entries);
   inst._zod.values = new Set(values);
-  inst._zod.pattern = new RegExp(`^(${values.filter((k2) => propertyKeyTypes.has(typeof k2)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${values.filter((k) => propertyKeyTypes.has(typeof k)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (inst._zod.values.has(input)) {
@@ -13130,8 +13130,8 @@ var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def) => {
 var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def) => {
   $ZodType.init(inst, def);
   defineLazy(inst._zod, "values", () => {
-    const v2 = def.innerType._zod.values;
-    return v2 ? new Set([...v2].filter((x2) => x2 !== void 0)) : void 0;
+    const v = def.innerType._zod.values;
+    return v ? new Set([...v].filter((x) => x !== void 0)) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     const result = def.innerType._zod.run(payload, ctx);
@@ -13229,7 +13229,7 @@ function handleReadonlyResult(payload) {
 var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
   $ZodCheck.init(inst, def);
   $ZodType.init(inst, def);
-  inst._zod.parse = (payload, _2) => {
+  inst._zod.parse = (payload, _) => {
     return payload;
   };
   inst._zod.check = (payload) => {
@@ -14418,7 +14418,7 @@ var ZodEnum2 = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
   };
 });
 function _enum(values, params) {
-  const entries = Array.isArray(values) ? Object.fromEntries(values.map((v2) => [v2, v2])) : values;
+  const entries = Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values;
   return new ZodEnum2({
     type: "enum",
     entries,
@@ -14630,7 +14630,7 @@ var LATEST_PROTOCOL_VERSION = "2025-11-25";
 var SUPPORTED_PROTOCOL_VERSIONS = [LATEST_PROTOCOL_VERSION, "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"];
 var RELATED_TASK_META_KEY = "io.modelcontextprotocol/related-task";
 var JSONRPC_VERSION = "2.0";
-var AssertObjectSchema = custom2((v2) => v2 !== null && (typeof v2 === "object" || typeof v2 === "function"));
+var AssertObjectSchema = custom2((v) => v !== null && (typeof v === "object" || typeof v === "function"));
 var ProgressTokenSchema = union([string2(), number2().int()]);
 var CursorSchema = string2();
 var TaskCreationParamsSchema = looseObject({
@@ -17085,15 +17085,15 @@ function isPlainObject2(value) {
 function mergeCapabilities(base, additional) {
   const result = { ...base };
   for (const key in additional) {
-    const k2 = key;
-    const addValue = additional[k2];
+    const k = key;
+    const addValue = additional[k];
     if (addValue === void 0)
       continue;
-    const baseValue = result[k2];
+    const baseValue = result[k];
     if (isPlainObject2(baseValue) && isPlainObject2(addValue)) {
-      result[k2] = { ...baseValue, ...addValue };
+      result[k] = { ...baseValue, ...addValue };
     } else {
-      result[k2] = addValue;
+      result[k] = addValue;
     }
   }
   return result;
@@ -17746,7 +17746,174 @@ var StdioServerTransport = class {
   }
 };
 
-// src/core/db.ts
+// src/core/embeddings.ts
+import { pipeline, env } from "@huggingface/transformers";
+var embeddingPipeline = null;
+async function initEmbeddings() {
+  if (!embeddingPipeline) {
+    console.log("Loading embedding model (first run may take time)...");
+    env.cacheDir = "./.cache";
+    embeddingPipeline = await pipeline(
+      "feature-extraction",
+      "onnx-community/embeddinggemma-300m-ONNX",
+      { dtype: "q4" }
+    );
+    console.log("Embedding model loaded");
+  }
+}
+async function generateEmbedding(text) {
+  if (!embeddingPipeline) {
+    await initEmbeddings();
+  }
+  const prefixedText = `title: none | text: ${text}`;
+  const truncated = prefixedText.substring(0, 8e3);
+  const output = await embeddingPipeline(truncated, {
+    pooling: "mean",
+    normalize: true
+  });
+  return Array.from(output.data);
+}
+
+// src/core/search.v3.ts
+function validateISODate(dateStr, paramName) {
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!isoDateRegex.test(dateStr)) {
+    throw new Error(`Invalid ${paramName} date: "${dateStr}". Expected YYYY-MM-DD format (e.g., 2025-10-01)`);
+  }
+  const date3 = new Date(dateStr);
+  if (isNaN(date3.getTime())) {
+    throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
+  }
+}
+function isoToTimestamp(isoDate) {
+  return new Date(isoDate).getTime();
+}
+async function search(query, options) {
+  const { db, limit = 10, mode = "both", after, before, projects, files } = options;
+  if (after) validateISODate(after, "--after");
+  if (before) validateISODate(before, "--before");
+  let results = [];
+  const timeFilter = [];
+  const timeFilterParams = [];
+  if (after) {
+    timeFilter.push("o.timestamp >= ?");
+    timeFilterParams.push(isoToTimestamp(after));
+  }
+  if (before) {
+    timeFilter.push("o.timestamp <= ?");
+    timeFilterParams.push(isoToTimestamp(before));
+  }
+  const timeClause = timeFilter.length > 0 ? `AND ${timeFilter.join(" AND ")}` : "";
+  const projectFilter = [];
+  const projectFilterParams = [];
+  if (projects && projects.length > 0) {
+    const projectPlaceholders = projects.map(() => "?").join(",");
+    projectFilter.push(`o.project IN (${projectPlaceholders})`);
+    projectFilterParams.push(...projects);
+  }
+  const projectClause = projectFilter.length > 0 ? `AND ${projectFilter.join(" AND ")}` : "";
+  function matchesFiles(content) {
+    if (!files || files.length === 0) {
+      return true;
+    }
+    return files.some((filePath) => content.includes(filePath));
+  }
+  if (mode === "vector" || mode === "both") {
+    await initEmbeddings();
+    const queryEmbedding = await generateEmbedding(query);
+    const stmt = db.prepare(`
+      SELECT
+        o.id,
+        o.title,
+        o.content,
+        o.project,
+        o.timestamp,
+        vec.distance
+      FROM observations o
+      INNER JOIN vec_observations vec ON CAST(o.id AS TEXT) = vec.id
+      WHERE vec.embedding MATCH ?
+        AND vec.k = ?
+        ${timeClause}
+        ${projectClause}
+      ORDER BY vec.distance ASC
+    `);
+    const vectorParams = [
+      Buffer.from(new Float32Array(queryEmbedding).buffer),
+      limit,
+      ...timeFilterParams,
+      ...projectFilterParams
+    ];
+    const vectorResults = stmt.all(...vectorParams);
+    for (const row of vectorResults) {
+      if (!matchesFiles(row.content)) {
+        continue;
+      }
+      results.push({
+        id: row.id,
+        title: row.title,
+        project: row.project,
+        timestamp: row.timestamp
+      });
+    }
+  }
+  if (mode === "text" || mode === "both") {
+    const filterConditions = [];
+    const filterParams = [];
+    if (after) {
+      filterConditions.push("o.timestamp >= ?");
+      filterParams.push(isoToTimestamp(after));
+    }
+    if (before) {
+      filterConditions.push("o.timestamp <= ?");
+      filterParams.push(isoToTimestamp(before));
+    }
+    if (projects && projects.length > 0) {
+      const projectPlaceholders = projects.map(() => "?").join(",");
+      filterConditions.push(`o.project IN (${projectPlaceholders})`);
+      filterParams.push(...projects);
+    }
+    const whereClause = filterConditions.length > 0 ? `AND ${filterConditions.join(" AND ")}` : "";
+    const ftsQuery = query.includes(".") ? `"${query}"` : query;
+    const textStmt = db.prepare(`
+      SELECT
+        o.id,
+        o.title,
+        o.content,
+        o.project,
+        o.timestamp
+      FROM observations o
+      INNER JOIN observations_fts fts ON o.id = fts.rowid
+      WHERE observations_fts MATCH ?
+        ${whereClause}
+      ORDER BY o.timestamp DESC
+      LIMIT ?
+    `);
+    const textParams = [
+      ftsQuery,
+      ...filterParams,
+      limit
+    ];
+    const textResults = textStmt.all(...textParams);
+    for (const row of textResults) {
+      const existing = results.find((r) => r.id === row.id);
+      if (existing) {
+        continue;
+      }
+      if (!matchesFiles(row.content)) {
+        continue;
+      }
+      results.push({
+        id: row.id,
+        title: row.title,
+        project: row.project,
+        timestamp: row.timestamp
+      });
+    }
+  }
+  return results;
+}
+
+// src/core/db.v3.ts
 import Database from "better-sqlite3";
 import path2 from "path";
 import fs2 from "fs";
@@ -17781,1927 +17948,103 @@ function getDbPath() {
   return path.join(getIndexDir(), "conversations.db");
 }
 
-// src/core/db.ts
-function migrateSchema(db) {
-  const exchangesColumns = db.prepare(`SELECT name FROM pragma_table_info('exchanges')`).all();
-  const exchangeColumnNames = new Set(exchangesColumns.map((c) => c.name));
-  let pendingEventColumnNames = /* @__PURE__ */ new Set();
-  const pendingEventsTableExists = db.prepare(`
-    SELECT name FROM sqlite_master WHERE type='table' AND name='pending_events'
-  `).get();
-  if (pendingEventsTableExists) {
-    const pendingColumns = db.prepare(`SELECT name FROM pragma_table_info('pending_events')`).all();
-    pendingEventColumnNames = new Set(pendingColumns.map((c) => c.name));
-  }
-  const exchangeMigrations = [
-    { name: "last_indexed", sql: "ALTER TABLE exchanges ADD COLUMN last_indexed INTEGER" },
-    { name: "parent_uuid", sql: "ALTER TABLE exchanges ADD COLUMN parent_uuid TEXT" },
-    { name: "is_sidechain", sql: "ALTER TABLE exchanges ADD COLUMN is_sidechain BOOLEAN DEFAULT 0" },
-    { name: "session_id", sql: "ALTER TABLE exchanges ADD COLUMN session_id TEXT" },
-    { name: "cwd", sql: "ALTER TABLE exchanges ADD COLUMN cwd TEXT" },
-    { name: "git_branch", sql: "ALTER TABLE exchanges ADD COLUMN git_branch TEXT" },
-    { name: "claude_version", sql: "ALTER TABLE exchanges ADD COLUMN claude_version TEXT" },
-    { name: "thinking_level", sql: "ALTER TABLE exchanges ADD COLUMN thinking_level TEXT" },
-    { name: "thinking_disabled", sql: "ALTER TABLE exchanges ADD COLUMN thinking_disabled BOOLEAN" },
-    { name: "thinking_triggers", sql: "ALTER TABLE exchanges ADD COLUMN thinking_triggers TEXT" },
-    { name: "compressed_tool_summary", sql: "ALTER TABLE exchanges ADD COLUMN compressed_tool_summary TEXT" }
-  ];
-  const pendingEventMigrations = [
-    { name: "project", sql: "ALTER TABLE pending_events ADD COLUMN project TEXT" }
-  ];
-  let migrated = false;
-  for (const migration of exchangeMigrations) {
-    if (!exchangeColumnNames.has(migration.name)) {
-      console.log(`Migrating exchanges table: adding ${migration.name} column...`);
-      db.prepare(migration.sql).run();
-      migrated = true;
-    }
-  }
-  if (pendingEventsTableExists) {
-    for (const migration of pendingEventMigrations) {
-      if (!pendingEventColumnNames.has(migration.name)) {
-        console.log(`Migrating pending_events table: adding ${migration.name} column...`);
-        db.prepare(migration.sql).run();
-        migrated = true;
-      }
-    }
-  }
-  if (migrated) {
-    console.log("Migration complete.");
-  }
-}
-function initDatabase() {
+// src/core/db.v3.ts
+function initDatabaseV3() {
   const dbPath = getDbPath();
   const dbDir = path2.dirname(dbPath);
   if (!fs2.existsSync(dbDir)) {
     fs2.mkdirSync(dbDir, { recursive: true });
   }
+  if (dbPath !== ":memory:" && fs2.existsSync(dbPath)) {
+    console.log("Deleting old database file for V3 clean slate...");
+    fs2.unlinkSync(dbPath);
+  }
   const db = new Database(dbPath);
   sqliteVec.load(db);
   db.pragma("journal_mode = WAL");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS exchanges (
-      id TEXT PRIMARY KEY,
+    CREATE TABLE pending_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT NOT NULL,
       project TEXT NOT NULL,
-      timestamp TEXT NOT NULL,
-      user_message TEXT NOT NULL,
-      assistant_message TEXT NOT NULL,
-      archive_path TEXT NOT NULL,
-      line_start INTEGER NOT NULL,
-      line_end INTEGER NOT NULL,
-      embedding BLOB,
-      last_indexed INTEGER,
-      parent_uuid TEXT,
-      is_sidechain BOOLEAN DEFAULT 0,
-      session_id TEXT,
-      cwd TEXT,
-      git_branch TEXT,
-      claude_version TEXT,
-      thinking_level TEXT,
-      thinking_disabled BOOLEAN,
-      thinking_triggers TEXT,
-      compressed_tool_summary TEXT
-    )
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS tool_calls (
-      id TEXT PRIMARY KEY,
-      exchange_id TEXT NOT NULL,
       tool_name TEXT NOT NULL,
-      tool_input TEXT,
-      tool_result TEXT,
-      is_error BOOLEAN DEFAULT 0,
-      timestamp TEXT NOT NULL,
-      FOREIGN KEY (exchange_id) REFERENCES exchanges(id)
-    )
-  `);
-  db.exec(`
-    CREATE VIRTUAL TABLE IF NOT EXISTS vec_exchanges USING vec0(
-      id TEXT PRIMARY KEY,
-      embedding FLOAT[768]
-    )
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS observations (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL,
-      project TEXT NOT NULL,
-      prompt_number INTEGER NOT NULL,
+      compressed TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
-      type TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE observations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      subtitle TEXT NOT NULL,
-      narrative TEXT NOT NULL,
-      facts TEXT NOT NULL,
-      concepts TEXT NOT NULL,
-      files_read TEXT NOT NULL,
-      files_modified TEXT NOT NULL,
-      tool_name TEXT,
-      correlation_id TEXT,
-      created_at INTEGER NOT NULL
-    )
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS session_summaries (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL,
+      content TEXT NOT NULL,
       project TEXT NOT NULL,
-      request TEXT NOT NULL,
-      investigated TEXT NOT NULL,
-      learned TEXT NOT NULL,
-      completed TEXT NOT NULL,
-      next_steps TEXT NOT NULL,
-      notes TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS pending_events (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL,
-      event_type TEXT NOT NULL,
-      tool_name TEXT,
-      tool_input TEXT,
-      tool_response TEXT,
-      cwd TEXT,
-      project TEXT,
+      session_id TEXT,
       timestamp INTEGER NOT NULL,
-      processed BOOLEAN DEFAULT 0,
       created_at INTEGER NOT NULL
     )
   `);
   db.exec(`
-    CREATE VIRTUAL TABLE IF NOT EXISTS vec_observations USING vec0(
+    CREATE VIRTUAL TABLE vec_observations USING vec0(
       id TEXT PRIMARY KEY,
-      embedding FLOAT[768]
+      embedding float[768]
     )
   `);
-  migrateSchema(db);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_timestamp ON exchanges(timestamp DESC)
+    CREATE VIRTUAL TABLE observations_fts USING fts5(title, content)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_session_id ON exchanges(session_id)
+    CREATE INDEX idx_pending_session ON pending_events(session_id)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_project ON exchanges(project)
+    CREATE INDEX idx_pending_project ON pending_events(project)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_sidechain ON exchanges(is_sidechain)
+    CREATE INDEX idx_pending_timestamp ON pending_events(timestamp)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_git_branch ON exchanges(git_branch)
+    CREATE INDEX idx_observations_project ON observations(project)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_tool_name ON tool_calls(tool_name)
+    CREATE INDEX idx_observations_session ON observations(session_id)
   `);
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_tool_exchange ON tool_calls(exchange_id)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_obs_session ON observations(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_obs_project ON observations(project)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_obs_type ON observations(type)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_obs_timestamp ON observations(timestamp DESC)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_pending_session ON pending_events(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_pending_processed ON pending_events(processed)
+    CREATE INDEX idx_observations_timestamp ON observations(timestamp DESC)
   `);
   return db;
 }
 
-// src/core/embeddings.ts
-import { pipeline, env } from "@huggingface/transformers";
-var embeddingPipeline = null;
-async function initEmbeddings() {
-  if (!embeddingPipeline) {
-    console.log("Loading embedding model (first run may take time)...");
-    env.cacheDir = "./.cache";
-    embeddingPipeline = await pipeline(
-      "feature-extraction",
-      "onnx-community/embeddinggemma-300m-ONNX",
-      { dtype: "q4" }
-    );
-    console.log("Embedding model loaded");
-  }
-}
-async function generateEmbedding(text) {
-  if (!embeddingPipeline) {
-    await initEmbeddings();
-  }
-  const prefixedText = `title: none | text: ${text}`;
-  const truncated = prefixedText.substring(0, 8e3);
-  const output = await embeddingPipeline(truncated, {
-    pooling: "mean",
-    normalize: true
-  });
-  return Array.from(output.data);
-}
-
-// src/core/search.ts
-var BOOST_FACTOR = 0.3;
-var BOOST_MIDPOINT = 0.5;
-function validateISODate(dateStr, paramName) {
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!isoDateRegex.test(dateStr)) {
-    throw new Error(`Invalid ${paramName} date: "${dateStr}". Expected YYYY-MM-DD format (e.g., 2025-10-01)`);
-  }
-  const date3 = new Date(dateStr);
-  if (isNaN(date3.getTime())) {
-    throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
-  }
-}
-function applyRecencyBoost(similarity, timestamp) {
-  const now = /* @__PURE__ */ new Date();
-  const then = new Date(timestamp);
-  const diffTime = Math.abs(now.getTime() - then.getTime());
-  const days = Math.floor(diffTime / (1e3 * 60 * 60 * 24));
-  const t = Math.min(days / 180, 1);
-  const boost = 1 + BOOST_FACTOR * (BOOST_MIDPOINT - t);
-  return similarity * boost;
-}
-async function searchConversations(query, options = {}) {
-  const { limit = 10, mode = "both", after, before, projects } = options;
-  if (after) validateISODate(after, "--after");
-  if (before) validateISODate(before, "--before");
-  const db = initDatabase();
-  let results = [];
-  const timeFilter = [];
-  const timeFilterParams = [];
-  if (after) {
-    timeFilter.push("e.timestamp >= ?");
-    timeFilterParams.push(after);
-  }
-  if (before) {
-    timeFilter.push("e.timestamp <= ?");
-    timeFilterParams.push(before);
-  }
-  const timeClause = timeFilter.length > 0 ? `AND ${timeFilter.join(" AND ")}` : "";
-  const projectFilter = [];
-  if (projects && projects.length > 0) {
-    const projectPlaceholders = projects.map(() => "?").join(",");
-    projectFilter.push(`e.project IN (${projectPlaceholders})`);
-  }
-  const projectClause = projectFilter.length > 0 ? `AND ${projectFilter.join(" AND ")}` : "";
-  if (mode === "vector" || mode === "both") {
-    await initEmbeddings();
-    const queryEmbedding = await generateEmbedding(query);
-    const stmt = db.prepare(`
-      SELECT
-        e.id,
-        e.project,
-        e.timestamp,
-        e.archive_path,
-        e.line_start,
-        e.line_end,
-        e.compressed_tool_summary,
-        SUBSTR(e.user_message, 1, 100) AS snippet_text,
-        vec.distance
-      FROM vec_exchanges AS vec
-      JOIN exchanges AS e ON vec.id = e.id
-      WHERE vec.embedding MATCH ?
-        AND k = ?
-        ${timeClause}
-        ${projectClause}
-      ORDER BY vec.distance ASC
-    `);
-    const vectorParams = [
-      Buffer.from(new Float32Array(queryEmbedding).buffer),
-      limit,
-      ...timeFilterParams,
-      ...projects || []
-    ];
-    results = stmt.all(...vectorParams);
-  }
-  if (mode === "text" || mode === "both") {
-    const textStmt = db.prepare(`
-      SELECT
-        e.id,
-        e.project,
-        e.timestamp,
-        e.archive_path,
-        e.line_start,
-        e.line_end,
-        e.compressed_tool_summary,
-        SUBSTR(e.user_message, 1, 100) AS snippet_text,
-        0 as distance
-      FROM exchanges AS e
-      WHERE (e.user_message LIKE ? OR e.assistant_message LIKE ?)
-        ${timeClause}
-        ${projectClause}
-      ORDER BY e.timestamp DESC
-      LIMIT ?
-    `);
-    const textParams = [
-      `%${query}%`,
-      `%${query}%`,
-      ...timeFilterParams,
-      ...projects || [],
-      limit
-    ];
-    const textResults = textStmt.all(...textParams);
-    if (mode === "both") {
-      const seenIds = new Set(results.map((r) => r.id));
-      for (const textResult of textResults) {
-        if (!seenIds.has(textResult.id)) {
-          results.push(textResult);
-        }
-      }
-    } else {
-      results = textResults;
-    }
-  }
-  db.close();
-  let compactResults = results.map((row) => {
-    const snippetText = row.snippet_text || "";
-    const snippet = snippetText + (snippetText.length >= 100 ? "..." : "");
-    return {
-      id: row.id,
-      project: row.project,
-      timestamp: row.timestamp,
-      archivePath: row.archive_path,
-      lineStart: row.line_start,
-      lineEnd: row.line_end,
-      compressedToolSummary: row.compressed_tool_summary,
-      similarity: mode === "text" ? void 0 : 1 - row.distance,
-      snippet
-    };
-  });
-  if (mode === "vector" || mode === "both") {
-    compactResults = compactResults.map((result) => {
-      if (result.similarity !== void 0) {
-        return {
-          ...result,
-          similarity: applyRecencyBoost(result.similarity, result.timestamp)
-        };
-      }
-      return result;
-    });
-    compactResults.sort((a, b2) => {
-      const aSim = a.similarity ?? 0;
-      const bSim = b2.similarity ?? 0;
-      return bSim - aSim;
-    });
-  }
-  return compactResults;
-}
-async function searchMultipleConcepts(concepts, options = {}) {
-  console.warn("[DEPRECATED] searchMultipleConcepts is legacy and will be removed in a future version.");
-  console.warn("[DEPRECATED] Use searchObservations() with filter parameters instead.");
-  console.warn('[DEPRECATED] Example: searchObservations("your query", { concepts: ["concept1", "concept2"] })');
-  const { limit = 10, projects } = options;
-  if (concepts.length === 0) {
+// src/core/observations.v3.ts
+async function findByIds(db, ids) {
+  if (ids.length === 0) {
     return [];
   }
-  const conceptResults = await Promise.all(
-    concepts.map((concept) => searchConversations(concept, { limit: limit * 5, mode: "vector", after: options.after, before: options.before, projects }))
-  );
-  const conversationMap = /* @__PURE__ */ new Map();
-  conceptResults.forEach((results, conceptIndex) => {
-    results.forEach((result) => {
-      const key = result.archivePath;
-      if (!conversationMap.has(key)) {
-        conversationMap.set(key, []);
-      }
-      conversationMap.get(key).push({ ...result, conceptIndex });
-    });
-  });
-  const multiConceptResults = [];
-  for (const [archivePath, results] of conversationMap.entries()) {
-    const representedConcepts = new Set(results.map((r) => r.conceptIndex));
-    if (representedConcepts.size === concepts.length) {
-      const conceptSimilarities = concepts.map((_concept, index) => {
-        const result = results.find((r) => r.conceptIndex === index);
-        return result?.similarity || 0;
-      });
-      const averageSimilarity = conceptSimilarities.reduce((sum, sim) => sum + sim, 0) / conceptSimilarities.length;
-      const firstResult = results[0];
-      multiConceptResults.push({
-        id: firstResult.id,
-        project: firstResult.project,
-        timestamp: firstResult.timestamp,
-        archivePath: firstResult.archivePath,
-        lineStart: firstResult.lineStart,
-        lineEnd: firstResult.lineEnd,
-        compressedToolSummary: firstResult.compressedToolSummary,
-        snippet: firstResult.snippet,
-        conceptSimilarities,
-        averageSimilarity
-      });
-    }
-  }
-  multiConceptResults.sort((a, b2) => b2.averageSimilarity - a.averageSimilarity);
-  return multiConceptResults.slice(0, limit);
-}
-function formatMultiConceptResults(results, concepts) {
-  if (results.length === 0) {
-    return `No conversations found matching all concepts: ${concepts.join(", ")}`;
-  }
-  let output = `Found ${results.length} conversation${results.length > 1 ? "s" : ""} matching all concepts [${concepts.join(" + ")}]:
-
-`;
-  for (let index = 0; index < results.length; index++) {
-    const result = results[index];
-    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
-    const avgPct = Math.round(result.averageSimilarity * 100);
-    output += `${index + 1}. [${result.project}, ${date3}] - ${avgPct}% avg match
-`;
-    const scores = result.conceptSimilarities.map((sim, i) => `${concepts[i]}: ${Math.round(sim * 100)}%`).join(", ");
-    output += `   Concepts: ${scores}
-`;
-    output += `   "${result.snippet}"
-`;
-    if (result.compressedToolSummary) {
-      output += `   Actions: ${result.compressedToolSummary}
-`;
-    }
-    const lineRange = `${result.lineStart}-${result.lineEnd}`;
-    output += `   Lines ${lineRange} in ${result.archivePath}
-
-`;
-  }
-  return output;
-}
-async function searchObservations(query, options = {}) {
-  const { limit = 10, mode = "both", after, before, projects, types, concepts, files } = options;
-  if (after) validateISODate(after, "--after");
-  if (before) validateISODate(before, "--before");
-  const db = initDatabase();
-  let results = [];
-  const whereClauses = [];
-  const whereParams = [];
-  if (after) {
-    whereClauses.push("o.timestamp >= ?");
-    whereParams.push(after);
-  }
-  if (before) {
-    whereClauses.push("o.timestamp <= ?");
-    whereParams.push(before);
-  }
-  if (projects && projects.length > 0) {
-    whereClauses.push(`o.project IN (${projects.map(() => "?").join(",")})`);
-    whereParams.push(...projects);
-  }
-  if (types && types.length > 0) {
-    whereClauses.push(`o.type IN (${types.map(() => "?").join(",")})`);
-    whereParams.push(...types);
-  }
-  if (concepts && concepts.length > 0) {
-    whereClauses.push(`(
-      SELECT COUNT(*) FROM json_each(o.concepts)
-      WHERE json_each.value IN (${concepts.map(() => "?").join(",")})
-    ) > 0`);
-    whereParams.push(...concepts);
-  }
-  if (files && files.length > 0) {
-    whereClauses.push(`(
-      SELECT COUNT(*) FROM json_each(o.files_read)
-      WHERE json_each.value IN (${files.map(() => "?").join(",")})
-    ) > 0 OR (
-      SELECT COUNT(*) FROM json_each(o.files_modified)
-      WHERE json_each.value IN (${files.map(() => "?").join(",")})
-    ) > 0`);
-    whereParams.push(...files, ...files);
-  }
-  const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-  if (mode === "vector" || mode === "both") {
-    await initEmbeddings();
-    const queryEmbedding = await generateEmbedding(query);
-    const stmt = db.prepare(`
-      SELECT
-        o.id,
-        o.session_id as sessionId,
-        o.project,
-        o.timestamp,
-        o.type,
-        o.title,
-        o.subtitle,
-        o.facts,
-        o.concepts,
-        o.files_read as filesRead,
-        o.files_modified as filesModified,
-        v.distance
-      FROM observations o
-      INNER JOIN vec_observations v ON o.id = v.id
-      ${whereClause}
-      ORDER BY v.distance
-      LIMIT ?
-    `);
-    const vectorResults = stmt.all(...whereParams, limit * 2);
-    for (const row of vectorResults) {
-      const similarity = Math.max(0, 1 - row.distance);
-      const boostedSimilarity = applyRecencyBoost(similarity, row.timestamp);
-      results.push({
-        id: row.id,
-        sessionId: row.sessionId,
-        project: row.project,
-        timestamp: row.timestamp,
-        type: row.type,
-        title: row.title,
-        subtitle: row.subtitle,
-        facts: JSON.parse(row.facts),
-        concepts: JSON.parse(row.concepts),
-        filesRead: JSON.parse(row.filesRead),
-        filesModified: JSON.parse(row.filesModified),
-        similarity: boostedSimilarity
-      });
-    }
-  }
-  if (mode === "text" || mode === "both") {
-    const textWhereClause = whereClause ? `${whereClause}
-      AND (` : "WHERE (";
-    const textStmt = db.prepare(`
-      SELECT
-        o.id,
-        o.session_id as sessionId,
-        o.project,
-        o.timestamp,
-        o.type,
-        o.title,
-        o.subtitle,
-        o.facts,
-        o.concepts,
-        o.files_read as filesRead,
-        o.files_modified as filesModified
-      FROM observations o
-      ${textWhereClause}
-        o.title LIKE ? OR
-        o.subtitle LIKE ? OR
-        o.narrative LIKE ?
-      )
-      ORDER BY o.timestamp DESC
-      LIMIT ?
-    `);
-    const likeQuery = `%${query}%`;
-    const textResults = textStmt.all(...whereParams, likeQuery, likeQuery, likeQuery, limit * 2);
-    for (const row of textResults) {
-      const existing = results.find((r) => r.id === row.id);
-      if (existing) {
-        continue;
-      }
-      results.push({
-        id: row.id,
-        sessionId: row.sessionId,
-        project: row.project,
-        timestamp: row.timestamp,
-        type: row.type,
-        title: row.title,
-        subtitle: row.subtitle,
-        facts: JSON.parse(row.facts),
-        concepts: JSON.parse(row.concepts),
-        filesRead: JSON.parse(row.filesRead),
-        filesModified: JSON.parse(row.filesModified),
-        similarity: void 0
-        // No similarity score for text-only results
-      });
-    }
-  }
-  results.sort((a, b2) => {
-    if (a.similarity !== void 0 && b2.similarity !== void 0) {
-      return b2.similarity - a.similarity;
-    }
-    if (a.similarity !== void 0) {
-      return -1;
-    }
-    if (b2.similarity !== void 0) {
-      return 1;
-    }
-    return new Date(b2.timestamp).getTime() - new Date(a.timestamp).getTime();
-  });
-  return results.slice(0, limit);
-}
-function formatObservationResults(results) {
-  if (results.length === 0) {
-    return "No observations found matching your query.";
-  }
-  let output = `Found ${results.length} observation${results.length > 1 ? "s" : ""}:
-
-`;
-  for (let index = 0; index < results.length; index++) {
-    const result = results[index];
-    const date3 = new Date(result.timestamp).toISOString().split("T")[0];
-    const time3 = new Date(result.timestamp).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    });
-    if (result.similarity !== void 0) {
-      const pct = Math.round(result.similarity * 100);
-      output += `${index + 1}. [${result.project}, ${date3} ${time3}] - ${pct}% match - **${result.type}**: ${result.title}
-`;
-    } else {
-      output += `${index + 1}. [${result.project}, ${date3} ${time3}] - **${result.type}**: ${result.title}
-`;
-    }
-    if (result.subtitle) {
-      output += `   ${result.subtitle}
-`;
-    }
-    if (result.facts.length > 0) {
-      output += `   Facts: ${result.facts.map((f) => `\`${f}\``).join(", ")}
-`;
-    }
-    if (result.concepts.length > 0) {
-      output += `   Concepts: ${result.concepts.map((c) => `\`${c}\``).join(", ")}
-`;
-    }
-    const allFiles = [...result.filesRead, ...result.filesModified];
-    if (allFiles.length > 0) {
-      const uniqueFiles = [...new Set(allFiles)];
-      output += `   Files: ${uniqueFiles.join(", ")}
-`;
-    }
-    output += `
-`;
-  }
-  return output;
+  const placeholders = ids.map(() => "?").join(",");
+  const stmt = db.prepare(`
+    SELECT id, title, content, project, session_id as sessionId, timestamp
+    FROM observations
+    WHERE id IN (${placeholders})
+    ORDER BY timestamp DESC
+  `);
+  const results = stmt.all(...ids);
+  return results.map((r) => ({
+    id: r.id,
+    title: r.title,
+    content: r.content,
+    project: r.project,
+    sessionId: r.sessionId,
+    timestamp: r.timestamp
+  }));
 }
 
-// node_modules/marked/lib/marked.esm.js
-function L() {
-  return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
-}
-var T = L();
-function Z(u3) {
-  T = u3;
-}
-var C = { exec: () => null };
-function k(u3, e = "") {
-  let t = typeof u3 == "string" ? u3 : u3.source, n = { replace: (r, i) => {
-    let s = typeof i == "string" ? i : i.source;
-    return s = s.replace(m.caret, "$1"), t = t.replace(r, s), n;
-  }, getRegex: () => new RegExp(t, e) };
-  return n;
-}
-var me = (() => {
-  try {
-    return !!new RegExp("(?<=1)(?<!1)");
-  } catch {
-    return false;
-  }
-})();
-var m = { codeRemoveIndent: /^(?: {1,4}| {0,3}\t)/gm, outputLinkReplace: /\\([\[\]])/g, indentCodeCompensation: /^(\s+)(?:```)/, beginningSpace: /^\s+/, endingHash: /#$/, startingSpaceChar: /^ /, endingSpaceChar: / $/, nonSpaceChar: /[^ ]/, newLineCharGlobal: /\n/g, tabCharGlobal: /\t/g, multipleSpaceGlobal: /\s+/g, blankLine: /^[ \t]*$/, doubleBlankLine: /\n[ \t]*\n[ \t]*$/, blockquoteStart: /^ {0,3}>/, blockquoteSetextReplace: /\n {0,3}((?:=+|-+) *)(?=\n|$)/g, blockquoteSetextReplace2: /^ {0,3}>[ \t]?/gm, listReplaceTabs: /^\t+/, listReplaceNesting: /^ {1,4}(?=( {4})*[^ ])/g, listIsTask: /^\[[ xX]\] +\S/, listReplaceTask: /^\[[ xX]\] +/, listTaskCheckbox: /\[[ xX]\]/, anyLine: /\n.*\n/, hrefBrackets: /^<(.*)>$/, tableDelimiter: /[:|]/, tableAlignChars: /^\||\| *$/g, tableRowBlankLine: /\n[ \t]*$/, tableAlignRight: /^ *-+: *$/, tableAlignCenter: /^ *:-+: *$/, tableAlignLeft: /^ *:-+ *$/, startATag: /^<a /i, endATag: /^<\/a>/i, startPreScriptTag: /^<(pre|code|kbd|script)(\s|>)/i, endPreScriptTag: /^<\/(pre|code|kbd|script)(\s|>)/i, startAngleBracket: /^</, endAngleBracket: />$/, pedanticHrefTitle: /^([^'"]*[^\s])\s+(['"])(.*)\2/, unicodeAlphaNumeric: /[\p{L}\p{N}]/u, escapeTest: /[&<>"']/, escapeReplace: /[&<>"']/g, escapeTestNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/, escapeReplaceNoEncode: /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g, unescapeTest: /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig, caret: /(^|[^\[])\^/g, percentDecode: /%25/g, findPipe: /\|/g, splitPipe: / \|/, slashPipe: /\\\|/g, carriageReturn: /\r\n|\r/g, spaceLine: /^ +$/gm, notSpaceStart: /^\S*/, endingNewline: /\n$/, listItemRegex: (u3) => new RegExp(`^( {0,3}${u3})((?:[	 ][^\\n]*)?(?:\\n|$))`), nextBulletRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`), hrRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`), fencesBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}(?:\`\`\`|~~~)`), headingBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}#`), htmlBeginRegex: (u3) => new RegExp(`^ {0,${Math.min(3, u3 - 1)}}<(?:[a-z].*>|!--)`, "i") };
-var xe = /^(?:[ \t]*(?:\n|$))+/;
-var be = /^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+/;
-var Re = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
-var I = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
-var Te = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
-var N = /(?:[*+-]|\d{1,9}[.)])/;
-var re = /^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\n {0,3}(=+|-+) *(?:\n+|$)/;
-var se = k(re).replace(/bull/g, N).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/\|table/g, "").getRegex();
-var Oe = k(re).replace(/bull/g, N).replace(/blockCode/g, /(?: {4}| {0,3}\t)/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).replace(/table/g, / {0,3}\|?(?:[:\- ]*\|)+[\:\- ]*\n/).getRegex();
-var Q = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
-var we = /^[^\n]+/;
-var F = /(?!\s*\])(?:\\[\s\S]|[^\[\]\\])+/;
-var ye = k(/^ {0,3}\[(label)\]: *(?:\n[ \t]*)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n[ \t]*)?| *\n[ \t]*)(title))? *(?:\n+|$)/).replace("label", F).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex();
-var Pe = k(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g, N).getRegex();
-var v = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
-var j = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
-var Se = k("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n[ 	]*)+\\n|$))", "i").replace("comment", j).replace("tag", v).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex();
-var ie = k(Q).replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex();
-var $e = k(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", ie).getRegex();
-var U = { blockquote: $e, code: be, def: ye, fences: Re, heading: Te, hr: I, html: Se, lheading: se, list: Pe, newline: xe, paragraph: ie, table: C, text: we };
-var te = k("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", "(?: {4}| {0,3}	)[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex();
-var _e = { ...U, lheading: Oe, table: te, paragraph: k(Q).replace("hr", I).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", te).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", v).getRegex() };
-var Le = { ...U, html: k(`^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`).replace("comment", j).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(), def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/, heading: /^(#{1,6})(.*)(?:\n+|$)/, fences: C, lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/, paragraph: k(Q).replace("hr", I).replace("heading", ` *#{1,6} *[^
-]`).replace("lheading", se).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex() };
-var Me = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
-var ze = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
-var oe = /^( {2,}|\\)\n(?!\s*$)/;
-var Ae = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
-var D = /[\p{P}\p{S}]/u;
-var K = /[\s\p{P}\p{S}]/u;
-var ae = /[^\s\p{P}\p{S}]/u;
-var Ce = k(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, K).getRegex();
-var le = /(?!~)[\p{P}\p{S}]/u;
-var Ie = /(?!~)[\s\p{P}\p{S}]/u;
-var Ee = /(?:[^\s\p{P}\p{S}]|~)/u;
-var Be = k(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", me ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex();
-var ue = /^(?:\*+(?:((?!\*)punct)|[^\s*]))|^_+(?:((?!_)punct)|([^\s_]))/;
-var qe = k(ue, "u").replace(/punct/g, D).getRegex();
-var ve = k(ue, "u").replace(/punct/g, le).getRegex();
-var pe = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)";
-var De = k(pe, "gu").replace(/notPunctSpace/g, ae).replace(/punctSpace/g, K).replace(/punct/g, D).getRegex();
-var He = k(pe, "gu").replace(/notPunctSpace/g, Ee).replace(/punctSpace/g, Ie).replace(/punct/g, le).getRegex();
-var Ze = k("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, ae).replace(/punctSpace/g, K).replace(/punct/g, D).getRegex();
-var Ge = k(/\\(punct)/, "gu").replace(/punct/g, D).getRegex();
-var Ne = k(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
-var Qe = k(j).replace("(?:-->|$)", "-->").getRegex();
-var Fe = k("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Qe).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
-var q = /(?:\[(?:\\[\s\S]|[^\[\]\\])*\]|\\[\s\S]|`+[^`]*?`+(?!`)|[^\[\]\\`])*?/;
-var je = k(/^!?\[(label)\]\(\s*(href)(?:(?:[ \t]*(?:\n[ \t]*)?)(title))?\s*\)/).replace("label", q).replace("href", /<(?:\\.|[^\n<>\\])+>|[^ \t\n\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
-var ce = k(/^!?\[(label)\]\[(ref)\]/).replace("label", q).replace("ref", F).getRegex();
-var he = k(/^!?\[(ref)\](?:\[\])?/).replace("ref", F).getRegex();
-var Ue = k("reflink|nolink(?!\\()", "g").replace("reflink", ce).replace("nolink", he).getRegex();
-var ne = /[hH][tT][tT][pP][sS]?|[fF][tT][pP]/;
-var W = { _backpedal: C, anyPunctuation: Ge, autolink: Ne, blockSkip: Be, br: oe, code: ze, del: C, emStrongLDelim: qe, emStrongRDelimAst: De, emStrongRDelimUnd: Ze, escape: Me, link: je, nolink: he, punctuation: Ce, reflink: ce, reflinkSearch: Ue, tag: Fe, text: Ae, url: C };
-var Ke = { ...W, link: k(/^!?\[(label)\]\((.*?)\)/).replace("label", q).getRegex(), reflink: k(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", q).getRegex() };
-var G = { ...W, emStrongRDelimAst: He, emStrongLDelim: ve, url: k(/^((?:protocol):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/).replace("protocol", ne).replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(), _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/, del: /^(~~?)(?=[^\s~])((?:\\[\s\S]|[^\\])*?(?:\\[\s\S]|[^\s~\\]))\1(?=[^~]|$)/, text: k(/^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|protocol:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/).replace("protocol", ne).getRegex() };
-var We = { ...G, br: k(oe).replace("{2,}", "*").getRegex(), text: k(G.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex() };
-var E = { normal: U, gfm: _e, pedantic: Le };
-var M = { normal: W, gfm: G, breaks: We, pedantic: Ke };
-var Xe = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-var ke = (u3) => Xe[u3];
-function w(u3, e) {
-  if (e) {
-    if (m.escapeTest.test(u3)) return u3.replace(m.escapeReplace, ke);
-  } else if (m.escapeTestNoEncode.test(u3)) return u3.replace(m.escapeReplaceNoEncode, ke);
-  return u3;
-}
-function X(u3) {
-  try {
-    u3 = encodeURI(u3).replace(m.percentDecode, "%");
-  } catch {
+// src/core/read.ts
+import * as fs3 from "fs";
+function readConversation(path3, startLine, endLine) {
+  if (!fs3.existsSync(path3)) {
     return null;
   }
-  return u3;
-}
-function J(u3, e) {
-  let t = u3.replace(m.findPipe, (i, s, a) => {
-    let o = false, l = s;
-    for (; --l >= 0 && a[l] === "\\"; ) o = !o;
-    return o ? "|" : " |";
-  }), n = t.split(m.splitPipe), r = 0;
-  if (n[0].trim() || n.shift(), n.length > 0 && !n.at(-1)?.trim() && n.pop(), e) if (n.length > e) n.splice(e);
-  else for (; n.length < e; ) n.push("");
-  for (; r < n.length; r++) n[r] = n[r].trim().replace(m.slashPipe, "|");
-  return n;
-}
-function z(u3, e, t) {
-  let n = u3.length;
-  if (n === 0) return "";
-  let r = 0;
-  for (; r < n; ) {
-    let i = u3.charAt(n - r - 1);
-    if (i === e && !t) r++;
-    else if (i !== e && t) r++;
-    else break;
-  }
-  return u3.slice(0, n - r);
-}
-function de(u3, e) {
-  if (u3.indexOf(e[1]) === -1) return -1;
-  let t = 0;
-  for (let n = 0; n < u3.length; n++) if (u3[n] === "\\") n++;
-  else if (u3[n] === e[0]) t++;
-  else if (u3[n] === e[1] && (t--, t < 0)) return n;
-  return t > 0 ? -2 : -1;
-}
-function ge(u3, e, t, n, r) {
-  let i = e.href, s = e.title || null, a = u3[1].replace(r.other.outputLinkReplace, "$1");
-  n.state.inLink = true;
-  let o = { type: u3[0].charAt(0) === "!" ? "image" : "link", raw: t, href: i, title: s, text: a, tokens: n.inlineTokens(a) };
-  return n.state.inLink = false, o;
-}
-function Je(u3, e, t) {
-  let n = u3.match(t.other.indentCodeCompensation);
-  if (n === null) return e;
-  let r = n[1];
-  return e.split(`
-`).map((i) => {
-    let s = i.match(t.other.beginningSpace);
-    if (s === null) return i;
-    let [a] = s;
-    return a.length >= r.length ? i.slice(r.length) : i;
-  }).join(`
-`);
-}
-var y = class {
-  options;
-  rules;
-  lexer;
-  constructor(e) {
-    this.options = e || T;
-  }
-  space(e) {
-    let t = this.rules.block.newline.exec(e);
-    if (t && t[0].length > 0) return { type: "space", raw: t[0] };
-  }
-  code(e) {
-    let t = this.rules.block.code.exec(e);
-    if (t) {
-      let n = t[0].replace(this.rules.other.codeRemoveIndent, "");
-      return { type: "code", raw: t[0], codeBlockStyle: "indented", text: this.options.pedantic ? n : z(n, `
-`) };
-    }
-  }
-  fences(e) {
-    let t = this.rules.block.fences.exec(e);
-    if (t) {
-      let n = t[0], r = Je(n, t[3] || "", this.rules);
-      return { type: "code", raw: n, lang: t[2] ? t[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : t[2], text: r };
-    }
-  }
-  heading(e) {
-    let t = this.rules.block.heading.exec(e);
-    if (t) {
-      let n = t[2].trim();
-      if (this.rules.other.endingHash.test(n)) {
-        let r = z(n, "#");
-        (this.options.pedantic || !r || this.rules.other.endingSpaceChar.test(r)) && (n = r.trim());
-      }
-      return { type: "heading", raw: t[0], depth: t[1].length, text: n, tokens: this.lexer.inline(n) };
-    }
-  }
-  hr(e) {
-    let t = this.rules.block.hr.exec(e);
-    if (t) return { type: "hr", raw: z(t[0], `
-`) };
-  }
-  blockquote(e) {
-    let t = this.rules.block.blockquote.exec(e);
-    if (t) {
-      let n = z(t[0], `
-`).split(`
-`), r = "", i = "", s = [];
-      for (; n.length > 0; ) {
-        let a = false, o = [], l;
-        for (l = 0; l < n.length; l++) if (this.rules.other.blockquoteStart.test(n[l])) o.push(n[l]), a = true;
-        else if (!a) o.push(n[l]);
-        else break;
-        n = n.slice(l);
-        let p = o.join(`
-`), c = p.replace(this.rules.other.blockquoteSetextReplace, `
-    $1`).replace(this.rules.other.blockquoteSetextReplace2, "");
-        r = r ? `${r}
-${p}` : p, i = i ? `${i}
-${c}` : c;
-        let g = this.lexer.state.top;
-        if (this.lexer.state.top = true, this.lexer.blockTokens(c, s, true), this.lexer.state.top = g, n.length === 0) break;
-        let h = s.at(-1);
-        if (h?.type === "code") break;
-        if (h?.type === "blockquote") {
-          let R = h, f = R.raw + `
-` + n.join(`
-`), O = this.blockquote(f);
-          s[s.length - 1] = O, r = r.substring(0, r.length - R.raw.length) + O.raw, i = i.substring(0, i.length - R.text.length) + O.text;
-          break;
-        } else if (h?.type === "list") {
-          let R = h, f = R.raw + `
-` + n.join(`
-`), O = this.list(f);
-          s[s.length - 1] = O, r = r.substring(0, r.length - h.raw.length) + O.raw, i = i.substring(0, i.length - R.raw.length) + O.raw, n = f.substring(s.at(-1).raw.length).split(`
-`);
-          continue;
-        }
-      }
-      return { type: "blockquote", raw: r, tokens: s, text: i };
-    }
-  }
-  list(e) {
-    let t = this.rules.block.list.exec(e);
-    if (t) {
-      let n = t[1].trim(), r = n.length > 1, i = { type: "list", raw: "", ordered: r, start: r ? +n.slice(0, -1) : "", loose: false, items: [] };
-      n = r ? `\\d{1,9}\\${n.slice(-1)}` : `\\${n}`, this.options.pedantic && (n = r ? n : "[*+-]");
-      let s = this.rules.other.listItemRegex(n), a = false;
-      for (; e; ) {
-        let l = false, p = "", c = "";
-        if (!(t = s.exec(e)) || this.rules.block.hr.test(e)) break;
-        p = t[0], e = e.substring(p.length);
-        let g = t[2].split(`
-`, 1)[0].replace(this.rules.other.listReplaceTabs, (O) => " ".repeat(3 * O.length)), h = e.split(`
-`, 1)[0], R = !g.trim(), f = 0;
-        if (this.options.pedantic ? (f = 2, c = g.trimStart()) : R ? f = t[1].length + 1 : (f = t[2].search(this.rules.other.nonSpaceChar), f = f > 4 ? 1 : f, c = g.slice(f), f += t[1].length), R && this.rules.other.blankLine.test(h) && (p += h + `
-`, e = e.substring(h.length + 1), l = true), !l) {
-          let O = this.rules.other.nextBulletRegex(f), V = this.rules.other.hrRegex(f), Y = this.rules.other.fencesBeginRegex(f), ee = this.rules.other.headingBeginRegex(f), fe = this.rules.other.htmlBeginRegex(f);
-          for (; e; ) {
-            let H = e.split(`
-`, 1)[0], A;
-            if (h = H, this.options.pedantic ? (h = h.replace(this.rules.other.listReplaceNesting, "  "), A = h) : A = h.replace(this.rules.other.tabCharGlobal, "    "), Y.test(h) || ee.test(h) || fe.test(h) || O.test(h) || V.test(h)) break;
-            if (A.search(this.rules.other.nonSpaceChar) >= f || !h.trim()) c += `
-` + A.slice(f);
-            else {
-              if (R || g.replace(this.rules.other.tabCharGlobal, "    ").search(this.rules.other.nonSpaceChar) >= 4 || Y.test(g) || ee.test(g) || V.test(g)) break;
-              c += `
-` + h;
-            }
-            !R && !h.trim() && (R = true), p += H + `
-`, e = e.substring(H.length + 1), g = A.slice(f);
-          }
-        }
-        i.loose || (a ? i.loose = true : this.rules.other.doubleBlankLine.test(p) && (a = true)), i.items.push({ type: "list_item", raw: p, task: !!this.options.gfm && this.rules.other.listIsTask.test(c), loose: false, text: c, tokens: [] }), i.raw += p;
-      }
-      let o = i.items.at(-1);
-      if (o) o.raw = o.raw.trimEnd(), o.text = o.text.trimEnd();
-      else return;
-      i.raw = i.raw.trimEnd();
-      for (let l of i.items) {
-        if (this.lexer.state.top = false, l.tokens = this.lexer.blockTokens(l.text, []), l.task) {
-          if (l.text = l.text.replace(this.rules.other.listReplaceTask, ""), l.tokens[0]?.type === "text" || l.tokens[0]?.type === "paragraph") {
-            l.tokens[0].raw = l.tokens[0].raw.replace(this.rules.other.listReplaceTask, ""), l.tokens[0].text = l.tokens[0].text.replace(this.rules.other.listReplaceTask, "");
-            for (let c = this.lexer.inlineQueue.length - 1; c >= 0; c--) if (this.rules.other.listIsTask.test(this.lexer.inlineQueue[c].src)) {
-              this.lexer.inlineQueue[c].src = this.lexer.inlineQueue[c].src.replace(this.rules.other.listReplaceTask, "");
-              break;
-            }
-          }
-          let p = this.rules.other.listTaskCheckbox.exec(l.raw);
-          if (p) {
-            let c = { type: "checkbox", raw: p[0] + " ", checked: p[0] !== "[ ]" };
-            l.checked = c.checked, i.loose ? l.tokens[0] && ["paragraph", "text"].includes(l.tokens[0].type) && "tokens" in l.tokens[0] && l.tokens[0].tokens ? (l.tokens[0].raw = c.raw + l.tokens[0].raw, l.tokens[0].text = c.raw + l.tokens[0].text, l.tokens[0].tokens.unshift(c)) : l.tokens.unshift({ type: "paragraph", raw: c.raw, text: c.raw, tokens: [c] }) : l.tokens.unshift(c);
-          }
-        }
-        if (!i.loose) {
-          let p = l.tokens.filter((g) => g.type === "space"), c = p.length > 0 && p.some((g) => this.rules.other.anyLine.test(g.raw));
-          i.loose = c;
-        }
-      }
-      if (i.loose) for (let l of i.items) {
-        l.loose = true;
-        for (let p of l.tokens) p.type === "text" && (p.type = "paragraph");
-      }
-      return i;
-    }
-  }
-  html(e) {
-    let t = this.rules.block.html.exec(e);
-    if (t) return { type: "html", block: true, raw: t[0], pre: t[1] === "pre" || t[1] === "script" || t[1] === "style", text: t[0] };
-  }
-  def(e) {
-    let t = this.rules.block.def.exec(e);
-    if (t) {
-      let n = t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal, " "), r = t[2] ? t[2].replace(this.rules.other.hrefBrackets, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "", i = t[3] ? t[3].substring(1, t[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : t[3];
-      return { type: "def", tag: n, raw: t[0], href: r, title: i };
-    }
-  }
-  table(e) {
-    let t = this.rules.block.table.exec(e);
-    if (!t || !this.rules.other.tableDelimiter.test(t[2])) return;
-    let n = J(t[1]), r = t[2].replace(this.rules.other.tableAlignChars, "").split("|"), i = t[3]?.trim() ? t[3].replace(this.rules.other.tableRowBlankLine, "").split(`
-`) : [], s = { type: "table", raw: t[0], header: [], align: [], rows: [] };
-    if (n.length === r.length) {
-      for (let a of r) this.rules.other.tableAlignRight.test(a) ? s.align.push("right") : this.rules.other.tableAlignCenter.test(a) ? s.align.push("center") : this.rules.other.tableAlignLeft.test(a) ? s.align.push("left") : s.align.push(null);
-      for (let a = 0; a < n.length; a++) s.header.push({ text: n[a], tokens: this.lexer.inline(n[a]), header: true, align: s.align[a] });
-      for (let a of i) s.rows.push(J(a, s.header.length).map((o, l) => ({ text: o, tokens: this.lexer.inline(o), header: false, align: s.align[l] })));
-      return s;
-    }
-  }
-  lheading(e) {
-    let t = this.rules.block.lheading.exec(e);
-    if (t) return { type: "heading", raw: t[0], depth: t[2].charAt(0) === "=" ? 1 : 2, text: t[1], tokens: this.lexer.inline(t[1]) };
-  }
-  paragraph(e) {
-    let t = this.rules.block.paragraph.exec(e);
-    if (t) {
-      let n = t[1].charAt(t[1].length - 1) === `
-` ? t[1].slice(0, -1) : t[1];
-      return { type: "paragraph", raw: t[0], text: n, tokens: this.lexer.inline(n) };
-    }
-  }
-  text(e) {
-    let t = this.rules.block.text.exec(e);
-    if (t) return { type: "text", raw: t[0], text: t[0], tokens: this.lexer.inline(t[0]) };
-  }
-  escape(e) {
-    let t = this.rules.inline.escape.exec(e);
-    if (t) return { type: "escape", raw: t[0], text: t[1] };
-  }
-  tag(e) {
-    let t = this.rules.inline.tag.exec(e);
-    if (t) return !this.lexer.state.inLink && this.rules.other.startATag.test(t[0]) ? this.lexer.state.inLink = true : this.lexer.state.inLink && this.rules.other.endATag.test(t[0]) && (this.lexer.state.inLink = false), !this.lexer.state.inRawBlock && this.rules.other.startPreScriptTag.test(t[0]) ? this.lexer.state.inRawBlock = true : this.lexer.state.inRawBlock && this.rules.other.endPreScriptTag.test(t[0]) && (this.lexer.state.inRawBlock = false), { type: "html", raw: t[0], inLink: this.lexer.state.inLink, inRawBlock: this.lexer.state.inRawBlock, block: false, text: t[0] };
-  }
-  link(e) {
-    let t = this.rules.inline.link.exec(e);
-    if (t) {
-      let n = t[2].trim();
-      if (!this.options.pedantic && this.rules.other.startAngleBracket.test(n)) {
-        if (!this.rules.other.endAngleBracket.test(n)) return;
-        let s = z(n.slice(0, -1), "\\");
-        if ((n.length - s.length) % 2 === 0) return;
-      } else {
-        let s = de(t[2], "()");
-        if (s === -2) return;
-        if (s > -1) {
-          let o = (t[0].indexOf("!") === 0 ? 5 : 4) + t[1].length + s;
-          t[2] = t[2].substring(0, s), t[0] = t[0].substring(0, o).trim(), t[3] = "";
-        }
-      }
-      let r = t[2], i = "";
-      if (this.options.pedantic) {
-        let s = this.rules.other.pedanticHrefTitle.exec(r);
-        s && (r = s[1], i = s[3]);
-      } else i = t[3] ? t[3].slice(1, -1) : "";
-      return r = r.trim(), this.rules.other.startAngleBracket.test(r) && (this.options.pedantic && !this.rules.other.endAngleBracket.test(n) ? r = r.slice(1) : r = r.slice(1, -1)), ge(t, { href: r && r.replace(this.rules.inline.anyPunctuation, "$1"), title: i && i.replace(this.rules.inline.anyPunctuation, "$1") }, t[0], this.lexer, this.rules);
-    }
-  }
-  reflink(e, t) {
-    let n;
-    if ((n = this.rules.inline.reflink.exec(e)) || (n = this.rules.inline.nolink.exec(e))) {
-      let r = (n[2] || n[1]).replace(this.rules.other.multipleSpaceGlobal, " "), i = t[r.toLowerCase()];
-      if (!i) {
-        let s = n[0].charAt(0);
-        return { type: "text", raw: s, text: s };
-      }
-      return ge(n, i, n[0], this.lexer, this.rules);
-    }
-  }
-  emStrong(e, t, n = "") {
-    let r = this.rules.inline.emStrongLDelim.exec(e);
-    if (!r || r[3] && n.match(this.rules.other.unicodeAlphaNumeric)) return;
-    if (!(r[1] || r[2] || "") || !n || this.rules.inline.punctuation.exec(n)) {
-      let s = [...r[0]].length - 1, a, o, l = s, p = 0, c = r[0][0] === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
-      for (c.lastIndex = 0, t = t.slice(-1 * e.length + s); (r = c.exec(t)) != null; ) {
-        if (a = r[1] || r[2] || r[3] || r[4] || r[5] || r[6], !a) continue;
-        if (o = [...a].length, r[3] || r[4]) {
-          l += o;
-          continue;
-        } else if ((r[5] || r[6]) && s % 3 && !((s + o) % 3)) {
-          p += o;
-          continue;
-        }
-        if (l -= o, l > 0) continue;
-        o = Math.min(o, o + l + p);
-        let g = [...r[0]][0].length, h = e.slice(0, s + r.index + g + o);
-        if (Math.min(s, o) % 2) {
-          let f = h.slice(1, -1);
-          return { type: "em", raw: h, text: f, tokens: this.lexer.inlineTokens(f) };
-        }
-        let R = h.slice(2, -2);
-        return { type: "strong", raw: h, text: R, tokens: this.lexer.inlineTokens(R) };
-      }
-    }
-  }
-  codespan(e) {
-    let t = this.rules.inline.code.exec(e);
-    if (t) {
-      let n = t[2].replace(this.rules.other.newLineCharGlobal, " "), r = this.rules.other.nonSpaceChar.test(n), i = this.rules.other.startingSpaceChar.test(n) && this.rules.other.endingSpaceChar.test(n);
-      return r && i && (n = n.substring(1, n.length - 1)), { type: "codespan", raw: t[0], text: n };
-    }
-  }
-  br(e) {
-    let t = this.rules.inline.br.exec(e);
-    if (t) return { type: "br", raw: t[0] };
-  }
-  del(e) {
-    let t = this.rules.inline.del.exec(e);
-    if (t) return { type: "del", raw: t[0], text: t[2], tokens: this.lexer.inlineTokens(t[2]) };
-  }
-  autolink(e) {
-    let t = this.rules.inline.autolink.exec(e);
-    if (t) {
-      let n, r;
-      return t[2] === "@" ? (n = t[1], r = "mailto:" + n) : (n = t[1], r = n), { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
-    }
-  }
-  url(e) {
-    let t;
-    if (t = this.rules.inline.url.exec(e)) {
-      let n, r;
-      if (t[2] === "@") n = t[0], r = "mailto:" + n;
-      else {
-        let i;
-        do
-          i = t[0], t[0] = this.rules.inline._backpedal.exec(t[0])?.[0] ?? "";
-        while (i !== t[0]);
-        n = t[0], t[1] === "www." ? r = "http://" + t[0] : r = t[0];
-      }
-      return { type: "link", raw: t[0], text: n, href: r, tokens: [{ type: "text", raw: n, text: n }] };
-    }
-  }
-  inlineText(e) {
-    let t = this.rules.inline.text.exec(e);
-    if (t) {
-      let n = this.lexer.state.inRawBlock;
-      return { type: "text", raw: t[0], text: t[0], escaped: n };
-    }
-  }
-};
-var x = class u {
-  tokens;
-  options;
-  state;
-  inlineQueue;
-  tokenizer;
-  constructor(e) {
-    this.tokens = [], this.tokens.links = /* @__PURE__ */ Object.create(null), this.options = e || T, this.options.tokenizer = this.options.tokenizer || new y(), this.tokenizer = this.options.tokenizer, this.tokenizer.options = this.options, this.tokenizer.lexer = this, this.inlineQueue = [], this.state = { inLink: false, inRawBlock: false, top: true };
-    let t = { other: m, block: E.normal, inline: M.normal };
-    this.options.pedantic ? (t.block = E.pedantic, t.inline = M.pedantic) : this.options.gfm && (t.block = E.gfm, this.options.breaks ? t.inline = M.breaks : t.inline = M.gfm), this.tokenizer.rules = t;
-  }
-  static get rules() {
-    return { block: E, inline: M };
-  }
-  static lex(e, t) {
-    return new u(t).lex(e);
-  }
-  static lexInline(e, t) {
-    return new u(t).inlineTokens(e);
-  }
-  lex(e) {
-    e = e.replace(m.carriageReturn, `
-`), this.blockTokens(e, this.tokens);
-    for (let t = 0; t < this.inlineQueue.length; t++) {
-      let n = this.inlineQueue[t];
-      this.inlineTokens(n.src, n.tokens);
-    }
-    return this.inlineQueue = [], this.tokens;
-  }
-  blockTokens(e, t = [], n = false) {
-    for (this.options.pedantic && (e = e.replace(m.tabCharGlobal, "    ").replace(m.spaceLine, "")); e; ) {
-      let r;
-      if (this.options.extensions?.block?.some((s) => (r = s.call({ lexer: this }, e, t)) ? (e = e.substring(r.raw.length), t.push(r), true) : false)) continue;
-      if (r = this.tokenizer.space(e)) {
-        e = e.substring(r.raw.length);
-        let s = t.at(-1);
-        r.raw.length === 1 && s !== void 0 ? s.raw += `
-` : t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.code(e)) {
-        e = e.substring(r.raw.length);
-        let s = t.at(-1);
-        s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
-`) ? "" : `
-`) + r.raw, s.text += `
-` + r.text, this.inlineQueue.at(-1).src = s.text) : t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.fences(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.heading(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.hr(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.blockquote(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.list(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.html(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.def(e)) {
-        e = e.substring(r.raw.length);
-        let s = t.at(-1);
-        s?.type === "paragraph" || s?.type === "text" ? (s.raw += (s.raw.endsWith(`
-`) ? "" : `
-`) + r.raw, s.text += `
-` + r.raw, this.inlineQueue.at(-1).src = s.text) : this.tokens.links[r.tag] || (this.tokens.links[r.tag] = { href: r.href, title: r.title }, t.push(r));
-        continue;
-      }
-      if (r = this.tokenizer.table(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      if (r = this.tokenizer.lheading(e)) {
-        e = e.substring(r.raw.length), t.push(r);
-        continue;
-      }
-      let i = e;
-      if (this.options.extensions?.startBlock) {
-        let s = 1 / 0, a = e.slice(1), o;
-        this.options.extensions.startBlock.forEach((l) => {
-          o = l.call({ lexer: this }, a), typeof o == "number" && o >= 0 && (s = Math.min(s, o));
-        }), s < 1 / 0 && s >= 0 && (i = e.substring(0, s + 1));
-      }
-      if (this.state.top && (r = this.tokenizer.paragraph(i))) {
-        let s = t.at(-1);
-        n && s?.type === "paragraph" ? (s.raw += (s.raw.endsWith(`
-`) ? "" : `
-`) + r.raw, s.text += `
-` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r), n = i.length !== e.length, e = e.substring(r.raw.length);
-        continue;
-      }
-      if (r = this.tokenizer.text(e)) {
-        e = e.substring(r.raw.length);
-        let s = t.at(-1);
-        s?.type === "text" ? (s.raw += (s.raw.endsWith(`
-`) ? "" : `
-`) + r.raw, s.text += `
-` + r.text, this.inlineQueue.pop(), this.inlineQueue.at(-1).src = s.text) : t.push(r);
-        continue;
-      }
-      if (e) {
-        let s = "Infinite loop on byte: " + e.charCodeAt(0);
-        if (this.options.silent) {
-          console.error(s);
-          break;
-        } else throw new Error(s);
-      }
-    }
-    return this.state.top = true, t;
-  }
-  inline(e, t = []) {
-    return this.inlineQueue.push({ src: e, tokens: t }), t;
-  }
-  inlineTokens(e, t = []) {
-    let n = e, r = null;
-    if (this.tokens.links) {
-      let o = Object.keys(this.tokens.links);
-      if (o.length > 0) for (; (r = this.tokenizer.rules.inline.reflinkSearch.exec(n)) != null; ) o.includes(r[0].slice(r[0].lastIndexOf("[") + 1, -1)) && (n = n.slice(0, r.index) + "[" + "a".repeat(r[0].length - 2) + "]" + n.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex));
-    }
-    for (; (r = this.tokenizer.rules.inline.anyPunctuation.exec(n)) != null; ) n = n.slice(0, r.index) + "++" + n.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
-    let i;
-    for (; (r = this.tokenizer.rules.inline.blockSkip.exec(n)) != null; ) i = r[2] ? r[2].length : 0, n = n.slice(0, r.index + i) + "[" + "a".repeat(r[0].length - i - 2) + "]" + n.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
-    n = this.options.hooks?.emStrongMask?.call({ lexer: this }, n) ?? n;
-    let s = false, a = "";
-    for (; e; ) {
-      s || (a = ""), s = false;
-      let o;
-      if (this.options.extensions?.inline?.some((p) => (o = p.call({ lexer: this }, e, t)) ? (e = e.substring(o.raw.length), t.push(o), true) : false)) continue;
-      if (o = this.tokenizer.escape(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.tag(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.link(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.reflink(e, this.tokens.links)) {
-        e = e.substring(o.raw.length);
-        let p = t.at(-1);
-        o.type === "text" && p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.emStrong(e, n, a)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.codespan(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.br(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.del(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (o = this.tokenizer.autolink(e)) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      if (!this.state.inLink && (o = this.tokenizer.url(e))) {
-        e = e.substring(o.raw.length), t.push(o);
-        continue;
-      }
-      let l = e;
-      if (this.options.extensions?.startInline) {
-        let p = 1 / 0, c = e.slice(1), g;
-        this.options.extensions.startInline.forEach((h) => {
-          g = h.call({ lexer: this }, c), typeof g == "number" && g >= 0 && (p = Math.min(p, g));
-        }), p < 1 / 0 && p >= 0 && (l = e.substring(0, p + 1));
-      }
-      if (o = this.tokenizer.inlineText(l)) {
-        e = e.substring(o.raw.length), o.raw.slice(-1) !== "_" && (a = o.raw.slice(-1)), s = true;
-        let p = t.at(-1);
-        p?.type === "text" ? (p.raw += o.raw, p.text += o.text) : t.push(o);
-        continue;
-      }
-      if (e) {
-        let p = "Infinite loop on byte: " + e.charCodeAt(0);
-        if (this.options.silent) {
-          console.error(p);
-          break;
-        } else throw new Error(p);
-      }
-    }
-    return t;
-  }
-};
-var P = class {
-  options;
-  parser;
-  constructor(e) {
-    this.options = e || T;
-  }
-  space(e) {
-    return "";
-  }
-  code({ text: e, lang: t, escaped: n }) {
-    let r = (t || "").match(m.notSpaceStart)?.[0], i = e.replace(m.endingNewline, "") + `
-`;
-    return r ? '<pre><code class="language-' + w(r) + '">' + (n ? i : w(i, true)) + `</code></pre>
-` : "<pre><code>" + (n ? i : w(i, true)) + `</code></pre>
-`;
-  }
-  blockquote({ tokens: e }) {
-    return `<blockquote>
-${this.parser.parse(e)}</blockquote>
-`;
-  }
-  html({ text: e }) {
-    return e;
-  }
-  def(e) {
-    return "";
-  }
-  heading({ tokens: e, depth: t }) {
-    return `<h${t}>${this.parser.parseInline(e)}</h${t}>
-`;
-  }
-  hr(e) {
-    return `<hr>
-`;
-  }
-  list(e) {
-    let t = e.ordered, n = e.start, r = "";
-    for (let a = 0; a < e.items.length; a++) {
-      let o = e.items[a];
-      r += this.listitem(o);
-    }
-    let i = t ? "ol" : "ul", s = t && n !== 1 ? ' start="' + n + '"' : "";
-    return "<" + i + s + `>
-` + r + "</" + i + `>
-`;
-  }
-  listitem(e) {
-    return `<li>${this.parser.parse(e.tokens)}</li>
-`;
-  }
-  checkbox({ checked: e }) {
-    return "<input " + (e ? 'checked="" ' : "") + 'disabled="" type="checkbox"> ';
-  }
-  paragraph({ tokens: e }) {
-    return `<p>${this.parser.parseInline(e)}</p>
-`;
-  }
-  table(e) {
-    let t = "", n = "";
-    for (let i = 0; i < e.header.length; i++) n += this.tablecell(e.header[i]);
-    t += this.tablerow({ text: n });
-    let r = "";
-    for (let i = 0; i < e.rows.length; i++) {
-      let s = e.rows[i];
-      n = "";
-      for (let a = 0; a < s.length; a++) n += this.tablecell(s[a]);
-      r += this.tablerow({ text: n });
-    }
-    return r && (r = `<tbody>${r}</tbody>`), `<table>
-<thead>
-` + t + `</thead>
-` + r + `</table>
-`;
-  }
-  tablerow({ text: e }) {
-    return `<tr>
-${e}</tr>
-`;
-  }
-  tablecell(e) {
-    let t = this.parser.parseInline(e.tokens), n = e.header ? "th" : "td";
-    return (e.align ? `<${n} align="${e.align}">` : `<${n}>`) + t + `</${n}>
-`;
-  }
-  strong({ tokens: e }) {
-    return `<strong>${this.parser.parseInline(e)}</strong>`;
-  }
-  em({ tokens: e }) {
-    return `<em>${this.parser.parseInline(e)}</em>`;
-  }
-  codespan({ text: e }) {
-    return `<code>${w(e, true)}</code>`;
-  }
-  br(e) {
-    return "<br>";
-  }
-  del({ tokens: e }) {
-    return `<del>${this.parser.parseInline(e)}</del>`;
-  }
-  link({ href: e, title: t, tokens: n }) {
-    let r = this.parser.parseInline(n), i = X(e);
-    if (i === null) return r;
-    e = i;
-    let s = '<a href="' + e + '"';
-    return t && (s += ' title="' + w(t) + '"'), s += ">" + r + "</a>", s;
-  }
-  image({ href: e, title: t, text: n, tokens: r }) {
-    r && (n = this.parser.parseInline(r, this.parser.textRenderer));
-    let i = X(e);
-    if (i === null) return w(n);
-    e = i;
-    let s = `<img src="${e}" alt="${n}"`;
-    return t && (s += ` title="${w(t)}"`), s += ">", s;
-  }
-  text(e) {
-    return "tokens" in e && e.tokens ? this.parser.parseInline(e.tokens) : "escaped" in e && e.escaped ? e.text : w(e.text);
-  }
-};
-var $ = class {
-  strong({ text: e }) {
-    return e;
-  }
-  em({ text: e }) {
-    return e;
-  }
-  codespan({ text: e }) {
-    return e;
-  }
-  del({ text: e }) {
-    return e;
-  }
-  html({ text: e }) {
-    return e;
-  }
-  text({ text: e }) {
-    return e;
-  }
-  link({ text: e }) {
-    return "" + e;
-  }
-  image({ text: e }) {
-    return "" + e;
-  }
-  br() {
-    return "";
-  }
-  checkbox({ raw: e }) {
-    return e;
-  }
-};
-var b = class u2 {
-  options;
-  renderer;
-  textRenderer;
-  constructor(e) {
-    this.options = e || T, this.options.renderer = this.options.renderer || new P(), this.renderer = this.options.renderer, this.renderer.options = this.options, this.renderer.parser = this, this.textRenderer = new $();
-  }
-  static parse(e, t) {
-    return new u2(t).parse(e);
-  }
-  static parseInline(e, t) {
-    return new u2(t).parseInline(e);
-  }
-  parse(e) {
-    let t = "";
-    for (let n = 0; n < e.length; n++) {
-      let r = e[n];
-      if (this.options.extensions?.renderers?.[r.type]) {
-        let s = r, a = this.options.extensions.renderers[s.type].call({ parser: this }, s);
-        if (a !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "html", "def", "paragraph", "text"].includes(s.type)) {
-          t += a || "";
-          continue;
-        }
-      }
-      let i = r;
-      switch (i.type) {
-        case "space": {
-          t += this.renderer.space(i);
-          break;
-        }
-        case "hr": {
-          t += this.renderer.hr(i);
-          break;
-        }
-        case "heading": {
-          t += this.renderer.heading(i);
-          break;
-        }
-        case "code": {
-          t += this.renderer.code(i);
-          break;
-        }
-        case "table": {
-          t += this.renderer.table(i);
-          break;
-        }
-        case "blockquote": {
-          t += this.renderer.blockquote(i);
-          break;
-        }
-        case "list": {
-          t += this.renderer.list(i);
-          break;
-        }
-        case "checkbox": {
-          t += this.renderer.checkbox(i);
-          break;
-        }
-        case "html": {
-          t += this.renderer.html(i);
-          break;
-        }
-        case "def": {
-          t += this.renderer.def(i);
-          break;
-        }
-        case "paragraph": {
-          t += this.renderer.paragraph(i);
-          break;
-        }
-        case "text": {
-          t += this.renderer.text(i);
-          break;
-        }
-        default: {
-          let s = 'Token with "' + i.type + '" type was not found.';
-          if (this.options.silent) return console.error(s), "";
-          throw new Error(s);
-        }
-      }
-    }
-    return t;
-  }
-  parseInline(e, t = this.renderer) {
-    let n = "";
-    for (let r = 0; r < e.length; r++) {
-      let i = e[r];
-      if (this.options.extensions?.renderers?.[i.type]) {
-        let a = this.options.extensions.renderers[i.type].call({ parser: this }, i);
-        if (a !== false || !["escape", "html", "link", "image", "strong", "em", "codespan", "br", "del", "text"].includes(i.type)) {
-          n += a || "";
-          continue;
-        }
-      }
-      let s = i;
-      switch (s.type) {
-        case "escape": {
-          n += t.text(s);
-          break;
-        }
-        case "html": {
-          n += t.html(s);
-          break;
-        }
-        case "link": {
-          n += t.link(s);
-          break;
-        }
-        case "image": {
-          n += t.image(s);
-          break;
-        }
-        case "checkbox": {
-          n += t.checkbox(s);
-          break;
-        }
-        case "strong": {
-          n += t.strong(s);
-          break;
-        }
-        case "em": {
-          n += t.em(s);
-          break;
-        }
-        case "codespan": {
-          n += t.codespan(s);
-          break;
-        }
-        case "br": {
-          n += t.br(s);
-          break;
-        }
-        case "del": {
-          n += t.del(s);
-          break;
-        }
-        case "text": {
-          n += t.text(s);
-          break;
-        }
-        default: {
-          let a = 'Token with "' + s.type + '" type was not found.';
-          if (this.options.silent) return console.error(a), "";
-          throw new Error(a);
-        }
-      }
-    }
-    return n;
-  }
-};
-var S = class {
-  options;
-  block;
-  constructor(e) {
-    this.options = e || T;
-  }
-  static passThroughHooks = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens", "emStrongMask"]);
-  static passThroughHooksRespectAsync = /* @__PURE__ */ new Set(["preprocess", "postprocess", "processAllTokens"]);
-  preprocess(e) {
-    return e;
-  }
-  postprocess(e) {
-    return e;
-  }
-  processAllTokens(e) {
-    return e;
-  }
-  emStrongMask(e) {
-    return e;
-  }
-  provideLexer() {
-    return this.block ? x.lex : x.lexInline;
-  }
-  provideParser() {
-    return this.block ? b.parse : b.parseInline;
-  }
-};
-var B = class {
-  defaults = L();
-  options = this.setOptions;
-  parse = this.parseMarkdown(true);
-  parseInline = this.parseMarkdown(false);
-  Parser = b;
-  Renderer = P;
-  TextRenderer = $;
-  Lexer = x;
-  Tokenizer = y;
-  Hooks = S;
-  constructor(...e) {
-    this.use(...e);
-  }
-  walkTokens(e, t) {
-    let n = [];
-    for (let r of e) switch (n = n.concat(t.call(this, r)), r.type) {
-      case "table": {
-        let i = r;
-        for (let s of i.header) n = n.concat(this.walkTokens(s.tokens, t));
-        for (let s of i.rows) for (let a of s) n = n.concat(this.walkTokens(a.tokens, t));
-        break;
-      }
-      case "list": {
-        let i = r;
-        n = n.concat(this.walkTokens(i.items, t));
-        break;
-      }
-      default: {
-        let i = r;
-        this.defaults.extensions?.childTokens?.[i.type] ? this.defaults.extensions.childTokens[i.type].forEach((s) => {
-          let a = i[s].flat(1 / 0);
-          n = n.concat(this.walkTokens(a, t));
-        }) : i.tokens && (n = n.concat(this.walkTokens(i.tokens, t)));
-      }
-    }
-    return n;
-  }
-  use(...e) {
-    let t = this.defaults.extensions || { renderers: {}, childTokens: {} };
-    return e.forEach((n) => {
-      let r = { ...n };
-      if (r.async = this.defaults.async || r.async || false, n.extensions && (n.extensions.forEach((i) => {
-        if (!i.name) throw new Error("extension name required");
-        if ("renderer" in i) {
-          let s = t.renderers[i.name];
-          s ? t.renderers[i.name] = function(...a) {
-            let o = i.renderer.apply(this, a);
-            return o === false && (o = s.apply(this, a)), o;
-          } : t.renderers[i.name] = i.renderer;
-        }
-        if ("tokenizer" in i) {
-          if (!i.level || i.level !== "block" && i.level !== "inline") throw new Error("extension level must be 'block' or 'inline'");
-          let s = t[i.level];
-          s ? s.unshift(i.tokenizer) : t[i.level] = [i.tokenizer], i.start && (i.level === "block" ? t.startBlock ? t.startBlock.push(i.start) : t.startBlock = [i.start] : i.level === "inline" && (t.startInline ? t.startInline.push(i.start) : t.startInline = [i.start]));
-        }
-        "childTokens" in i && i.childTokens && (t.childTokens[i.name] = i.childTokens);
-      }), r.extensions = t), n.renderer) {
-        let i = this.defaults.renderer || new P(this.defaults);
-        for (let s in n.renderer) {
-          if (!(s in i)) throw new Error(`renderer '${s}' does not exist`);
-          if (["options", "parser"].includes(s)) continue;
-          let a = s, o = n.renderer[a], l = i[a];
-          i[a] = (...p) => {
-            let c = o.apply(i, p);
-            return c === false && (c = l.apply(i, p)), c || "";
-          };
-        }
-        r.renderer = i;
-      }
-      if (n.tokenizer) {
-        let i = this.defaults.tokenizer || new y(this.defaults);
-        for (let s in n.tokenizer) {
-          if (!(s in i)) throw new Error(`tokenizer '${s}' does not exist`);
-          if (["options", "rules", "lexer"].includes(s)) continue;
-          let a = s, o = n.tokenizer[a], l = i[a];
-          i[a] = (...p) => {
-            let c = o.apply(i, p);
-            return c === false && (c = l.apply(i, p)), c;
-          };
-        }
-        r.tokenizer = i;
-      }
-      if (n.hooks) {
-        let i = this.defaults.hooks || new S();
-        for (let s in n.hooks) {
-          if (!(s in i)) throw new Error(`hook '${s}' does not exist`);
-          if (["options", "block"].includes(s)) continue;
-          let a = s, o = n.hooks[a], l = i[a];
-          S.passThroughHooks.has(s) ? i[a] = (p) => {
-            if (this.defaults.async && S.passThroughHooksRespectAsync.has(s)) return (async () => {
-              let g = await o.call(i, p);
-              return l.call(i, g);
-            })();
-            let c = o.call(i, p);
-            return l.call(i, c);
-          } : i[a] = (...p) => {
-            if (this.defaults.async) return (async () => {
-              let g = await o.apply(i, p);
-              return g === false && (g = await l.apply(i, p)), g;
-            })();
-            let c = o.apply(i, p);
-            return c === false && (c = l.apply(i, p)), c;
-          };
-        }
-        r.hooks = i;
-      }
-      if (n.walkTokens) {
-        let i = this.defaults.walkTokens, s = n.walkTokens;
-        r.walkTokens = function(a) {
-          let o = [];
-          return o.push(s.call(this, a)), i && (o = o.concat(i.call(this, a))), o;
-        };
-      }
-      this.defaults = { ...this.defaults, ...r };
-    }), this;
-  }
-  setOptions(e) {
-    return this.defaults = { ...this.defaults, ...e }, this;
-  }
-  lexer(e, t) {
-    return x.lex(e, t ?? this.defaults);
-  }
-  parser(e, t) {
-    return b.parse(e, t ?? this.defaults);
-  }
-  parseMarkdown(e) {
-    return (n, r) => {
-      let i = { ...r }, s = { ...this.defaults, ...i }, a = this.onError(!!s.silent, !!s.async);
-      if (this.defaults.async === true && i.async === false) return a(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));
-      if (typeof n > "u" || n === null) return a(new Error("marked(): input parameter is undefined or null"));
-      if (typeof n != "string") return a(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(n) + ", string expected"));
-      if (s.hooks && (s.hooks.options = s, s.hooks.block = e), s.async) return (async () => {
-        let o = s.hooks ? await s.hooks.preprocess(n) : n, p = await (s.hooks ? await s.hooks.provideLexer() : e ? x.lex : x.lexInline)(o, s), c = s.hooks ? await s.hooks.processAllTokens(p) : p;
-        s.walkTokens && await Promise.all(this.walkTokens(c, s.walkTokens));
-        let h = await (s.hooks ? await s.hooks.provideParser() : e ? b.parse : b.parseInline)(c, s);
-        return s.hooks ? await s.hooks.postprocess(h) : h;
-      })().catch(a);
-      try {
-        s.hooks && (n = s.hooks.preprocess(n));
-        let l = (s.hooks ? s.hooks.provideLexer() : e ? x.lex : x.lexInline)(n, s);
-        s.hooks && (l = s.hooks.processAllTokens(l)), s.walkTokens && this.walkTokens(l, s.walkTokens);
-        let c = (s.hooks ? s.hooks.provideParser() : e ? b.parse : b.parseInline)(l, s);
-        return s.hooks && (c = s.hooks.postprocess(c)), c;
-      } catch (o) {
-        return a(o);
-      }
-    };
-  }
-  onError(e, t) {
-    return (n) => {
-      if (n.message += `
-Please report this to https://github.com/markedjs/marked.`, e) {
-        let r = "<p>An error occurred:</p><pre>" + w(n.message + "", true) + "</pre>";
-        return t ? Promise.resolve(r) : r;
-      }
-      if (t) return Promise.reject(n);
-      throw n;
-    };
-  }
-};
-var _ = new B();
-function d(u3, e) {
-  return _.parse(u3, e);
-}
-d.options = d.setOptions = function(u3) {
-  return _.setOptions(u3), d.defaults = _.defaults, Z(d.defaults), d;
-};
-d.getDefaults = L;
-d.defaults = T;
-d.use = function(...u3) {
-  return _.use(...u3), d.defaults = _.defaults, Z(d.defaults), d;
-};
-d.walkTokens = function(u3, e) {
-  return _.walkTokens(u3, e);
-};
-d.parseInline = _.parseInline;
-d.Parser = b;
-d.parser = b.parse;
-d.Renderer = P;
-d.TextRenderer = $;
-d.Lexer = x;
-d.lexer = x.lex;
-d.Tokenizer = y;
-d.Hooks = S;
-d.parse = d;
-var Dt = d.options;
-var Ht = d.setOptions;
-var Zt = d.use;
-var Gt = d.walkTokens;
-var Nt = d.parseInline;
-var Ft = b.parse;
-var jt = x.lex;
-
-// src/core/show.ts
-function readConversationFromDb(db, archivePath, startLine, endLine) {
-  let whereClause = "WHERE archive_path = ?";
-  const params = [archivePath];
-  if (startLine !== void 0) {
-    whereClause += " AND line_end >= ?";
-    params.push(startLine);
-  }
-  if (endLine !== void 0) {
-    whereClause += " AND line_start <= ?";
-    params.push(endLine);
-  }
-  const query = `
-    SELECT
-      id,
-      timestamp,
-      user_message,
-      assistant_message,
-      archive_path,
-      line_start,
-      line_end,
-      session_id,
-      cwd,
-      git_branch,
-      claude_version,
-      is_sidechain,
-      compressed_tool_summary
-    FROM exchanges
-    ${whereClause}
-    ORDER BY line_start ASC
-  `;
-  const exchanges = db.prepare(query).all(...params);
-  if (exchanges.length === 0) {
-    return null;
-  }
-  let output = "# Conversation\n\n";
-  const firstExchange = exchanges[0];
-  output += "## Metadata\n\n";
-  if (firstExchange.session_id) {
-    output += `**Session ID:** ${firstExchange.session_id}
-
-`;
-  }
-  if (firstExchange.git_branch) {
-    output += `**Git Branch:** ${firstExchange.git_branch}
-
-`;
-  }
-  if (firstExchange.cwd) {
-    output += `**Working Directory:** ${firstExchange.cwd}
-
-`;
-  }
-  if (firstExchange.claude_version) {
-    output += `**Claude Code Version:** ${firstExchange.claude_version}
-
-`;
-  }
-  output += "---\n\n";
-  output += "## Messages\n\n";
-  let inSidechain = false;
-  for (const exchange of exchanges) {
-    const timestamp = new Date(exchange.timestamp).toLocaleString();
-    if (exchange.is_sidechain && !inSidechain) {
-      output += "\n---\n";
-      output += "**\u{1F500} SIDECHAIN START**\n";
-      output += "---\n\n";
-      inSidechain = true;
-    } else if (!exchange.is_sidechain && inSidechain) {
-      output += "\n---\n";
-      output += "**\u{1F500} SIDECHAIN END**\n";
-      output += "---\n\n";
-      inSidechain = false;
-    }
-    const roleLabel = exchange.is_sidechain ? "Agent" : "User";
-    output += `### **${roleLabel}** (${timestamp})
-
-`;
-    output += `${exchange.user_message}
-
-`;
-    const agentRoleLabel = exchange.is_sidechain ? "Subagent" : "Agent";
-    output += `### **${agentRoleLabel}** (${timestamp})
-
-`;
-    output += `${exchange.assistant_message}
-
-`;
-    if (exchange.compressed_tool_summary) {
-      output += "**Tools:** " + exchange.compressed_tool_summary + "\n\n";
-    }
-    output += "---\n\n";
-  }
-  if (inSidechain) {
-    output += "\n---\n";
-    output += "**\u{1F500} SIDECHAIN END**\n";
-    output += "---\n\n";
-  }
-  return output;
+  const jsonlContent = fs3.readFileSync(path3, "utf-8");
+  return formatConversationAsMarkdown(jsonlContent, startLine, endLine);
 }
 function formatConversationAsMarkdown(jsonl, startLine, endLine) {
   const allLines = jsonl.trim().split("\n").filter((line) => line.trim());
@@ -19850,8 +18193,8 @@ ${JSON.stringify(value, null, 2)}
             const toolUseId = block.id;
             if (toolUseId) {
               let foundResult = false;
-              for (let j2 = i + 1; j2 < Math.min(i + 6, messages.length) && !foundResult; j2++) {
-                const laterMsg = messages[j2];
+              for (let j = i + 1; j < Math.min(i + 6, messages.length) && !foundResult; j++) {
+                const laterMsg = messages[j];
                 if (laterMsg.type === "user" && Array.isArray(laterMsg.message.content)) {
                   for (const resultBlock of laterMsg.message.content) {
                     if (resultBlock.type === "tool_result" && resultBlock.tool_use_id === toolUseId) {
@@ -19905,59 +18248,26 @@ ${JSON.stringify(value, null, 2)}
   return output;
 }
 
-// src/core/observations.ts
-function getObservationsByIds(db, ids) {
-  if (ids.length === 0) {
-    return [];
-  }
-  const stmt = db.prepare(`
-    SELECT id, session_id as sessionId, project, prompt_number as promptNumber,
-           timestamp, type, title, subtitle, narrative, facts, concepts,
-           files_read as filesRead, files_modified as filesModified,
-           tool_name as toolName, correlation_id as correlationId, created_at as createdAt
-    FROM observations
-    WHERE id IN (${ids.map(() => "?").join(",")})
-    ORDER BY timestamp DESC
-  `);
-  const rows = stmt.all(...ids);
-  return rows.map((row) => ({
-    ...row,
-    facts: JSON.parse(row.facts),
-    concepts: JSON.parse(row.concepts),
-    filesRead: JSON.parse(row.filesRead),
-    filesModified: JSON.parse(row.filesModified)
-  }));
-}
-
 // src/mcp/server.ts
-import fs3 from "fs";
 var SearchModeEnum = external_exports.enum(["vector", "text", "both"]);
-var ResponseFormatEnum = external_exports.enum(["markdown", "json"]);
 var SearchInputSchema = external_exports.object({
-  query: external_exports.union([
-    external_exports.string().min(2, "Query must be at least 2 characters"),
-    external_exports.array(external_exports.string().min(2)).min(2, "Must provide at least 2 concepts for multi-concept search").max(5, "Cannot search more than 5 concepts at once")
-  ]).describe(
-    "Search query - string for single concept, array of strings for multi-concept AND search"
-  ),
+  query: external_exports.string().min(2, "Query must be at least 2 characters").describe("Search query string"),
   mode: SearchModeEnum.default("both").describe(
-    'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined (default: "both"). Only used for single-concept searches.'
+    'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
   ),
   limit: external_exports.number().int().min(1).max(50).default(10).describe("Maximum number of results to return (default: 10)"),
-  after: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return conversations after this date (YYYY-MM-DD format)"),
-  before: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return conversations before this date (YYYY-MM-DD format)"),
-  projects: external_exports.array(external_exports.string().min(1)).optional().describe('Filter results to specific project names (e.g., ["my-project", "another-project"])'),
-  response_format: ResponseFormatEnum.default("markdown").describe(
-    'Output format: "markdown" for human-readable or "json" for machine-readable (default: "markdown")'
-  )
-}).strict();
-var ShowConversationInputSchema = external_exports.object({
-  path: external_exports.string().min(1, "Path is required").describe("Absolute path to the JSONL conversation file to display"),
-  startLine: external_exports.number().int().min(1).optional().describe("Starting line number (1-indexed, inclusive). Omit to start from beginning."),
-  endLine: external_exports.number().int().min(1).optional().describe("Ending line number (1-indexed, inclusive). Omit to read to end.")
+  after: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return results after this date (YYYY-MM-DD format)"),
+  before: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return results before this date (YYYY-MM-DD format)"),
+  projects: external_exports.array(external_exports.string().min(1)).optional().describe("Filter results to specific project names"),
+  files: external_exports.array(external_exports.string().min(1)).optional().describe("Filter results to specific file paths")
 }).strict();
 var GetObservationsInputSchema = external_exports.object({
-  ids: external_exports.array(external_exports.string().min(1)).min(1, "Must provide at least 1 observation ID").max(20, "Cannot get more than 20 observations at once").describe("Array of observation IDs to retrieve")
+  ids: external_exports.array(external_exports.union([external_exports.string(), external_exports.number()])).min(1, "Must provide at least 1 observation ID").max(20, "Cannot get more than 20 observations at once").describe("Array of observation IDs to retrieve")
+}).strict();
+var ReadInputSchema = external_exports.object({
+  path: external_exports.string().min(1, "Path is required").describe("Path to the JSONL conversation file"),
+  startLine: external_exports.number().int().min(1).optional().describe("Starting line number (1-indexed, inclusive)"),
+  endLine: external_exports.number().int().min(1).optional().describe("Ending line number (1-indexed, inclusive)")
 }).strict();
 function handleError(error2) {
   if (error2 instanceof Error) {
@@ -19968,7 +18278,7 @@ function handleError(error2) {
 var server = new Server(
   {
     name: "conversation-memory",
-    version: "1.0.0"
+    version: "3.0.0"
   },
   {
     capabilities: {
@@ -19981,25 +18291,48 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "search",
-        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by type/concepts/files, and date ranges.`,
+        description: `Gives you memory across sessions using observations (structured insights) and conversations. Use BEFORE every task to recover decisions, solutions, and avoid reinventing work. Progressive disclosure: 1) search returns compact observations (~30t), 2) get_observations() for full details (~200-500t), 3) read() for raw conversation (~500-2000t). Supports semantic search, filters by projects/files, and date ranges.`,
         inputSchema: {
           type: "object",
           properties: {
             query: {
-              oneOf: [
-                { type: "string", minLength: 2 },
-                { type: "array", items: { type: "string", minLength: 2 }, minItems: 2, maxItems: 5 }
-              ]
+              type: "string",
+              minLength: 2,
+              description: "Search query string"
             },
-            mode: { type: "string", enum: ["vector", "text", "both"], default: "both" },
-            limit: { type: "number", minimum: 1, maximum: 50, default: 10 },
-            after: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-            before: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-            projects: { type: "array", items: { type: "string" } },
-            types: { type: "array", items: { type: "string" } },
-            concepts: { type: "array", items: { type: "string" } },
-            files: { type: "array", items: { type: "string" } },
-            response_format: { type: "string", enum: ["markdown", "json"], default: "markdown" }
+            mode: {
+              type: "string",
+              enum: ["vector", "text", "both"],
+              default: "both",
+              description: 'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
+            },
+            limit: {
+              type: "number",
+              minimum: 1,
+              maximum: 50,
+              default: 10,
+              description: "Maximum number of results to return"
+            },
+            after: {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              description: "Only return results after this date (YYYY-MM-DD format)"
+            },
+            before: {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              description: "Only return results before this date (YYYY-MM-DD format)"
+            },
+            projects: {
+              type: "array",
+              items: { type: "string", minLength: 1 },
+              description: "Filter results to specific project names"
+            },
+            files: {
+              type: "array",
+              items: { type: "string", minLength: 1 },
+              description: "Filter results to specific file paths"
+            }
           },
           required: ["query"],
           additionalProperties: false
@@ -20020,9 +18353,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             ids: {
               type: "array",
-              items: { type: "string", minLength: 1 },
+              items: { type: ["string", "number"] },
               minItems: 1,
-              maxItems: 20
+              maxItems: 20,
+              description: "Array of observation IDs to retrieve"
             }
           },
           required: ["ids"],
@@ -20042,9 +18376,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
-            path: { type: "string", minLength: 1 },
-            startLine: { type: "number", minimum: 1 },
-            endLine: { type: "number", minimum: 1 }
+            path: {
+              type: "string",
+              minLength: 1,
+              description: "Path to the JSONL conversation file"
+            },
+            startLine: {
+              type: "number",
+              minimum: 1,
+              description: "Starting line number (1-indexed, inclusive)"
+            },
+            endLine: {
+              type: "number",
+              minimum: 1,
+              description: "Ending line number (1-indexed, inclusive)"
+            }
           },
           required: ["path"],
           additionalProperties: false
@@ -20065,67 +18411,54 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     if (name === "search") {
       const params = SearchInputSchema.parse(args);
-      let resultText;
-      if (Array.isArray(params.query)) {
-        const options = {
+      const db = initDatabaseV3();
+      try {
+        const results = await search(params.query, {
+          db,
           limit: params.limit,
-          after: params.after,
-          before: params.before
-        };
-        const results = await searchMultipleConcepts(params.query, options);
-        if (params.response_format === "json") {
-          resultText = JSON.stringify(
-            {
-              results,
-              count: results.length,
-              concepts: params.query
-            },
-            null,
-            2
-          );
-        } else {
-          resultText = formatMultiConceptResults(results, params.query);
-        }
-      } else {
-        const options = {
           mode: params.mode,
-          limit: params.limit,
           after: params.after,
           before: params.before,
           projects: params.projects,
-          types: args.types,
-          concepts: args.concepts,
-          files: args.files
-        };
-        const results = await searchObservations(params.query, options);
-        if (params.response_format === "json") {
-          resultText = JSON.stringify(
+          files: params.files
+        });
+        return {
+          content: [
             {
-              results,
-              count: results.length,
-              mode: params.mode
-            },
-            null,
-            2
-          );
-        } else {
-          resultText = formatObservationResults(results);
-        }
+              type: "text",
+              text: JSON.stringify({
+                results: results.map((r) => ({
+                  id: String(r.id),
+                  title: r.title,
+                  project: r.project,
+                  timestamp: r.timestamp
+                }))
+              }, null, 2)
+            }
+          ]
+        };
+      } finally {
+        db.close();
       }
-      return {
-        content: [
-          {
-            type: "text",
-            text: resultText
-          }
-        ]
-      };
     }
     if (name === "get_observations") {
       const params = GetObservationsInputSchema.parse(args);
-      const db = initDatabase();
+      const numericIds = params.ids.map(
+        (id) => typeof id === "string" ? parseInt(id, 10) : id
+      );
+      const db = initDatabaseV3();
       try {
-        const observations = getObservationsByIds(db, params.ids);
+        const observations = await findByIds(db, numericIds);
+        if (observations.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "No observations found."
+              }
+            ]
+          };
+        }
         let output = `Retrieved ${observations.length} observation${observations.length > 1 ? "s" : ""}:
 
 `;
@@ -20136,39 +18469,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             minute: "2-digit",
             hour12: true
           });
-          output += `## [${obs.project}, ${date3} ${time3}] - ${obs.type}: ${obs.title}
+          output += `## [${obs.project}, ${date3} ${time3}] - ${obs.title}
 
 `;
-          if (obs.subtitle) {
-            output += `**${obs.subtitle}**
+          output += `${obs.content}
 
 `;
-          }
-          if (obs.narrative) {
-            output += `${obs.narrative}
-
-`;
-          }
-          if (obs.facts.length > 0) {
-            output += `**Facts:**
-`;
-            obs.facts.forEach((f) => output += `- ${f}
-`);
-            output += `
-`;
-          }
-          if (obs.concepts.length > 0) {
-            output += `**Concepts:** ${obs.concepts.map((c) => `\`${c}\``).join(", ")}
-
-`;
-          }
-          const allFiles = [...obs.filesRead, ...obs.filesModified];
-          if (allFiles.length > 0) {
-            const uniqueFiles = [...new Set(allFiles)];
-            output += `**Files:** ${uniqueFiles.join(", ")}
-
-`;
-          }
           output += `---
 
 `;
@@ -20179,19 +18485,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
     if (name === "read") {
-      const params = ShowConversationInputSchema.parse(args);
-      const db = initDatabase();
-      try {
-        const dbResult = readConversationFromDb(db, params.path, params.startLine, params.endLine);
-        if (dbResult) {
-          return { content: [{ type: "text", text: dbResult }] };
-        }
-        if (!fs3.existsSync(params.path)) throw new Error(`File not found: ${params.path}`);
-        const jsonlContent = fs3.readFileSync(params.path, "utf-8");
-        return { content: [{ type: "text", text: formatConversationAsMarkdown(jsonlContent, params.startLine, params.endLine) }] };
-      } finally {
-        db.close();
+      const params = ReadInputSchema.parse(args);
+      const result = readConversation(params.path, params.startLine, params.endLine);
+      if (result === null) {
+        throw new Error(`File not found: ${params.path}`);
       }
+      return { content: [{ type: "text", text: result }] };
     }
     throw new Error(`Unknown tool: ${name}`);
   } catch (error2) {
@@ -20207,7 +18506,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 async function main() {
-  console.error("Conversation Memory MCP server running via stdio");
+  console.error("Conversation Memory V3 MCP server running via stdio");
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
@@ -20216,6 +18515,7 @@ main().catch((error2) => {
   process.exit(1);
 });
 export {
-  SearchInputSchema,
-  ShowConversationInputSchema
+  GetObservationsInputSchema,
+  ReadInputSchema,
+  SearchInputSchema
 };
