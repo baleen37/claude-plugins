@@ -60,6 +60,28 @@ validate_prd() {
     echo "Error: prd.json userStories must be an array" >&2
     return 1
   fi
+
+  # Validate each user story has required fields
+  local story_required_fields=("id" "title" "description" "acceptanceCriteria" "priority" "status" "startedAt" "completedAt" "passes")
+  local story_count
+  story_count=$(jq -r '.userStories | length' "$PRD_FILE")
+
+  for ((i=0; i<story_count; i++)); do
+    for field in "${story_required_fields[@]}"; do
+      if ! jq -e ".userStories[$i] | has(\"$field\")" "$PRD_FILE" >/dev/null 2>&1; then
+        echo "Error: user story at index $i missing required field: $field" >&2
+        return 1
+      fi
+    done
+
+    # Validate status enum values
+    local status
+    status=$(jq -r ".userStories[$i].status" "$PRD_FILE")
+    if [[ "$status" != "open" ]] && [[ "$status" != "in_progress" ]] && [[ "$status" != "done" ]]; then
+      echo "Error: user story at index $i has invalid status: '$status' (must be 'open', 'in_progress', or 'done')" >&2
+      return 1
+    fi
+  done
 }
 
 if ! validate_prd; then
@@ -185,7 +207,7 @@ show_progress_summary() {
 
   local total completed pending
   total=$(jq -r '.userStories | length' "$PRD_FILE")
-  completed=$(jq -r '[.userStories[] | select(.passes == true)] | length' "$PRD_FILE")
+  completed=$(jq -r '[.userStories[] | select(.status == "done")] | length' "$PRD_FILE")
   pending=$((total - completed))
 
   echo ""
