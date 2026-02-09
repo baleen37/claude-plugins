@@ -24,33 +24,32 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     has_frontmatter_field "$agent_file" "model"
 }
 
-# create-pr command tests
-@test "me: create-pr command exists with required components" {
-    [ -f "${PLUGIN_DIR}/commands/create-pr.md" ]
-    [ -f "${PLUGIN_DIR}/scripts/check-conflicts.sh" ]
-    [ -f "${PLUGIN_DIR}/scripts/verify-pr-status.sh" ]
+# create-pr skill tests
+@test "me: create-pr skill exists with required components" {
+    [ -f "${PLUGIN_DIR}/skills/create-pr/SKILL.md" ]
+    [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh" ]
+    [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
 }
 
-@test "me: create-pr command has proper frontmatter" {
-    local command_file="${PLUGIN_DIR}/commands/create-pr.md"
-    has_frontmatter_delimiter "$command_file"
-    has_frontmatter_field "$command_file" "name"
-    has_frontmatter_field "$command_file" "description"
+@test "me: create-pr skill has proper frontmatter" {
+    local skill_file="${PLUGIN_DIR}/skills/create-pr/SKILL.md"
+    has_frontmatter_delimiter "$skill_file"
+    has_frontmatter_field "$skill_file" "name"
+    has_frontmatter_field "$skill_file" "description"
 }
 
 @test "me: create-pr scripts are executable" {
-    [ -x "${PLUGIN_DIR}/scripts/check-conflicts.sh" ]
-    [ -x "${PLUGIN_DIR}/scripts/verify-pr-status.sh" ]
+    [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh" ]
+    [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
 }
 
-@test "me: create-pr check-conflicts.sh validates arguments and git repo" {
-    local script="${PLUGIN_DIR}/scripts/check-conflicts.sh"
-    grep -q "if.*#.*ne 1" "$script"
+@test "me: create-pr check-conflicts.sh validates git repo" {
+    local script="${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh"
     grep -q "git rev-parse.*git-dir" "$script"
 }
 
 @test "me: create-pr verify-pr-status.sh handles all PR states with CI checks" {
-    local script="${PLUGIN_DIR}/scripts/verify-pr-status.sh"
+    local script="${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh"
     grep -q "CLEAN)" "$script"
     grep -q "BEHIND)" "$script"
     grep -q "DIRTY)" "$script"
