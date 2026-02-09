@@ -5,52 +5,37 @@
  * 1. Getting compressed tool data using compress.ts
  * 2. Skipping tools that return null (low value)
  * 3. Storing in pending_events table
- * 4. Running async (non-blocking)
+ * 4. Runs synchronously (simple function call)
  */
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
-import * as sqliteVec from 'sqlite-vec';
 import { compressToolData } from '../core/compress.js';
-import { initDatabaseV3, insertPendingEventV3, getPendingEventsV3 } from '../core/db.v3.js';
+import { initDatabaseV3, getPendingEventsV3 } from '../core/db.v3.js';
 import { handlePostToolUse } from './post-tool-use.js';
 
 describe('PostToolUse Hook', () => {
   let db: Database.Database;
-  let originalEnv: NodeJS.ProcessEnv;
-  let originalCwd: string;
 
   beforeEach(() => {
     // Use in-memory database for testing
-    process.env.TEST_DB_PATH = ':memory:';
     db = initDatabaseV3();
-
-    // Save original environment and cwd
-    originalEnv = { ...process.env };
-    originalCwd = process.cwd();
-
-    // Set up test environment
-    process.env.CLAUDE_SESSION_ID = 'test-session-123';
   });
 
   afterEach(() => {
     if (db) {
       db.close();
     }
-
-    // Restore environment and cwd
-    process.env = originalEnv;
-    process.chdir(originalCwd);
   });
 
   describe('handlePostToolUse', () => {
-    test('stores compressed tool data in pending_events', async () => {
+    test('stores compressed tool data in pending_events', () => {
       const toolData = {
         file_path: '/src/test.ts',
         lines: 100
       };
 
-      await handlePostToolUse(db, 'Read', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Read', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
@@ -60,20 +45,20 @@ describe('PostToolUse Hook', () => {
       expect(events[0].sessionId).toBe('test-session-123');
     });
 
-    test('skips tools that return null from compression', async () => {
+    test('skips tools that return null from compression', () => {
       const toolData = { pattern: 'test' };
 
-      await handlePostToolUse(db, 'Glob', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Glob', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(0);
     });
 
-    test('includes timestamp and createdAt fields', async () => {
+    test('includes timestamp and createdAt fields', () => {
       const beforeTime = Date.now();
       const toolData = { command: 'echo test', exitCode: 0 };
 
-      await handlePostToolUse(db, 'Bash', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Bash', toolData);
 
       const afterTime = Date.now();
       const events = getPendingEventsV3(db, 'test-session-123', 10);
@@ -85,14 +70,14 @@ describe('PostToolUse Hook', () => {
       expect(events[0].createdAt).toBeLessThanOrEqual(afterTime);
     });
 
-    test('handles Edit tool compression', async () => {
+    test('handles Edit tool compression', () => {
       const toolData = {
         file_path: '/src/auth.ts',
         old_string: 'function login()',
         new_string: 'async function login()'
       };
 
-      await handlePostToolUse(db, 'Edit', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Edit', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
@@ -102,40 +87,40 @@ describe('PostToolUse Hook', () => {
       expect(events[0].compressed).toContain('→');
     });
 
-    test('handles Write tool compression', async () => {
+    test('handles Write tool compression', () => {
       const toolData = {
         file_path: '/src/new.ts',
         lines: 250
       };
 
-      await handlePostToolUse(db, 'Write', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Write', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toBe('Created /src/new.ts (250 lines)');
     });
 
-    test('handles Bash tool compression with success', async () => {
+    test('handles Bash tool compression with success', () => {
       const toolData = {
         command: 'npm test',
         exitCode: 0
       };
 
-      await handlePostToolUse(db, 'Bash', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Bash', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toContain('Ran `npm test` → exit 0');
     });
 
-    test('handles Bash tool compression with error', async () => {
+    test('handles Bash tool compression with error', () => {
       const toolData = {
         command: 'npm test',
         exitCode: 1,
         stderr: 'Error: Test failed\n    at test.js:10:5'
       };
 
-      await handlePostToolUse(db, 'Bash', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Bash', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
@@ -143,48 +128,48 @@ describe('PostToolUse Hook', () => {
       expect(events[0].compressed).toContain('Error: Test failed');
     });
 
-    test('handles Grep tool compression', async () => {
+    test('handles Grep tool compression', () => {
       const toolData = {
         pattern: 'TODO',
         path: '/src',
         count: 5
       };
 
-      await handlePostToolUse(db, 'Grep', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Grep', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toContain("Searched 'TODO' in /src → 5 matches");
     });
 
-    test('handles WebSearch tool compression', async () => {
+    test('handles WebSearch tool compression', () => {
       const toolData = {
         query: 'TypeScript best practices 2026'
       };
 
-      await handlePostToolUse(db, 'WebSearch', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'WebSearch', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toBe('Searched: TypeScript best practices 2026');
     });
 
-    test('handles WebFetch tool compression', async () => {
+    test('handles WebFetch tool compression', () => {
       const toolData = {
         url: 'https://example.com/api/docs'
       };
 
-      await handlePostToolUse(db, 'WebFetch', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'WebFetch', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toBe('Fetched https://example.com/api/docs');
     });
 
-    test('handles multiple tool events in sequence', async () => {
-      await handlePostToolUse(db, 'Read', { file_path: '/src/a.ts', lines: 10 }, 'test-project');
-      await handlePostToolUse(db, 'Read', { file_path: '/src/b.ts', lines: 20 }, 'test-project');
-      await handlePostToolUse(db, 'Bash', { command: 'echo test', exitCode: 0 }, 'test-project');
+    test('handles multiple tool events in sequence', () => {
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Read', { file_path: '/src/a.ts', lines: 10 });
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Read', { file_path: '/src/b.ts', lines: 20 });
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Bash', { command: 'echo test', exitCode: 0 });
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(3);
@@ -193,7 +178,7 @@ describe('PostToolUse Hook', () => {
       expect(events[2].compressed).toContain('echo test');
     });
 
-    test('filters out skipped tools', async () => {
+    test('filters out skipped tools', () => {
       // These tools should be skipped (return null from compress)
       const skippedTools = [
         'Glob', 'LSP', 'TodoWrite', 'TaskCreate', 'TaskUpdate',
@@ -202,39 +187,32 @@ describe('PostToolUse Hook', () => {
       ];
 
       for (const toolName of skippedTools) {
-        await handlePostToolUse(db, toolName, {}, 'test-project');
+        handlePostToolUse(db, 'test-session-123', 'test-project', toolName, {});
       }
 
       const events = getPendingEventsV3(db, 'test-session-123', 100);
       expect(events).toHaveLength(0);
     });
 
-    test('uses session ID from environment', async () => {
-      process.env.CLAUDE_SESSION_ID = 'custom-session-456';
+    test('handles different session IDs', () => {
+      handlePostToolUse(db, 'session-1', 'project-1', 'Read', { file_path: '/a.ts', lines: 10 });
+      handlePostToolUse(db, 'session-2', 'project-2', 'Read', { file_path: '/b.ts', lines: 20 });
 
-      await handlePostToolUse(db, 'Read', { file_path: '/test.ts', lines: 50 }, 'test-project');
+      const events1 = getPendingEventsV3(db, 'session-1', 10);
+      const events2 = getPendingEventsV3(db, 'session-2', 10);
 
-      const events = getPendingEventsV3(db, 'custom-session-456', 10);
-      expect(events).toHaveLength(1);
+      expect(events1).toHaveLength(1);
+      expect(events2).toHaveLength(1);
+      expect(events1[0].project).toBe('project-1');
+      expect(events2[0].project).toBe('project-2');
     });
 
-    test('handles unknown tool names', async () => {
-      await handlePostToolUse(db, 'UnknownTool', { data: 'test' }, 'test-project');
+    test('handles unknown tool names', () => {
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'UnknownTool', { data: 'test' });
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
       expect(events[0].compressed).toBe('UnknownTool');
-    });
-
-    test('does not throw errors on invalid input', async () => {
-      // Should not throw even with null/undefined data
-      await expect(
-        handlePostToolUse(db, 'Read', null, 'test-project')
-      ).resolves.not.toThrow();
-
-      await expect(
-        handlePostToolUse(db, 'Read', undefined, 'test-project')
-      ).resolves.not.toThrow();
     });
 
     test('compresses tool data correctly for all supported tools', () => {
@@ -275,10 +253,10 @@ describe('PostToolUse Hook', () => {
   });
 
   describe('Integration: pending_events table', () => {
-    test('events can be retrieved after insertion', async () => {
+    test('events can be retrieved after insertion', () => {
       const toolData = { file_path: '/test.ts', lines: 100 };
 
-      await handlePostToolUse(db, 'Read', toolData, 'test-project');
+      handlePostToolUse(db, 'test-session-123', 'test-project', 'Read', toolData);
 
       const events = getPendingEventsV3(db, 'test-session-123', 10);
       expect(events).toHaveLength(1);
@@ -291,12 +269,9 @@ describe('PostToolUse Hook', () => {
       expect(events[0]).toHaveProperty('createdAt');
     });
 
-    test('multiple sessions do not interfere', async () => {
-      process.env.CLAUDE_SESSION_ID = 'session-1';
-      await handlePostToolUse(db, 'Read', { file_path: '/a.ts', lines: 10 }, 'project-1');
-
-      process.env.CLAUDE_SESSION_ID = 'session-2';
-      await handlePostToolUse(db, 'Read', { file_path: '/b.ts', lines: 20 }, 'project-2');
+    test('multiple sessions do not interfere', () => {
+      handlePostToolUse(db, 'session-1', 'project-1', 'Read', { file_path: '/a.ts', lines: 10 });
+      handlePostToolUse(db, 'session-2', 'project-2', 'Read', { file_path: '/b.ts', lines: 20 });
 
       const events1 = getPendingEventsV3(db, 'session-1', 10);
       const events2 = getPendingEventsV3(db, 'session-2', 10);
