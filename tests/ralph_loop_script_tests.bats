@@ -68,6 +68,9 @@ create_prd() {
       "description": "As a user, I want to test.",
       "acceptanceCriteria": ["Test passes"],
       "priority": 1,
+      "status": "open",
+      "startedAt": null,
+      "completedAt": null,
       "passes": false
     }
   ]
@@ -362,6 +365,42 @@ EOF
 # Test: prompt.md template has Browser Testing section
 @test "prompt.md: has Browser Testing section" {
   run grep -q "Browser Testing" "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions status field
+@test "prompt.md: mentions status field for user stories" {
+  run grep -q 'status' "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions startedAt field
+@test "prompt.md: mentions startedAt timestamp field" {
+  run grep -q 'startedAt' "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions completedAt field
+@test "prompt.md: mentions completedAt timestamp field" {
+  run grep -q 'completedAt' "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions in_progress status
+@test "prompt.md: mentions in_progress status" {
+  run grep -q 'in_progress' "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions done status
+@test "prompt.md: mentions done status" {
+  run grep -q '"done"' "$PROMPT_TEMPLATE"
+  [ $status -eq 0 ]
+}
+
+# Test: prompt.md template mentions ISO timestamp
+@test "prompt.md: mentions ISO timestamp" {
+  run grep -q 'ISO timestamp' "$PROMPT_TEMPLATE"
   [ $status -eq 0 ]
 }
 
