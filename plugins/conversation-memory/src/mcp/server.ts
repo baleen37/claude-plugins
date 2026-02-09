@@ -350,16 +350,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (name === 'read') {
       const params = ShowConversationInputSchema.parse(args);
-      const db = initDatabase();
-      try {
-        const result = readConversation(db, params.path, params.startLine, params.endLine);
-        if (result === null) {
-          throw new Error(`File not found: ${params.path}`);
-        }
-        return { content: [{ type: 'text', text: result }] };
-      } finally {
-        db.close();
+      const result = readConversation(params.path, params.startLine, params.endLine);
+      if (result === null) {
+        throw new Error(`File not found: ${params.path}`);
       }
+      return { content: [{ type: 'text', text: result }] };
     }
 
     throw new Error(`Unknown tool: ${name}`);

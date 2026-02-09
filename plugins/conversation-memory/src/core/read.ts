@@ -8,8 +8,7 @@
  * using 1-indexed line numbers as per spec.
  */
 
-import Database from 'better-sqlite3';
-import fs from 'fs';
+import * as fs from 'fs';
 
 interface ConversationMessage {
   uuid: string;
@@ -40,14 +39,12 @@ interface ConversationMessage {
  * In V3, conversations are read directly from JSONL files.
  * The database is not used for storing raw conversation data.
  *
- * @param db - Database instance (unused, kept for API compatibility)
  * @param path - Path to JSONL file
  * @param startLine - Starting line number (1-indexed, inclusive)
  * @param endLine - Ending line number (1-indexed, inclusive)
  * @returns Markdown formatted conversation or null if not found
  */
 export function readConversation(
-  db: Database.Database,
   path: string,
   startLine?: number,
   endLine?: number

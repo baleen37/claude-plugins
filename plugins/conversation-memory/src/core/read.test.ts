@@ -57,7 +57,7 @@ describe('read.ts', () => {
 
   describe('readConversation()', () => {
     test('returns null when path does not exist', () => {
-      const result = readConversation(db, '/nonexistent/path.jsonl');
+      const result = readConversation( '/nonexistent/path.jsonl');
       expect(result).toBeNull();
     });
 
@@ -73,7 +73,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath);
+      const result = readConversation( jsonlPath);
 
       expect(result).not.toBeNull();
       expect(result).toContain('# Conversation');
@@ -83,7 +83,7 @@ describe('read.ts', () => {
     });
 
     test('returns null when JSONL file does not exist', () => {
-      const result = readConversation(db, '/nonexistent/file.jsonl');
+      const result = readConversation( '/nonexistent/file.jsonl');
       expect(result).toBeNull();
     });
 
@@ -104,7 +104,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath, 3);
+      const result = readConversation( jsonlPath, 3);
 
       expect(result).toContain('Message 2');
       expect(result).not.toContain('Message 1');
@@ -127,7 +127,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath, undefined, 2);
+      const result = readConversation( jsonlPath, undefined, 2);
 
       expect(result).toContain('Message 1');
       expect(result).toContain('Response 1');
@@ -152,7 +152,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath, 3, 4);
+      const result = readConversation( jsonlPath, 3, 4);
 
       expect(result).not.toContain('Message 1');
       expect(result).toContain('Message 2');
@@ -183,7 +183,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath);
+      const result = readConversation( jsonlPath);
 
       expect(result).toContain('**Tool Use:** `read_file`');
       expect(result).toContain('**file_path:**');
@@ -207,7 +207,7 @@ describe('read.ts', () => {
 
       writeFileSync(jsonlPath, jsonl);
 
-      const result = readConversation(db, jsonlPath);
+      const result = readConversation( jsonlPath);
 
       expect(result).toContain('🔀 SIDECHAIN START');
       expect(result).toContain('🔀 SIDECHAIN END');
