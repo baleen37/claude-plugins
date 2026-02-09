@@ -1,5 +1,5 @@
 /**
- * LLM Configuration and Provider Factory
+ * LLM Configuration for Stop Hook Batch Extraction
  *
  * This module provides:
  * - LLMConfig interface for configuration file structure
@@ -11,11 +11,8 @@
  * @example
  * ```json
  * {
- *   "provider": "gemini",
- *   "gemini": {
- *     "apiKeys": ["key1", "key2", "key3"],
- *     "model": "gemini-2.0-flash"
- *   }
+ *   "apiKey": "your-gemini-api-key",
+ *   "model": "gemini-2.0-flash"
  * }
  * ```
  */
@@ -24,11 +21,10 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import type { LLMProvider } from './types.js';
 import { GeminiProvider } from './gemini-provider.js';
-import { RoundRobinProvider } from './round-robin-provider.js';
 
 /**
  * Default model to use for Gemini API calls.
- * gemini-2.0-flash is fast and cost-effective for summarization tasks.
+ * gemini-2.0-flash is fast and cost-effective for batch extraction.
  */
 const DEFAULT_MODEL = 'gemini-2.0-flash';
 
@@ -38,17 +34,10 @@ const DEFAULT_MODEL = 'gemini-2.0-flash';
  * Defines the structure of the config file at ~/.config/conversation-memory/config.json
  */
 export interface LLMConfig {
-  /** Provider name (e.g., "gemini") */
-  provider: string;
-  /** Gemini-specific configuration */
-  gemini?: {
-    /** Array of API keys for round-robin distribution */
-    apiKeys: string[];
-    /** Optional model name (defaults to gemini-2.0-flash) */
-    model?: string;
-  };
-  /** Optional list of tool names to skip during observation */
-  skipTools?: string[];
+  /** Gemini API key */
+  apiKey: string;
+  /** Optional model name (defaults to gemini-2.0-flash) */
+  model?: string;
 }
 
 /**
@@ -82,8 +71,8 @@ export function loadConfig(): LLMConfig | null {
     const config = JSON.parse(configContent) as LLMConfig;
 
     // Validate required fields
-    if (!config.provider) {
-      console.warn('Invalid config: missing provider field');
+    if (!config.apiKey) {
+      console.warn('Invalid config: missing apiKey field');
       return null;
     }
 
@@ -99,53 +88,29 @@ export function loadConfig(): LLMConfig | null {
 /**
  * Creates an LLMProvider from configuration.
  *
- * For "gemini" provider:
- * - Creates multiple GeminiProviders from the apiKeys array
- * - Wraps them in a RoundRobinProvider for load distribution
- * - Uses the specified model or defaults to gemini-2.0-flash
+ * Creates a GeminiProvider with the specified API key and model.
+ * Uses gemini-2.0-flash as the default model if not specified.
  *
  * @param config - LLM configuration object
- * @returns Configured LLMProvider instance
- * @throws {Error} If apiKeys array is empty
- * @throws {Error} If provider name is unknown
- * @throws {Error} If gemini config is missing for gemini provider
+ * @returns Configured GeminiProvider instance
+ * @throws {Error} If apiKey is missing
  *
  * @example
  * ```ts
  * const config: LLMConfig = {
- *   provider: 'gemini',
- *   gemini: {
- *     apiKeys: ['key1', 'key2', 'key3'],
- *     model: 'gemini-2.0-flash'
- *   }
+ *   apiKey: 'your-api-key',
+ *   model: 'gemini-2.0-flash'
  * };
  * const provider = createProvider(config);
- * const result = await provider.complete('Summarize this');
+ * const result = await provider.complete('Extract observations');
  * ```
  */
 export function createProvider(config: LLMConfig): LLMProvider {
-  switch (config.provider) {
-    case 'gemini': {
-      const geminiConfig = config.gemini;
-      if (!geminiConfig) {
-        throw new Error('Gemini provider requires gemini configuration');
-      }
+  const { apiKey, model = DEFAULT_MODEL } = config;
 
-      const { apiKeys, model = DEFAULT_MODEL } = geminiConfig;
-
-      if (apiKeys.length === 0) {
-        throw new Error('Gemini provider requires at least one API key');
-      }
-
-      // Create multiple GeminiProviders, one for each API key
-      const providers = apiKeys.map((apiKey) => new GeminiProvider(apiKey, model));
-
-      // Wrap in RoundRobinProvider for load distribution
-      // If only one provider, RoundRobinProvider will still work (just always returns index 0)
-      return new RoundRobinProvider(providers);
-    }
-
-    default:
-      throw new Error(`Unknown provider: ${config.provider}`);
+  if (!apiKey) {
+    throw new Error('Gemini provider requires an apiKey');
   }
+
+  return new GeminiProvider(apiKey, model);
 }

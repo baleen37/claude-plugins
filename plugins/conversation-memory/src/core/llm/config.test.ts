@@ -4,31 +4,35 @@
  * These tests verify:
  * - Config file loading from ~/.config/conversation-memory/config.json
  * - Provider creation from config
- * - RoundRobinProvider wrapping for multiple API keys
  * - Error handling for invalid configs
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { existsSync, readFileSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { loadConfig, createProvider, type LLMConfig } from './config.js';
-
-// Mock the fs module
-vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
-  return {
-    ...actual,
-    existsSync: vi.fn(),
-    readFileSync: vi.fn(),
-  };
-});
 
 // Test config directory path
 const testConfigDir = join(process.env.HOME ?? '', '.config', 'conversation-memory');
 const testConfigPath = join(testConfigDir, 'config.json');
 
+// Mock the fs module
+// NOTE: vi.mock() is hoisted to the top of the file before any other code runs.
+// The factory function must be self-contained and cannot reference external variables.
+let mockExistsSyncReturnValue = false;
+let mockReadFileSyncReturnValue = '{}';
+
+vi.mock('fs', () => ({
+  existsSync: vi.fn((path: string) => mockExistsSyncReturnValue),
+  readFileSync: vi.fn((path: string, encoding: string) => mockReadFileSyncReturnValue),
+}));
+
+// Import mocked functions
+import { existsSync, readFileSync } from 'fs';
+
 describe('loadConfig', () => {
   beforeEach(() => {
+    mockExistsSyncReturnValue = false;
+    mockReadFileSyncReturnValue = '{}';
     vi.clearAllMocks();
   });
 
@@ -38,7 +42,7 @@ describe('loadConfig', () => {
 
   describe('when config file does not exist', () => {
     it('should return null', () => {
-      vi.mocked(existsSync).mockReturnValue(false);
+      mockExistsSyncReturnValue = false;
 
       const config = loadConfig();
       expect(config).toBeNull();
@@ -46,91 +50,34 @@ describe('loadConfig', () => {
   });
 
   describe('when config file exists and is valid', () => {
-    it('should return LLMConfig for gemini provider', () => {
+    it('should return LLMConfig with apiKey and model', () => {
       const validConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1', 'key2'],
-          model: 'gemini-2.0-flash',
-        },
+        apiKey: 'test-api-key',
+        model: 'gemini-2.0-flash',
       };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(validConfig);
 
       const config = loadConfig();
       expect(config).toEqual(validConfig);
     });
 
-    it('should return LLMConfig for gemini provider without model', () => {
+    it('should return LLMConfig with only apiKey (model defaults)', () => {
       const validConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-        },
+        apiKey: 'test-api-key',
       };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(validConfig);
 
       const config = loadConfig();
       expect(config).toEqual(validConfig);
-    });
-
-    it('should return LLMConfig with only provider field', () => {
-      const validConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-        },
-      };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
-
-      const config = loadConfig();
-      expect(config).toEqual(validConfig);
-    });
-
-    it('should return LLMConfig with skipTools array', () => {
-      const validConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-        },
-        skipTools: ['TodoWrite', 'TaskCreate', 'Glob'],
-      };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
-
-      const config = loadConfig();
-      expect(config).toEqual(validConfig);
-      expect(config?.skipTools).toEqual(['TodoWrite', 'TaskCreate', 'Glob']);
-    });
-
-    it('should return LLMConfig with empty skipTools array', () => {
-      const validConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-        },
-        skipTools: [],
-      };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(validConfig));
-
-      const config = loadConfig();
-      expect(config).toEqual(validConfig);
-      expect(config?.skipTools).toEqual([]);
     });
   });
 
   describe('when config file exists but is invalid', () => {
     it('should return null and log warning for invalid JSON', () => {
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue('invalid json{');
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = 'invalid json{';
 
       const consoleWarnSpy = vi.fn();
       globalThis.console = { ...console, warn: consoleWarnSpy };
@@ -139,33 +86,42 @@ describe('loadConfig', () => {
       expect(config).toBeNull();
     });
 
-    it('should return null and log warning for missing provider field', () => {
+    it('should return null and log warning for missing apiKey field', () => {
       const invalidConfig = {
-        gemini: {
-          apiKeys: ['key1'],
-        },
+        model: 'gemini-2.0-flash',
       };
-
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(JSON.stringify(invalidConfig));
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(invalidConfig);
 
       const consoleWarnSpy = vi.fn();
       globalThis.console = { ...console, warn: consoleWarnSpy };
 
       const config = loadConfig();
+      expect(config).toBeNull();
+    });
+
+    it('should return null and log warning for empty apiKey', () => {
+      const invalidConfig = {
+        apiKey: '',
+      };
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(invalidConfig);
+
+      const consoleWarnSpy = vi.fn();
+      globalThis.console = { ...console, warn: consoleWarnSpy };
+
+      const config = loadConfig();
+      // Note: The current implementation checks for truthiness, so empty string is NOT considered valid
       expect(config).toBeNull();
     });
   });
 });
 
 describe('createProvider', () => {
-  describe('gemini provider', () => {
-    it('should create RoundRobinProvider with multiple GeminiProviders from apiKeys', () => {
+  describe('valid configurations', () => {
+    it('should create GeminiProvider with apiKey and default model', () => {
       const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1', 'key2', 'key3'],
-        },
+        apiKey: 'test-api-key',
       };
 
       const provider = createProvider(config);
@@ -175,89 +131,22 @@ describe('createProvider', () => {
       expect(typeof provider.complete).toBe('function');
     });
 
-    it('should create single GeminiProvider when only one API key', () => {
+    it('should create GeminiProvider with apiKey and specified model', () => {
       const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['single-key'],
-        },
+        apiKey: 'test-api-key',
+        model: 'gemini-2.0-flash',
       };
 
       const provider = createProvider(config);
 
       expect(provider).toBeDefined();
       expect(provider.complete).toBeDefined();
+      expect(typeof provider.complete).toBe('function');
     });
 
-    it('should use default model gemini-2.0-flash when not specified', () => {
-      const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-        },
-      };
-
-      const provider = createProvider(config);
-
-      expect(provider).toBeDefined();
-      expect(provider.complete).toBeDefined();
-    });
-
-    it('should use specified model from config', () => {
-      const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1'],
-          model: 'gemini-2.0-flash',
-        },
-      };
-
-      const provider = createProvider(config);
-
-      expect(provider).toBeDefined();
-      expect(provider.complete).toBeDefined();
-    });
-  });
-
-  describe('error handling', () => {
-    it('should throw error when apiKeys array is empty', () => {
-      const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: [],
-        },
-      };
-
-      expect(() => createProvider(config)).toThrow('at least one API key');
-    });
-
-    it('should throw error when provider name is unknown', () => {
-      const config: LLMConfig = {
-        provider: 'unknown-provider',
-        gemini: {
-          apiKeys: ['key1'],
-        },
-      };
-
-      expect(() => createProvider(config)).toThrow('Unknown provider');
-    });
-
-    it('should throw error when gemini config is missing', () => {
-      const config: LLMConfig = {
-        provider: 'gemini',
-      };
-
-      expect(() => createProvider(config)).toThrow();
-    });
-  });
-
-  describe('integration scenarios', () => {
     it('should create provider with correct structure for use', () => {
       const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['test-key'],
-        },
+        apiKey: 'test-key',
       };
 
       const provider = createProvider(config);
@@ -267,20 +156,23 @@ describe('createProvider', () => {
       expect(typeof provider.complete).toBe('function');
       expect(provider.complete.length).toBeGreaterThan(0); // Has parameters
     });
+  });
 
-    it('should create RoundRobinProvider with multiple providers for load distribution', () => {
+  describe('error handling', () => {
+    it('should throw error when apiKey is missing', () => {
+      const config = {
+        model: 'gemini-2.0-flash',
+      } as LLMConfig;
+
+      expect(() => createProvider(config)).toThrow('requires an apiKey');
+    });
+
+    it('should throw error when apiKey is empty string', () => {
       const config: LLMConfig = {
-        provider: 'gemini',
-        gemini: {
-          apiKeys: ['key1', 'key2', 'key3'],
-        },
+        apiKey: '',
       };
 
-      const provider = createProvider(config);
-
-      // Should create a provider (RoundRobinProvider wrapping multiple GeminiProviders)
-      expect(provider).toBeDefined();
-      expect(typeof provider.complete).toBe('function');
+      expect(() => createProvider(config)).toThrow('requires an apiKey');
     });
   });
 });
