@@ -233,15 +233,14 @@ export async function searchByVector(
  * - vec_observations (vector embeddings)
  * - observations_fts (full-text search index)
  *
+ * Note: Named 'deleteObservation' instead of 'delete' because delete is a reserved word.
+ *
  * @param db - Database instance
  * @param id - Observation ID
  */
-async function deleteImpl(
+export async function deleteObservation(
   db: Database.Database,
   id: number
 ): Promise<void> {
   deleteObservationV3(db, id);
 }
-
-// Export as 'delete' (reserved word workaround)
-export { deleteImpl as delete };

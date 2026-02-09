@@ -7,7 +7,7 @@ import {
   findByIds,
   findByProject,
   searchByVector,
-  delete as deleteObservation
+  deleteObservation
 } from './observations.v3.js';
 
 // Mock embedding generation - create a valid 768-dimensional vector
