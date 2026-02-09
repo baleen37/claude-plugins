@@ -27,7 +27,6 @@ import {
   formatResults,
   searchMultipleConcepts,
   formatMultiConceptResults,
-  applyRecencyBoost,
   type SearchOptions
 } from './search.js';
 
@@ -255,7 +254,6 @@ describe('searchConversations - text mode', () => {
     const results = await searchConversations('authentication', { mode: 'text' });
     expect(results.length).toBe(1);
     expect(results[0].snippet).toContain('authentication');
-    expect(results[0].similarity).toBeUndefined();
     // Verify it's a CompactSearchResult (no exchange property)
     expect('exchange' in results[0]).toBe(false);
     // Verify snippet length is limited
@@ -408,7 +406,6 @@ describe('formatResults', () => {
         archivePath: '/archive/test.jsonl',
         lineStart: 1,
         lineEnd: 10,
-        similarity: 0.85,
         snippet: 'How do I implement authentication?'
       }
     ];
@@ -416,7 +413,6 @@ describe('formatResults', () => {
     const output = formatResults(results);
     expect(output).toContain('Found 1 relevant conversation:');
     expect(output).toContain('[test-project, 2025-01-15]');
-    expect(output).toContain('85% match');
     expect(output).toContain('"How do I implement authentication?"');
     expect(output).toContain('Lines 1-10 in /archive/test.jsonl');
     // Should NOT contain file size and line count metadata
@@ -433,7 +429,6 @@ describe('formatResults', () => {
         archivePath: '/archive/test1.jsonl',
         lineStart: 1,
         lineEnd: 5,
-        similarity: 0.9,
         snippet: 'First question'
       },
       {
@@ -443,15 +438,14 @@ describe('formatResults', () => {
         archivePath: '/archive/test2.jsonl',
         lineStart: 1,
         lineEnd: 8,
-        similarity: 0.75,
         snippet: 'Second question'
       }
     ];
 
     const output = formatResults(results);
     expect(output).toContain('Found 2 relevant conversations:');
-    expect(output).toContain('[project-a, 2025-01-15] - 90% match');
-    expect(output).toContain('[project-b, 2025-01-16] - 75% match');
+    expect(output).toContain('[project-a, 2025-01-15]');
+    expect(output).toContain('[project-b, 2025-01-16]');
     expect(output).toContain('Lines 1-5 in /archive/test1.jsonl');
     expect(output).toContain('Lines 1-8 in /archive/test2.jsonl');
     // Should NOT contain file size and line count metadata
@@ -469,7 +463,6 @@ describe('formatResults', () => {
         lineStart: 1,
         lineEnd: 5,
         compressedToolSummary: 'Bash: `ls` | Read: /tmp/file.txt',
-        similarity: 0.8,
         snippet: 'Question'
       }
     ];
@@ -488,7 +481,6 @@ describe('formatResults', () => {
         archivePath: '/archive/test.jsonl',
         lineStart: 1,
         lineEnd: 5,
-        similarity: undefined,
         snippet: 'Question'
       }
     ];
@@ -509,7 +501,6 @@ describe('formatResults', () => {
         archivePath: '/archive/test.jsonl',
         lineStart: 1,
         lineEnd: 5,
-        similarity: 0.8,
         snippet: longMessage.substring(0, 200) + '...'
       }
     ];
@@ -578,13 +569,14 @@ describe('formatMultiConceptResults', () => {
     const output = formatMultiConceptResults(results, ['authentication', 'JWT']);
     expect(output).toContain('Found 1 conversation matching all concepts');
     expect(output).toContain('[authentication + JWT]');
-    expect(output).toContain('79% avg match');
-    expect(output).toContain('authentication: 85%');
-    expect(output).toContain('JWT: 72%');
     expect(output).toContain('Lines 1-10 in /archive/test.jsonl');
     // Should NOT contain file size and line count metadata
     expect(output).not.toContain('KB');
     expect(output).not.toMatch(/\(\d+ lines\)/);
+    // Should NOT contain similarity percentages since they were removed
+    expect(output).not.toContain('% avg match');
+    expect(output).not.toContain('authentication: 85%');
+    expect(output).not.toContain('JWT: 72%');
   });
 
   test('should include tool calls in multi-concept format', () => {
@@ -606,90 +598,5 @@ describe('formatMultiConceptResults', () => {
     const output = formatMultiConceptResults(results, ['concept1']);
     expect(output).toContain('Actions:');
     expect(output).toContain('Bash: `ls`');
-  });
-});
-
-describe('applyRecencyBoost', () => {
-  // Fixed reference date for consistent testing
-  const fixedReferenceDate = new Date('2026-02-08T00:00:00Z').getTime();
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(fixedReferenceDate);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  test('should boost by 1.15 for today (days=0)', () => {
-    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-    const result = applyRecencyBoost(0.8, today);
-    // Boost = 1.15, so 0.8 * 1.15 = 0.92
-    expect(result).toBeCloseTo(0.92, 2);
-  });
-
-  test('should have boost of 1.15 for days=0', () => {
-    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, today);
-    // Boost = 1.15, so 1.0 * 1.15 = 1.15
-    expect(result).toBeCloseTo(1.15, 2);
-  });
-
-  test('should have boost of 1.0 for days=90', () => {
-    // 90 days ago from fixed reference date
-    const ninetyDaysAgo = new Date(fixedReferenceDate - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, ninetyDaysAgo);
-    // Boost = 1.0, so 1.0 * 1.0 = 1.0
-    expect(result).toBeCloseTo(1.0, 2);
-  });
-
-  test('should have boost of 0.85 for days=180', () => {
-    // 180 days ago from fixed reference date
-    const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
-    // Boost = 0.85, so 1.0 * 0.85 = 0.85
-    expect(result).toBeCloseTo(0.85, 2);
-  });
-
-  test('should clamp boost to 0.85 for days=270 (beyond 180)', () => {
-    // 270 days ago from fixed reference date
-    const twoSeventyDaysAgo = new Date(fixedReferenceDate - 270 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, twoSeventyDaysAgo);
-    // Boost should be clamped at 0.85
-    expect(result).toBeCloseTo(0.85, 2);
-  });
-
-  test('should interpolate boost correctly for days=45', () => {
-    // 45 days ago from fixed reference date
-    const fortyFiveDaysAgo = new Date(fixedReferenceDate - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, fortyFiveDaysAgo);
-    // Boost = 1.075, so 1.0 * 1.075 = 1.075
-    expect(result).toBeCloseTo(1.075, 2);
-  });
-
-  test('should apply boost correctly with similarity=0.8 and days=0', () => {
-    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-    const result = applyRecencyBoost(0.8, today);
-    // Boost = 1.15, so 0.8 * 1.15 = 0.92
-    expect(result).toBeCloseTo(0.92, 2);
-  });
-
-  test('should handle edge case of very old dates (beyond 180 days)', () => {
-    // Very old date - should be clamped at 0.85
-    const result = applyRecencyBoost(0.5, '2020-01-01');
-    expect(result).toBeCloseTo(0.425, 2);
-  });
-
-  test('should handle similarity of 0', () => {
-    const today = new Date(fixedReferenceDate).toISOString().split('T')[0];
-    const result = applyRecencyBoost(0, today);
-    expect(result).toBe(0);
-  });
-
-  test('should handle similarity of 1 with no boost effect on product', () => {
-    const oneHEightyDaysAgo = new Date(fixedReferenceDate - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const result = applyRecencyBoost(1.0, oneHEightyDaysAgo);
-    expect(result).toBeCloseTo(0.85, 2);
   });
 });

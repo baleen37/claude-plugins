@@ -49,7 +49,6 @@ export interface CompactSearchResult {
   lineStart: number;
   lineEnd: number;
   compressedToolSummary?: string;
-  similarity?: number;
   snippet: string;
 }
 

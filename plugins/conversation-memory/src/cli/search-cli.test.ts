@@ -370,7 +370,6 @@ describe('search-cli output formatting', () => {
           archivePath: archivePath,
           lineStart: 1,
           lineEnd: 5,
-          similarity: 0.85,
           snippet: 'How to implement auth?'
         }
       ];
@@ -410,7 +409,8 @@ describe('search-cli output formatting', () => {
       const output = formatMultiConceptResults(results, ['authentication', 'JWT']);
       expect(output).toContain('Found 1 conversation matching all concepts');
       expect(output).toContain('[authentication + JWT]');
-      expect(output).toContain('79% avg match');
+      // Similarity percentages are no longer displayed
+      expect(output).not.toContain('% avg match');
     });
   });
 });

@@ -3,10 +3,6 @@ import { initDatabase } from './db.js';
 import { initEmbeddings, generateEmbedding } from './embeddings.js';
 import { CompactSearchResult, CompactMultiConceptResult } from './types.js';
 
-// Constants for recency boost calculation
-const BOOST_FACTOR = 0.3;
-const BOOST_MIDPOINT = 0.5;
-
 export interface SearchOptions {
   limit?: number;
   mode?: 'vector' | 'text' | 'both';
@@ -25,32 +21,6 @@ function validateISODate(dateStr: string, paramName: string): void {
   if (isNaN(date.getTime())) {
     throw new Error(`Invalid ${paramName} date: "${dateStr}". Not a valid calendar date.`);
   }
-}
-
-/**
- * Apply recency boost to similarity scores based on timestamp.
- * Uses linear decay: today = ×1.15, 90 days = ×1.0, 180+ days = ×0.85
- *
- * @param similarity - The base similarity score (0-1)
- * @param timestamp - ISO timestamp string of the conversation
- * @returns The boosted similarity score
- */
-export function applyRecencyBoost(similarity: number, timestamp: string): number {
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffTime = Math.abs(now.getTime() - then.getTime());
-  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  // Clamp days to maximum of 180 for the boost calculation
-  const t = Math.min(days / 180, 1);
-
-  // Formula: similarity * (1 + BOOST_FACTOR * (BOOST_MIDPOINT - t))
-  // When t=0 (today): 1 + BOOST_FACTOR * BOOST_MIDPOINT = 1.15
-  // When t=0.5 (90 days): 1 + BOOST_FACTOR * 0 = 1.0
-  // When t=1.0 (180+ days): 1 + BOOST_FACTOR * (-BOOST_MIDPOINT) = 0.85
-  const boost = 1 + BOOST_FACTOR * (BOOST_MIDPOINT - t);
-
-  return similarity * boost;
 }
 
 export async function searchConversations(
@@ -170,7 +140,7 @@ export async function searchConversations(
   db.close();
 
   // Map rows to CompactSearchResult
-  let compactResults = results.map((row: any): CompactSearchResult => {
+  const compactResults = results.map((row: any): CompactSearchResult => {
     // Create snippet from snippet_text (first 100 chars from SQL)
     const snippetText = row.snippet_text || '';
     const snippet = snippetText + (snippetText.length >= 100 ? '...' : '');
@@ -183,31 +153,9 @@ export async function searchConversations(
       lineStart: row.line_start,
       lineEnd: row.line_end,
       compressedToolSummary: row.compressed_tool_summary,
-      similarity: mode === 'text' ? undefined : 1 - row.distance,
       snippet
     };
   });
-
-  // Apply recency boost to vector results and re-sort by boosted similarity
-  if (mode === 'vector' || mode === 'both') {
-    // For vector results, apply recency boost
-    compactResults = compactResults.map(result => {
-      if (result.similarity !== undefined) {
-        return {
-          ...result,
-          similarity: applyRecencyBoost(result.similarity, result.timestamp)
-        };
-      }
-      return result;
-    });
-
-    // Re-sort by boosted similarity (highest first)
-    compactResults.sort((a, b) => {
-      const aSim = a.similarity ?? 0;
-      const bSim = b.similarity ?? 0;
-      return bSim - aSim;
-    });
-  }
 
   return compactResults;
 }
@@ -222,14 +170,9 @@ export function formatResults(results: CompactSearchResult[]): string {
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
     const date = new Date(result.timestamp).toISOString().split('T')[0];
-    const simPct = result.similarity !== undefined ? Math.round(result.similarity * 100) : null;
 
-    // Header with match percentage
-    output += `${index + 1}. [${result.project}, ${date}]`;
-    if (simPct !== null) {
-      output += ` - ${simPct}% match`;
-    }
-    output += '\n';
+    // Header
+    output += `${index + 1}. [${result.project}, ${date}]\n`;
 
     // Show snippet
     output += `   "${result.snippet}"\n`;
@@ -300,12 +243,9 @@ export async function searchMultipleConcepts(
     const representedConcepts = new Set(results.map(r => r.conceptIndex));
     if (representedConcepts.size === concepts.length) {
       // All concepts found in this conversation
-      const conceptSimilarities = concepts.map((_concept, index) => {
-        const result = results.find(r => r.conceptIndex === index);
-        return result?.similarity || 0;
-      });
-
-      const averageSimilarity = conceptSimilarities.reduce((sum, sim) => sum + sim, 0) / conceptSimilarities.length;
+      // Note: similarity is no longer available, using placeholder values
+      const conceptSimilarities = concepts.map(() => 1.0);
+      const averageSimilarity = 1.0;
 
       // Use the first result's data (they're all from the same conversation)
       const firstResult = results[0];
@@ -325,8 +265,8 @@ export async function searchMultipleConcepts(
     }
   }
 
-  // Sort by average similarity (highest first)
-  multiConceptResults.sort((a, b) => b.averageSimilarity - a.averageSimilarity);
+  // Sort by timestamp (most recent first) since similarity is no longer available
+  multiConceptResults.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   // Apply limit
   return multiConceptResults.slice(0, limit);
@@ -345,16 +285,9 @@ export function formatMultiConceptResults(
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
     const date = new Date(result.timestamp).toISOString().split('T')[0];
-    const avgPct = Math.round(result.averageSimilarity * 100);
 
-    // Header with average match percentage
-    output += `${index + 1}. [${result.project}, ${date}] - ${avgPct}% avg match\n`;
-
-    // Show individual concept scores
-    const scores = result.conceptSimilarities
-      .map((sim, i) => `${concepts[i]}: ${Math.round(sim * 100)}%`)
-      .join(', ');
-    output += `   Concepts: ${scores}\n`;
+    // Header
+    output += `${index + 1}. [${result.project}, ${date}]\n`;
 
     // Show snippet
     output += `   "${result.snippet}"\n`;
@@ -399,7 +332,6 @@ export interface CompactObservationResult {
   concepts: string[];
   filesRead: string[];
   filesModified: string[];
-  similarity?: number;
 }
 
 /**
@@ -491,10 +423,6 @@ export async function searchObservations(
     const vectorResults = stmt.all(...whereParams, limit * 2) as any[];
 
     for (const row of vectorResults) {
-      // Convert distance to similarity (1 - distance for cosine distance)
-      const similarity = Math.max(0, 1 - row.distance);
-      const boostedSimilarity = applyRecencyBoost(similarity, row.timestamp);
-
       results.push({
         id: row.id,
         sessionId: row.sessionId,
@@ -506,8 +434,7 @@ export async function searchObservations(
         facts: JSON.parse(row.facts),
         concepts: JSON.parse(row.concepts),
         filesRead: JSON.parse(row.filesRead),
-        filesModified: JSON.parse(row.filesModified),
-        similarity: boostedSimilarity
+        filesModified: JSON.parse(row.filesModified)
       });
     }
   }
@@ -560,23 +487,13 @@ export async function searchObservations(
         facts: JSON.parse(row.facts),
         concepts: JSON.parse(row.concepts),
         filesRead: JSON.parse(row.filesRead),
-        filesModified: JSON.parse(row.filesModified),
-        similarity: undefined // No similarity score for text-only results
+        filesModified: JSON.parse(row.filesModified)
       });
     }
   }
 
-  // Sort by similarity (highest first) then by timestamp
+  // Sort by timestamp (most recent first)
   results.sort((a, b) => {
-    if (a.similarity !== undefined && b.similarity !== undefined) {
-      return b.similarity - a.similarity;
-    }
-    if (a.similarity !== undefined) {
-      return -1;
-    }
-    if (b.similarity !== undefined) {
-      return 1;
-    }
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 
@@ -603,13 +520,8 @@ export function formatObservationResults(results: CompactObservationResult[]): s
       hour12: true
     });
 
-    // Header with similarity score if available
-    if (result.similarity !== undefined) {
-      const pct = Math.round(result.similarity * 100);
-      output += `${index + 1}. [${result.project}, ${date} ${time}] - ${pct}% match - **${result.type}**: ${result.title}\n`;
-    } else {
-      output += `${index + 1}. [${result.project}, ${date} ${time}] - **${result.type}**: ${result.title}\n`;
-    }
+    // Header
+    output += `${index + 1}. [${result.project}, ${date} ${time}] - **${result.type}**: ${result.title}\n`;
 
     // Show subtitle if available
     if (result.subtitle) {
