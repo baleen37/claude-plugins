@@ -1,10 +1,13 @@
 # Zhipu AI Setup Guide
 
-This guide explains how to configure the conversation-memory plugin to use Zhipu AI (GLM models) for conversation summarization.
+This guide explains how to configure the conversation-memory plugin to use
+Zhipu AI (GLM models) for conversation summarization.
 
 ## What is Zhipu AI?
 
-Zhipu AI (智谱AI) is a Chinese AI company that provides the GLM (General Language Model) series of large language models. The conversation-memory plugin supports Zhipu AI as an LLM provider for generating conversation summaries and observations.
+Zhipu AI (智谱AI) is a Chinese AI company that provides the GLM (General Language
+Model) series of large language models. The conversation-memory plugin supports
+Zhipu AI as an LLM provider for generating conversation summaries and observations.
 
 ### Supported Models
 
@@ -26,7 +29,8 @@ The plugin supports the following GLM models:
 
 - Sign up and complete the verification process
 - New users receive **1 million free tokens** upon registration
-- After real-name authentication (实名认证), you get an additional **4 million tokens** (valid for a period)
+- After real-name authentication (实名认证), you get an additional
+  **4 million tokens** (valid for a period)
 
 ### Step 3: Create API Key
 
@@ -46,7 +50,7 @@ The plugin supports the following GLM models:
 
 Create or edit the configuration file at:
 
-```
+```text
 ~/.config/conversation-memory/config.json
 ```
 
@@ -133,7 +137,7 @@ When enabled, debug logs will include:
 
 Logs are written to:
 
-```
+```text
 ~/.config/conversation-memory/conversation-memory.log
 ```
 
@@ -147,7 +151,7 @@ The plugin uses the following log levels:
 
 ### Example Log Output
 
-```
+```text
 [INFO] [ZhipuAIProvider] Starting completion {"model":"glm-4.7","promptLength":1234}
 [DEBUG] [ZhipuAIProvider] Sending request {"model":"glm-4.7","messagesCount":1}
 [INFO] [ZhipuAIProvider] Completion successful {"duration":1234,"inputTokens":500,"outputTokens":200,"responseLength":800}
@@ -159,9 +163,11 @@ The plugin uses the following log levels:
 
 #### 1. Invalid API Key
 
-**Symptoms**: Error messages containing "authentication failed" or "invalid api key"
+**Symptoms**: Error messages containing "authentication failed"
+or "invalid api key"
 
 **Solution**:
+
 - Verify your API key is correct
 - Check that the API key hasn't expired
 - Ensure the API key has sufficient balance
@@ -171,6 +177,7 @@ The plugin uses the following log levels:
 **Symptoms**: Timeout or connection errors during summarization
 
 **Solution**:
+
 - Check your internet connection
 - If behind a corporate firewall, configure appropriate proxy settings
 - Verify Zhipu AI service status at [docs.bigmodel.cn](https://docs.bigmodel.cn/)
@@ -180,6 +187,7 @@ The plugin uses the following log levels:
 **Symptoms**: Error message "model not found" or "invalid model"
 
 **Solution**:
+
 - Verify the model name is correct (e.g., `glm-4.7`, `glm-4.6`)
 - Check the [Zhipu AI documentation](https://docs.bigmodel.cn/) for available models
 
@@ -188,6 +196,7 @@ The plugin uses the following log levels:
 **Symptoms**: Error messages about rate limits or too many requests
 
 **Solution**:
+
 - Wait before retrying requests
 - Consider upgrading your account plan
 - Use multiple API keys if available (future enhancement)
@@ -259,4 +268,6 @@ For issues related to:
 
 ## License
 
-This integration uses the [zhipuai-sdk-nodejs-v4](https://www.npmjs.com/package/zhipuai-sdk-nodejs-v4) SDK, which is licensed under the MIT License.
+This integration uses the zhipuai-sdk-nodejs-v4 SDK
+([npm package](https://www.npmjs.com/package/zhipuai-sdk-nodejs-v4)),
+which is licensed under the MIT License.
