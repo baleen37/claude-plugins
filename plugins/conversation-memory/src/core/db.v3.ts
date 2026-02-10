@@ -61,6 +61,22 @@ export interface SearchOptionsV3 {
  * Deletes old database file if it exists (clean slate)
  */
 export function initDatabaseV3(): Database.Database {
+  return createDatabase(true);
+}
+
+/**
+ * Open existing database or create new one if not exists.
+ * Does not delete existing database.
+ */
+export function openDatabase(): Database.Database {
+  return createDatabase(false);
+}
+
+/**
+ * Create or open database.
+ * @param wipe Whether to delete existing database file first
+ */
+function createDatabase(wipe: boolean): Database.Database {
   const dbPath = getDbPath();
 
   // Ensure directory exists
@@ -69,8 +85,8 @@ export function initDatabaseV3(): Database.Database {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  // Delete old database file for clean slate (only if not in-memory)
-  if (dbPath !== ':memory:' && fs.existsSync(dbPath)) {
+  // Delete old database file if wipe is true (only if not in-memory)
+  if (wipe && dbPath !== ':memory:' && fs.existsSync(dbPath)) {
     console.log('Deleting old database file for V3 clean slate...');
     fs.unlinkSync(dbPath);
   }
@@ -83,62 +99,55 @@ export function initDatabaseV3(): Database.Database {
   // Enable WAL mode for better concurrency
   db.pragma('journal_mode = WAL');
 
-  // Create pending_events table
-  db.exec(`
-    CREATE TABLE pending_events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id TEXT NOT NULL,
-      project TEXT NOT NULL,
-      tool_name TEXT NOT NULL,
-      compressed TEXT NOT NULL,
-      timestamp INTEGER NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
+  // Check if tables exist, create if not
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[];
+  const tableNames = new Set(tables.map(t => t.name));
 
-  // Create observations table
-  db.exec(`
-    CREATE TABLE observations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
-      project TEXT NOT NULL,
-      session_id TEXT,
-      timestamp INTEGER NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
+  // Create pending_events table if not exists
+  if (!tableNames.has('pending_events')) {
+    db.exec(`
+      CREATE TABLE pending_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        project TEXT NOT NULL,
+        tool_name TEXT NOT NULL,
+        compressed TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    db.exec(`CREATE INDEX idx_pending_session ON pending_events(session_id)`);
+    db.exec(`CREATE INDEX idx_pending_project ON pending_events(project)`);
+    db.exec(`CREATE INDEX idx_pending_timestamp ON pending_events(timestamp)`);
+  }
 
-  // Create vector table for observations
-  // Note: Using id (as TEXT) to link with observations table
-  db.exec(`
-    CREATE VIRTUAL TABLE vec_observations USING vec0(
-      id TEXT PRIMARY KEY,
-      embedding float[768]
-    )
-  `);
+  // Create observations table if not exists
+  if (!tableNames.has('observations')) {
+    db.exec(`
+      CREATE TABLE observations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        project TEXT NOT NULL,
+        session_id TEXT,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    db.exec(`CREATE INDEX idx_observations_project ON observations(project)`);
+    db.exec(`CREATE INDEX idx_observations_session ON observations(session_id)`);
+    db.exec(`CREATE INDEX idx_observations_timestamp ON observations(timestamp DESC)`);
+  }
 
-  // Create indexes for pending_events
-  db.exec(`
-    CREATE INDEX idx_pending_session ON pending_events(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX idx_pending_project ON pending_events(project)
-  `);
-  db.exec(`
-    CREATE INDEX idx_pending_timestamp ON pending_events(timestamp)
-  `);
-
-  // Create indexes for observations
-  db.exec(`
-    CREATE INDEX idx_observations_project ON observations(project)
-  `);
-  db.exec(`
-    CREATE INDEX idx_observations_session ON observations(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX idx_observations_timestamp ON observations(timestamp DESC)
-  `);
+  // Create vector table if not exists
+  if (!tableNames.has('vec_observations')) {
+    db.exec(`
+      CREATE VIRTUAL TABLE vec_observations USING vec0(
+        id TEXT PRIMARY KEY,
+        embedding float[768]
+      )
+    `);
+  }
 
   return db;
 }
