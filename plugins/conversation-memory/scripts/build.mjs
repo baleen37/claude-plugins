@@ -40,7 +40,7 @@ async function buildCli() {
 
     // Copy graceful wrapper (not bundled, just copied)
     await copyFile(
-      join("src", "cli-graceful.mjs"),
+      join("src", "cli.mjs"),
       join("dist", "cli.mjs")
     );
     console.log("✓ Copied dist/cli.mjs (graceful wrapper)");

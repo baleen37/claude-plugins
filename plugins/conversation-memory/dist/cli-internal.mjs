@@ -6583,9 +6583,9 @@ var require_combined_stream = __commonJS({
   }
 });
 
-// node_modules/form-data/node_modules/mime-types/node_modules/mime-db/db.json
+// node_modules/form-data/node_modules/mime-db/db.json
 var require_db = __commonJS({
-  "node_modules/form-data/node_modules/mime-types/node_modules/mime-db/db.json"(exports, module) {
+  "node_modules/form-data/node_modules/mime-db/db.json"(exports, module) {
     module.exports = {
       "application/1d-interleaved-parityfec": {
         source: "iana"
@@ -15108,9 +15108,9 @@ var require_db = __commonJS({
   }
 });
 
-// node_modules/form-data/node_modules/mime-types/node_modules/mime-db/index.js
+// node_modules/form-data/node_modules/mime-db/index.js
 var require_mime_db = __commonJS({
-  "node_modules/form-data/node_modules/mime-types/node_modules/mime-db/index.js"(exports, module) {
+  "node_modules/form-data/node_modules/mime-db/index.js"(exports, module) {
     module.exports = require_db();
   }
 });
