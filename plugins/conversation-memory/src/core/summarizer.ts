@@ -87,7 +87,7 @@ async function callLLM(prompt: string, sessionId?: string): Promise<SummaryWithU
     };
   }
 
-  const provider = createProvider(config);
+  const provider = await createProvider(config);
 
   logInfo('LLM call started', { provider: config.provider, sessionId });
   console.log(`[CONVERSATION_MEMORY] Using provider: ${config.provider}`);

@@ -7,6 +7,7 @@
  */
 
 import type { LLMProvider } from './types.js';
+import { logDebug, logInfo, logError } from '../logger.js';
 
 /**
  * A compressed tool event from pending_events table.
@@ -191,18 +192,46 @@ export async function extractObservationsFromBatch(
   events: CompressedEvent[],
   previousObservations: PreviousObservation[]
 ): Promise<ExtractedObservation[]> {
+  const startTime = Date.now();
+
+  logDebug('extractObservationsFromBatch: starting batch extraction', {
+    eventsCount: events.length,
+    previousObservationsCount: previousObservations.length
+  });
+
   try {
     const prompt = buildBatchExtractPrompt(events, previousObservations);
+
+    logDebug('extractObservationsFromBatch: built prompt', {
+      promptLength: prompt.length
+    });
 
     const result = await provider.complete(prompt, {
       systemPrompt: BATCH_EXTRACT_SYSTEM_PROMPT,
       maxTokens: 2048,
     });
 
-    return parseBatchExtractResponse(result.text);
+    const extracted = parseBatchExtractResponse(result.text);
+    const duration = Date.now() - startTime;
+
+    logInfo('extractObservationsFromBatch: successfully extracted observations', {
+      extractedCount: extracted.length,
+      responseLength: result.text.length,
+      duration: `${duration}ms`
+    });
+
+    return extracted;
   } catch (error) {
+    const duration = Date.now() - startTime;
+    const promptLength = events.length > 0 ? JSON.stringify(events).length : 0;
+
+    logError('extractObservationsFromBatch: batch extraction failed', error, {
+      eventsCount: events.length,
+      promptLength,
+      duration: `${duration}ms`
+    });
+
     // Return empty array on any error (graceful degradation)
-    console.warn('Batch extraction failed:', error instanceof Error ? error.message : String(error));
     return [];
   }
 }

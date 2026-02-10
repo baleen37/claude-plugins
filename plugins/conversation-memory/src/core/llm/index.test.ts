@@ -75,7 +75,7 @@ describe('LLM Module Barrel Export', () => {
     it('should export LLMConfig type', () => {
       const config: LLMConfig = {
         provider: 'gemini',
-        gemini: { apiKeys: ['key1'] },
+        apiKey: 'key1',
       };
       expect(config.provider).toBe('gemini');
     });
@@ -114,7 +114,7 @@ describe('LLM Module Barrel Export', () => {
       const options: LLMOptions = { maxTokens: 100 };
       const usage: TokenUsage = { input_tokens: 10, output_tokens: 5 };
       const result: LLMResult = { text: 'test', usage };
-      const config: LLMConfig = { provider: 'gemini', gemini: { apiKeys: ['key1'] } };
+      const config: LLMConfig = { provider: 'gemini', apiKey: 'key1' };
 
       expect(options.maxTokens).toBe(100);
       expect(usage.input_tokens).toBe(10);

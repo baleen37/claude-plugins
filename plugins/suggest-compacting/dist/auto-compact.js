@@ -1,3 +1,4 @@
+#!/usr/bin/env npx tsx
 import { incrementState, isValidSessionId } from './lib/state.js';
 const DEFAULT_THRESHOLD = 50;
 const REPEAT_THRESHOLD = 25;

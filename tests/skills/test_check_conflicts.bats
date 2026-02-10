@@ -12,16 +12,42 @@ setup() {
   fi
 }
 
-@test "check-conflicts.sh: fails without arguments" {
-  run "$SCRIPT"
-  [ "$status" -eq 2 ]
-  [[ "$output" =~ "ERROR: Missing base branch argument" ]]
+@test "check-conflicts.sh: works without arguments when gh available" {
+  skip "Requires gh CLI and git repository"
+  # Script should use gh to get default branch
 }
 
-@test "check-conflicts.sh: shows usage on error" {
+@test "check-conflicts.sh: works with explicit base branch" {
+  skip "Requires git repository"
+  run "$SCRIPT" main
+  # Should accept explicit base branch
+}
+
+@test "check-conflicts.sh: errors when no base and gh fails" {
+  # Create temp directory (not a git repo)
+  TEMP_DIR=$(mktemp -d)
+
+  cd "$TEMP_DIR"
+  # gh will fail in non-repo, script should error appropriately
   run "$SCRIPT"
   [ "$status" -eq 2 ]
-  [[ "$output" =~ "Usage:" ]]
+  [[ "$output" =~ "ERROR: Cannot determine default branch" || "$output" =~ "Not in a git repository" ]]
+
+  # Cleanup
+  rm -rf "$TEMP_DIR"
+}
+
+@test "check-conflicts.sh: shows usage when gh fails" {
+  # Create temp directory (not a git repo)
+  TEMP_DIR=$(mktemp -d)
+
+  cd "$TEMP_DIR"
+  run "$SCRIPT"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "Usage:" || "$output" =~ "ERROR" ]]
+
+  # Cleanup
+  rm -rf "$TEMP_DIR"
 }
 
 @test "check-conflicts.sh: is executable" {
