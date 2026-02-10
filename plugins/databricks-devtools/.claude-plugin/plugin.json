@@ -1,6 +1,6 @@
 {
   "name": "databricks-devtools",
-  "version": "5.17.1",
+  "version": "5.17.2",
   "description": "Databricks CLI wrapper for workspace management and SQL execution",
   "author": {
     "name": "Baleen"
