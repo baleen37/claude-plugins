@@ -17789,7 +17789,7 @@ function isoToTimestamp(isoDate) {
   return new Date(isoDate).getTime();
 }
 async function search(query, options) {
-  const { db, limit = 10, mode = "both", after, before, projects, files } = options;
+  const { db, limit = 10, after, before, projects, files } = options;
   if (after) validateISODate(after, "--after");
   if (before) validateISODate(before, "--before");
   let results = [];
@@ -17818,97 +17818,41 @@ async function search(query, options) {
     }
     return files.some((filePath) => content.includes(filePath));
   }
-  if (mode === "vector" || mode === "both") {
-    await initEmbeddings();
-    const queryEmbedding = await generateEmbedding(query);
-    const stmt = db.prepare(`
-      SELECT
-        o.id,
-        o.title,
-        o.content,
-        o.project,
-        o.timestamp,
-        vec.distance
-      FROM observations o
-      INNER JOIN vec_observations vec ON CAST(o.id AS TEXT) = vec.id
-      WHERE vec.embedding MATCH ?
-        AND vec.k = ?
-        ${timeClause}
-        ${projectClause}
-      ORDER BY vec.distance ASC
-    `);
-    const vectorParams = [
-      Buffer.from(new Float32Array(queryEmbedding).buffer),
-      limit,
-      ...timeFilterParams,
-      ...projectFilterParams
-    ];
-    const vectorResults = stmt.all(...vectorParams);
-    for (const row of vectorResults) {
-      if (!matchesFiles(row.content)) {
-        continue;
-      }
-      results.push({
-        id: row.id,
-        title: row.title,
-        project: row.project,
-        timestamp: row.timestamp
-      });
+  await initEmbeddings();
+  const queryEmbedding = await generateEmbedding(query);
+  const stmt = db.prepare(`
+    SELECT
+      o.id,
+      o.title,
+      o.content,
+      o.project,
+      o.timestamp,
+      vec.distance
+    FROM observations o
+    INNER JOIN vec_observations vec ON CAST(o.id AS TEXT) = vec.id
+    WHERE vec.embedding MATCH ?
+      AND vec.k = ?
+      ${timeClause}
+      ${projectClause}
+    ORDER BY vec.distance ASC
+  `);
+  const vectorParams = [
+    Buffer.from(new Float32Array(queryEmbedding).buffer),
+    limit,
+    ...timeFilterParams,
+    ...projectFilterParams
+  ];
+  const vectorResults = stmt.all(...vectorParams);
+  for (const row of vectorResults) {
+    if (!matchesFiles(row.content)) {
+      continue;
     }
-  }
-  if (mode === "text" || mode === "both") {
-    const filterConditions = [];
-    const filterParams = [];
-    if (after) {
-      filterConditions.push("o.timestamp >= ?");
-      filterParams.push(isoToTimestamp(after));
-    }
-    if (before) {
-      filterConditions.push("o.timestamp <= ?");
-      filterParams.push(isoToTimestamp(before));
-    }
-    if (projects && projects.length > 0) {
-      const projectPlaceholders = projects.map(() => "?").join(",");
-      filterConditions.push(`o.project IN (${projectPlaceholders})`);
-      filterParams.push(...projects);
-    }
-    const whereClause = filterConditions.length > 0 ? `AND ${filterConditions.join(" AND ")}` : "";
-    const ftsQuery = query.includes(".") ? `"${query}"` : query;
-    const textStmt = db.prepare(`
-      SELECT
-        o.id,
-        o.title,
-        o.content,
-        o.project,
-        o.timestamp
-      FROM observations o
-      INNER JOIN observations_fts fts ON o.id = fts.rowid
-      WHERE observations_fts MATCH ?
-        ${whereClause}
-      ORDER BY o.timestamp DESC
-      LIMIT ?
-    `);
-    const textParams = [
-      ftsQuery,
-      ...filterParams,
-      limit
-    ];
-    const textResults = textStmt.all(...textParams);
-    for (const row of textResults) {
-      const existing = results.find((r) => r.id === row.id);
-      if (existing) {
-        continue;
-      }
-      if (!matchesFiles(row.content)) {
-        continue;
-      }
-      results.push({
-        id: row.id,
-        title: row.title,
-        project: row.project,
-        timestamp: row.timestamp
-      });
-    }
+    results.push({
+      id: row.id,
+      title: row.title,
+      project: row.project,
+      timestamp: row.timestamp
+    });
   }
   return results;
 }
@@ -17989,9 +17933,6 @@ function initDatabaseV3() {
       id TEXT PRIMARY KEY,
       embedding float[768]
     )
-  `);
-  db.exec(`
-    CREATE VIRTUAL TABLE observations_fts USING fts5(title, content)
   `);
   db.exec(`
     CREATE INDEX idx_pending_session ON pending_events(session_id)
@@ -18249,12 +18190,8 @@ ${JSON.stringify(value, null, 2)}
 }
 
 // src/mcp/server.ts
-var SearchModeEnum = external_exports.enum(["vector", "text", "both"]);
 var SearchInputSchema = external_exports.object({
   query: external_exports.string().min(2, "Query must be at least 2 characters").describe("Search query string"),
-  mode: SearchModeEnum.default("both").describe(
-    'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
-  ),
   limit: external_exports.number().int().min(1).max(50).default(10).describe("Maximum number of results to return (default: 10)"),
   after: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return results after this date (YYYY-MM-DD format)"),
   before: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().describe("Only return results before this date (YYYY-MM-DD format)"),
@@ -18299,12 +18236,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               minLength: 2,
               description: "Search query string"
-            },
-            mode: {
-              type: "string",
-              enum: ["vector", "text", "both"],
-              default: "both",
-              description: 'Search mode: "vector" for semantic similarity, "text" for exact matching, "both" for combined'
             },
             limit: {
               type: "number",
@@ -18416,7 +18347,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const results = await search(params.query, {
           db,
           limit: params.limit,
-          mode: params.mode,
           after: params.after,
           before: params.before,
           projects: params.projects,
