@@ -1,0 +1,20 @@
+{
+  "name": "Analytics SQL Warehouse",
+  "size": "Medium",
+  "enable_serverless_compute": true,
+  "min_num_clusters": 1,
+  "max_num_clusters": 10,
+  "auto_stop_mins": 30,
+  "tags": {
+    "Environment": "production",
+    "Purpose": "analytics",
+    "Team": "business-intelligence",
+    "CostCenter": "analytics"
+  },
+  "channel": {
+    "name": "CHANNEL_NAME_CURRENT"
+  },
+  "spot_instance_policy": {
+    "policy": "COST_OPTIMIZED"
+  }
+}

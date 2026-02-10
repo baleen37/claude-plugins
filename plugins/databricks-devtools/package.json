@@ -1,6 +1,6 @@
 {
   "name": "@baleen/databricks-devtools-plugin",
-  "version": "1.0.0",
+  "version": "5.17.5",
   "private": true,
   "type": "module",
   "description": "Databricks CLI wrapper for workspace management and SQL execution",
