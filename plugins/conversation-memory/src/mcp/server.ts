@@ -22,7 +22,7 @@ import { z } from 'zod';
 import { search as searchV3 } from '../core/search.v3.js';
 import { findByIds as getObservationsByIds } from '../core/observations.v3.js';
 import { readConversation } from '../core/read.js';
-import { initDatabaseV3 } from '../core/db.v3.js';
+import { openDatabase } from '../core/db.v3.js';
 
 // Zod Schemas for Input Validation
 
@@ -249,8 +249,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'search') {
       const params = SearchInputSchema.parse(args);
 
-      // Initialize V3 database
-      const db = initDatabaseV3();
+      // Open V3 database (persistent storage)
+      const db = openDatabase();
       try {
         // Perform search using V3 search function
         const results = await searchV3(params.query, {
@@ -291,8 +291,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         typeof id === 'string' ? parseInt(id, 10) : id
       );
 
-      // Initialize V3 database
-      const db = initDatabaseV3();
+      // Open V3 database (persistent storage)
+      const db = openDatabase();
       try {
         const observations = await getObservationsByIds(db, numericIds);
 
