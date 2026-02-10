@@ -96,8 +96,7 @@ export class ZhipuAIProvider implements LLMProvider {
 
       logDebug('[ZhipuAIProvider] Sending request', {
         model: this.model,
-        messages,
-        maxTokens: options?.maxTokens
+        messagesCount: messages.length
       });
 
       const response = await this.client.createCompletions({
@@ -129,9 +128,7 @@ export class ZhipuAIProvider implements LLMProvider {
         duration
       });
       // Re-throw API errors directly for the caller to handle
-      throw new Error(
-        `Zhipu AI API call failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+      throw error;
     }
   }
 
