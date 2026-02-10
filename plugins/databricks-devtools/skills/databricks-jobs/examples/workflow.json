@@ -1,0 +1,153 @@
+{
+  "name": "Multi-Task ETL Workflow",
+  "description": "A data pipeline with extract, transform, and load tasks with dependencies",
+  "tags": {
+    "environment": "production",
+    "team": "data-engineering",
+    "pipeline": "etl"
+  },
+  "job_clusters": [
+    {
+      "job_cluster_key": "etl_cluster",
+      "new_cluster": {
+        "cluster_name": "ETL Job Cluster",
+        "spark_version": "13.3.x-scala2.12",
+        "node_type_id": "i3.xlarge",
+        "num_workers": 4,
+        "autoscale": {
+          "min_workers": 2,
+          "max_workers": 8
+        },
+        "spark_conf": {
+          "spark.dynamicAllocation.enabled": "true"
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "extract",
+      "description": "Extract data from source systems",
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/Extract",
+        "base_parameters": {
+          "source_system": "postgres",
+          "output_path": "/tmp/extract/{{run_id}}"
+        }
+      },
+      "timeout_seconds": 1800,
+      "retry_on_timeout": true,
+      "max_retries": 3
+    },
+    {
+      "task_key": "validate_data",
+      "description": "Validate extracted data quality",
+      "depends_on": [
+        {"task_key": "extract"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/ValidateData",
+        "base_parameters": {
+          "data_path": "{{extract.output.output_path}}"
+        }
+      },
+      "timeout_seconds": 600
+    },
+    {
+      "task_key": "transform",
+      "description": "Transform and clean data",
+      "depends_on": [
+        {"task_key": "validate_data", "outcome": "SUCCESS"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/Transform",
+        "base_parameters": {
+          "input_path": "{{extract.output.output_path}}",
+          "output_path": "/tmp/transform/{{run_id}}"
+        }
+      },
+      "timeout_seconds": 3600
+    },
+    {
+      "task_key": "handle_validation_failure",
+      "description": "Handle data quality failures",
+      "depends_on": [
+        {"task_key": "validate_data", "outcome": "FAILURE"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/HandleError",
+        "base_parameters": {
+          "error_type": "DATA_QUALITY",
+          "task_key": "validate_data"
+        }
+      }
+    },
+    {
+      "task_key": "load_silver",
+      "description": "Load to silver table",
+      "depends_on": [
+        {"task_key": "transform"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/LoadSilver",
+        "base_parameters": {
+          "input_path": "{{transform.output.output_path}}",
+          "table_name": "analytics.silver_transactions"
+        }
+      },
+      "timeout_seconds": 1800
+    },
+    {
+      "task_key": "load_gold",
+      "description": "Load to gold table for reporting",
+      "depends_on": [
+        {"task_key": "load_silver"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/LoadGold",
+        "base_parameters": {
+          "source_table": "analytics.silver_transactions",
+          "target_table": "analytics.gold_daily_summary"
+        }
+      },
+      "timeout_seconds": 1200
+    },
+    {
+      "task_key": "cleanup",
+      "description": "Clean up temporary files",
+      "depends_on": [
+        {"task_key": "load_gold", "outcome": "SUCCESS"},
+        {"task_key": "handle_validation_failure", "outcome": "SUCCESS"}
+      ],
+      "job_cluster_key": "etl_cluster",
+      "notebook_task": {
+        "notebook_path": "/Production/ETL/Cleanup",
+        "base_parameters": {
+          "cleanup_path": "/tmp"
+        }
+      },
+      "timeout_seconds": 300
+    }
+  ],
+  "parameters": [
+    {
+      "name": "backfill_date",
+      "default": "",
+      "description": "Optional backfill date (YYYY-MM-DD). Leave empty for current date."
+    },
+    {
+      "name": "dry_run",
+      "default": "false",
+      "description": "Set to true to validate without loading data"
+    }
+  ],
+  "timeout_seconds": 10800,
+  "max_concurrent_runs": 1,
+  "format": "MULTI_TASK"
+}
