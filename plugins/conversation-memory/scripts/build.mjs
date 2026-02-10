@@ -29,14 +29,21 @@ async function buildCli() {
   await mkdir("dist", { recursive: true });
 
   try {
-    // Build CLI
+    // Build actual CLI (bundled)
     await build({
       ...commonConfig,
       entryPoints: ["src/cli/index-cli.ts"],
-      outfile: "dist/cli.mjs",
+      outfile: "dist/cli-internal.mjs",
       banner: { js: "#!/usr/bin/env node" },
     });
-    console.log("✓ Built dist/cli.mjs");
+    console.log("✓ Built dist/cli-internal.mjs");
+
+    // Copy graceful wrapper (not bundled, just copied)
+    await copyFile(
+      join("src", "cli-graceful.mjs"),
+      join("dist", "cli.mjs")
+    );
+    console.log("✓ Copied dist/cli.mjs (graceful wrapper)");
 
     // Build MCP server
     await build({
