@@ -9,21 +9,27 @@ import { ZhipuAI } from 'zhipuai-sdk-nodejs-v4';
 import type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js';
 
 /**
- * Type definition for Zhipu AI completion response.
- * Copied from the SDK's internal types since they're not properly exported.
+ * Type definition for Zhipu AI completion response message.
+ * Based on the zhipuai-sdk-nodejs-v4 package types.
  */
-interface ZhipuAIResponse {
-  choices?: Array<{
-    message?: {
-      content?: string;
+type CompletionsResponseMessage = {
+  id: string;
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    finish_reason: string;
+    message: {
+      role: string;
+      content: string;
     };
   }>;
-  usage?: {
+  usage: {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
   };
-}
+};
 
 /**
  * Default model to use for Zhipu AI API calls.
@@ -74,8 +80,6 @@ export class ZhipuAIProvider implements LLMProvider {
    * @throws {Error} If the API call fails
    */
   async complete(prompt: string, options?: LLMOptions): Promise<LLMResult> {
-    const startTime = Date.now();
-
     const messages: Array<{ role: 'user'; content: string }> = [
       { role: 'user', content: prompt }
     ];
@@ -87,11 +91,11 @@ export class ZhipuAIProvider implements LLMProvider {
       maxTokens: options?.maxTokens
     });
 
-    const duration = Date.now() - startTime;
-
-    // Extract text and usage from response
-    const text = (response as ZhipuAIResponse).choices?.[0]?.message?.content ?? '';
-    const usage = this.extractUsage(response as ZhipuAIResponse);
+    // The response can be either CompletionsResponseMessage or IncomingMessage
+    // We need to check which one we got
+    const completionsResponse = response as CompletionsResponseMessage;
+    const text = completionsResponse.choices?.[0]?.message?.content ?? '';
+    const usage = this.extractUsage(completionsResponse);
 
     return { text, usage };
   }
@@ -102,7 +106,7 @@ export class ZhipuAIProvider implements LLMProvider {
    * @param response - The response object from Zhipu AI
    * @returns Token usage information
    */
-  private extractUsage(response: ZhipuAIResponse): TokenUsage {
+  private extractUsage(response: CompletionsResponseMessage): TokenUsage {
     const usage = response.usage;
 
     return {

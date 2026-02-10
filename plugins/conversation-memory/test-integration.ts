@@ -59,28 +59,23 @@ async function testConfigLoading() {
   success('Config loaded successfully');
   info(`Provider: ${config.provider}`);
 
-  if (config.provider !== 'gemini') {
-    error(`Expected provider "gemini", got "${config.provider}"`);
+  if (config.provider !== 'gemini' && config.provider !== 'zhipu-ai') {
+    error(`Expected provider "gemini" or "zhipu-ai", got "${config.provider}"`);
     return false;
   }
 
-  success('Provider is "gemini"');
+  success(`Provider is "${config.provider}"`);
 
-  if (!config.gemini) {
-    error('Missing gemini configuration');
+  success('Config has provider');
+  info(`Model: ${config.model || 'default (gemini-2.0-flash)'}`);
+  info(`API Key present: ${!!config.apiKey}`);
+
+  if (!config.apiKey) {
+    error('No API key configured');
     return false;
   }
 
-  success('Gemini config exists');
-  info(`Model: ${config.gemini.model || 'default (gemini-2.0-flash)'}`);
-  info(`API Keys count: ${config.gemini.apiKeys.length}`);
-
-  if (config.gemini.apiKeys.length === 0) {
-    error('No API keys configured');
-    return false;
-  }
-
-  success('At least one API key is configured');
+  success('API key is configured');
 
   return true;
 }
@@ -95,7 +90,7 @@ async function testProviderCreation() {
   }
 
   try {
-    const provider = createProvider(config);
+    const provider = await createProvider(config);
     success('Provider created successfully');
 
     if (typeof provider.complete !== 'function') {
@@ -120,7 +115,7 @@ async function testSummarization() {
     return false;
   }
 
-  const provider = createProvider(config);
+  const provider = await createProvider(config);
 
   const testPrompt = 'Summarize this in one word: Hello world, this is a test.';
   info(`Test prompt: "${testPrompt}"`);

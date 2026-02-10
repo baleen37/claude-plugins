@@ -13,6 +13,7 @@ import type {
   ModelParams,
 } from '@google/generative-ai';
 import type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js';
+import { logInfo, logError, logDebug } from '../logger.js';
 
 /**
  * Default model to use for Gemini API calls.
@@ -60,6 +61,14 @@ export class GeminiProvider implements LLMProvider {
    * @throws {Error} If the API call fails
    */
   async complete(prompt: string, options?: LLMOptions): Promise<LLMResult> {
+    const startTime = Date.now();
+
+    logInfo('[GeminiProvider] Starting completion', {
+      model: this.model,
+      promptLength: prompt.length,
+      maxTokens: options?.maxTokens
+    });
+
     try {
       const generationConfig: GenerationConfig = {};
       if (options?.maxTokens) {
@@ -74,11 +83,32 @@ export class GeminiProvider implements LLMProvider {
         modelParams.generationConfig = generationConfig;
       }
 
+      logDebug('[GeminiProvider] Sending request', {
+        model: this.model,
+        hasSystemPrompt: !!options?.systemPrompt
+      });
+
       const generativeModel = this.client.getGenerativeModel(modelParams);
 
       const result = await generativeModel.generateContent(prompt);
-      return this.parseResult(result);
+      const duration = Date.now() - startTime;
+
+      const parsed = this.parseResult(result);
+
+      logInfo('[GeminiProvider] Completion successful', {
+        duration,
+        inputTokens: parsed.usage.input_tokens,
+        outputTokens: parsed.usage.output_tokens,
+        responseLength: parsed.text.length
+      });
+
+      return parsed;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      logError('[GeminiProvider] Completion failed', error, {
+        model: this.model,
+        duration
+      });
       // Re-throw API errors directly for the caller to handle
       throw new Error(
         `Gemini API call failed: ${error instanceof Error ? error.message : String(error)}`
