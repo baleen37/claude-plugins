@@ -6,7 +6,7 @@ This directory contains reusable workflow skills that enforce best practices.
 
 Each skill is a self-contained directory with `SKILL.md`:
 
-```
+```text
 skills/
 ├── SKILL.md                    # Skill definition (mandatory)
 ├── scripts/                    # Bash/shell scripts (optional)
@@ -27,7 +27,6 @@ skills/
 
 | Skill | Purpose | When to Use |
 |-------|---------|-------------|
-| `creating-pull-requests` | PR creation with --base, Conventional Commits | Creating/updating PRs |
 | `ci-troubleshooting` | Systematic CI debugging | CI failures |
 | `setup-precommit-and-ci` | Pre-commit hooks & CI setup | New project setup |
 | `nix-direnv-setup` | Direnv for Nix flakes | Nix flake projects |

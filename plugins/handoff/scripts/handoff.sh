@@ -4,10 +4,8 @@ set -euo pipefail
 # Handoff Script
 # Saves current session context to a handoff file
 
-# Arguments: $1 = summary, $2 = next_steps_json, $3 = decisions_json
+# Arguments: $1 = summary
 SUMMARY="$1"
-NEXT_STEPS="$2"
-DECISIONS="$3"
 
 HANDOFF_DIR="$HOME/.claude/handoffs"
 PROJECT_PATH="${CLAUDE_PROJECT_DIR:-$(pwd)}"
@@ -58,10 +56,6 @@ CREATED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # Build handoff JSON using jq
 HANDOFF_FILE="$HANDOFF_DIR/$UUID.json"
 
-# Parse JSON arrays for next_steps and decisions
-NEXT_STEPS_JSON=$(echo "$NEXT_STEPS" | jq -c '.' 2>/dev/null || echo '[]')
-DECISIONS_JSON=$(echo "$DECISIONS" | jq -c '.' 2>/dev/null || echo '[]')
-
 # Build JSON with jq to handle null values correctly
 jq -n \
   --arg id "$UUID" \
@@ -70,11 +64,9 @@ jq -n \
   --arg project_path "$PROJECT_PATH" \
   --arg branch "$BRANCH" \
   --arg summary "$SUMMARY" \
-  --argjson next_steps "$NEXT_STEPS_JSON" \
-  --argjson decisions "$DECISIONS_JSON" \
   --arg plan_path "${PLAN_PATH:-null}" \
   --arg tasks_session_id "${TASKS_SESSION_ID:-null}" \
-  --arg session_id "${SESSION_ID:-null}" \
+  --arg source_session_id "${SESSION_ID:-null}" \
   '{
     id: $id,
     created_at: $created_at,
@@ -83,14 +75,11 @@ jq -n \
     project_path: $project_path,
     branch: $branch,
     summary: $summary,
-    next_steps: $next_steps,
-    decisions: $decisions,
     references: {
       plan_path: (if $plan_path == "null" then null else $plan_path end),
-      tasks_session_id: (if $tasks_session_id == "null" then null else $tasks_session_id end),
-      session_id: (if $session_id == "null" then null else $session_id end)
+      tasks_session_id: (if $tasks_session_id == "null" then null else $tasks_session_id end)
     },
-    source_session_id: (if $session_id == "null" then null else $session_id end)
+    source_session_id: (if $source_session_id == "null" then null else $source_session_id end)
   }' > "$HANDOFF_FILE"
 
 # Display handoff information
@@ -100,13 +89,4 @@ echo "ID: $UUID"
 echo "Project: $PROJECT_NAME ($BRANCH)"
 echo "Summary: $SUMMARY"
 echo ""
-
-# Display next steps if any
-NEXT_STEPS_COUNT=$(echo "$NEXT_STEPS_JSON" | jq 'length')
-if [ "$NEXT_STEPS_COUNT" -gt 0 ]; then
-  echo "Next Steps:"
-  echo "$NEXT_STEPS_JSON" | jq -r '.[] | "  - \(.)"' 2>/dev/null || true
-  echo ""
-fi
-
 echo "Use /pickup to restore this session, or /pickup $UUID to restore this specific handoff."

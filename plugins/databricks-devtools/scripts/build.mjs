@@ -1,45 +1,33 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Build script for databricks-devtools plugin
- * Compiles TypeScript and bundles the MCP server
+ * Bundles the MCP server using Bun
  */
 
-import * as esbuild from "esbuild";
 import { mkdir, copyFile } from "fs/promises";
 import { join } from "path";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
+import { build } from "bun";
 
 const commonConfig = {
-  bundle: true,
-  platform: "node",
-  target: "node20",
+  target: "node",
   format: "esm",
   sourcemap: false,
   minify: false,
+  // External dependencies that should not be bundled
   external: [],
 };
 
-async function build() {
+async function buildPlugin() {
   // Ensure output directory exists
   await mkdir("dist", { recursive: true });
 
   try {
-    // First, compile TypeScript to JavaScript in dist/
-    console.log("Compiling TypeScript...");
-    await execAsync("npx tsc --project tsconfig.json");
-    console.log("✓ TypeScript compiled");
-
-    // Then bundle the compiled JS
-    await esbuild.build({
+    // Build MCP server - Bun handles TypeScript natively
+    await build({
       ...commonConfig,
-      entryPoints: ["dist/mcp/server.js"],
+      entrypoints: ["src/mcp/server.ts"],
       outfile: "dist/mcp-server.mjs",
-      banner: {
-        js: "#!/usr/bin/env node",
-      },
+      banner: "#!/usr/bin/env bun\n",
     });
     console.log("✓ Built dist/mcp-server.mjs");
 
@@ -49,10 +37,12 @@ async function build() {
       join("dist", "mcp-wrapper.mjs")
     );
     console.log("✓ Copied dist/mcp-wrapper.mjs");
+
+    console.log("\n✅ Build complete!");
   } catch (error) {
     console.error("Build failed:", error);
     process.exit(1);
   }
 }
 
-build();
+buildPlugin();

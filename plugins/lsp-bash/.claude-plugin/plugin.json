@@ -1,0 +1,29 @@
+{
+  "name": "lsp-bash",
+  "version": "5.17.5",
+  "description": "Bash Language Server integration for Claude Code",
+  "author": {
+    "name": "baleen37"
+  },
+  "license": "MIT",
+  "keywords": [
+    "lsp",
+    "bash",
+    "shell",
+    "autocomplete",
+    "diagnostics"
+  ],
+  "lspServers": {
+    "bash": {
+      "command": "bash-language-server",
+      "args": [
+        "start"
+      ],
+      "extensionToLanguage": {
+        ".sh": "bash",
+        ".bash": "bash",
+        ".zsh": "bash"
+      }
+    }
+  }
+}

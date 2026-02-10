@@ -16,7 +16,6 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     [ -f "${PLUGIN_DIR}/commands/verify.md" ]
     [ -f "${PLUGIN_DIR}/commands/tdd.md" ]
     [ -f "${PLUGIN_DIR}/commands/spawn.md" ]
-    [ -f "${PLUGIN_DIR}/commands/claude-isolated-test.md" ]
 }
 
 @test "me: code-reviewer agent exists with proper model" {
@@ -27,7 +26,6 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
 
 # create-pr skill tests
 @test "me: create-pr skill exists with required components" {
-    [ -d "${PLUGIN_DIR}/skills/create-pr" ]
     [ -f "${PLUGIN_DIR}/skills/create-pr/SKILL.md" ]
     [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh" ]
     [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
@@ -45,9 +43,8 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
 }
 
-@test "me: create-pr check-conflicts.sh validates arguments and git repo" {
+@test "me: create-pr check-conflicts.sh validates git repo" {
     local script="${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh"
-    grep -q "if.*#.*ne 1" "$script"
     grep -q "git rev-parse.*git-dir" "$script"
 }
 

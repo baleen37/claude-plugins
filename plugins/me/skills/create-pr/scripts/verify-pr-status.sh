@@ -2,18 +2,23 @@
 set -euo pipefail
 
 # PR Status Verification with Retry Logic
-# Usage: verify-pr-status.sh <base-branch>
+# Usage: verify-pr-status.sh [base-branch]
 #
 # Exit codes:
 #   0 - PR is merge-ready (CLEAN + CI passed)
 #   1 - Error (conflicts, CI failures, max retries exceeded)
 #   2 - Pending (CI still running, BLOCKED/UNSTABLE status)
 
+# Get base branch from argument or gh CLI
 BASE="${1:-}"
 if [[ -z "$BASE" ]]; then
-  echo "ERROR: Base branch required" >&2
-  echo "Usage: $0 <base-branch>" >&2
-  exit 1
+  BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo "")
+  if [[ -z "$BASE" ]]; then
+    echo "ERROR: Cannot determine default branch" >&2
+    echo "  - Pass base branch explicitly: $0 <base-branch>" >&2
+    echo "  - Or ensure 'gh' CLI is authenticated" >&2
+    exit 1
+  fi
 fi
 
 MAX_RETRIES=3
@@ -70,9 +75,7 @@ while [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; do
       echo "⟳ Branch is behind $BASE (attempt $RETRY_COUNT/$MAX_RETRIES)"
 
       # Update branch
-      git merge origin/"$BASE" --no-edit
-
-      if [[ $? -ne 0 ]]; then
+      if ! git merge origin/"$BASE" --no-edit; then
         echo ""
         echo "✗ Merge failed - conflicts detected"
         echo ""

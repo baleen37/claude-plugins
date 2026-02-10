@@ -5,8 +5,9 @@ repos:
       - id: check-yaml
       - id: check-json
       - id: end-of-file-fixer
+        exclude: ^(tests/|\.ralph/)
       - id: trailing-whitespace
-        exclude: ^tests/
+        exclude: ^(tests/|\.ralph/)
 
   - repo: local
     hooks:
@@ -25,9 +26,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: bats-tests
-        name: BATS test runner
-        entry: bash tests/run-all-tests.sh
+      - id: bats-unit-tests
+        name: BATS unit test runner (fast)
+        entry: bash tests/run-unit-tests.sh
         language: system
         pass_filenames: false
         always_run: true

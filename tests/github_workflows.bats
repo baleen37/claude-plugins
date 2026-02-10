@@ -31,12 +31,6 @@ job_has_if_condition() {
     yaml_get "$workflow_file" ".jobs.${job_name}.if" &>/dev/null
 }
 
-# Helper: Ensure yq is available (call in tests that need yq)
-ensure_yq() {
-    if ! command -v yq &> /dev/null; then
-        skip "yq not available"
-    fi
-}
 
 @test "Workflow directory exists" {
     [ -d "$WORKFLOW_DIR" ]
@@ -48,22 +42,22 @@ ensure_yq() {
 }
 
 @test "CI workflow has valid YAML syntax" {
-    ensure_yq
-    yaml_get "$CI_WORKFLOW" "." >/dev/null
+    ensure_yaml_validator
+    validate_yaml_file "$CI_WORKFLOW"
 }
 
 @test "CI workflow triggers on push to main" {
-    ensure_yq
+    ensure_yaml_validator
     workflow_has_trigger "$CI_WORKFLOW" "push"
 }
 
 @test "CI workflow triggers on pull_request" {
-    ensure_yq
+    ensure_yaml_validator
     workflow_has_trigger "$CI_WORKFLOW" "pull_request"
 }
 
 @test "CI workflow has only test job (no release job)" {
-    ensure_yq
+    ensure_yaml_validator
     # CI workflow should only have test job, release is handled by separate release.yml
     local jobs
     jobs=$(yaml_get "$CI_WORKFLOW" ".jobs | keys | .[]")
@@ -77,7 +71,7 @@ ensure_yq() {
 }
 
 @test "CI workflow has read-only permissions" {
-    ensure_yq
+    ensure_yaml_validator
     local permissions
     permissions=$(yaml_get "$CI_WORKFLOW" ".permissions.contents")
 
@@ -89,12 +83,12 @@ ensure_yq() {
 }
 
 @test "Release workflow has valid YAML syntax" {
-    ensure_yq
-    yaml_get "${WORKFLOW_DIR}/release.yml" "." >/dev/null
+    ensure_yaml_validator
+    validate_yaml_file "${WORKFLOW_DIR}/release.yml"
 }
 
 @test "Release workflow triggers on push to main" {
-    ensure_yq
+    ensure_yaml_validator
     workflow_has_trigger "${WORKFLOW_DIR}/release.yml" "push"
     local branches
     branches=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".on.push.branches.[]")
@@ -102,7 +96,7 @@ ensure_yq() {
 }
 
 @test "Release workflow has required permissions" {
-    ensure_yq
+    ensure_yaml_validator
     local contents_perm
     contents_perm=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".permissions.contents")
     [[ "$contents_perm" == "write" ]]
@@ -113,12 +107,12 @@ ensure_yq() {
 }
 
 @test "Marketplace sync workflow has valid YAML syntax" {
-    ensure_yq
-    yaml_get "${WORKFLOW_DIR}/sync-marketplace.yml" "." >/dev/null
+    ensure_yaml_validator
+    validate_yaml_file "${WORKFLOW_DIR}/sync-marketplace.yml"
 }
 
 @test "Release workflow has infinite loop prevention" {
-    ensure_yq
+    ensure_yaml_validator
     # Verify that the workflow prevents infinite loops from bot release commits
     local if_condition
     if_condition=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".jobs.release.if")
@@ -129,7 +123,7 @@ ensure_yq() {
 }
 
 @test "Release workflow uses full git history" {
-    ensure_yq
+    ensure_yaml_validator
     # Verify that the workflow fetches full history for semantic-release
     local fetch_depth
     fetch_depth=$(yaml_get "${WORKFLOW_DIR}/release.yml" ".jobs.release.steps[] | select(.uses == \"actions/checkout@v4\") | .with.\"fetch-depth\"")

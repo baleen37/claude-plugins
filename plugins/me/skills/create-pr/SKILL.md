@@ -1,97 +1,125 @@
 ---
 name: create-pr
-description: Use when user asks to create PR, commit and push, or mentions being ready to merge - handles conflicts, protected branches, and merge-ready verification
+description: Use when the user asks to "create a PR", "create pull request", "open a PR", "submit a PR", "make a pull request", "merge PR", or requests complete git workflow including commit, push, and PR creation
 ---
 
 # Create PR
 
-Complete git workflow: commit → push → PR → verify merge-ready.
+## Overview
 
-**Core principle:** Verify before every transition. Smart defaults, no unnecessary options.
+Complete git workflow with verification at every transition. Prevents broken PRs, wrong target branches, and merge conflicts.
 
-**Announce at start:** "I'm using the create-pr skill to handle the complete git workflow."
+## When to Use
+
+User asks for PR creation OR requests commit → push → PR workflow.
+
+## Quick Reference
+
+| Step | Command | Purpose |
+|------|---------|---------|
+| Pre-flight | `git status && git branch --show-current` | Check branch, block main/master, verify changes |
+| Commit | `git add <files> && git commit -m "type(scope): description"` | Stage specific files only |
+| Conflict check | `${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/check-conflicts.sh "$BASE"` | Verify clean merge BEFORE pushing |
+| Push | `git push -u origin HEAD` | Push to remote |
+| Create PR | `gh pr create --base "$BASE" --title "..." --body "..."` | Create with correct target branch |
+| Verify | `${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/verify-pr-status.sh "$BASE"` | Confirm merge-ready (CLEAN + CI passed) |
 
 ## Red Flags - STOP
 
-**Critical mistakes:**
-- No `--base` flag → wrong target branch
-- Skip conflict check → breaks remote
+**Critical mistakes that break the workflow:**
+
+- Hardcoding `--base main` → breaks when default branch changes (omit `--base` instead)
+- Skip conflict check → pushes broken PR, breaks remote
 - Stop at PR creation → not verified merge-ready
 - `git add` without `git status` → adds unintended files
-- Proceed from main/master → violates protection
+- Proceed from main/master → violates branch protection
 - **No changes to commit** → inform user, don't proceed
 
-**Rationalizations (all wrong):**
-- "Push/CI will catch it" → You verify, no assumptions
-- "Time pressure" → Skipping verification costs hours of fixes
-- "Base hasn't changed" → Always re-verify after updates
-- "User is urgent/exhausted" → Fatigue increases risk, not decreases it
-- "User ordered me to skip it" → You call out bad ideas, don't execute them
+**Violating the letter of the rules is violating the spirit of the rules.**
 
-## Workflow
+## Common Mistakes
 
-### 1. Pre-flight
-- Check state: `git status`, `git log`, current branch
-- **Block if on main/master** - create feature branch first
-- **Block if no changes** - inform user working tree is clean
+| Mistake | Why It's Wrong | Fix |
+|---------|----------------|-----|
+| Using `git add -A` | Stages untracked files (secrets, temps) | Always `git status` first, add specific files |
+| Hardcoding `--base main` | Wrong target branch | Omit `--base` - `gh pr create` uses default branch automatically |
+| Skipping verify script | PR may be DIRTY, BEHIND, or CI-failing | Always run verify-pr-status.sh after creation |
+| Pushing to main/master | Violates protection rules | Block if `git branch --show-current` shows main/master |
 
-### 2. Commit
-- Review: `git status`, `git diff --stat`
-- Stage specific files only (never `-A`)
-- Conventional commits + Co-Authored-By
+## Implementation
 
-### 3. Pre-push
-- Detect base: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`
-- **Conflict check:** `scripts/check-conflicts.sh "$BASE"` (REQUIRED)
-
-### 4. Push
-- `git push -u origin HEAD`
-
-### 5. Create PR
-- Generate body: `git log origin/"$BASE"..HEAD`
-- `gh pr create --base "$BASE"` (always specify `--base`)
-
-### 6. Verify Merge-Ready
-**CRITICAL:** Don't stop at PR creation.
+### Pre-flight
 
 ```bash
-scripts/verify-pr-status.sh "$BASE"
+# Check current state
+git status
+git log --oneline -5
+git branch --show-current
+
+# Block if on main/master
+# Block if no changes (working tree clean)
 ```
 
-Handles: CLEAN+CI checks, BEHIND (auto-update, max 3 retries), DIRTY (conflict detection)
+### Commit
 
-## Scripts
+```bash
+# Stage specific files only (never -A)
+git add <specific-files>
+git commit -m "type(scope): description"
+```
 
-- **scripts/check-conflicts.sh** - Pre-push conflict detection
-- **scripts/verify-pr-status.sh** - PR status verification with BEHIND retry
+### Conflict Check (REQUIRED)
 
-## Out of Scope
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/check-conflicts.sh"
+```
 
-This skill handles current branch state → push → PR → verify.
+Exits with:
+- `0` - No conflicts, safe to proceed
+- `1` - Conflicts detected, manual resolution required
+- `2` - Error (missing branch, git errors)
 
-Does NOT handle:
-- Git history cleanup (use manual rebase or GitHub squash merge)
-- Debug code removal (clean up first, then use skill)
-- Interactive rebase (technically unsupported)
-- Commit message rewriting (amend before using skill)
+### Push
 
-**Clarification:** Multiple commits are fine - PR includes all commits since branch diverged from base.
+```bash
+git push -u origin HEAD
+```
 
-## Integration
+### Create PR
 
-**Called by:** `/create-pr` command, after completing work
+```bash
+gh pr create --title "$(git log -1 --pretty=%s)" --body "<comprehensive description>"
+```
 
-**Pairs with:**
-- **verification-before-completion** - REQUIRED before this workflow
-- **finishing-a-development-branch** - REQUIRED after PR merged
+`gh pr create` automatically uses the repository's default branch as base.
 
-## Additional Resources
+**PR body must include:**
+- Summary of changes
+- Technical details
+- Testing approach
+- Breaking changes (if any)
 
-For detailed step-by-step workflow with examples, see **`references/workflow.md`**.
+Check `.github/PULL_REQUEST_TEMPLATE.md` for project-specific format.
 
-## Notes
+### Verify Merge-Ready (CRITICAL)
 
-- Smart defaults handle 95% of cases
-- Every transition has verification
-- Main/master protection is non-negotiable
-- CI checks are mandatory (not optional)
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/verify-pr-status.sh"
+```
+
+Handles:
+- **CLEAN** + CI passed → merge-ready, exit 0
+- **BEHIND** → auto-update branch, max 3 retries
+- **DIRTY** → conflicts detected, resolution steps provided
+- **BLOCKED/UNSTABLE** → CI still running or failed, exit 2
+- **CI failures** → shows failed required checks, exit 1
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "Conflict check takes too long" | 5 seconds now vs hours of conflict resolution later |
+| "I know the default branch is main" | Hardcoding breaks when default changes |
+| "PR creation is enough" | Unverified PRs break CI, waste reviewer time |
+| "I'll check status manually" | You won't. Script catches BEHIND/DIRTY automatically |
+| "Small changes don't need verification" | Small changes break production too |

@@ -1,10 +1,16 @@
 ---
-description: "Cancel active Ralph Loop"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/cancel-ralph.sh)"]
-hide-from-slash-command-tool: "true"
+description: "Cancel active Ralph loop"
+allowed-tools: ["Bash(kill*)", "Bash(cat .ralph/ralph.pid)", "Bash(rm .ralph/ralph.pid)"]
 ---
+
 # Cancel Ralph
-Execute the cancel script:
-```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/cancel-ralph.sh"
-```
+
+Cancel the active Ralph loop by killing the ralph.sh process.
+
+1. Check if `.ralph/ralph.pid` exists
+2. If not found: report "No active Ralph loop"
+3. If found:
+   - Read the PID from the file
+   - Kill the process
+   - Remove the PID file
+   - Report cancellation

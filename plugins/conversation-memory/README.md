@@ -1,36 +1,45 @@
 # Conversation Memory Plugin
 
-Conversation memory plugin with semantic search across Claude Code sessions.
+Conversation memory plugin with **observation-based semantic search** across Claude Code sessions.
 
 ## Purpose
 
-Gives Claude persistent memory across sessions by automatically indexing conversations and providing semantic
-search capabilities. Based on [@obra/episodic-memory](https://github.com/obra/episodic-memory) with integration
-into the Claude Code plugin ecosystem.
+Gives Claude persistent memory across sessions by automatically indexing conversations and providing
+**progressive disclosure search** through structured observations. Based on [@obra/episodic-memory](https://github.com/obra/episodic-memory)
+with integration into the Claude Code plugin ecosystem.
 
 ## Features
 
 - **Automatic Indexing**: SessionEnd hook syncs conversations automatically
+- **Observation-Based Search**: Structured insights from past sessions (~30t each)
+- **Progressive Disclosure**: 3-layer pattern saves 50-100x context
+  - Layer 1: search() returns compact observations
+  - Layer 2: get_observations() returns full details
+  - Layer 3: read() returns raw conversation (rarely needed)
 - **Semantic Search**: Vector embeddings for intelligent similarity matching
 - **Text Search**: Fast exact-text matching for specific terms
-- **Multi-Concept Search**: AND search across 2-5 concepts simultaneously
+- **Advanced Filtering**: Filter by observation type, concepts, files, projects
+- **Multi-Concept Search**: AND search across 2-5 concepts (legacy exchange-based)
 - **Date Filtering**: Search within specific time ranges
 - **Conversation Reading**: Full conversation retrieval with pagination
+- **Inline Exclusion Markers**: Exclude sensitive conversations with `DO NOT INDEX THIS CHAT`
+- **Index Verification**: Check index health and repair issues
+- **CLI Interface**: Direct CLI access for manual operations
 
 ## Agents
 
 ### `search-conversation`
 
-Specialized agent for searching and synthesizing conversation history.
-Saves 50-100x context by returning synthesized insights instead of raw
-conversation data.
+Specialized agent for searching and synthesizing conversation history using **observations** (structured insights).
+Saves 50-100x context by using progressive disclosure and returning synthesized insights.
 
 **The agent automatically:**
 
-1. Searches using semantic + text search
-2. Reads top 2-5 relevant conversations
-3. Synthesizes findings into 200-1000 word summary
-4. Returns actionable insights with sources
+1. Searches observations (Layer 1: compact results ~30t each)
+2. Gets full observation details (Layer 2: complete context ~200-500t each)
+3. Reads raw conversations only if needed (Layer 3: full transcript ~500-2000t)
+4. Synthesizes findings into 200-1000 word summary
+5. Returns actionable insights with sources
 
 **Always use the agent instead of MCP tools directly** to avoid wasting context.
 
@@ -68,41 +77,71 @@ These tools are exposed for advanced usage only. See `skills/remembering-convers
 
 ### `conversation-memory__search`
 
-Restores context by searching past conversations. Claude doesn't automatically remember past sessions—this tool
-recovers decisions, solutions, and avoids reinventing work.
+Restores context by searching past conversations using **observations** (structured insights).
+Uses progressive disclosure to minimize context usage.
 
 **Use the search-conversation agent instead of calling this directly.**
 
 **Parameters:**
 
-- `query` (string | string[], required): Search query (single string for semantic search, array of 2-5 strings for
-  multi-concept AND search)
+- `query` (string | string[], required): Search query (single string for observation-based search, array of 2-5 strings for
+  multi-concept AND search - **deprecated**, use single-concept with filters instead)
 - `limit` (number, optional): Maximum results to return (1-50, default: 10)
 - `mode` (string, optional): Search mode - "vector", "text", or "both" (default: "both", only for single-concept)
 - `before` (string, optional): Only conversations before this date (YYYY-MM-DD)
 - `after` (string, optional): Only conversations after this date (YYYY-MM-DD)
+- `projects` (string[], optional): Filter results to specific project names
+- `types` (string[], optional): Filter by observation types (single-concept only)
+- `concepts` (string[], optional): Filter by tagged concepts (single-concept only)
+- `files` (string[], optional): Filter by files mentioned/modified (single-concept only)
 - `response_format` (string, optional): "markdown" or "json" (default: "markdown")
 
 **Examples:**
 
 ```javascript
-// Semantic search
+// Observation-based search (recommended)
 { query: "React Router authentication errors" }
 
 // Text search for exact match
 { query: "a1b2c3d4e5f6", mode: "text" }
 
-// Multi-concept AND search
+// Advanced filtering (single-concept only)
+{ query: "authentication", types: ["decision", "bug-fix"], concepts: ["JWT"] }
+
+// Multi-concept AND search (deprecated, uses exchanges)
+// Instead use: { query: "React Router authentication JWT", concepts: ["React Router", "authentication", "JWT"], mode: "both" }
 { query: ["React Router", "authentication", "JWT"] }
 
 // Date filtering
 { query: "refactoring", after: "2025-09-01" }
+
+// Project filtering
+{ query: "authentication", projects: ["my-project"] }
+```
+
+### `conversation-memory__get_observations`
+
+Gets full observation details (Layer 2 of progressive disclosure). Use after search() to retrieve
+complete information including narrative, facts, concepts, and files.
+
+**Use the search-conversation agent instead of calling this directly.**
+
+**Parameters:**
+
+- `ids` (string[], required): Array of observation IDs (1-20)
+
+**Example:**
+
+```javascript
+// Get full details for specific observations
+{ ids: ["obs-abc123", "obs-def456", "obs-ghi789"] }
 ```
 
 ### `conversation-memory__read`
 
-Reads full conversations to extract detailed context after finding relevant results with search. Essential for
-understanding complete rationale, evolution, and gotchas behind past decisions.
+Reads full conversations (Layer 3 of progressive disclosure). Use to extract detailed context after finding
+relevant observations with search() and getting full details with get_observations(). Essential for understanding
+the complete rationale, evolution, and gotchas behind past decisions.
 
 **Use the search-conversation agent instead of calling this directly.**
 
@@ -112,11 +151,14 @@ understanding complete rationale, evolution, and gotchas behind past decisions.
 - `startLine` (number, optional): Starting line number (1-indexed) for pagination
 - `endLine` (number, optional): Ending line number (1-indexed) for pagination
 
+**Note:** Most searches are satisfied with layers 1-2 (search + get_observations). Only use this when
+absolutely necessary to save context.
+
 ## Installation
 
 ```bash
 # Install dependencies
-cd plugins/memory
+cd plugins/conversation-memory
 npm install
 
 # Build the plugin
@@ -156,42 +198,76 @@ This:
 
 ### Exclusion
 
-To exclude specific conversation directories from indexing, create a `.no-conversation-memory` marker file:
+There are two ways to exclude conversations from indexing:
+
+**1. Directory-level exclusion:**
+
+Create a `.no-conversation-memory` marker file in the conversation directory:
 
 ```bash
 touch /path/to/conversation/dir/.no-conversation-memory
 ```
 
-### Environment Variables (Optional)
+**2. Inline content exclusion:**
 
-The plugin supports optional environment variables for customizing the summarization API:
+Include one of these markers anywhere in the conversation content:
 
-- **`CONVERSATION_MEMORY_API_MODEL`**: Model to use for summarization (default: `haiku`)
+- `DO NOT INDEX THIS CHAT`
+- `DO NOT INDEX THIS CONVERSATION`
+- `이 대화는 인덱싱하지 마세요` (Korean)
+- `이 대화는 검색에서 제외하세요` (Korean)
 
-  ```bash
-  export CONVERSATION_MEMORY_API_MODEL="sonnet"
-  ```
+The entire conversation will be excluded from indexing when any of these markers are detected.
 
-- **`CONVERSATION_MEMORY_API_BASE_URL`**: Custom Anthropic API endpoint
+### LLM Configuration (Required for Summarization)
 
-  ```bash
-  export CONVERSATION_MEMORY_API_BASE_URL="https://api.anthropic.com"
-  ```
+Summarization requires an LLM provider configuration. Create a config file at `~/.config/conversation-memory/config.json`:
 
-- **`CONVERSATION_MEMORY_API_TOKEN`**: Authentication token for custom API endpoint
+**Supported providers:** `gemini`, `zhipu-ai`
 
-  ```bash
-  export CONVERSATION_MEMORY_API_TOKEN="sk-ant-..."
-  ```
+#### Gemini Configuration
 
-- **`CONVERSATION_MEMORY_API_TIMEOUT_MS`**: API call timeout in milliseconds (default: SDK default)
+```json
+{
+  "provider": "gemini",
+  "apiKey": "your-gemini-api-key",
+  "model": "gemini-2.0-flash"
+}
+```
 
-  ```bash
-  export CONVERSATION_MEMORY_API_TIMEOUT_MS="30000"
-  ```
+**Getting a Gemini API key:**
 
-**Note**: If these variables are not set, the plugin uses Claude Code's default Anthropic API
-configuration (subscription-based or `ANTHROPIC_API_KEY`).
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to your config.json
+
+#### Zhipu AI Configuration
+
+```json
+{
+  "provider": "zhipu-ai",
+  "apiKey": "your-zhipu-ai-api-key",
+  "model": "glm-4.7"
+}
+```
+
+**Getting a Zhipu AI API key:**
+
+1. Visit the [Zhipu AI Open Platform](https://docs.bigmodel.cn/cn/guide/start/quick-start)
+2. Create an account and complete verification
+3. Generate an API key from the dashboard
+4. Add it to your config.json
+
+See [docs/zhipu-ai-setup.md](docs/zhipu-ai-setup.md) for detailed Zhipu AI setup instructions.
+
+**Configuration options:**
+
+- **`provider`**: LLM provider name (`gemini` or `zhipu-ai`)
+- **`apiKey`**: API key for the provider
+- **`model`**: Optional model name (defaults: `gemini-2.0-flash` for Gemini, `glm-4.7` for Zhipu AI)
+
+**Note**: If no config file is found, conversations will still be indexed but not summarized.
+You'll see `[Not summarized - no LLM config found]` placeholders instead of summaries.
 
 ## Development
 
@@ -210,6 +286,33 @@ Bundles:
 
 ```bash
 npm run typecheck
+```
+
+### CLI Usage
+
+The plugin provides a CLI interface for manual operations:
+
+```bash
+# Show help
+conversation-memory --help
+
+# Sync new conversations
+conversation-memory sync
+
+# Sync with parallel summarization
+conversation-memory sync --concurrency 4
+
+# Index a specific session
+conversation-memory index-session 2025-02-06-123456
+
+# Verify index health
+conversation-memory verify
+
+# Repair detected issues
+conversation-memory repair
+
+# Rebuild entire index
+conversation-memory rebuild --concurrency 8
 ```
 
 ### Project Structure
@@ -250,7 +353,7 @@ plugins/conversation-memory/
 
 ### Runtime
 
-- `@anthropic-ai/claude-agent-sdk`: ^0.1.9 - For conversation summarization
+- `@google/generative-ai`: ^0.24.1 - For conversation summarization (Gemini API)
 - `@modelcontextprotocol/sdk`: ^1.0.4 - MCP protocol implementation
 - `@huggingface/transformers`: ^3.8.1 - ML embeddings (Transformers.js v3)
 - `better-sqlite3`: ^9.6.0 - SQLite database
@@ -260,9 +363,7 @@ plugins/conversation-memory/
 ### Development Dependencies
 
 - `typescript`: ^5.3.3
-- `esbuild`: ^0.20.0
-- `@types/node`: ^20.0.0
-- `@types/better-sqlite3`: ^7.6.11
+- `node`: For build and test runtime (Node.js 18+)
 
 ## Upgrading from v1.x (multilingual-e5-small)
 

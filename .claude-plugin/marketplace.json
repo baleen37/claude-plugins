@@ -17,19 +17,7 @@
         "context-management",
         "hooks"
       ],
-      "version": "5.0.0"
-    },
-    {
-      "name": "auto-updater",
-      "description": "Automatic plugin installation and updates from baleen-plugins marketplace",
-      "source": "./plugins/auto-updater",
-      "category": "development",
-      "tags": [
-        "automation",
-        "updates",
-        "marketplace"
-      ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
       "name": "git-guard",
@@ -43,27 +31,99 @@
         "pr",
         "security"
       ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
-      "name": "lsp-support",
-      "description": "Language Server Protocol support for Bash, TypeScript, JavaScript, Python, Go, Kotlin, Lua, and Nix",
-      "source": "./plugins/lsp-support",
+      "name": "lsp-bash",
+      "description": "Language Server Protocol support for Bash - bash-language-server",
+      "source": "./plugins/lsp-bash",
       "category": "development",
       "tags": [
         "lsp",
         "bash",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-typescript",
+      "description": "Language Server Protocol support for TypeScript and JavaScript - typescript-language-server",
+      "source": "./plugins/lsp-typescript",
+      "category": "development",
+      "tags": [
+        "lsp",
         "typescript",
         "javascript",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-python",
+      "description": "Language Server Protocol support for Python - pyright",
+      "source": "./plugins/lsp-python",
+      "category": "development",
+      "tags": [
+        "lsp",
         "python",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-go",
+      "description": "Language Server Protocol support for Go - gopls",
+      "source": "./plugins/lsp-go",
+      "category": "development",
+      "tags": [
+        "lsp",
         "go",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-kotlin",
+      "description": "Language Server Protocol support for Kotlin - kotlin-language-server",
+      "source": "./plugins/lsp-kotlin",
+      "category": "development",
+      "tags": [
+        "lsp",
         "kotlin",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-lua",
+      "description": "Language Server Protocol support for Lua - lua-language-server",
+      "source": "./plugins/lsp-lua",
+      "category": "development",
+      "tags": [
+        "lsp",
         "lua",
+        "autocomplete",
+        "diagnostics"
+      ],
+      "version": "5.17.5"
+    },
+    {
+      "name": "lsp-nix",
+      "description": "Language Server Protocol support for Nix - nil",
+      "source": "./plugins/lsp-nix",
+      "category": "development",
+      "tags": [
+        "lsp",
         "nix",
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
       "name": "me",
@@ -78,7 +138,7 @@
         "code-review",
         "debugging"
       ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
       "name": "ralph-loop",
@@ -91,35 +151,7 @@
         "loop",
         "ai"
       ],
-      "version": "5.0.0"
-    },
-    {
-      "name": "ast-tools",
-      "description": "AST-based code search and transformation tools using ast-grep",
-      "source": "./plugins/ast-tools",
-      "category": "development",
-      "tags": [
-        "ast",
-        "refactoring",
-        "code-analysis",
-        "mcp",
-        "ast-grep"
-      ],
-      "version": "5.0.0"
-    },
-    {
-      "name": "conversation-memory",
-      "description": "Conversation memory plugin with semantic search across Claude Code sessions",
-      "source": "./plugins/conversation-memory",
-      "category": "productivity",
-      "tags": [
-        "memory",
-        "search",
-        "semantic",
-        "mcp",
-        "sessions"
-      ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
       "name": "handoff",
@@ -132,7 +164,7 @@
         "context",
         "pickup"
       ],
-      "version": "5.0.0"
+      "version": "5.17.5"
     },
     {
       "name": "databricks-devtools",
@@ -146,7 +178,21 @@
         "mcp",
         "cli"
       ],
-      "version": "1.0.0"
+      "version": "5.17.5"
+    },
+    {
+      "name": "conversation-memory",
+      "description": "Persistent semantic memory for Claude Code conversations - search, index, and retrieve past sessions using embeddings",
+      "source": "./plugins/conversation-memory",
+      "category": "productivity",
+      "tags": [
+        "memory",
+        "search",
+        "embeddings",
+        "semantic",
+        "mcp"
+      ],
+      "version": "5.17.5"
     }
   ]
 }

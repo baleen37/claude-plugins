@@ -3,7 +3,7 @@ set -euo pipefail
 
 # check-conflicts.sh - Check for merge conflicts between current branch and base
 #
-# Usage: check-conflicts.sh <base-branch>
+# Usage: check-conflicts.sh [base-branch]
 #
 # Exit codes:
 #   0 - No conflicts (clean merge)
@@ -16,14 +16,17 @@ YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-# Check arguments
-if [[ $# -ne 1 ]]; then
-  echo -e "${RED}ERROR: Missing base branch argument${NC}" >&2
-  echo "Usage: $0 <base-branch>" >&2
-  exit 2
+# Get base branch from argument or gh CLI
+BASE="${1:-}"
+if [[ -z "$BASE" ]]; then
+  BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo "")
+  if [[ -z "$BASE" ]]; then
+    echo -e "${RED}ERROR: Cannot determine default branch${NC}" >&2
+    echo "  - Pass base branch explicitly: $0 <base-branch>" >&2
+    echo "  - Or ensure 'gh' CLI is authenticated" >&2
+    exit 2
+  fi
 fi
-
-BASE="$1"
 
 # Verify we're in a git repository
 if ! git rev-parse --git-dir >/dev/null 2>&1; then

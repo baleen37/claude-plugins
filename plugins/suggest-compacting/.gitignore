@@ -1,5 +1,4 @@
 # Dependencies
-node_modules/
 
-# npm
-package-lock.json
+# Bun
+bun.lockb

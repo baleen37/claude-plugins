@@ -2,166 +2,119 @@
 # Test suite for plugin.json manifest validation
 # https://code.claude.com/docs/en/plugins-reference#plugin-manifest
 
-load helpers/setup
 load helpers/bats_helper
-
-setup() {
-    setup_test_temp
-    export TEST_DIR="${TEST_TEMP_DIR}/manifest_tests"
-    mkdir -p "$TEST_DIR"
-    ensure_jq
-}
-
-teardown() {
-    teardown_test_temp
-}
+load helpers/fixture_factory
 
 @test "plugin.json has only allowed top-level fields" {
-    # Create a valid plugin.json
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "test-plugin",
-    "description": "Test plugin",
-    "author": {
-        "name": "Test Author",
-        "email": "test@example.com"
-    },
-    "version": "1.0.0",
-    "license": "MIT",
-    "homepage": "https://example.com",
-    "repository": "https://github.com/test/test-plugin",
-    "keywords": ["test", "plugin"]
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"description": "Test plugin", "author": {"name": "Test Author", "email": "test@example.com"}, "version": "1.0.0", "license": "MIT", "homepage": "https://example.com", "repository": "https://github.com/test/test-plugin", "keywords": ["test", "plugin"]'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin" "$custom_fields")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Validate all fields are allowed
-    run validate_plugin_manifest_fields "$TEST_DIR/plugin.json"
+    run validate_plugin_manifest_fields "$manifest"
     [ "$status" -eq 0 ]
 }
 
 @test "plugin.json rejects disallowed top-level fields" {
-    # Create plugin.json with disallowed fields
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "test-plugin",
-    "description": "Test plugin",
-    "invalidField": "should not be here",
-    "anotherInvalid": 123
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"description": "Test plugin", "invalidField": "should not be here", "anotherInvalid": 123'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-invalid" "$custom_fields")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Should fail validation
-    run validate_plugin_manifest_fields "$TEST_DIR/plugin.json"
-    [ "$status" -eq 1 ]
-    [[ "$output" == *"Invalid field"* ]]
+    run validate_plugin_manifest_fields "$manifest"
+    assert_exit_code 1 "Invalid field"
 }
 
 @test "plugin.json allows only name and email in author object" {
-    # Create plugin.json with valid author fields
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "test-plugin",
-    "author": {
-        "name": "Test Author",
-        "email": "test@example.com"
-    }
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"author": {"name": "Test Author", "email": "test@example.com"}'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-valid-author" "$custom_fields")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Should pass validation
-    run validate_plugin_manifest_fields "$TEST_DIR/plugin.json"
+    run validate_plugin_manifest_fields "$manifest"
     [ "$status" -eq 0 ]
 }
 
 @test "plugin.json rejects disallowed author fields" {
-    # Create plugin.json with invalid author field
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "test-plugin",
-    "author": {
-        "name": "Test Author",
-        "url": "https://example.com",
-        "invalid": "field"
-    }
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"author": {"name": "Test Author", "url": "https://example.com", "invalid": "field"}'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-invalid-author" "$custom_fields")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Should fail validation
-    run validate_plugin_manifest_fields "$TEST_DIR/plugin.json"
-    [ "$status" -eq 1 ]
-    [[ "$output" == *"Invalid author field"* ]]
+    run validate_plugin_manifest_fields "$manifest"
+    assert_exit_code 1 "Invalid author field"
 }
 
 @test "plugin.json requires name field" {
-    # Create plugin.json without name
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "description": "Test plugin without name"
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"description": "Test plugin without name"'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-no-name" "$custom_fields")
+
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
+    # Remove the name field that was added by default
+    $JQ_BIN 'del(.name)' "$manifest" > "${manifest}.tmp" && mv "${manifest}.tmp" "$manifest"
 
     # Name is required - validate it exists
-    run json_has_field "$TEST_DIR/plugin.json" "name"
-    [ "$status" -eq 1 ]
+    run json_has_field "$manifest" "name"
+    assert_exit_code 1
 }
 
 @test "plugin.json name is valid JSON string" {
-    # Create plugin.json with valid name
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "my-valid-plugin"
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local plugin_path
+    plugin_path=$(create_minimal_plugin "$FIXTURE_ROOT" "my-valid-plugin")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Should be valid JSON
-    run validate_json "$TEST_DIR/plugin.json"
+    run validate_json "$manifest"
     [ "$status" -eq 0 ]
 
     # Name should be a string
-    json_field_has_type "$TEST_DIR/plugin.json" "name" "string"
+    json_field_has_type "$manifest" "name" "string"
 }
 
 @test "plugin.json author can be string or object" {
-    # Test with string author
-    cat > "$TEST_DIR/plugin-string.json" <<EOF
-{
-    "name": "test-plugin",
-    "author": "Test Author"
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
 
-    run validate_json "$TEST_DIR/plugin-string.json"
+    # Test with string author
+    local plugin_string
+    plugin_string=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-string" '"author": "Test Author"')
+
+    local manifest_string="$plugin_string/.claude-plugin/plugin.json"
+    run validate_json "$manifest_string"
     [ "$status" -eq 0 ]
 
     # Test with object author
-    cat > "$TEST_DIR/plugin-object.json" <<EOF
-{
-    "name": "test-plugin",
-    "author": {
-        "name": "Test Author"
-    }
-}
-EOF
+    local plugin_object
+    plugin_object=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-object" '"author": {"name": "Test Author"}')
 
-    run validate_json "$TEST_DIR/plugin-object.json"
+    local manifest_object="$plugin_object/.claude-plugin/plugin.json"
+    run validate_json "$manifest_object"
     [ "$status" -eq 0 ]
 }
 
 @test "plugin.json keywords is array of strings" {
-    # Create plugin.json with keywords array
-    cat > "$TEST_DIR/plugin.json" <<EOF
-{
-    "name": "test-plugin",
-    "keywords": ["test", "plugin", "automation"]
-}
-EOF
+    local FIXTURE_ROOT="${TEST_TEMP_DIR}/manifest_tests"
+    local custom_fields='"keywords": ["test", "plugin", "automation"]'
+    local plugin_path
+    plugin_path=$(create_plugin_with_custom_fields "$FIXTURE_ROOT" "test-plugin-keywords" "$custom_fields")
 
+    local manifest="$plugin_path/.claude-plugin/plugin.json"
     # Should be valid JSON
-    run validate_json "$TEST_DIR/plugin.json"
+    run validate_json "$manifest"
     [ "$status" -eq 0 ]
 
     # Keywords should be an array
-    json_field_has_type "$TEST_DIR/plugin.json" "keywords" "array"
+    json_field_has_type "$manifest" "keywords" "array"
 }
 
 @test "all real plugin manifests are valid" {

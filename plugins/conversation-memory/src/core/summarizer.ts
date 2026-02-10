@@ -1,6 +1,8 @@
 import { ConversationExchange } from './types.js';
-import { query } from '@anthropic-ai/claude-agent-sdk';
 import { SUMMARIZER_CONTEXT_MARKER } from './constants.js';
+import { logInfo, logError, logWarn } from './logger.js';
+import { createProvider, loadConfig } from './llm/config.js';
+import type { TokenUsage } from './llm/types.js';
 
 // Global token usage accumulator for the current sync run
 let currentRunTokenUsages: TokenUsage[] = [];
@@ -17,44 +19,9 @@ export function trackTokenUsage(usage: TokenUsage): void {
   currentRunTokenUsages.push(usage);
 }
 
-export interface TokenUsage {
-  input_tokens: number;
-  output_tokens: number;
-  cache_read_input_tokens?: number;
-  cache_creation_input_tokens?: number;
-}
-
 export interface SummaryWithUsage {
   summary: string;
   tokens: TokenUsage;
-}
-
-/**
- * Get API environment overrides for summarization calls.
- * Returns full env merged with process.env so subprocess inherits PATH, HOME, etc.
- *
- * Env vars (all optional):
- * - CONVERSATION_MEMORY_API_MODEL: Model to use (default: haiku)
- * - CONVERSATION_MEMORY_API_BASE_URL: Custom API endpoint
- * - CONVERSATION_MEMORY_API_TOKEN: Auth token for custom endpoint
- * - CONVERSATION_MEMORY_API_TIMEOUT_MS: Timeout for API calls (default: SDK default)
- */
-function getApiEnv(): Record<string, string | undefined> | undefined {
-  const baseUrl = process.env.CONVERSATION_MEMORY_API_BASE_URL;
-  const token = process.env.CONVERSATION_MEMORY_API_TOKEN;
-  const timeoutMs = process.env.CONVERSATION_MEMORY_API_TIMEOUT_MS;
-
-  if (!baseUrl && !token && !timeoutMs) {
-    return undefined;
-  }
-
-  // Merge with process.env so subprocess inherits PATH, HOME, etc.
-  return {
-    ...process.env,
-    ...(baseUrl && { ANTHROPIC_BASE_URL: baseUrl }),
-    ...(token && { ANTHROPIC_AUTH_TOKEN: token }),
-    ...(timeoutMs && { API_TIMEOUT_MS: timeoutMs }),
-  };
 }
 
 export function formatConversationText(exchanges: ConversationExchange[]): string {
@@ -98,53 +65,61 @@ function formatTokenUsage(usage: TokenUsage): string {
   return parts.join(' | ');
 }
 
-async function callClaude(prompt: string, sessionId?: string): Promise<SummaryWithUsage> {
-  const model = process.env.CONVERSATION_MEMORY_API_MODEL || 'haiku';
+/**
+ * Call LLM provider for summarization.
+ *
+ * Loads configuration from ~/.config/conversation-memory/config.json.
+ * If config is missing or API call fails, returns empty summary with zero tokens.
+ *
+ * @param prompt - The prompt to send to the LLM
+ * @param sessionId - Ignored (kept for backward compatibility, resume not supported)
+ * @returns Promise with summary text and token usage
+ */
+async function callLLM(prompt: string, sessionId?: string): Promise<SummaryWithUsage> {
+  const config = loadConfig();
 
-  const apiEnv = getApiEnv();
-  const apiUrl = apiEnv?.ANTHROPIC_BASE_URL || 'default';
-  const hasToken = !!apiEnv?.ANTHROPIC_AUTH_TOKEN;
-  console.log(`[CONVERSATION_MEMORY] API: ${model} @ ${apiUrl} (token: ${hasToken})`);
-
-  for await (const message of query({
-    prompt,
-    options: {
-      model,
-      max_tokens: 4096,
-      env: getApiEnv(),
-      resume: sessionId,
-      // Don't override systemPrompt when resuming - it uses the original session's prompt
-      // Instead, the prompt itself should provide clear instructions
-      ...(sessionId ? {} : {
-        systemPrompt: 'Write concise, factual summaries. Output ONLY the summary - no preamble, no "Here is", no "I will". Your output will be indexed directly.'
-      })
-    } as any
-  })) {
-    if (message && typeof message === 'object' && 'type' in message && message.type === 'result') {
-      const result = (message as any).result;
-
-      // Extract token usage from result message
-      const usage = (message as any).usage || { input_tokens: 0, output_tokens: 0 };
-      const tokenUsage: TokenUsage = {
-        input_tokens: usage.input_tokens || 0,
-        output_tokens: usage.output_tokens || 0,
-        cache_read_input_tokens: usage.cache_read_input_tokens,
-        cache_creation_input_tokens: usage.cache_creation_input_tokens,
-      };
-
-      // Track token usage for current run
-      trackTokenUsage(tokenUsage);
-
-      return {
-        summary: result,
-        tokens: tokenUsage,
-      };
-    }
+  if (!config) {
+    logWarn('No config.json found, skipping summarization');
+    console.log('[CONVERSATION_MEMORY] No config found at ~/.config/conversation-memory/config.json');
+    return {
+      summary: '',
+      tokens: { input_tokens: 0, output_tokens: 0 }
+    };
   }
-  return {
-    summary: '',
-    tokens: { input_tokens: 0, output_tokens: 0 }
-  };
+
+  const provider = await createProvider(config);
+
+  logInfo('LLM call started', { provider: config.provider, sessionId });
+  console.log(`[CONVERSATION_MEMORY] Using provider: ${config.provider}`);
+
+  try {
+    const result = await provider.complete(prompt, {
+      maxTokens: 4096,
+      systemPrompt: 'Write concise, factual summaries. Output ONLY the summary - no preamble, no "Here is", no "I will". Your output will be indexed directly.'
+    });
+
+    // Track token usage for current run
+    trackTokenUsage(result.usage);
+
+    logInfo('LLM call completed', {
+      inputTokens: result.usage.input_tokens,
+      outputTokens: result.usage.output_tokens,
+      cacheReadTokens: result.usage.cache_read_input_tokens,
+      cacheCreationTokens: result.usage.cache_creation_input_tokens
+    });
+
+    return {
+      summary: result.text,
+      tokens: result.usage,
+    };
+  } catch (error) {
+    logError('LLM call failed', error);
+    console.log(`[CONVERSATION_MEMORY] API call failed: ${error instanceof Error ? error.message : String(error)}`);
+    return {
+      summary: '',
+      tokens: { input_tokens: 0, output_tokens: 0 }
+    };
+  }
 }
 
 function chunkExchanges(exchanges: ConversationExchange[], chunkSize: number): ConversationExchange[][] {
@@ -188,19 +163,23 @@ function isTrivialConversation(exchanges: ConversationExchange[]): boolean {
   return false;
 }
 
-export async function summarizeConversation(exchanges: ConversationExchange[], sessionId?: string): Promise<string> {
+export async function summarizeConversation(
+  exchanges: ConversationExchange[],
+  sessionId?: string,
+  filename?: string
+): Promise<string> {
   // Handle trivial conversations
   if (isTrivialConversation(exchanges)) {
+    logInfo('Skipped trivial conversation', { filename, sessionId });
     return 'Trivial conversation with no substantive content.';
   }
 
+  logInfo('Summarization started', { exchangeCount: exchanges.length, filename, sessionId });
   const allTokenUsages: TokenUsage[] = [];
 
   // For short conversations (≤15 exchanges), summarize directly
   if (exchanges.length <= 15) {
-    const conversationText = sessionId
-      ? '' // When resuming, no need to include conversation text - it's already in context
-      : formatConversationText(exchanges);
+    const conversationText = formatConversationText(exchanges);
 
     const prompt = `${SUMMARIZER_CONTEXT_MARKER}.
 
@@ -226,20 +205,33 @@ Bad:
 
 ${conversationText}`;
 
-    const result = await callClaude(prompt, sessionId);
+    const result = await callLLM(prompt, sessionId);
+
+    // If summarization was skipped (no config), return placeholder
+    if (result.summary === '') {
+      logWarn('Summarization skipped due to missing config', { filename });
+      return '[Not summarized - no LLM config found]';
+    }
+
     allTokenUsages.push(result.tokens);
+
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
 
     // Log token usage
     console.log(`  Tokens: ${formatTokenUsage(result.tokens)}`);
+    logInfo('Summarization completed (direct)', {
+      filename,
+      wordCount,
+      inputTokens: result.tokens.input_tokens,
+      outputTokens: result.tokens.output_tokens
+    });
 
-    return extractSummaryFromResult(result);
+    return summary;
   }
 
   // For long conversations, use hierarchical summarization
   console.log(`  Long conversation (${exchanges.length} exchanges) - using hierarchical summarization`);
-
-  // Note: Hierarchical summarization doesn't support resume mode (needs fresh session for each chunk)
-  // This is fine since we only use resume for the main session-end hook
 
   // Chunk into groups of 32 exchanges (reduced from 8 for ~75% fewer API calls)
   const chunks = chunkExchanges(exchanges, 32);
@@ -258,18 +250,28 @@ ${chunkText}
 Example: <summary>Implemented HID keyboard functionality for ESP32. Hit Bluetooth controller initialization error, fixed by adjusting memory allocation.</summary>`;
 
     try {
-      const result = await callClaude(prompt); // No sessionId for chunks
+      const result = await callLLM(prompt);
+
+      // If this chunk failed to summarize, skip it
+      if (result.summary === '') {
+        console.log(`  Chunk ${i + 1} skipped (no LLM config or API failed)`);
+        continue;
+      }
+
       allTokenUsages.push(result.tokens);
       const extracted = extractSummaryFromResult(result);
       chunkSummaries.push(extracted);
-      console.log(`  Chunk ${i + 1}/${chunks.length}: ${extracted.split(/\s+/).length} words (${formatTokenUsage(result.tokens)})`);
+      const wordCount = extracted.split(/\s+/).length;
+      console.log(`  Chunk ${i + 1}/${chunks.length}: ${wordCount} words (${formatTokenUsage(result.tokens)})`);
     } catch (error) {
       console.log(`  Chunk ${i + 1} failed, skipping`);
+      logError(`Chunk ${i + 1}/${chunks.length} failed`, error, { filename });
     }
   }
 
   if (chunkSummaries.length === 0) {
-    return 'Error: Unable to summarize conversation.';
+    logWarn('All chunks failed to summarize', { filename, chunkCount: chunks.length });
+    return '[Not summarized - LLM config missing or all API calls failed]';
   }
 
   // Synthesize chunks into final summary
@@ -290,16 +292,37 @@ Your summary (max 200 words):`;
 
   console.log(`  Synthesizing final summary...`);
   try {
-    const result = await callClaude(synthesisPrompt); // No sessionId for synthesis
+    const result = await callLLM(synthesisPrompt);
+
+    // If synthesis failed, fall back to chunk summaries
+    if (result.summary === '') {
+      console.log(`  Synthesis failed, using chunk summaries directly`);
+      logWarn('Synthesis failed, using chunk summaries as fallback', { filename });
+      return chunkSummaries.join(' ');
+    }
+
     allTokenUsages.push(result.tokens);
 
     // Log total token usage
     const totalUsage = sumTokenUsage(allTokenUsages);
     console.log(`  Total tokens: ${formatTokenUsage(totalUsage)}`);
 
-    return extractSummaryFromResult(result);
+    const summary = extractSummaryFromResult(result);
+    const wordCount = summary.split(/\s+/).length;
+
+    logInfo('Summarization completed (hierarchical)', {
+      filename,
+      exchangeCount: exchanges.length,
+      chunkCount: chunks.length,
+      wordCount,
+      totalInputTokens: totalUsage.input_tokens,
+      totalOutputTokens: totalUsage.output_tokens
+    });
+
+    return summary;
   } catch (error) {
     console.log(`  Synthesis failed, using chunk summaries`);
+    logError('Synthesis failed, using chunk summaries as fallback', error, { filename });
     return chunkSummaries.join(' ');
   }
 }
