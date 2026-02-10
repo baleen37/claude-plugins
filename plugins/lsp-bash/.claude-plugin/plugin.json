@@ -1,6 +1,6 @@
 {
   "name": "lsp-bash",
-  "version": "5.18.0",
+  "version": "5.18.1",
   "description": "Bash Language Server integration for Claude Code",
   "author": {
     "name": "baleen37"
