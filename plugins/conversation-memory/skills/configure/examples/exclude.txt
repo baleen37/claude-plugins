@@ -1,0 +1,9 @@
+# Conversation Memory Project Exclusions
+#
+# Add one project name per line to exclude from indexing
+# Lines starting with # are comments
+
+# Example exclusions:
+# sensitive-project
+# test-sandbox
+# temp-work

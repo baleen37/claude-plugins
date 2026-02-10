@@ -3,7 +3,7 @@
  * Test RoundRobinProvider behavior with single provider
  */
 
-import { loadConfig, createProvider, GeminiProvider, RoundRobinProvider } from './src/core/llm/index.js';
+import { loadConfig, createProvider } from './src/core/llm/index.js';
 
 async function main() {
   console.log('Testing RoundRobinProvider with single API key...\n');
@@ -15,7 +15,7 @@ async function main() {
   }
 
   // Create provider using the factory
-  const provider = createProvider(config);
+  const provider = await createProvider(config);
 
   console.log('Provider type:', provider.constructor.name);
 

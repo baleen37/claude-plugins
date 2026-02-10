@@ -1,0 +1,5 @@
+{
+  "provider": "zhipu-ai",
+  "apiKey": "your-zhipu-ai-api-key-here",
+  "model": "glm-4.7"
+}
