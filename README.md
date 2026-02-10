@@ -227,6 +227,15 @@ pre-commit run --all-files
 
 > Note: Pre-commit failures cannot be bypassed with `--no-verify` (enforced by git-guard).
 
+## Contributing
+
+Contributions are welcome! This project follows:
+
+1. **Conventional Commits** - Use `bun run commit` for interactive commit creation
+2. **Pre-commit Hooks** - All hooks must pass before committing
+3. **Test Coverage** - Add BATS tests for new features
+4. **Documentation** - Update README.md for plugin changes
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file.
