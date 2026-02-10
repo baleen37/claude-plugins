@@ -17893,65 +17893,64 @@ function getDbPath() {
 }
 
 // src/core/db.v3.ts
-function initDatabaseV3() {
+function openDatabase() {
+  return createDatabase(false);
+}
+function createDatabase(wipe) {
   const dbPath = getDbPath();
   const dbDir = path2.dirname(dbPath);
   if (!fs2.existsSync(dbDir)) {
     fs2.mkdirSync(dbDir, { recursive: true });
   }
-  if (dbPath !== ":memory:" && fs2.existsSync(dbPath)) {
+  if (wipe && dbPath !== ":memory:" && fs2.existsSync(dbPath)) {
     console.log("Deleting old database file for V3 clean slate...");
     fs2.unlinkSync(dbPath);
   }
   const db = new Database(dbPath);
   sqliteVec.load(db);
   db.pragma("journal_mode = WAL");
-  db.exec(`
-    CREATE TABLE pending_events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id TEXT NOT NULL,
-      project TEXT NOT NULL,
-      tool_name TEXT NOT NULL,
-      compressed TEXT NOT NULL,
-      timestamp INTEGER NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
-  db.exec(`
-    CREATE TABLE observations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
-      project TEXT NOT NULL,
-      session_id TEXT,
-      timestamp INTEGER NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
-  db.exec(`
-    CREATE VIRTUAL TABLE vec_observations USING vec0(
-      id TEXT PRIMARY KEY,
-      embedding float[768]
-    )
-  `);
-  db.exec(`
-    CREATE INDEX idx_pending_session ON pending_events(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX idx_pending_project ON pending_events(project)
-  `);
-  db.exec(`
-    CREATE INDEX idx_pending_timestamp ON pending_events(timestamp)
-  `);
-  db.exec(`
-    CREATE INDEX idx_observations_project ON observations(project)
-  `);
-  db.exec(`
-    CREATE INDEX idx_observations_session ON observations(session_id)
-  `);
-  db.exec(`
-    CREATE INDEX idx_observations_timestamp ON observations(timestamp DESC)
-  `);
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+  const tableNames = new Set(tables.map((t) => t.name));
+  if (!tableNames.has("pending_events")) {
+    db.exec(`
+      CREATE TABLE pending_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        project TEXT NOT NULL,
+        tool_name TEXT NOT NULL,
+        compressed TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    db.exec(`CREATE INDEX idx_pending_session ON pending_events(session_id)`);
+    db.exec(`CREATE INDEX idx_pending_project ON pending_events(project)`);
+    db.exec(`CREATE INDEX idx_pending_timestamp ON pending_events(timestamp)`);
+  }
+  if (!tableNames.has("observations")) {
+    db.exec(`
+      CREATE TABLE observations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        project TEXT NOT NULL,
+        session_id TEXT,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    db.exec(`CREATE INDEX idx_observations_project ON observations(project)`);
+    db.exec(`CREATE INDEX idx_observations_session ON observations(session_id)`);
+    db.exec(`CREATE INDEX idx_observations_timestamp ON observations(timestamp DESC)`);
+  }
+  if (!tableNames.has("vec_observations")) {
+    db.exec(`
+      CREATE VIRTUAL TABLE vec_observations USING vec0(
+        id TEXT PRIMARY KEY,
+        embedding float[768]
+      )
+    `);
+  }
   return db;
 }
 
@@ -18342,7 +18341,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     if (name === "search") {
       const params = SearchInputSchema.parse(args);
-      const db = initDatabaseV3();
+      const db = openDatabase();
       try {
         const results = await search(params.query, {
           db,
@@ -18376,7 +18375,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const numericIds = params.ids.map(
         (id) => typeof id === "string" ? parseInt(id, 10) : id
       );
-      const db = initDatabaseV3();
+      const db = openDatabase();
       try {
         const observations = await findByIds(db, numericIds);
         if (observations.length === 0) {
