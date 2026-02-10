@@ -14,11 +14,42 @@ version: 1.0.0
 
 The Databricks workspace stores notebooks, libraries, and other files. This skill covers workspace navigation, notebook import/export, and file management operations.
 
+## Quick Start
+
+### Run the Interactive Demo
+
+```bash
+# Run all workspace operations demo
+cd examples
+./quick-start.sh
+
+# Use specific profile
+DATABRICKS_PROFILE=prod ./quick-start.sh
+```
+
+The `quick-start.sh` script demonstrates:
+- Listing workspace items
+- Uploading and importing code
+- Quick code execution
+- Git repo operations
+- Exporting workspace items
+
+### Quick Code Execution
+
+```bash
+# Run Python code instantly
+cd examples
+./run-simple.sh 'print("Hello World"); spark.range(10).count()'
+
+# Run with specific cluster
+CLUSTER_ID=0210-030934-hwk19fl0 ./run-simple.sh 'df = spark.range(100); df.show()'
+```
+
 ## Workspace Structure
 
 ### Default Layout
 
-```text
+```
 /
 ├── Users/
 │   └── user@example.com/
@@ -40,100 +71,42 @@ The Databricks workspace stores notebooks, libraries, and other files. This skil
 - **Shared**: `/Shared/`
 - **FileStore**: `/FileStore/`
 
-## Listing Workspace Items
+## Common Operations
 
-### List Root Directory
+### Listing Workspace Items
 
 ```bash
+# List root directory
 databricks workspace list /
-```
 
-### List Subdirectory
-
-```bash
+# List subdirectory
 databricks workspace list /Users/user@example.com
+
+# List with JSON output
+databricks workspace list /Users/user@example.com --output json
+
+# List all items recursively
+databricks workspace list / --recursive
 ```
 
-### List with Details
-
-```bash
-databricks workspace list --output json /Users/user@example.com
-```
-
-**Output includes:**
+**JSON Output includes:**
 - Object type (Directory, Notebook)
 - Last modified timestamp
 - File size (for objects)
 - Object ID
 - Language (for notebooks)
 
-### Recursive Listing
+### Creating Directories
 
 ```bash
-# List all items recursively
-databricks workspace list --recursive /
-```
-
-## Creating Directories
-
-### Create Directory
-
-```bash
+# Create directory (creates parents if needed)
 databricks workspace mkdirs /Users/user@example.com/Project
-```
 
-**Note**: Creates parent directories if they don't exist.
-
-### Create Nested Directory
-
-```bash
+# Create nested directory
 databricks workspace mkdirs /Users/user@example.com/Project/Subdirectory/Data
 ```
 
-## Exporting Notebooks
-
-### Export Single Notebook
-
-```bash
-# Export notebook to current directory
-databricks workspace export /Users/user@example.com/Notebook ./notebook.py
-
-# Export to specific location
-databricks workspace export /Users/user@example.com/Notebook /path/to/output.py
-```
-
-**Export Formats:**
-
-- `.py` - Python source code
-- `.scala` - Scala source code
-- `.r` - R source code
-- `.sql` - SQL source code
-- `.html` - HTML file with input/output cells
-
-**Databricks CLI auto-detects language by extension.**
-
-### Export Directory
-
-```bash
-# Export directory and contents
-databricks workspace export-dir /Users/user@example.com/Project ./local-project
-```
-
-**Exported structure includes:**
-- Notebooks (as .py, .scala, etc.)
-- Subdirectories (preserved)
-- Non-notebook files (if any)
-
-### Export All User Notebooks
-
-```bash
-# Backup entire user folder
-databricks workspace export-dir /Users/user@example.com ./backup-$(date +%Y%m%d)
-```
-
-## Importing Notebooks
-
-### Import Single Notebook
+### Importing Notebooks
 
 ```bash
 # Import Python notebook
@@ -144,6 +117,9 @@ databricks workspace import ./notebook.py /Users/user@example.com/Project/Notebo
 
 # Specify language explicitly
 databricks workspace import ./notebook.py /Users/user@example.com/Notebook --language PYTHON
+
+# Overwrite existing notebook
+databricks workspace import ./notebook.py /Users/user@example.com/Notebook --overwrite
 ```
 
 **Supported languages:**
@@ -153,97 +129,100 @@ databricks workspace import ./notebook.py /Users/user@example.com/Notebook --lan
 - `SQL` - SQL notebook
 - `DATABRICKS-SCALA` - Databricks Scala
 
-### Import Directory
+### Exporting Notebooks
 
 ```bash
-# Import local directory to workspace
-databricks workspace import-dir ./local-project /Users/user@example.com/RemoteProject
+# Export notebook to current directory
+databricks workspace export /Users/user@example.com/Notebook ./notebook.py
+
+# Export to specific location
+databricks workspace export /Users/user@example.com/Notebook /path/to/output.py
+
+# Export directory and contents
+databricks workspace export-dir /Users/user@example.com/Project ./local-project
+
+# Export all user notebooks (backup)
+databricks workspace export-dir /Users/user@example.com ./backup-$(date +%Y%m%d)
 ```
 
-**Import behavior:**
-- Creates directory structure
-- Imports all notebooks
-- Preserves subdirectories
+**Export Formats:**
+- `.py` - Python source code
+- `.scala` - Scala source code
+- `.r` - R source code
+- `.sql` - SQL source code
+- `.html` - HTML file with input/output cells
 
-### Import with Overwrite
+**Databricks CLI auto-detects language by extension.**
 
-```bash
-# Overwrite existing notebook
-databricks workspace import ./notebook.py /Users/user@example.com/Notebook --overwrite
-```
-
-## Deleting Items
-
-### Delete Notebook or File
+### Deleting Items
 
 ```bash
+# Delete notebook or file
 databricks workspace delete /Users/user@example.com/Notebook
-```
 
-### Delete Empty Directory
-
-```bash
+# Delete directory (must be empty)
 databricks workspace delete /Users/user@example.com/EmptyFolder
-```
 
-**Note**: Directory must be empty to delete.
-
-### Delete Directory and Contents
-
-```bash
-# Delete non-empty directory
+# Delete non-empty directory (irreversible!)
 databricks workspace delete /Users/user@example.com/Project --recursive
 ```
 
-**Warning**: `--recursive` is irreversible. Confirm contents before deletion.
+## Git Repos Operations
 
-## Working with Libraries
-
-### List Libraries
+### Listing Repos
 
 ```bash
-# List workspace libraries
-databricks workspace list /Workspace/Shared
-
-# List cluster libraries (via CLI)
-databricks clusters cluster-libraries --cluster-id 1234-567890-abcde
-```
-
-### Install Library
-
-Libraries are installed at cluster level, not workspace level.
-
-```bash
-# Install library to cluster
-databricks libraries install --cluster-id 1234-567890-abcde --pypi-package pandas
-```
-
-## Repos Integration
-
-### List Repos
-
-```bash
+# List all repos
 databricks repos list
+
+# List with JSON output
+databricks repos list --output json
+
+# List /Repos directory contents
+databricks workspace list /Repos
 ```
 
-### Create Repo
+### Managing Repos
 
 ```bash
 # Create repo from Git URL
 databricks repos create --url https://github.com/user/repo.git --path /Repos/my-repo
-```
 
-### Update Repo
-
-```bash
 # Pull latest changes
 databricks repos update --repo-id 123456789
+
+# Delete repo
+databricks repos delete --repo-id 123456789
 ```
 
-### Delete Repo
+## Running Notebooks
+
+### Using Jobs API
 
 ```bash
-databricks repos delete --repo-id 123456789
+# Submit notebook execution job
+databricks jobs submit --json '{
+  "run_name": "My Job",
+  "tasks": [{
+    "task_key": "my_task",
+    "notebook_task": {
+      "notebook_path": "/Users/user@example.com/Notebook"
+    },
+    "existing_cluster_id": "0210-030934-hwk19fl0"
+  }]
+}'
+
+# Get job run output
+databricks jobs get-run-output <run-id> --output json
+```
+
+### Quick Execution Script
+
+Use the `run-simple.sh` script for instant code execution:
+
+```bash
+cd examples
+./run-simple.sh 'print("Quick test"); spark.range(10).count()'
 ```
 
 ## Common Workflows
@@ -363,19 +342,13 @@ databricks jobs list-runs --active-only
 
 ## Additional Resources
 
-### Reference Files
+### Example Scripts
+
+- **`examples/quick-start.sh`** - Comprehensive workspace operations demo
+- **`examples/run-simple.sh`** - Quick code execution tool
+
+### Reference Documentation
 
 - **`references/paths.md`** - Workspace path conventions
 - **`references/formats.md`** - Notebook format details
 - **`references/permissions.md`** - Access control guide
-
-### Example Files
-
-- **`examples/export-script.sh`** - Automated backup script
-- **`examples/sync-script.sh`** - Workspace sync script
-- **`examples/migration-script.sh`** - Cross-workspace migration
-
-### Scripts
-
-- **`scripts/backup-workspace.sh`** - Backup entire workspace
-- **`scripts/list-large-notebooks.sh`** - Find notebooks by size

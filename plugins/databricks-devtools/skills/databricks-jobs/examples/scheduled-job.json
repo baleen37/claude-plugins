@@ -1,0 +1,73 @@
+{
+  "name": "Daily Data Sync Job",
+  "description": "Scheduled job that runs daily to sync data from external sources",
+  "tags": {
+    "environment": "production",
+    "team": "data-engineering",
+    "schedule": "daily"
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 30 1 * * ?",
+    "timezone_id": "America/Los_Angeles",
+    "pause_status": "UNPAUSED"
+  },
+  "tasks": [
+    {
+      "task_key": "sync_data",
+      "description": "Sync data from external API",
+      "existing_cluster_id": "1234-567890-abc123",
+      "notebook_task": {
+        "notebook_path": "/Production/Sync/ExternalAPI",
+        "base_parameters": {
+          "api_endpoint": "https://api.example.com/data",
+          "target_table": "raw.external_data",
+          "batch_size": "1000"
+        }
+      },
+      "timeout_seconds": 3600,
+      "retry_on_timeout": true,
+      "max_retries": 3,
+      "min_retry_interval_millis": 60000
+    }
+  ],
+  "parameters": [
+    {
+      "name": "date_override",
+      "default": "",
+      "description": "Override date for backfill (YYYY-MM-DD)"
+    },
+    {
+      "name": "full_refresh",
+      "default": "false",
+      "description": "Set to true for full refresh instead of incremental"
+    }
+  ],
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_start": ["data-team@example.com"],
+    "on_success": [],
+    "on_failure": ["alerts@example.com", "oncall@example.com"]
+  },
+  "notification_settings": {
+    "no_alert_for_skipped_runs": true,
+    "no_alert_for_canceled_runs": true,
+    "alert_on_last_attempt": true
+  },
+  "webhook_notifications": {
+    "on_failure": [
+      {
+        "id": "slack-alerts"
+      }
+    ]
+  },
+  "health": {
+    "rules": [
+      {
+        "rule": "metric",
+        "metric": "RUN_DURATION_SECONDS",
+        "op": "GREATER_THAN",
+        "value": 3600
+      }
+    ]
+  }
+}
