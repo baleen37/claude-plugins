@@ -6,13 +6,15 @@ version: 1.0.0
 
 # Configure Conversation Memory
 
-This skill provides guidance for configuring the conversation-memory plugin, including LLM settings for summarization, API key configuration, project exclusions, and environment variables.
+This skill provides guidance for configuring the conversation-memory plugin,
+including LLM settings for summarization, API key configuration, project
+exclusions, and environment variables.
 
 ## Config File Location
 
 The conversation-memory plugin uses a configuration file at:
 
-```
+```text
 ~/.config/conversation-memory/config.json
 ```
 
@@ -24,7 +26,9 @@ mkdir -p ~/.config/conversation-memory
 
 ## LLM Provider Configuration
 
-Conversation summarization requires an LLM provider. Without configuration, conversations will be indexed but not summarized (you'll see `[Not summarized - no LLM config found]` placeholders).
+Conversation summarization requires an LLM provider. Without configuration,
+conversations will be indexed but not summarized (you'll see
+`[Not summarized - no LLM config found]` placeholders).
 
 ### Supported Providers
 
@@ -64,7 +68,8 @@ Conversation summarization requires an LLM provider. Without configuration, conv
 3. Generate an API key from the dashboard
 4. Add it to your config.json
 
-See [docs/zhipu-ai-setup.md](../../../docs/zhipu-ai-setup.md) for detailed Zhipu AI setup instructions.
+See [docs/zhipu-ai-setup.md](../../../docs/zhipu-ai-setup.md) for detailed
+Zhipu AI setup instructions.
 
 ### Configuration Options
 
@@ -93,7 +98,7 @@ export CONVERSATION_SEARCH_EXCLUDE_PROJECTS="project-a,project-b,project-c"
 
 Create a file at `~/.config/conversation-memory/conversation-index/exclude.txt`:
 
-```
+```text
 # Comments start with #
 project-a
 project-b
@@ -136,6 +141,7 @@ tail -f ~/.config/conversation-memory/logs/$(date +%Y-%m-%d).log
 **Symptoms:** Authentication failed, invalid API key errors
 
 **Solution:**
+
 - Verify API key is correct in config.json
 - Check API key hasn't expired
 - Ensure API key has sufficient balance
@@ -145,6 +151,7 @@ tail -f ~/.config/conversation-memory/logs/$(date +%Y-%m-%d).log
 **Symptoms:** Timeout, connection errors
 
 **Solution:**
+
 - Check internet connection
 - Configure proxy if behind corporate firewall
 - Verify provider service status
@@ -154,15 +161,18 @@ tail -f ~/.config/conversation-memory/logs/$(date +%Y-%m-%d).log
 **Symptoms:** "model not found" or "invalid model"
 
 **Solution:**
+
 - Verify model name spelling
 - Check provider documentation for available models
 - Use default model (omit `model` field)
 
 ### No Summaries Generated
 
-**Symptoms:** Conversations indexed but `[Not summarized - no LLM config found]` appears
+**Symptoms:** Conversations indexed but `[Not summarized - no LLM config found]`
+appears
 
 **Solution:**
+
 - Verify config.json exists at `~/.config/conversation-memory/config.json`
 - Check config.json has valid JSON syntax
 - Ensure `provider` and `apiKey` fields are present
