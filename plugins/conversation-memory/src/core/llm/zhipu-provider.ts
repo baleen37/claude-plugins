@@ -7,6 +7,7 @@
 
 import { ZhipuAI } from 'zhipuai-sdk-nodejs-v4';
 import type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js';
+import { logInfo, logError, logDebug } from '../logger.js';
 
 /**
  * Type definition for Zhipu AI completion response message.
@@ -80,24 +81,58 @@ export class ZhipuAIProvider implements LLMProvider {
    * @throws {Error} If the API call fails
    */
   async complete(prompt: string, options?: LLMOptions): Promise<LLMResult> {
-    const messages: Array<{ role: 'user'; content: string }> = [
-      { role: 'user', content: prompt }
-    ];
+    const startTime = Date.now();
 
-    const response = await this.client.createCompletions({
+    logInfo('[ZhipuAIProvider] Starting completion', {
       model: this.model,
-      messages,
-      stream: false,
+      promptLength: prompt.length,
       maxTokens: options?.maxTokens
     });
 
-    // The response can be either CompletionsResponseMessage or IncomingMessage
-    // We need to check which one we got
-    const completionsResponse = response as CompletionsResponseMessage;
-    const text = completionsResponse.choices?.[0]?.message?.content ?? '';
-    const usage = this.extractUsage(completionsResponse);
+    try {
+      const messages: Array<{ role: 'user'; content: string }> = [
+        { role: 'user', content: prompt }
+      ];
 
-    return { text, usage };
+      logDebug('[ZhipuAIProvider] Sending request', {
+        model: this.model,
+        messages,
+        maxTokens: options?.maxTokens
+      });
+
+      const response = await this.client.createCompletions({
+        model: this.model,
+        messages,
+        stream: false,
+        maxTokens: options?.maxTokens
+      });
+      const duration = Date.now() - startTime;
+
+      // The response can be either CompletionsResponseMessage or IncomingMessage
+      // We need to check which one we got
+      const completionsResponse = response as CompletionsResponseMessage;
+      const text = completionsResponse.choices?.[0]?.message?.content ?? '';
+      const usage = this.extractUsage(completionsResponse);
+
+      logInfo('[ZhipuAIProvider] Completion successful', {
+        duration,
+        inputTokens: usage.input_tokens,
+        outputTokens: usage.output_tokens,
+        responseLength: text.length
+      });
+
+      return { text, usage };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      logError('[ZhipuAIProvider] Completion failed', error, {
+        model: this.model,
+        duration
+      });
+      // Re-throw API errors directly for the caller to handle
+      throw new Error(
+        `Zhipu AI API call failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 
   /**
