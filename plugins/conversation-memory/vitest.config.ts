@@ -7,6 +7,11 @@ export default defineConfig({
     exclude: ['**/node_modules/**', 'dist', '.git'],
     testTimeout: 15000,
     hookTimeout: 15000,
+    poolOptions: {
+      threads: {
+        maxThreads: 4,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
