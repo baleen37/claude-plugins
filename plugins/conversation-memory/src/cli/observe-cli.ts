@@ -75,7 +75,7 @@ async function handleSummarize(): Promise<void> {
     }
 
     // Create LLM provider from config using factory function
-    const provider = createProvider(config);
+    const provider = await createProvider(config);
 
     await handleStop(db, {
       provider,

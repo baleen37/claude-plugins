@@ -140,7 +140,12 @@ export class ZAIProvider implements LLMProvider {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch((): APIErrorResponse => ({})) as APIErrorResponse;
+        let errorData: APIErrorResponse = {};
+        try {
+          errorData = await response.json() as APIErrorResponse;
+        } catch {
+          // Use empty errorData if JSON parsing fails
+        }
         const errorMessage = errorData.error?.message || response.statusText;
         throw new Error(`Z.AI API request failed (${response.status}): ${errorMessage}`);
       }
