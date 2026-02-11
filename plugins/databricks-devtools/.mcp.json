@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "databricks-devtools": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/mcp-wrapper.mjs"]
+      "command": "bun",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server-wrapper.mjs"]
     }
   }
 }
