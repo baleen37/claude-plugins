@@ -48,7 +48,7 @@ describe('observations.v3', () => {
       expect(id).toBeGreaterThan(0);
 
       // Verify the observation was inserted
-      const obs = db.prepare('SELECT * FROM observations WHERE id = ?').get(id);
+      const obs = db.prepare('SELECT * FROM observations WHERE id = ?').get(id) as Record<string, unknown>;
       expect(obs).toBeDefined();
       expect(obs.title).toBe('Test Observation');
       expect(obs.content).toBe('This is the content of the observation');
@@ -66,7 +66,7 @@ describe('observations.v3', () => {
 
       expect(id).toBeGreaterThan(0);
 
-      const obs = db.prepare('SELECT * FROM observations WHERE id = ?').get(id);
+      const obs = db.prepare('SELECT * FROM observations WHERE id = ?').get(id) as Record<string, unknown>;
       expect(obs).toBeDefined();
       expect(obs.session_id).toBeNull();
     });
@@ -81,11 +81,11 @@ describe('observations.v3', () => {
 
       // Check vector table
       const vecStmt = db.prepare('SELECT embedding FROM vec_observations WHERE id = ?');
-      const vecResult = vecStmt.get(String(id));
+      const vecResult = vecStmt.get(String(id)) as { embedding: Buffer } | undefined;
 
       expect(vecResult).toBeDefined();
-      expect(Buffer.isBuffer(vecResult.embedding)).toBe(true);
-      expect(vecResult.embedding.length).toBe(768 * 4); // 768 floats * 4 bytes
+      expect(Buffer.isBuffer(vecResult!.embedding)).toBe(true);
+      expect(vecResult!.embedding.length).toBe(768 * 4); // 768 floats * 4 bytes
     });
 
     it('should use provided timestamp', async () => {
@@ -99,7 +99,7 @@ describe('observations.v3', () => {
         timestamp
       );
 
-      const obs = db.prepare('SELECT timestamp FROM observations WHERE id = ?').get(id);
+      const obs = db.prepare('SELECT timestamp FROM observations WHERE id = ?').get(id) as Record<string, unknown>;
       expect(obs.timestamp).toBe(timestamp);
     });
   });
@@ -130,14 +130,15 @@ describe('observations.v3', () => {
 
   describe('findByIds', () => {
     it('should retrieve multiple observations by ids', async () => {
-      const id1 = await create(db, 'Obs 1', 'Content 1', 'test-project');
-      const id2 = await create(db, 'Obs 2', 'Content 2', 'test-project');
-      const id3 = await create(db, 'Obs 3', 'Content 3', 'test-project');
+      const now = Date.now();
+      const id1 = await create(db, 'Obs 1', 'Content 1', 'test-project', undefined, now - 200);
+      await create(db, 'Obs 2', 'Content 2', 'test-project', undefined, now - 100);
+      const id3 = await create(db, 'Obs 3', 'Content 3', 'test-project', undefined, now);
 
       const observations = await findByIds(db, [id1, id3]);
 
       expect(observations).toHaveLength(2);
-      // Results are ordered by timestamp DESC, so id3 (created later) comes first
+      // Results are ordered by timestamp DESC, so id3 (newest timestamp) comes first
       expect(observations[0].title).toBe('Obs 3');
       expect(observations[1].title).toBe('Obs 1');
     });

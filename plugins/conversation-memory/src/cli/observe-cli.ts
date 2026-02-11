@@ -7,7 +7,7 @@
  * - For Stop: Batch extracts observations from pending_events using LLM
  */
 
-import { initDatabaseV3 } from '../core/db.v3.js';
+import { openDatabase } from '../core/db.v3.js';
 import { handlePostToolUse } from '../hooks/post-tool-use.js';
 import { handleStop } from '../hooks/stop.js';
 import { loadConfig, createProvider } from '../core/llm/config.js';
@@ -46,7 +46,7 @@ function getProject(): string {
  * Handle PostToolUse hook.
  */
 async function handleObserve(toolName: string, result: unknown): Promise<void> {
-  const db = initDatabaseV3();
+  const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject();
@@ -61,7 +61,7 @@ async function handleObserve(toolName: string, result: unknown): Promise<void> {
  * Handle Stop hook with summarization.
  */
 async function handleSummarize(): Promise<void> {
-  const db = initDatabaseV3();
+  const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject();

@@ -9,7 +9,7 @@
  * 4. Returns formatted markdown via stdout for injection
  */
 
-import { initDatabaseV3 } from '../core/db.v3.js';
+import { openDatabase } from '../core/db.v3.js';
 import { handleSessionStart } from '../hooks/session-start.js';
 import type { SessionStartConfig } from '../hooks/session-start.js';
 
@@ -70,8 +70,8 @@ async function main() {
     const project = getProject(input);
     const config = getConfig();
 
-    // Initialize database
-    const db = initDatabaseV3();
+    // Open existing database (don't wipe)
+    const db = openDatabase();
 
     try {
       // Handle session start hook
