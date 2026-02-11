@@ -21,6 +21,7 @@ const commonConfig = {
     "sharp",
     "onnxruntime-node",
     "sqlite-vec",
+    "zhipuai-sdk-nodejs-v4",
   ],
 };
 

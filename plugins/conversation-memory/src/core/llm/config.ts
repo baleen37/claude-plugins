@@ -25,14 +25,15 @@ import type { LLMProvider } from './types.js';
 /**
  * Supported LLM provider types.
  */
-export type LLMProviderType = 'gemini' | 'zhipu-ai';
+export type LLMProviderType = 'gemini' | 'zhipu-ai' | 'zai';
 
 /**
  * Default models for each provider.
  */
 const DEFAULT_MODELS = {
   gemini: 'gemini-2.0-flash',
-  'zhipu-ai': 'glm-4.7'
+  'zhipu-ai': 'glm-4.7',
+  zai: 'glm-4.7'
 } as const;
 
 /**
@@ -41,7 +42,7 @@ const DEFAULT_MODELS = {
  * Defines the structure of the config file at ~/.config/conversation-memory/config.json
  */
 export interface LLMConfig {
-  /** Provider: 'gemini' or 'zhipu-ai' */
+  /** Provider: 'gemini', 'zhipu-ai', or 'zai' */
   provider: LLMProviderType;
   /** API key for the provider */
   apiKey: string;
@@ -86,7 +87,7 @@ export function loadConfig(): LLMConfig | null {
     }
 
     // Validate provider value
-    if (config.provider !== 'gemini' && config.provider !== 'zhipu-ai') {
+    if (config.provider !== 'gemini' && config.provider !== 'zhipu-ai' && config.provider !== 'zai') {
       console.warn(`Invalid config: unknown provider "${config.provider}"`);
       return null;
     }
@@ -103,7 +104,7 @@ export function loadConfig(): LLMConfig | null {
 /**
  * Creates an LLMProvider from configuration.
  *
- * Supports both 'gemini' and 'zhipu-ai' providers.
+ * Supports 'gemini', 'zhipu-ai', and 'zai' providers.
  * Uses provider-specific default models if not specified.
  *
  * @param config - LLM configuration object
@@ -136,6 +137,9 @@ export async function createProvider(config: LLMConfig): Promise<LLMProvider> {
   } else if (provider === 'zhipu-ai') {
     const { ZhipuAIProvider } = await import('./zhipu-provider.js');
     return new ZhipuAIProvider(apiKey, defaultModel);
+  } else if (provider === 'zai') {
+    const { ZAIProvider } = await import('./zai-provider.js');
+    return new ZAIProvider(apiKey, defaultModel);
   }
 
   throw new Error(`Unknown provider: ${provider}`);

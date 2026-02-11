@@ -25,6 +25,9 @@ export { GeminiProvider } from './gemini-provider.js';
 // Classes from zhipu-provider.ts
 export { ZhipuAIProvider } from './zhipu-provider.js';
 
+// Classes from zai-provider.ts
+export { ZAIProvider } from './zai-provider.js';
+
 // Types and functions from config.ts
 export type { LLMConfig } from './config.js';
 export { loadConfig, createProvider } from './config.js';
