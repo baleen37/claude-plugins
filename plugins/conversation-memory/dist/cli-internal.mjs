@@ -84,8 +84,8 @@ import Database from "better-sqlite3";
 import path2 from "path";
 import fs2 from "fs";
 import * as sqliteVec from "sqlite-vec";
-function initDatabaseV3() {
-  return createDatabase(true);
+function openDatabase() {
+  return createDatabase(false);
 }
 function createDatabase(wipe) {
   const dbPath = getDbPath();
@@ -324,7 +324,7 @@ async function main() {
     const input = JSON.parse(stdinData);
     const project = getProject(input);
     const config = getConfig();
-    const db = initDatabaseV3();
+    const db = openDatabase();
     try {
       const result = await handleSessionStart(db, project, config);
       if (result.markdown) {
@@ -21832,7 +21832,7 @@ function getProject2() {
   return process.env.CLAUDE_PROJECT || process.env.CLAUDE_PROJECT_NAME || "default";
 }
 async function handleObserve(toolName, result) {
-  const db = initDatabaseV3();
+  const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject2();
@@ -21842,7 +21842,7 @@ async function handleObserve(toolName, result) {
   }
 }
 async function handleSummarize() {
-  const db = initDatabaseV3();
+  const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject2();
