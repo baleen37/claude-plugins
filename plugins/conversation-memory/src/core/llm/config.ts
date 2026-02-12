@@ -25,15 +25,14 @@ import type { LLMProvider } from './types.js';
 /**
  * Supported LLM provider types.
  */
-export type LLMProviderType = 'gemini' | 'zhipu-ai' | 'zai';
+export type LLMProviderType = 'gemini' | 'zai';
 
 /**
  * Default models for each provider.
  */
 const DEFAULT_MODELS = {
   gemini: 'gemini-2.0-flash',
-  'zhipu-ai': 'glm-4.7',
-  zai: 'glm-4.7'
+  zai: 'glm-4.5-air'
 } as const;
 
 /**
@@ -42,7 +41,7 @@ const DEFAULT_MODELS = {
  * Defines the structure of the config file at ~/.config/conversation-memory/config.json
  */
 export interface LLMConfig {
-  /** Provider: 'gemini', 'zhipu-ai', or 'zai' */
+  /** Provider: 'gemini' or 'zai' */
   provider: LLMProviderType;
   /** API key for the provider */
   apiKey: string;
@@ -87,7 +86,7 @@ export function loadConfig(): LLMConfig | null {
     }
 
     // Validate provider value
-    if (config.provider !== 'gemini' && config.provider !== 'zhipu-ai' && config.provider !== 'zai') {
+    if (config.provider !== 'gemini' && config.provider !== 'zai') {
       console.warn(`Invalid config: unknown provider "${config.provider}"`);
       return null;
     }
@@ -104,7 +103,7 @@ export function loadConfig(): LLMConfig | null {
 /**
  * Creates an LLMProvider from configuration.
  *
- * Supports 'gemini', 'zhipu-ai', and 'zai' providers.
+ * Supports 'gemini' and 'zai' providers.
  * Uses provider-specific default models if not specified.
  *
  * @param config - LLM configuration object
@@ -134,9 +133,6 @@ export async function createProvider(config: LLMConfig): Promise<LLMProvider> {
   if (provider === 'gemini') {
     const { GeminiProvider } = await import('./gemini-provider.js');
     return new GeminiProvider(apiKey, defaultModel);
-  } else if (provider === 'zhipu-ai') {
-    const { ZhipuAIProvider } = await import('./zhipu-provider.js');
-    return new ZhipuAIProvider(apiKey, defaultModel);
   } else if (provider === 'zai') {
     const { ZAIProvider } = await import('./zai-provider.js');
     return new ZAIProvider(apiKey, defaultModel);

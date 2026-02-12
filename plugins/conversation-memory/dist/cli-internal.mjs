@@ -1924,118 +1924,18 @@ var init_gemini_provider = __esm({
   }
 });
 
-// src/core/llm/zhipu-provider.ts
-var zhipu_provider_exports = {};
-__export(zhipu_provider_exports, {
-  ZhipuAIProvider: () => ZhipuAIProvider
-});
-import { ZhipuAI } from "zhipuai-sdk-nodejs-v4";
-var DEFAULT_MODEL2, ZhipuAIProvider;
-var init_zhipu_provider = __esm({
-  "src/core/llm/zhipu-provider.ts"() {
-    "use strict";
-    init_logger();
-    DEFAULT_MODEL2 = "glm-4.7";
-    ZhipuAIProvider = class {
-      client;
-      model;
-      /**
-       * Creates a new ZhipuAIProvider instance.
-       *
-       * @param apiKey - Zhipu AI API key for authentication
-       * @param model - Model name to use (default: glm-4.7)
-       * @throws {Error} If API key is not provided
-       */
-      constructor(apiKey, model = DEFAULT_MODEL2) {
-        if (!apiKey) {
-          throw new Error("ZhipuAIProvider requires an API key");
-        }
-        this.client = new ZhipuAI({
-          apiKey,
-          cacheToken: true
-        });
-        this.model = model;
-      }
-      /**
-       * Completes a prompt using the Zhipu AI API.
-       *
-       * @param prompt - The user prompt to complete
-       * @param options - Optional configuration for the completion
-       * @returns Promise resolving to the completion result with token usage
-       * @throws {Error} If the API call fails
-       */
-      async complete(prompt, options) {
-        const startTime = Date.now();
-        logInfo("[ZhipuAIProvider] Starting completion", {
-          model: this.model,
-          promptLength: prompt.length,
-          maxTokens: options?.maxTokens
-        });
-        try {
-          const messages = [
-            { role: "user", content: prompt }
-          ];
-          logDebug("[ZhipuAIProvider] Sending request", {
-            model: this.model,
-            messagesCount: messages.length
-          });
-          const response = await this.client.createCompletions({
-            model: this.model,
-            messages,
-            stream: false,
-            maxTokens: options?.maxTokens
-          });
-          const duration = Date.now() - startTime;
-          const completionsResponse = response;
-          const text = completionsResponse.choices?.[0]?.message?.content ?? "";
-          const usage = this.extractUsage(completionsResponse);
-          logInfo("[ZhipuAIProvider] Completion successful", {
-            duration,
-            inputTokens: usage.input_tokens,
-            outputTokens: usage.output_tokens,
-            responseLength: text.length
-          });
-          return { text, usage };
-        } catch (error) {
-          const duration = Date.now() - startTime;
-          logError("[ZhipuAIProvider] Completion failed", error, {
-            model: this.model,
-            duration
-          });
-          throw error;
-        }
-      }
-      /**
-       * Extracts token usage information from a Zhipu AI API response.
-       *
-       * @param response - The response object from Zhipu AI
-       * @returns Token usage information
-       */
-      extractUsage(response) {
-        const usage = response.usage;
-        return {
-          input_tokens: usage?.prompt_tokens ?? 0,
-          output_tokens: usage?.completion_tokens ?? 0,
-          cache_read_input_tokens: void 0,
-          cache_creation_input_tokens: void 0
-        };
-      }
-    };
-  }
-});
-
 // src/core/llm/zai-provider.ts
 var zai_provider_exports = {};
 __export(zai_provider_exports, {
   ZAIProvider: () => ZAIProvider
 });
-var DEFAULT_MODEL3, DEFAULT_BASE_URL2, ZAIProvider;
+var DEFAULT_MODEL2, DEFAULT_BASE_URL2, ZAIProvider;
 var init_zai_provider = __esm({
   "src/core/llm/zai-provider.ts"() {
     "use strict";
     init_logger();
-    DEFAULT_MODEL3 = "glm-4.7";
-    DEFAULT_BASE_URL2 = "https://api.z.ai/api/paas/v4";
+    DEFAULT_MODEL2 = "glm-4.5-air";
+    DEFAULT_BASE_URL2 = "https://api.z.ai/api/coding/paas/v4";
     ZAIProvider = class {
       apiKey;
       model;
@@ -2048,7 +1948,7 @@ var init_zai_provider = __esm({
        * @param baseUrl - Base URL for API (default: https://api.z.ai/api/paas/v4)
        * @throws {Error} If API key is not provided
        */
-      constructor(apiKey, model = DEFAULT_MODEL3, baseUrl = DEFAULT_BASE_URL2) {
+      constructor(apiKey, model = DEFAULT_MODEL2, baseUrl = DEFAULT_BASE_URL2) {
         if (!apiKey) {
           throw new Error("ZAIProvider requires an API key");
         }
@@ -2163,7 +2063,7 @@ function loadConfig() {
       console.warn("Invalid config: missing provider or apiKey field");
       return null;
     }
-    if (config.provider !== "gemini" && config.provider !== "zhipu-ai" && config.provider !== "zai") {
+    if (config.provider !== "gemini" && config.provider !== "zai") {
       console.warn(`Invalid config: unknown provider "${config.provider}"`);
       return null;
     }
@@ -2184,9 +2084,6 @@ async function createProvider(config) {
   if (provider === "gemini") {
     const { GeminiProvider: GeminiProvider2 } = await Promise.resolve().then(() => (init_gemini_provider(), gemini_provider_exports));
     return new GeminiProvider2(apiKey, defaultModel);
-  } else if (provider === "zhipu-ai") {
-    const { ZhipuAIProvider: ZhipuAIProvider2 } = await Promise.resolve().then(() => (init_zhipu_provider(), zhipu_provider_exports));
-    return new ZhipuAIProvider2(apiKey, defaultModel);
   } else if (provider === "zai") {
     const { ZAIProvider: ZAIProvider2 } = await Promise.resolve().then(() => (init_zai_provider(), zai_provider_exports));
     return new ZAIProvider2(apiKey, defaultModel);
@@ -2199,8 +2096,7 @@ var init_config = __esm({
     "use strict";
     DEFAULT_MODELS = {
       gemini: "gemini-2.0-flash",
-      "zhipu-ai": "glm-4.7",
-      zai: "glm-4.7"
+      zai: "glm-4.5-air"
     };
   }
 });

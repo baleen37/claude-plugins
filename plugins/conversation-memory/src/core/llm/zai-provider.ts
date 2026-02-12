@@ -48,14 +48,14 @@ interface APIErrorResponse {
 
 /**
  * Default model to use for Z.AI API calls.
- * glm-4.7 is the current flagship model.
+ * glm-4.5-air is optimized for fast responses.
  */
-const DEFAULT_MODEL = 'glm-4.7';
+const DEFAULT_MODEL = 'glm-4.5-air';
 
 /**
- * Base URL for Z.AI API.
+ * Base URL for Z.AI Coding API.
  */
-const DEFAULT_BASE_URL = 'https://api.z.ai/api/paas/v4';
+const DEFAULT_BASE_URL = 'https://api.z.ai/api/coding/paas/v4';
 
 /**
  * LLM provider implementation using Z.AI's GLM API with native fetch.

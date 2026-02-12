@@ -1,0 +1,5 @@
+{
+  "provider": "zai",
+  "apiKey": "your-zai-api-key-here",
+  "model": "glm-4.7"
+}

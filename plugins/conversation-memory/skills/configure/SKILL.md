@@ -33,7 +33,7 @@ conversations will be indexed but not summarized (you'll see
 ### Supported Providers
 
 1. **Gemini** (Google AI) - `gemini-2.0-flash` (default)
-2. **Zhipu AI** (GLM models) - `glm-4.7` (default)
+2. **Z.AI** (GLM models) - `glm-4.7` (default)
 
 ### Gemini Configuration
 
@@ -51,38 +51,28 @@ conversations will be indexed but not summarized (you'll see
 2. Create a new API key
 3. Add it to your config.json
 
-### Zhipu AI Configuration
+### Z.AI Configuration
 
 ```json
 {
-  "provider": "zhipu-ai",
-  "apiKey": "your-zhipu-ai-api-key",
+  "provider": "zai",
+  "apiKey": "your-zai-api-key",
   "model": "glm-4.7"
 }
 ```
-
-**Getting a Zhipu AI API key:**
-
-1. Visit the [Zhipu AI Open Platform](https://docs.bigmodel.cn/cn/guide/start/quick-start)
-2. Create an account and complete verification
-3. Generate an API key from the dashboard
-4. Add it to your config.json
-
-See [docs/zhipu-ai-setup.md](../../../docs/zhipu-ai-setup.md) for detailed
-Zhipu AI setup instructions.
 
 ### Configuration Options
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `provider` | string | Yes | - | `gemini` or `zhipu-ai` |
+| `provider` | string | Yes | - | `gemini` or `zai` |
 | `apiKey` | string | Yes | - | API key for the provider |
 | `model` | string | No | Provider-specific | Model name (see below) |
 
 **Default models:**
 
 - Gemini: `gemini-2.0-flash`
-- Zhipu AI: `glm-4.7`
+- Z.AI: `glm-4.7`
 
 ## Project Exclusions
 
@@ -182,11 +172,10 @@ appears
 See [examples/](./examples/) directory for complete working examples:
 
 - `examples/gemini-config.json` - Gemini configuration
-- `examples/zhipu-ai-config.json` - Zhipu AI configuration
+- `examples/zai-config.json` - Z.AI configuration
 - `examples/exclude.txt` - Project exclusion file
 
 ## Further Reading
 
 - [README.md](../../../README.md) - Main plugin documentation
-- [docs/zhipu-ai-setup.md](../../../docs/zhipu-ai-setup.md) - Detailed Zhipu AI setup guide
 - [skills/remembering-conversations/SKILL.md](../remembering-conversations/SKILL.md) - Using conversation search
