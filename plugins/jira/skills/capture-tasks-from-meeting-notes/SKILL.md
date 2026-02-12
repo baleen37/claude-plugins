@@ -1,6 +1,6 @@
 ---
 name: capture-tasks-from-meeting-notes
-description: "Analyze meeting notes to find action items and create Jira tasks for assigned work. When Claude needs to: (1) Create Jira tasks or tickets from meeting notes, (2) Extract or find action items from notes, (3) Parse meeting notes for assigned tasks, or (4) Analyze notes and generate tasks for team members. Identifies assignees, looks up account IDs, and creates tasks with proper context."
+description: "Analyze meeting notes to find action items and create Jira tasks for assigned work. When Claude needs to: (1) Create Jira tasks or tickets from meeting notes, (2) Extract or find action items from notes or Confluence pages, (3) Parse meeting notes for assigned tasks, or (4) Analyze notes and generate tasks for team members. Identifies assignees, looks up account IDs, and creates tasks with proper context."
 ---
 
 # Capture Tasks from Meeting Notes
@@ -10,7 +10,7 @@ meeting notes, action items, create tasks, create tickets, extract tasks, parse 
 
 ## Overview
 
-Automatically extract action items from meeting notes and create Jira tasks with proper assignees. This skill parses unstructured meeting notes (from text or documents), identifies action items with assignees, looks up Jira account IDs, and creates tasks - eliminating the tedious post-meeting ticket creation process.
+Automatically extract action items from meeting notes and create Jira tasks with proper assignees. This skill parses unstructured meeting notes (from Confluence or pasted text), identifies action items with assignees, looks up Jira account IDs, and creates tasks - eliminating the tedious post-meeting ticket creation process.
 
 **Use this skill when:** Users have meeting notes with action items that need to become Jira tasks.
 
@@ -24,21 +24,32 @@ Follow this 7-step process to turn meeting notes into actionable Jira tasks:
 
 Obtain the meeting notes from the user.
 
-#### Option A: Text Content
+#### Option A: Confluence Page URL
+
+If user provides a Confluence URL:
+
+```
+getConfluencePage(
+  cloudId="...",
+  pageId="[extracted from URL]",
+  contentFormat="markdown"
+)
+```
+
+**URL patterns:**
+- `https://[site].atlassian.net/wiki/spaces/[SPACE]/pages/[PAGE_ID]/[title]`
+- Extract PAGE_ID from the numeric portion
+- Get cloudId from site name or use `getAccessibleAtlassianResources`
+
+#### Option B: Pasted Text
 
 If user pastes meeting notes directly:
 - Use the text as-is
 - No fetching needed
 
-#### Option B: Document Reference
-
-If user references a document or page:
-- If it's a Confluence page URL, fetch the content using the Atlassian MCP tools
-- Extract the page ID from the URL and use `getConfluencePage` to retrieve the content
-
 #### If Unclear
 
-Ask: "Do you have the meeting notes as text to paste, or would you like to reference a document?"
+Ask: "Do you have a Confluence link to the meeting notes, or would you like to paste them directly?"
 
 ---
 
@@ -295,6 +306,8 @@ Use action verbs and be specific:
 [Meeting title/date]
 [Relevant discussion points or decisions]
 
+**Source:** [Link to Confluence meeting notes if available]
+
 **Original Note:**
 > [Exact quote from meeting notes]
 ```
@@ -308,6 +321,8 @@ Use action verbs and be specific:
 **Context:**
 Product Planning Meeting - December 3, 2025
 Discussed Q1 roadmap priorities and new feature requirements
+
+**Source:** https://yoursite.atlassian.net/wiki/spaces/TEAM/pages/12345
 
 **Original Note:**
 > @Sarah to create user stories for chat feature

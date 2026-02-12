@@ -1,19 +1,19 @@
 ---
 name: spec-to-backlog
-description: "Automatically convert specification documents into structured Jira backlogs with Epics and implementation tickets. When Claude needs to: (1) Create Jira tickets from a specification, (2) Generate a backlog from a specification, (3) Break down a spec into implementation tasks, or (4) Convert requirements into Jira issues. Handles reading specifications, analyzing requirements, creating Epics with proper structure, and generating detailed implementation tickets linked to the Epic."
+description: "Automatically convert Confluence specification documents into structured Jira backlogs with Epics and implementation tickets. When Claude needs to: (1) Create Jira tickets from a Confluence page, (2) Generate a backlog from a specification, (3) Break down a spec into implementation tasks, or (4) Convert requirements into Jira issues. Handles reading Confluence pages, analyzing specifications, creating Epics with proper structure, and generating detailed implementation tickets linked to the Epic."
 ---
 
 # Spec to Backlog
 
 ## Overview
 
-Transform specification documents into structured Jira backlogs automatically. This skill reads requirement documents, intelligently breaks them down into logical implementation tasks, **creates an Epic first** to organize the work, then generates individual Jira tickets linked to that Epic - eliminating tedious manual copy-pasting.
+Transform Confluence specification documents into structured Jira backlogs automatically. This skill reads requirement documents from Confluence, intelligently breaks them down into logical implementation tasks, **creates an Epic first** to organize the work, then generates individual Jira tickets linked to that Epic - eliminating tedious manual copy-pasting.
 
 ## Core Workflow
 
 **CRITICAL: Always follow this exact sequence:**
 
-1. **Fetch Specification** -> Get the specification content
+1. **Fetch Confluence Page** -> Get the specification content
 2. **Ask for Project Key** -> Identify target Jira project
 3. **Analyze Specification** -> Break down into logical tasks (internally, don't create yet)
 4. **Present Breakdown** -> Show user the planned Epic and tickets
@@ -25,15 +25,16 @@ Transform specification documents into structured Jira backlogs automatically. T
 
 ---
 
-## Step 1: Fetch Specification
+## Step 1: Fetch Confluence Page
 
-When triggered, obtain the specification content:
+When triggered, obtain the Confluence page content:
 
-### If user provides a document reference:
+### If user provides a Confluence URL:
 
-- If it's a Confluence page URL, fetch the content using the Atlassian MCP tools
-- Extract the page ID from the URL and use `getConfluencePage` to retrieve the content
+Extract the cloud ID and page ID from the URL pattern:
 - Standard format: `https://[site].atlassian.net/wiki/spaces/[SPACE]/pages/[PAGE_ID]/[title]`
+- The cloud ID can be extracted from `[site].atlassian.net` or by calling `getAccessibleAtlassianResources`
+- The page ID is the numeric value in the URL path
 
 ### If user provides only a page title or description:
 
@@ -47,9 +48,18 @@ search(
 
 If multiple pages match, ask the user to clarify which one to use.
 
-### If user provides text directly:
+### Fetch the page:
 
-Use the text as the specification content.
+Call `getConfluencePage` with the cloudId and pageId:
+```
+getConfluencePage(
+  cloudId="...",
+  pageId="123456",
+  contentFormat="markdown"
+)
+```
+
+This returns the page content in Markdown format, which you'll analyze in Step 3.
 
 ---
 
@@ -227,7 +237,7 @@ createJiraIssue(
 [1-2 sentence summary of what this epic delivers]
 
 ## Source
-[Link to specification or document source]
+Confluence Spec: [Link to Confluence page]
 
 ## Objectives
 - [Key objective 1]
@@ -308,7 +318,7 @@ Use action verbs and be specific:
 
 ```markdown
 ## Context
-[Brief context for this task from the specification]
+[Brief context for this task from the Confluence spec]
 
 ## Requirements
 - [Requirement 1]
@@ -327,7 +337,7 @@ Use action verbs and be specific:
 - [ ] [Testable criterion 3]
 
 ## Related
-- Specification: [Link to relevant section if possible]
+- Confluence Spec: [Link to relevant section if possible]
 - Epic: PROJ-123
 ```
 
