@@ -42,7 +42,7 @@ export interface StopHookOptions {
   sessionId: string;
   /** Project name */
   project: string;
-  /** Optional batch size (default: 15) */
+  /** Optional batch size (defaults to DEFAULT_BATCH_SIZE) */
   batchSize?: number;
 }
 

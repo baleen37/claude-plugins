@@ -103,6 +103,22 @@ function createDatabase(wipe: boolean): Database.Database {
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[];
   const tableNames = new Set(tables.map(t => t.name));
 
+  // Validate schema version - detect v2 database and prevent accidental use
+  if (!wipe && tableNames.size > 0) {
+    const v3Tables = ['pending_events', 'observations', 'vec_observations'];
+    const hasV3Tables = v3Tables.every(t => tableNames.has(t));
+
+    // If tables exist but v3 tables are missing, it might be a v2 database
+    if (!hasV3Tables && tableNames.has('exchanges')) {
+      throw new Error(
+        'Database schema mismatch: v2 database detected. ' +
+        'Please remove the old database (~/.config/conversation-memory/conversation-index/conversations.db) ' +
+        'and restart. V3 will create a fresh schema. ' +
+        'Note: v2 data cannot be migrated to v3.'
+      );
+    }
+  }
+
   // Create pending_events table if not exists
   if (!tableNames.has('pending_events')) {
     db.exec(`

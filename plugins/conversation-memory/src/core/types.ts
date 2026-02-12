@@ -74,19 +74,6 @@ export interface CompactObservation {
   filesModified: string[];
 }
 
-export interface SessionSummary {
-  id: string;
-  sessionId: string;
-  project: string;
-  request: string;
-  investigated: string[];
-  learned: string[];
-  completed: string[];
-  nextSteps: string[];
-  notes: string;
-  createdAt: number;
-}
-
 export type PendingEventType = 'tool_use' | 'summarize';
 
 export interface PendingEvent {
