@@ -73,6 +73,15 @@ function createDatabase(wipe) {
   db.pragma("journal_mode = WAL");
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
   const tableNames = new Set(tables.map((t) => t.name));
+  if (!wipe && tableNames.size > 0) {
+    const v3Tables = ["pending_events", "observations", "vec_observations"];
+    const hasV3Tables = v3Tables.every((t) => tableNames.has(t));
+    if (!hasV3Tables && tableNames.has("exchanges")) {
+      throw new Error(
+        "Database schema mismatch: v2 database detected. Please remove the old database (~/.config/conversation-memory/conversation-index/conversations.db) and restart. V3 will create a fresh schema. Note: v2 data cannot be migrated to v3."
+      );
+    }
+  }
   if (!tableNames.has("pending_events")) {
     db.exec(`
       CREATE TABLE pending_events (
@@ -2189,10 +2198,12 @@ COMMANDS:
   inject              Inject recent context at session start (for SessionStart hook)
   observe             Handle PostToolUse hook - compress and store tool events
   observe --summarize Handle Stop hook - extract observations from pending events
-  search              Search observations (MCP tool, not CLI)
-  show                Show observation details (MCP tool, not CLI)
-  stats               Show observation statistics (MCP tool, not CLI)
-  read                Read conversation file (MCP tool, not CLI)
+
+MCP TOOLS (use via Claude Code MCP, not CLI):
+  search              Search observations with filters
+  show                Display observation details
+  stats               Show database statistics
+  read                Read conversation files
 
 HOOKS:
   The inject and observe commands are used by the hooks system.
@@ -2214,7 +2225,6 @@ async function main3() {
       await Promise.resolve().then(() => (init_inject_cli(), inject_cli_exports));
       break;
     case "observe":
-    case "observe-run":
       await Promise.resolve().then(() => (init_observe_cli(), observe_cli_exports));
       break;
     default:

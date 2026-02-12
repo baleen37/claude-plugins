@@ -16,7 +16,7 @@ import { handleStop, type StopHookOptions } from './hooks/stop.js';
 import { handleSessionStart, type SessionStartConfig } from './hooks/session-start.js';
 import { search as searchV3 } from './core/search.v3.js';
 import { findByIds as getObservationsByIds } from './core/observations.v3.js';
-import type { LLMProvider } from './core/llm/types.js';
+import type { LLMProvider } from './core/llm/index.js';
 
 // Mock LLM provider
 const createMockLLMProvider = (responses: Array<{ text: string; usage?: { input_tokens: number; output_tokens: number } }>) => {

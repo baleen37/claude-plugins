@@ -15,8 +15,8 @@
  */
 
 import Database from 'better-sqlite3';
-import type { LLMProvider } from '../core/llm/types.js';
-import { extractObservationsFromBatch, type CompressedEvent, type PreviousObservation } from '../core/llm/batch-extract-prompt.js';
+import type { LLMProvider, CompressedEvent, PreviousObservation } from '../core/llm/index.js';
+import { extractObservationsFromBatch } from '../core/llm/index.js';
 import { create as createObservation } from '../core/observations.v3.js';
 import { getAllPendingEventsV3, type PendingEventV3 } from '../core/db.v3.js';
 
@@ -42,7 +42,7 @@ export interface StopHookOptions {
   sessionId: string;
   /** Project name */
   project: string;
-  /** Optional batch size (default: 15) */
+  /** Optional batch size (defaults to DEFAULT_BATCH_SIZE) */
   batchSize?: number;
 }
 

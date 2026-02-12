@@ -12,10 +12,12 @@ COMMANDS:
   inject              Inject recent context at session start (for SessionStart hook)
   observe             Handle PostToolUse hook - compress and store tool events
   observe --summarize Handle Stop hook - extract observations from pending events
-  search              Search observations (MCP tool, not CLI)
-  show                Show observation details (MCP tool, not CLI)
-  stats               Show observation statistics (MCP tool, not CLI)
-  read                Read conversation file (MCP tool, not CLI)
+
+MCP TOOLS (use via Claude Code MCP, not CLI):
+  search              Search observations with filters
+  show                Display observation details
+  stats               Show database statistics
+  read                Read conversation files
 
 HOOKS:
   The inject and observe commands are used by the hooks system.
@@ -38,7 +40,6 @@ async function main() {
       await import('./inject-cli.js');
       break;
     case 'observe':
-    case 'observe-run':
       await import('./observe-cli.js');
       break;
     default:

@@ -10,7 +10,7 @@
 import { openDatabase } from '../core/db.v3.js';
 import { handlePostToolUse } from '../hooks/post-tool-use.js';
 import { handleStop } from '../hooks/stop.js';
-import { loadConfig, createProvider } from '../core/llm/config.js';
+import { loadConfig, createProvider } from '../core/llm/index.js';
 
 interface PostToolUseInput {
   tool_name: string;

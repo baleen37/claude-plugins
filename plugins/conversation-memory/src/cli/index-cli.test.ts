@@ -4,7 +4,7 @@
  * This is the main CLI entry point that:
  * - Shows help when no command or --help is provided
  * - Routes to inject-cli.js for 'inject' command
- * - Routes to observe-cli.js for 'observe' or 'observe-run' commands
+ * - Routes to observe-cli.js for 'observe' command
  * - Shows error for unknown commands
  */
 
@@ -75,12 +75,6 @@ describe('index-cli', () => {
       expect(command).toBe('observe');
     });
 
-    test('should detect observe-run command', () => {
-      process.argv = ['node', 'index-cli', 'observe-run'];
-      const command = process.argv[2];
-      expect(command).toBe('observe-run');
-    });
-
     test('should detect unknown command', () => {
       process.argv = ['node', 'index-cli', 'unknown-command'];
       const command = process.argv[2];
@@ -97,19 +91,13 @@ describe('index-cli', () => {
 
     test('should route observe command correctly', () => {
       const command: string = 'observe';
-      const shouldRouteToObserve = command === 'observe' || command === 'observe-run';
-      expect(shouldRouteToObserve).toBe(true);
-    });
-
-    test('should route observe-run command correctly', () => {
-      const command: string = 'observe-run';
-      const shouldRouteToObserve = command === 'observe' || command === 'observe-run';
+      const shouldRouteToObserve = command === 'observe';
       expect(shouldRouteToObserve).toBe(true);
     });
 
     test('should identify unknown command', () => {
       const command: string = 'invalid-command';
-      const isKnownCommand = command === 'inject' || command === 'observe' || command === 'observe-run';
+      const isKnownCommand = command === 'inject' || command === 'observe';
       expect(isKnownCommand).toBe(false);
     });
   });

@@ -17911,6 +17911,15 @@ function createDatabase(wipe) {
   db.pragma("journal_mode = WAL");
   const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
   const tableNames = new Set(tables.map((t) => t.name));
+  if (!wipe && tableNames.size > 0) {
+    const v3Tables = ["pending_events", "observations", "vec_observations"];
+    const hasV3Tables = v3Tables.every((t) => tableNames.has(t));
+    if (!hasV3Tables && tableNames.has("exchanges")) {
+      throw new Error(
+        "Database schema mismatch: v2 database detected. Please remove the old database (~/.config/conversation-memory/conversation-index/conversations.db) and restart. V3 will create a fresh schema. Note: v2 data cannot be migrated to v3."
+      );
+    }
+  }
   if (!tableNames.has("pending_events")) {
     db.exec(`
       CREATE TABLE pending_events (
@@ -18211,6 +18220,42 @@ function handleError(error2) {
   }
   return `Error: ${String(error2)}`;
 }
+async function handleSearch(params, db) {
+  const results = await search(params.query, {
+    db,
+    limit: params.limit,
+    after: params.after,
+    before: params.before,
+    projects: params.projects,
+    files: params.files
+  });
+  return results.map((r) => ({
+    id: String(r.id),
+    title: r.title,
+    project: r.project,
+    timestamp: r.timestamp
+  }));
+}
+async function handleGetObservations(params, db) {
+  const numericIds = params.ids.map(
+    (id) => typeof id === "string" ? parseInt(id, 10) : id
+  );
+  const observations = await findByIds(db, numericIds);
+  return observations.map((obs) => ({
+    id: obs.id,
+    title: obs.title,
+    content: obs.content,
+    project: obs.project,
+    timestamp: obs.timestamp
+  }));
+}
+function handleRead(params) {
+  const result = readConversation(params.path, params.startLine, params.endLine);
+  if (result === null) {
+    throw new Error(`File not found: ${params.path}`);
+  }
+  return result;
+}
 var server = new Server(
   {
     name: "conversation-memory",
@@ -18343,26 +18388,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const params = SearchInputSchema.parse(args);
       const db = openDatabase();
       try {
-        const results = await search(params.query, {
-          db,
-          limit: params.limit,
-          after: params.after,
-          before: params.before,
-          projects: params.projects,
-          files: params.files
-        });
+        const results = await handleSearch(params, db);
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                results: results.map((r) => ({
-                  id: String(r.id),
-                  title: r.title,
-                  project: r.project,
-                  timestamp: r.timestamp
-                }))
-              }, null, 2)
+              text: JSON.stringify({ results }, null, 2)
             }
           ]
         };
@@ -18372,12 +18403,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     if (name === "get_observations") {
       const params = GetObservationsInputSchema.parse(args);
-      const numericIds = params.ids.map(
-        (id) => typeof id === "string" ? parseInt(id, 10) : id
-      );
       const db = openDatabase();
       try {
-        const observations = await findByIds(db, numericIds);
+        const observations = await handleGetObservations(params, db);
         if (observations.length === 0) {
           return {
             content: [
@@ -18415,10 +18443,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     if (name === "read") {
       const params = ReadInputSchema.parse(args);
-      const result = readConversation(params.path, params.startLine, params.endLine);
-      if (result === null) {
-        throw new Error(`File not found: ${params.path}`);
-      }
+      const result = handleRead(params);
       return { content: [{ type: "text", text: result }] };
     }
     throw new Error(`Unknown tool: ${name}`);
@@ -18446,5 +18471,9 @@ main().catch((error2) => {
 export {
   GetObservationsInputSchema,
   ReadInputSchema,
-  SearchInputSchema
+  SearchInputSchema,
+  handleError,
+  handleGetObservations,
+  handleRead,
+  handleSearch
 };
