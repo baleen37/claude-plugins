@@ -1,298 +1,424 @@
-import { describe, test, expect } from 'vitest';
+/**
+ * Tests for embeddings module
+ *
+ * These tests mock @huggingface/transformers to avoid loading the actual model
+ * while verifying correct behavior of all exported functions.
+ *
+ * Note: Due to module-level state (embeddingPipeline singleton), each describe
+ * block uses vi.resetModules() to ensure fresh module imports.
+ */
 
-// Since bun:test (deprecated) doesn't have built-in mocking and we can't easily mock
-// @huggingface/transformers, we'll test the logic that can be tested
-// without the actual model loading. This follows the characterization test
-// pattern used in other test files in this project.
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 
-describe('embeddings - text formatting and logic', () => {
-  describe('embedding text prefix format', () => {
-    test('uses correct prefix for document/text embeddings', () => {
-      // Characterization test: documents the prefix format required by EmbeddingGemma
-      const text = 'This is a test document';
-      const prefix = 'title: none | text: ';
-      const expected = 'title: none | text: This is a test document';
+// Track calls to verify mock behavior
+let mockPipelineCalls: Array<{ task: string; model: string; options: unknown }> = [];
+let mockEmbeddingCalls: Array<{ text: string; options: unknown }> = [];
 
-      expect(prefix + text).toBe(expected);
+// Create a mock pipeline function that returns predictable output
+const createMockPipeline = () => {
+  return vi.fn(async (text: string, options: unknown) => {
+    mockEmbeddingCalls.push({ text, options });
+    // Return a Float32Array-like structure with 768 dimensions
+    const data = new Float32Array(768);
+    // Fill with predictable values based on text length for testing
+    for (let i = 0; i < 768; i++) {
+      data[i] = 0.001 * (i + 1);
+    }
+    return { data };
+  });
+};
+
+let mockPipelineFn: ReturnType<typeof createMockPipeline>;
+
+// Mock @huggingface/transformers module
+// NOTE: vi.mock() is hoisted to the top of the file before any other code runs.
+vi.mock('@huggingface/transformers', () => {
+  // Create mock pipeline function within the factory
+  const pipelineMock = vi.fn(async (task: string, model: string, options: unknown) => {
+    mockPipelineCalls.push({ task, model, options });
+    // Return the embedding function
+    return mockPipelineFn;
+  });
+
+  return {
+    pipeline: pipelineMock,
+    env: { cacheDir: '' },
+    FeatureExtractionPipeline: class {},
+  };
+});
+
+describe('embeddings', () => {
+  // We'll dynamically import the module in each test or describe block
+  // to ensure fresh state after resetModules
+
+  beforeEach(() => {
+    // Reset all tracking arrays
+    mockPipelineCalls = [];
+    mockEmbeddingCalls = [];
+    // Create a fresh mock pipeline function for each test
+    mockPipelineFn = createMockPipeline();
+    // Reset modules to clear the singleton state
+    vi.resetModules();
+  });
+
+  describe('initEmbeddings()', () => {
+    test('initializes the pipeline with correct parameters', async () => {
+      const { initEmbeddings } = await import('./embeddings.js');
+
+      await initEmbeddings();
+
+      expect(mockPipelineCalls).toHaveLength(1);
+      expect(mockPipelineCalls[0].task).toBe('feature-extraction');
+      expect(mockPipelineCalls[0].model).toBe('onnx-community/embeddinggemma-300m-ONNX');
+      expect(mockPipelineCalls[0].options).toEqual({ dtype: 'q4' });
     });
 
-    test('prefix format has pipe separator', () => {
-      const prefix = 'title: none | text: ';
-      const parts = prefix.split(' | ');
+    test('sets cache directory', async () => {
+      // Import the mocked env object
+      const { env } = await import('@huggingface/transformers');
+      const { initEmbeddings } = await import('./embeddings.js');
 
-      expect(parts).toHaveLength(2);
-      expect(parts[0]).toBe('title: none');
-      expect(parts[1]).toBe('text: ');
+      await initEmbeddings();
+
+      expect(env.cacheDir).toBe('./.cache');
     });
 
-    test('prefix with empty text still includes full prefix', () => {
-      const text = '';
-      const prefix = 'title: none | text: ';
-      const expected = 'title: none | text: ';
+    test('reuses existing pipeline (singleton pattern)', async () => {
+      const { initEmbeddings } = await import('./embeddings.js');
 
-      expect(prefix + text).toBe(expected);
+      // Call initEmbeddings twice
+      await initEmbeddings();
+      await initEmbeddings();
+
+      // Pipeline should only be created once
+      expect(mockPipelineCalls).toHaveLength(1);
+    });
+
+    test('logs loading messages', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const { initEmbeddings } = await import('./embeddings.js');
+
+      await initEmbeddings();
+
+      expect(consoleSpy).toHaveBeenCalledWith('Loading embedding model (first run may take time)...');
+      expect(consoleSpy).toHaveBeenCalledWith('Embedding model loaded');
+
+      consoleSpy.mockRestore();
     });
   });
 
-  describe('text truncation for token limits', () => {
-    const MAX_PREFIXED_LENGTH = 8000;
-    const PREFIX = 'title: none | text: ';
+  describe('generateEmbedding()', () => {
+    test('adds the required prefix to text', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-    test('truncates text exceeding token limit', () => {
+      await generateEmbedding('test text');
+
+      expect(mockEmbeddingCalls).toHaveLength(1);
+      expect(mockEmbeddingCalls[0].text).toBe('title: none | text: test text');
+    });
+
+    test('truncates text exceeding 8000 characters', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
       const longText = 'a'.repeat(10000);
-      const prefixedText = PREFIX + longText;
-      const truncated = prefixedText.substring(0, MAX_PREFIXED_LENGTH);
+      await generateEmbedding(longText);
 
-      expect(truncated.length).toBe(MAX_PREFIXED_LENGTH);
-      expect(truncated.startsWith(PREFIX)).toBe(true);
-      expect(truncated.endsWith('a')).toBe(true);
+      expect(mockEmbeddingCalls).toHaveLength(1);
+      expect(mockEmbeddingCalls[0].text.length).toBe(8000);
     });
 
-    test('does not truncate text within limit', () => {
-      const shortText = 'Hello world';
-      const prefixedText = PREFIX + shortText;
+    test('does not truncate short text', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-      expect(prefixedText.length).toBeLessThanOrEqual(MAX_PREFIXED_LENGTH);
-      expect(prefixedText).toBe('title: none | text: Hello world');
+      const shortText = 'hello world';
+      await generateEmbedding(shortText);
+
+      expect(mockEmbeddingCalls).toHaveLength(1);
+      expect(mockEmbeddingCalls[0].text).toBe('title: none | text: hello world');
     });
 
-    test('calculates maximum text length correctly', () => {
-      const maxTextLength = MAX_PREFIXED_LENGTH - PREFIX.length;
-      const exactText = 'a'.repeat(maxTextLength);
-      const prefixedText = PREFIX + exactText;
+    test('truncates at exactly 8000 characters boundary', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-      expect(prefixedText.length).toBe(MAX_PREFIXED_LENGTH);
-      // Verify the prefix is complete and intact
-      expect(prefixedText.startsWith(PREFIX)).toBe(true);
-      // Verify the text was not truncated (all 'a's)
-      expect(prefixedText.substring(PREFIX.length)).toBe('a'.repeat(maxTextLength));
+      // Create text that with prefix is exactly 8000 chars
+      const prefix = 'title: none | text: ';
+      const textLength = 8000 - prefix.length;
+      const exactText = 'a'.repeat(textLength);
+
+      await generateEmbedding(exactText);
+
+      expect(mockEmbeddingCalls[0].text.length).toBe(8000);
     });
 
-    test('handles text exactly one character over limit', () => {
-      const maxTextLength = MAX_PREFIXED_LENGTH - PREFIX.length;
-      const overText = 'a'.repeat(maxTextLength + 1);
-      const prefixedText = PREFIX + overText;
-      const truncated = prefixedText.substring(0, MAX_PREFIXED_LENGTH);
+    test('truncates text that exceeds by one character', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-      expect(truncated.length).toBe(MAX_PREFIXED_LENGTH);
-    });
-  });
+      // Create text that with prefix exceeds by 1 char
+      const prefix = 'title: none | text: ';
+      const textLength = 8000 - prefix.length + 1;
+      const overText = 'a'.repeat(textLength);
 
-  describe('generateExchangeEmbedding text formatting', () => {
-    test('combines user and assistant messages with labels', () => {
-      const userMessage = 'How do I create a test?';
-      const assistantMessage = 'Use vitest framework';
+      await generateEmbedding(overText);
 
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-
-      expect(formatted).toBe('User: How do I create a test?\n\nAssistant: Use vitest framework');
+      expect(mockEmbeddingCalls[0].text.length).toBe(8000);
     });
 
-    test('includes tools section when tools are provided', () => {
-      const userMessage = 'Search files';
-      const assistantMessage = 'Found 3 files';
-      const toolNames = ['Grep', 'Glob'];
+    test('returns an array of numbers with 768 dimensions', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}\n\nTools: ${toolNames.join(', ')}`;
+      const result = await generateEmbedding('test');
 
-      expect(formatted).toBe('User: Search files\n\nAssistant: Found 3 files\n\nTools: Grep, Glob');
-    });
-
-    test('formats single tool correctly', () => {
-      const toolNames = ['Read'];
-      const toolsSection = `Tools: ${toolNames.join(', ')}`;
-
-      expect(toolsSection).toBe('Tools: Read');
-    });
-
-    test('formats multiple tools with comma separation', () => {
-      const toolNames = ['Read', 'Write', 'Bash', 'Grep'];
-      const toolsSection = `Tools: ${toolNames.join(', ')}`;
-
-      expect(toolsSection).toBe('Tools: Read, Write, Bash, Grep');
-    });
-
-    test('handles empty tool names array (should not add tools section)', () => {
-      const userMessage = 'Hello';
-      const assistantMessage = 'Hi';
-      const toolNames: string[] = [];
-
-      // When toolNames is empty, the tools section should not be added
-      let formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-      if (toolNames.length > 0) {
-        formatted += `\n\nTools: ${toolNames.join(', ')}`;
-      }
-
-      expect(formatted).toBe('User: Hello\n\nAssistant: Hi');
-      expect(formatted).not.toContain('Tools:');
-    });
-
-    test('handles undefined tool names (should not add tools section)', () => {
-      const userMessage = 'Hello';
-      const assistantMessage = 'Hi';
-      const toolNames = undefined;
-
-      let formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-      if (toolNames && toolNames.length > 0) {
-        formatted += `\n\nTools: ${toolNames.join(', ')}`;
-      }
-
-      expect(formatted).toBe('User: Hello\n\nAssistant: Hi');
-      expect(formatted).not.toContain('Tools:');
-    });
-
-    test('preserves newlines within messages', () => {
-      const userMessage = 'Line 1\nLine 2\nLine 3';
-      const assistantMessage = 'Response 1\nResponse 2';
-
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-
-      expect(formatted).toBe('User: Line 1\nLine 2\nLine 3\n\nAssistant: Response 1\nResponse 2');
-    });
-
-    test('handles empty user message', () => {
-      const userMessage = '';
-      const assistantMessage = 'Hello';
-
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-
-      expect(formatted).toBe('User: \n\nAssistant: Hello');
-    });
-
-    test('handles empty assistant message', () => {
-      const userMessage = 'Hello';
-      const assistantMessage = '';
-
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-
-      expect(formatted).toBe('User: Hello\n\nAssistant: ');
-    });
-
-    test('handles special characters in messages', () => {
-      const userMessage = 'Test with "quotes" and \'apostrophes\'';
-      const assistantMessage = 'Response with <html> & entities';
-
-      const formatted = `User: ${userMessage}\n\nAssistant: ${assistantMessage}`;
-
-      expect(formatted).toContain('"quotes"');
-      expect(formatted).toContain('\'apostrophes\'');
-      expect(formatted).toContain('<html>');
-      expect(formatted).toContain('&');
-    });
-  });
-
-  describe('exchange embedding format structure', () => {
-    test('has User label before user message', () => {
-      const formatted = 'User: Hello\n\nAssistant: Hi';
-      expect(formatted).toMatch(/^User: /);
-    });
-
-    test('has double newline between user and assistant', () => {
-      const formatted = 'User: Hello\n\nAssistant: Hi';
-      expect(formatted).toContain('\n\nAssistant: ');
-    });
-
-    test('has Assistant label before assistant message', () => {
-      const formatted = 'User: Hello\n\nAssistant: Hi';
-      expect(formatted).toContain('\n\nAssistant: ');
-    });
-
-    test('has double newline before tools section', () => {
-      const formatted = 'User: Hello\n\nAssistant: Hi\n\nTools: Read';
-      expect(formatted).toContain('\n\nTools: ');
-    });
-
-    test('tools section comes after assistant message', () => {
-      const userMsg = 'Q';
-      const assistantMsg = 'A';
-      const tools = 'Read';
-
-      const formatted = `User: ${userMsg}\n\nAssistant: ${assistantMsg}\n\nTools: ${tools}`;
-
-      const parts = formatted.split('\n\n');
-      expect(parts[0]).toBe('User: Q');
-      expect(parts[1]).toBe('Assistant: A');
-      expect(parts[2]).toBe('Tools: Read');
-    });
-  });
-
-  describe('embedding vector specifications', () => {
-    test('vector dimension is 768', () => {
-      const dimension = 768;
-      expect(dimension).toBe(768);
-      expect(dimension).toBeGreaterThan(0);
-    });
-
-    test('can create mock vector of correct size', () => {
-      const createMockVector = (): number[] => Array.from({ length: 768 }, () => 0.123);
-      const mockVector = createMockVector();
-
-      expect(mockVector).toHaveLength(768);
-      expect(mockVector[0]).toBe(0.123);
-      expect(mockVector[767]).toBe(0.123);
-    });
-
-    test('all elements in mock vector are numbers', () => {
-      const createMockVector = (): number[] => Array.from({ length: 768 }, () => Math.random());
-      const mockVector = createMockVector();
-
-      mockVector.forEach((val) => {
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(768);
+      result.forEach((val) => {
         expect(typeof val).toBe('number');
-        expect(isNaN(val)).toBe(false);
-        expect(isFinite(val)).toBe(true);
       });
     });
 
-    test('Float32Array can hold 768 dimensions', () => {
-      const arr = new Float32Array(768);
-      expect(arr.length).toBe(768);
-      expect(arr.BYTES_PER_ELEMENT).toBe(4);
-    });
-  });
+    test('returns values from Float32Array conversion', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-  describe('embedding model configuration', () => {
-    test('uses correct model identifier', () => {
-      const modelId = 'onnx-community/embeddinggemma-300m-ONNX';
-      expect(modelId).toBe('onnx-community/embeddinggemma-300m-ONNX');
+      const result = await generateEmbedding('test');
+
+      // Check first and last values match our mock pattern
+      expect(result[0]).toBeCloseTo(0.001, 4);
+      expect(result[767]).toBeCloseTo(0.768, 3);
     });
 
-    test('uses feature-extraction task', () => {
-      const task = 'feature-extraction';
-      expect(task).toBe('feature-extraction');
+    test('calls initEmbeddings if pipeline not initialized', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      // generateEmbedding should auto-initialize
+      await generateEmbedding('test');
+
+      // Pipeline should be created (via initEmbeddings)
+      expect(mockPipelineCalls).toHaveLength(1);
     });
 
-    test('uses q4 dtype configuration', () => {
-      const dtype = 'q4';
-      expect(dtype).toBe('q4');
+    test('reuses existing pipeline when already initialized', async () => {
+      const { initEmbeddings, generateEmbedding } = await import('./embeddings.js');
+
+      // Initialize first
+      await initEmbeddings();
+      mockPipelineCalls = []; // Reset tracking
+
+      // Now generate embedding
+      await generateEmbedding('test');
+
+      // Pipeline should NOT be created again
+      expect(mockPipelineCalls).toHaveLength(0);
     });
 
-    test('cache directory is set to ./.cache', () => {
-      const cacheDir = './.cache';
-      expect(cacheDir).toBe('./.cache');
-    });
-  });
+    test('passes pooling and normalize options to pipeline', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
 
-  describe('embedding generation options', () => {
-    test('uses mean pooling', () => {
-      const pooling = 'mean';
-      expect(pooling).toBe('mean');
-    });
+      await generateEmbedding('test');
 
-    test('uses normalization', () => {
-      const normalize = true;
-      expect(normalize).toBe(true);
-    });
-
-    test('pooling and normalize options structure', () => {
-      const options = {
-        pooling: 'mean',
-        normalize: true,
-      };
-
-      expect(options).toEqual({
+      expect(mockEmbeddingCalls[0].options).toEqual({
         pooling: 'mean',
         normalize: true,
       });
+    });
+
+    test('handles empty text', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      const result = await generateEmbedding('');
+
+      expect(mockEmbeddingCalls[0].text).toBe('title: none | text: ');
+      expect(result).toHaveLength(768);
+    });
+
+    test('preserves special characters in text', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      const specialText = 'Test with "quotes" and \'apostrophes\' & <html>';
+      await generateEmbedding(specialText);
+
+      expect(mockEmbeddingCalls[0].text).toBe(`title: none | text: ${specialText}`);
+    });
+
+    test('preserves newlines in text', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      const multilineText = 'Line 1\nLine 2\nLine 3';
+      await generateEmbedding(multilineText);
+
+      expect(mockEmbeddingCalls[0].text).toBe('title: none | text: Line 1\nLine 2\nLine 3');
+    });
+  });
+
+  describe('generateExchangeEmbedding()', () => {
+    test('combines user and assistant messages with labels', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('How do I test?', 'Use vitest');
+
+      // Check the embedding was called with formatted text
+      expect(mockEmbeddingCalls).toHaveLength(1);
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: How do I test?\n\nAssistant: Use vitest'
+      );
+    });
+
+    test('includes tools section when tools are provided', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Search files', 'Found 3 files', ['Grep', 'Glob']);
+
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: Search files\n\nAssistant: Found 3 files\n\nTools: Grep, Glob'
+      );
+    });
+
+    test('excludes tools section when no tools provided', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Hello', 'Hi', []);
+
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: Hello\n\nAssistant: Hi'
+      );
+    });
+
+    test('excludes tools section when tools is undefined', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Hello', 'Hi');
+
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: Hello\n\nAssistant: Hi'
+      );
+      expect(mockEmbeddingCalls[0].text).not.toContain('Tools:');
+    });
+
+    test('formats single tool correctly', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Read file', 'Done', ['Read']);
+
+      expect(mockEmbeddingCalls[0].text).toContain('Tools: Read');
+    });
+
+    test('formats multiple tools with comma separation', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Search', 'Done', ['Read', 'Write', 'Bash', 'Grep']);
+
+      expect(mockEmbeddingCalls[0].text).toContain('Tools: Read, Write, Bash, Grep');
+    });
+
+    test('returns embedding array from generateEmbedding', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      const result = await generateExchangeEmbedding('Q', 'A');
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toHaveLength(768);
+    });
+
+    test('handles empty user message', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('', 'Response');
+
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: \n\nAssistant: Response'
+      );
+    });
+
+    test('handles empty assistant message', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Question', '');
+
+      expect(mockEmbeddingCalls[0].text).toBe(
+        'title: none | text: User: Question\n\nAssistant: '
+      );
+    });
+
+    test('preserves newlines within messages', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Line 1\nLine 2', 'Response 1\nResponse 2');
+
+      expect(mockEmbeddingCalls[0].text).toContain('User: Line 1\nLine 2');
+      expect(mockEmbeddingCalls[0].text).toContain('Assistant: Response 1\nResponse 2');
+    });
+
+    test('handles special characters in messages', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding(
+        'Test with "quotes" and \'apostrophes\'',
+        'Response with <html> & entities',
+        ['Read', 'Write']
+      );
+
+      const text = mockEmbeddingCalls[0].text;
+      expect(text).toContain('"quotes"');
+      expect(text).toContain('\'apostrophes\'');
+      expect(text).toContain('<html>');
+      expect(text).toContain('&');
+    });
+
+    test('truncates combined text if too long', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      const longUser = 'a'.repeat(4000);
+      const longAssistant = 'b'.repeat(4000);
+
+      await generateExchangeEmbedding(longUser, longAssistant);
+
+      // Combined text should be truncated to 8000 chars
+      expect(mockEmbeddingCalls[0].text.length).toBe(8000);
+    });
+
+    test('calls generateEmbedding with correctly formatted text', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      // The function should format the text and pass to generateEmbedding
+      // which adds the prefix
+      await generateExchangeEmbedding('User question', 'Assistant answer', ['Tool1', 'Tool2']);
+
+      const expected = 'title: none | text: User: User question\n\nAssistant: Assistant answer\n\nTools: Tool1, Tool2';
+      expect(mockEmbeddingCalls[0].text).toBe(expected);
+    });
+  });
+
+  describe('integration scenarios', () => {
+    test('full workflow: init then generate multiple embeddings', async () => {
+      const { initEmbeddings, generateEmbedding } = await import('./embeddings.js');
+
+      await initEmbeddings();
+      await generateEmbedding('first text');
+      await generateEmbedding('second text');
+      await generateEmbedding('third text');
+
+      // Pipeline should only be initialized once
+      expect(mockPipelineCalls).toHaveLength(1);
+      // But embedding should be called 3 times
+      expect(mockEmbeddingCalls).toHaveLength(3);
+    });
+
+    test('generateEmbedding auto-initializes on first call', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      // Without explicit init, should still work
+      const result = await generateEmbedding('auto init test');
+
+      expect(mockPipelineCalls).toHaveLength(1);
+      expect(result).toHaveLength(768);
+    });
+
+    test('generateExchangeEmbedding auto-initializes', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      // Without explicit init, should still work
+      const result = await generateExchangeEmbedding('user msg', 'assistant msg');
+
+      expect(mockPipelineCalls).toHaveLength(1);
+      expect(result).toHaveLength(768);
     });
   });
 });

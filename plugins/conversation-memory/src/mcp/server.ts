@@ -19,6 +19,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
+import type Database from 'better-sqlite3';
 import { search as searchV3 } from '../core/search.v3.js';
 import { findByIds as getObservationsByIds } from '../core/observations.v3.js';
 import { readConversation } from '../core/read.js';
@@ -102,11 +103,77 @@ export { SearchInputSchema, GetObservationsInputSchema, ReadInputSchema };
 
 // Error Handling Utility
 
-function handleError(error: unknown): string {
+export function handleError(error: unknown): string {
   if (error instanceof Error) {
     return `Error: ${error.message}`;
   }
   return `Error: ${String(error)}`;
+}
+
+// Handler Functions (exported for testing)
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  project: string;
+  timestamp: number;
+}
+
+export async function handleSearch(
+  params: SearchInput,
+  db: Database.Database
+): Promise<SearchResult[]> {
+  const results = await searchV3(params.query, {
+    db,
+    limit: params.limit,
+    after: params.after,
+    before: params.before,
+    projects: params.projects,
+    files: params.files,
+  });
+
+  return results.map(r => ({
+    id: String(r.id),
+    title: r.title,
+    project: r.project,
+    timestamp: r.timestamp,
+  }));
+}
+
+export interface ObservationOutput {
+  id: number;
+  title: string;
+  content: string;
+  project: string;
+  timestamp: number;
+}
+
+export async function handleGetObservations(
+  params: GetObservationsInput,
+  db: Database.Database
+): Promise<ObservationOutput[]> {
+  // Convert string IDs to numbers
+  const numericIds = params.ids.map(id =>
+    typeof id === 'string' ? parseInt(id, 10) : id
+  );
+
+  const observations = await getObservationsByIds(db, numericIds);
+
+  return observations.map(obs => ({
+    id: obs.id,
+    title: obs.title,
+    content: obs.content,
+    project: obs.project,
+    timestamp: obs.timestamp,
+  }));
+}
+
+export function handleRead(params: ReadInput): string {
+  const result = readConversation(params.path, params.startLine, params.endLine);
+  if (result === null) {
+    throw new Error(`File not found: ${params.path}`);
+  }
+  return result;
 }
 
 // Create MCP Server
@@ -252,29 +319,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Open V3 database (persistent storage)
       const db = openDatabase();
       try {
-        // Perform search using V3 search function
-        const results = await searchV3(params.query, {
-          db,
-          limit: params.limit,
-          after: params.after,
-          before: params.before,
-          projects: params.projects,
-          files: params.files,
-        });
+        const results = await handleSearch(params, db);
 
         // Return compact observations as JSON
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({
-                results: results.map(r => ({
-                  id: String(r.id),
-                  title: r.title,
-                  project: r.project,
-                  timestamp: r.timestamp,
-                })),
-              }, null, 2),
+              text: JSON.stringify({ results }, null, 2),
             },
           ],
         };
@@ -286,15 +338,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === 'get_observations') {
       const params = GetObservationsInputSchema.parse(args);
 
-      // Convert string IDs to numbers
-      const numericIds = params.ids.map(id =>
-        typeof id === 'string' ? parseInt(id, 10) : id
-      );
-
       // Open V3 database (persistent storage)
       const db = openDatabase();
       try {
-        const observations = await getObservationsByIds(db, numericIds);
+        const observations = await handleGetObservations(params, db);
 
         if (observations.length === 0) {
           return {
@@ -330,10 +377,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (name === 'read') {
       const params = ReadInputSchema.parse(args);
-      const result = readConversation(params.path, params.startLine, params.endLine);
-      if (result === null) {
-        throw new Error(`File not found: ${params.path}`);
-      }
+      const result = handleRead(params);
       return { content: [{ type: 'text', text: result }] };
     }
 
