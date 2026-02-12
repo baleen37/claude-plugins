@@ -13,7 +13,11 @@
  * {
  *   "provider": "gemini",
  *   "apiKey": "your-gemini-api-key",
- *   "model": "gemini-2.0-flash"
+ *   "model": "gemini-2.0-flash",
+ *   "ratelimit": {
+ *     "embedding": { "requestsPerSecond": 5, "burstSize": 10 },
+ *     "llm": { "requestsPerSecond": 2, "burstSize": 4 }
+ *   }
  * }
  * ```
  */
@@ -36,6 +40,26 @@ const DEFAULT_MODELS = {
 } as const;
 
 /**
+ * Rate limiter configuration for a single limiter.
+ */
+export interface RateLimitConfig {
+  /** Maximum requests per second (token refill rate) */
+  requestsPerSecond?: number;
+  /** Maximum tokens in bucket (burst capacity) */
+  burstSize?: number;
+}
+
+/**
+ * Rate limiter configuration for all limiters.
+ */
+export interface RateLimitsConfig {
+  /** Rate limiter for embedding generation */
+  embedding?: RateLimitConfig;
+  /** Rate limiter for LLM API calls */
+  llm?: RateLimitConfig;
+}
+
+/**
  * LLM configuration interface.
  *
  * Defines the structure of the config file at ~/.config/conversation-memory/config.json
@@ -47,6 +71,8 @@ export interface LLMConfig {
   apiKey: string;
   /** Optional model name (defaults depend on provider) */
   model?: string;
+  /** Optional rate limiter configuration */
+  ratelimit?: RateLimitsConfig;
 }
 
 /**

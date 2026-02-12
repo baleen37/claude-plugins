@@ -12,9 +12,16 @@ import { handlePostToolUse } from '../hooks/post-tool-use.js';
 import { handleStop } from '../hooks/stop.js';
 import { loadConfig, createProvider } from '../core/llm/index.js';
 
+/**
+ * PostToolUse hook input from Claude Code.
+ * See: https://code.claude.com/docs/en/hooks.md
+ */
 interface PostToolUseInput {
   tool_name: string;
-  result: unknown;
+  tool_input: Record<string, unknown>;
+  tool_response: unknown;
+  session_id?: string;
+  tool_use_id?: string;
 }
 
 /**
@@ -45,13 +52,23 @@ function getProject(): string {
 /**
  * Handle PostToolUse hook.
  */
-async function handleObserve(toolName: string, result: unknown): Promise<void> {
+async function handleObserve(toolName: string, toolInput: unknown, toolResponse: unknown): Promise<void> {
   const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject();
 
-    handlePostToolUse(db, sessionId, project, toolName, result);
+    // Merge tool_input and tool_response for compression
+    // tool_input contains the arguments (file_path, command, etc.)
+    // tool_response contains the result
+    const mergedData = {
+      ...((toolInput && typeof toolInput === 'object') ? toolInput : {}),
+      ...(typeof toolResponse === 'object' && toolResponse !== null ? toolResponse : {}),
+      // Include primitive responses as 'result' field
+      ...(typeof toolResponse !== 'object' ? { result: toolResponse } : {}),
+    };
+
+    handlePostToolUse(db, sessionId, project, toolName, mergedData);
   } finally {
     db.close();
   }
@@ -105,7 +122,7 @@ async function main() {
       }
 
       const input = JSON.parse(stdinData) as PostToolUseInput;
-      await handleObserve(input.tool_name, input.result);
+      await handleObserve(input.tool_name, input.tool_input, input.tool_response);
     }
   } catch (error) {
     // Silent failure for async hooks to avoid disrupting session

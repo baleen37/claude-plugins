@@ -1,4 +1,5 @@
 import { pipeline, FeatureExtractionPipeline, env } from '@huggingface/transformers';
+import { getEmbeddingRateLimiter } from './ratelimiter.js';
 
 let embeddingPipeline: FeatureExtractionPipeline | null = null;
 
@@ -21,6 +22,9 @@ export async function initEmbeddings(): Promise<void> {
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
+  // Acquire rate limiter token before generating embedding
+  await getEmbeddingRateLimiter().acquire();
+
   if (!embeddingPipeline) {
     await initEmbeddings();
   }
