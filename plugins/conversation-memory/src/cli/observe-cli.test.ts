@@ -12,7 +12,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
-import type { LLMProvider } from '../core/llm/types.js';
+import type { LLMProvider } from '../core/llm/index.js';
 
 // Mock the modules
 vi.mock('../core/db.v3.js', () => ({
@@ -38,7 +38,7 @@ vi.mock('../core/llm/config.js', () => ({
 import { initDatabaseV3 } from '../core/db.v3.js';
 import { handlePostToolUse } from '../hooks/post-tool-use.js';
 import { handleStop } from '../hooks/stop.js';
-import { loadConfig, createProvider } from '../core/llm/config.js';
+import { loadConfig, createProvider } from '../core/llm/index.js';
 
 describe('Observe CLI', () => {
   let mockDb: Database.Database;

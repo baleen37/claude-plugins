@@ -40,31 +40,6 @@ export interface ConversationExchange {
   compressedToolSummary?: string;
 }
 
-// Compact types for search results (without full ConversationExchange)
-export interface CompactSearchResult {
-  id: string;
-  project: string;
-  timestamp: string;
-  archivePath: string;
-  lineStart: number;
-  lineEnd: number;
-  compressedToolSummary?: string;
-  snippet: string;
-}
-
-export interface CompactMultiConceptResult {
-  id: string;
-  project: string;
-  timestamp: string;
-  archivePath: string;
-  lineStart: number;
-  lineEnd: number;
-  compressedToolSummary?: string;
-  snippet: string;
-  conceptSimilarities: number[];
-  averageSimilarity: number;
-}
-
 // Observation system types
 export interface Observation {
   id: string;
@@ -99,19 +74,6 @@ export interface CompactObservation {
   filesModified: string[];
 }
 
-export interface SessionSummary {
-  id: string;
-  sessionId: string;
-  project: string;
-  request: string;
-  investigated: string[];
-  learned: string[];
-  completed: string[];
-  nextSteps: string[];
-  notes: string;
-  createdAt: number;
-}
-
 export type PendingEventType = 'tool_use' | 'summarize';
 
 export interface PendingEvent {
@@ -126,36 +88,4 @@ export interface PendingEvent {
   timestamp: number;
   processed: boolean;
   createdAt: number;
-}
-
-// XML response types from LLM
-export interface ObservationXML {
-  observation: {
-    type: string;
-    title: string;
-    subtitle: string;
-    narrative: string;
-    facts: string[];
-    concepts: string[];
-    files_read: string[];
-    files_modified: string[];
-    correlation_id?: string;
-  };
-}
-
-export interface SkipXML {
-  skip: {
-    reason: string;
-  };
-}
-
-export interface SessionSummaryXML {
-  session_summary: {
-    request: string;
-    investigated: string[];
-    learned: string[];
-    completed: string[];
-    next_steps: string[];
-    notes: string;
-  };
 }

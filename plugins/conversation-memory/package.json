@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cli": "node dist/cli.mjs"
+    "cli": "node dist/cli.mjs",
+    "migrate": "node scripts/migrate-v2-to-v3.mjs"
   },
   "bin": {
     "conversation-memory": "dist/cli.mjs"

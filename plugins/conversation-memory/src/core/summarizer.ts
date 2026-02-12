@@ -1,8 +1,8 @@
 import { ConversationExchange } from './types.js';
 import { SUMMARIZER_CONTEXT_MARKER } from './constants.js';
 import { logInfo, logError, logWarn } from './logger.js';
-import { createProvider, loadConfig } from './llm/config.js';
-import type { TokenUsage } from './llm/types.js';
+import { createProvider, loadConfig } from './llm/index.js';
+import type { TokenUsage } from './llm/index.js';
 
 // Global token usage accumulator for the current sync run
 let currentRunTokenUsages: TokenUsage[] = [];

@@ -21,7 +21,6 @@ const commonConfig = {
     "sharp",
     "onnxruntime-node",
     "sqlite-vec",
-    "zhipuai-sdk-nodejs-v4",
   ],
 };
 
@@ -56,11 +55,19 @@ async function buildCli() {
     console.log("✓ Built dist/mcp-server.mjs");
 
     // Copy wrapper script to dist/ for cached plugins
+    await mkdir("dist/lib", { recursive: true });
     await copyFile(
       join("scripts", "mcp-server-wrapper.mjs"),
       join("dist", "mcp-wrapper.mjs")
     );
     console.log("✓ Copied dist/mcp-wrapper.mjs");
+
+    // Copy shared dependency library for dist/mcp-wrapper.mjs
+    await copyFile(
+      join("scripts", "lib", "check-dependencies.mjs"),
+      join("dist", "lib", "check-dependencies.mjs")
+    );
+    console.log("✓ Copied dist/lib/check-dependencies.mjs");
 
     console.log("\n✅ Build complete!");
   } catch (error) {
