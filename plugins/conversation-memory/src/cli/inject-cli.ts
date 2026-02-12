@@ -62,9 +62,20 @@ function getConfig(): SessionStartConfig {
 
 async function main() {
   try {
-    // Read input from stdin
+    // Read input from stdin (may be empty for SessionStart)
     const stdinData = await readStdin();
-    const input = JSON.parse(stdinData) as SessionStartInput;
+
+    // Parse input or use defaults if stdin is empty
+    let input: SessionStartInput;
+    if (stdinData.trim()) {
+      input = JSON.parse(stdinData) as SessionStartInput;
+    } else {
+      // Default input when no stdin data provided
+      input = {
+        session_id: process.env.CLAUDE_SESSION_ID || 'unknown',
+        transcript_path: '',
+      };
+    }
 
     // Get project and config
     const project = getProject(input);

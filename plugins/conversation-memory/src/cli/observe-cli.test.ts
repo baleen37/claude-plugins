@@ -242,12 +242,14 @@ describe('Observe CLI', () => {
     test('should parse JSON input correctly', () => {
       const stdinData = JSON.stringify({
         tool_name: 'Read',
-        result: { file_path: '/test.ts', lines: 100 },
+        tool_input: { file_path: '/test.ts' },
+        tool_response: { lines: 100 },
       });
 
       const parsed = JSON.parse(stdinData);
       expect(parsed.tool_name).toBe('Read');
-      expect(parsed.result).toEqual({ file_path: '/test.ts', lines: 100 });
+      expect(parsed.tool_input).toEqual({ file_path: '/test.ts' });
+      expect(parsed.tool_response).toEqual({ lines: 100 });
     });
 
     test('should handle empty stdin gracefully', () => {
@@ -320,27 +322,30 @@ describe('Observe CLI', () => {
     test('should parse valid PostToolUse input', () => {
       const stdinData = JSON.stringify({
         tool_name: 'Read',
-        result: { file_path: '/src/test.ts', lines: 100 },
+        tool_input: { file_path: '/src/test.ts' },
+        tool_response: { lines: 100 },
       });
 
       const input = JSON.parse(stdinData);
 
       expect(input.tool_name).toBe('Read');
-      expect(input.result).toEqual({ file_path: '/src/test.ts', lines: 100 });
+      expect(input.tool_input).toEqual({ file_path: '/src/test.ts' });
+      expect(input.tool_response).toEqual({ lines: 100 });
     });
 
     test('should handle various tool types', () => {
       const toolInputs = [
-        { tool_name: 'Bash', result: { command: 'npm test', exitCode: 0 } },
-        { tool_name: 'Edit', result: { file_path: '/test.ts', old_string: 'old', new_string: 'new' } },
-        { tool_name: 'Grep', result: { pattern: 'TODO', path: '/src', count: 5 } },
-        { tool_name: 'WebSearch', result: { query: 'test query' } },
+        { tool_name: 'Bash', tool_input: { command: 'npm test' }, tool_response: { exitCode: 0 } },
+        { tool_name: 'Edit', tool_input: { file_path: '/test.ts', old_string: 'old', new_string: 'new' }, tool_response: {} },
+        { tool_name: 'Grep', tool_input: { pattern: 'TODO', path: '/src' }, tool_response: { count: 5 } },
+        { tool_name: 'WebSearch', tool_input: { query: 'test query' }, tool_response: {} },
       ];
 
       for (const input of toolInputs) {
         const parsed = JSON.parse(JSON.stringify(input));
         expect(parsed.tool_name).toBeDefined();
-        expect(parsed.result).toBeDefined();
+        expect(parsed.tool_input).toBeDefined();
+        expect(parsed.tool_response).toBeDefined();
       }
     });
   });
@@ -382,31 +387,31 @@ describe('Observe CLI', () => {
     });
 
     test('should handle missing tool_name in input', () => {
-      const invalidInput = JSON.stringify({ result: { data: 'test' } });
+      const invalidInput = JSON.stringify({ tool_input: { data: 'test' }, tool_response: {} });
 
       const input = JSON.parse(invalidInput);
       expect(input.tool_name).toBeUndefined();
     });
 
-    test('should handle missing result in input', () => {
-      const invalidInput = JSON.stringify({ tool_name: 'Read' });
+    test('should handle missing tool_input in input', () => {
+      const invalidInput = JSON.stringify({ tool_name: 'Read', tool_response: {} });
 
       const input = JSON.parse(invalidInput);
-      expect(input.result).toBeUndefined();
+      expect(input.tool_input).toBeUndefined();
     });
 
     test('should handle empty tool_name', () => {
-      const input = JSON.stringify({ tool_name: '', result: {} });
+      const input = JSON.stringify({ tool_name: '', tool_input: {}, tool_response: {} });
 
       const parsed = JSON.parse(input);
       expect(parsed.tool_name).toBe('');
     });
 
-    test('should handle null result', () => {
-      const input = JSON.stringify({ tool_name: 'Read', result: null });
+    test('should handle null tool_response', () => {
+      const input = JSON.stringify({ tool_name: 'Read', tool_input: {}, tool_response: null });
 
       const parsed = JSON.parse(input);
-      expect(parsed.result).toBeNull();
+      expect(parsed.tool_response).toBeNull();
     });
   });
 

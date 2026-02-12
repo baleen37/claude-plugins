@@ -301,7 +301,15 @@ function getConfig() {
 async function main() {
   try {
     const stdinData = await readStdin();
-    const input = JSON.parse(stdinData);
+    let input;
+    if (stdinData.trim()) {
+      input = JSON.parse(stdinData);
+    } else {
+      input = {
+        session_id: process.env.CLAUDE_SESSION_ID || "unknown",
+        transcript_path: ""
+      };
+    }
     const project = getProject(input);
     const config = getConfig();
     const db = openDatabase();
@@ -511,308 +519,6 @@ var init_post_tool_use = __esm({
     "use strict";
     init_compress();
     init_db_v3();
-  }
-});
-
-// src/core/logger.ts
-import fs3 from "fs";
-function formatLogEntry(entry) {
-  const dataStr = entry.data ? ` ${JSON.stringify(entry.data)}` : "";
-  return `[${entry.timestamp}] [${entry.level}] ${entry.message}${dataStr}`;
-}
-function writeLog(entry) {
-  const logPath = getLogFilePath();
-  const line = formatLogEntry(entry) + "\n";
-  fs3.appendFileSync(logPath, line, "utf-8");
-}
-function logInfo(message, data) {
-  const entry = {
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    level: "INFO" /* INFO */,
-    message,
-    data
-  };
-  writeLog(entry);
-  console.log(`[INFO] ${message}`);
-}
-function logError(message, error, data) {
-  const errorData = error instanceof Error ? {
-    name: error.name,
-    message: error.message,
-    stack: error.stack
-  } : error;
-  const entry = {
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    level: "ERROR" /* ERROR */,
-    message,
-    data: data ? { ...data, error: errorData } : { error: errorData }
-  };
-  writeLog(entry);
-}
-function logDebug(message, data) {
-  if (process.env.CONVERSATION_MEMORY_DEBUG !== "true") {
-    return;
-  }
-  const entry = {
-    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-    level: "DEBUG" /* DEBUG */,
-    message,
-    data
-  };
-  writeLog(entry);
-  console.log(`[DEBUG] ${message}`, data);
-}
-var init_logger = __esm({
-  "src/core/logger.ts"() {
-    "use strict";
-    init_paths();
-  }
-});
-
-// src/core/llm/batch-extract-prompt.ts
-function buildBatchExtractPrompt(events, previousObservations) {
-  let prompt = "";
-  if (previousObservations.length > 0) {
-    const lastThree = previousObservations.slice(-3);
-    prompt += "<previous_observations>\n";
-    for (const obs of lastThree) {
-      prompt += `- ${obs.title}: ${obs.content}
-`;
-    }
-    prompt += "</previous_observations>\n\n";
-  }
-  prompt += "<tool_events>\n";
-  for (const event of events) {
-    prompt += `[${event.timestamp}] ${event.toolName}: ${event.compressed}
-`;
-  }
-  prompt += "</tool_events>\n\n";
-  prompt += `Extract meaningful observations from these tool events.
-
-Remember:
-- title (under 50 characters)
-- content (under 200 characters)
-- Return empty array [] if this batch is low-value
-- Avoid duplicating information from previous observations above
-
-Return only a JSON array.`;
-  return prompt;
-}
-function parseBatchExtractResponse(response) {
-  try {
-    let jsonText = response.trim();
-    if (jsonText.startsWith("```")) {
-      const lines = jsonText.split("\n");
-      let startIndex = 0;
-      let endIndex = lines.length;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim().startsWith("```")) {
-          startIndex = i + 1;
-          break;
-        }
-      }
-      for (let i = startIndex; i < lines.length; i++) {
-        if (lines[i].trim().startsWith("```")) {
-          endIndex = i;
-          break;
-        }
-      }
-      jsonText = lines.slice(startIndex, endIndex).join("\n").trim();
-    }
-    const parsed = JSON.parse(jsonText);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter((item) => {
-      return typeof item === "object" && item !== null && typeof item.title === "string" && typeof item.content === "string" && item.title.trim().length > 0 && item.content.trim().length > 0;
-    }).map((item) => ({
-      title: item.title.trim(),
-      content: item.content.trim()
-    }));
-  } catch (error) {
-    return [];
-  }
-}
-async function extractObservationsFromBatch(provider, events, previousObservations) {
-  const startTime = Date.now();
-  logDebug("extractObservationsFromBatch: starting batch extraction", {
-    eventsCount: events.length,
-    previousObservationsCount: previousObservations.length
-  });
-  try {
-    const prompt = buildBatchExtractPrompt(events, previousObservations);
-    logDebug("extractObservationsFromBatch: built prompt", {
-      promptLength: prompt.length
-    });
-    const result = await provider.complete(prompt, {
-      systemPrompt: BATCH_EXTRACT_SYSTEM_PROMPT,
-      maxTokens: 2048
-    });
-    const extracted = parseBatchExtractResponse(result.text);
-    const duration = Date.now() - startTime;
-    logInfo("extractObservationsFromBatch: successfully extracted observations", {
-      extractedCount: extracted.length,
-      responseLength: result.text.length,
-      duration: `${duration}ms`
-    });
-    return extracted;
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    const promptLength = events.length > 0 ? JSON.stringify(events).length : 0;
-    logError("extractObservationsFromBatch: batch extraction failed", error, {
-      eventsCount: events.length,
-      promptLength,
-      duration: `${duration}ms`
-    });
-    return [];
-  }
-}
-var BATCH_EXTRACT_SYSTEM_PROMPT;
-var init_batch_extract_prompt = __esm({
-  "src/core/llm/batch-extract-prompt.ts"() {
-    "use strict";
-    init_logger();
-    BATCH_EXTRACT_SYSTEM_PROMPT = `You are an observation extractor that analyzes Claude Code tool events and identifies meaningful insights.
-
-Your task:
-1. Analyze the batch of tool events
-2. Extract meaningful observations as {title, content} pairs
-3. Avoid duplicating information from previous observations
-4. Return an empty JSON array if the batch contains only low-value events
-
-Guidelines:
-- Title: Keep under 50 characters, descriptive and concise
-- Content: Keep under 200 characters, informative but brief
-- Focus on: decisions, learnings, bugfixes, features, refactoring, debugging
-- Skip: trivial operations, simple file reads, status checks, repetitive tasks
-- Return JSON array only, no markdown, no explanations
-
-Response format:
-[
-  {"title": "Fixed authentication bug", "content": "Resolved JWT token validation in login flow"},
-  {"title": "Added test coverage", "content": "Added unit tests for auth module"}
-]`;
-  }
-});
-
-// src/core/embeddings.ts
-import { pipeline, env } from "@huggingface/transformers";
-async function initEmbeddings() {
-  if (!embeddingPipeline) {
-    console.log("Loading embedding model (first run may take time)...");
-    env.cacheDir = "./.cache";
-    embeddingPipeline = await pipeline(
-      "feature-extraction",
-      "onnx-community/embeddinggemma-300m-ONNX",
-      { dtype: "q4" }
-    );
-    console.log("Embedding model loaded");
-  }
-}
-async function generateEmbedding(text) {
-  if (!embeddingPipeline) {
-    await initEmbeddings();
-  }
-  const prefixedText = `title: none | text: ${text}`;
-  const truncated = prefixedText.substring(0, 8e3);
-  const output = await embeddingPipeline(truncated, {
-    pooling: "mean",
-    normalize: true
-  });
-  return Array.from(output.data);
-}
-var embeddingPipeline;
-var init_embeddings = __esm({
-  "src/core/embeddings.ts"() {
-    "use strict";
-    embeddingPipeline = null;
-  }
-});
-
-// src/core/observations.v3.ts
-async function create(db, title, content, project, sessionId, timestamp) {
-  const now = Date.now();
-  const obsTimestamp = timestamp ?? now;
-  const observation = {
-    title,
-    content,
-    project,
-    sessionId,
-    timestamp: obsTimestamp,
-    createdAt: now
-  };
-  await initEmbeddings();
-  const embeddingText = `${title}
-${content}`;
-  const embedding = await generateEmbedding(embeddingText);
-  return insertObservationV3(db, observation, embedding);
-}
-var init_observations_v3 = __esm({
-  "src/core/observations.v3.ts"() {
-    "use strict";
-    init_db_v3();
-    init_embeddings();
-  }
-});
-
-// src/hooks/stop.ts
-async function handleStop(db, options) {
-  const { provider, sessionId, project, batchSize = DEFAULT_BATCH_SIZE } = options;
-  const allEvents = getAllPendingEventsV3(db, sessionId);
-  if (allEvents.length < MIN_EVENT_THRESHOLD) {
-    return;
-  }
-  const batches = createBatches(allEvents, batchSize);
-  const allExtractedObservations = [];
-  for (const batch of batches) {
-    try {
-      const compressedEvents = batch.map((event) => ({
-        toolName: event.toolName,
-        compressed: event.compressed,
-        timestamp: event.timestamp
-      }));
-      const extracted = await extractObservationsFromBatch(
-        provider,
-        compressedEvents,
-        allExtractedObservations
-        // Pass all previous observations for deduplication
-      );
-      for (const obs of extracted) {
-        try {
-          await create(
-            db,
-            obs.title,
-            obs.content,
-            project,
-            sessionId,
-            Date.now()
-          );
-        } catch (error) {
-          console.warn(`Failed to store observation: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      }
-      allExtractedObservations.push(...extracted);
-    } catch (error) {
-      console.warn(`Failed to process batch: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-}
-function createBatches(events, batchSize) {
-  const batches = [];
-  for (let i = 0; i < events.length; i += batchSize) {
-    batches.push(events.slice(i, i + batchSize));
-  }
-  return batches;
-}
-var DEFAULT_BATCH_SIZE, MIN_EVENT_THRESHOLD;
-var init_stop = __esm({
-  "src/hooks/stop.ts"() {
-    "use strict";
-    init_batch_extract_prompt();
-    init_observations_v3();
-    init_db_v3();
-    DEFAULT_BATCH_SIZE = 15;
-    MIN_EVENT_THRESHOLD = 3;
   }
 });
 
@@ -1816,6 +1522,61 @@ var init_dist = __esm({
   }
 });
 
+// src/core/logger.ts
+import fs3 from "fs";
+function formatLogEntry(entry) {
+  const dataStr = entry.data ? ` ${JSON.stringify(entry.data)}` : "";
+  return `[${entry.timestamp}] [${entry.level}] ${entry.message}${dataStr}`;
+}
+function writeLog(entry) {
+  const logPath = getLogFilePath();
+  const line = formatLogEntry(entry) + "\n";
+  fs3.appendFileSync(logPath, line, "utf-8");
+}
+function logInfo(message, data) {
+  const entry = {
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    level: "INFO" /* INFO */,
+    message,
+    data
+  };
+  writeLog(entry);
+  console.log(`[INFO] ${message}`);
+}
+function logError(message, error, data) {
+  const errorData = error instanceof Error ? {
+    name: error.name,
+    message: error.message,
+    stack: error.stack
+  } : error;
+  const entry = {
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    level: "ERROR" /* ERROR */,
+    message,
+    data: data ? { ...data, error: errorData } : { error: errorData }
+  };
+  writeLog(entry);
+}
+function logDebug(message, data) {
+  if (process.env.CONVERSATION_MEMORY_DEBUG !== "true") {
+    return;
+  }
+  const entry = {
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    level: "DEBUG" /* DEBUG */,
+    message,
+    data
+  };
+  writeLog(entry);
+  console.log(`[DEBUG] ${message}`, data);
+}
+var init_logger = __esm({
+  "src/core/logger.ts"() {
+    "use strict";
+    init_paths();
+  }
+});
+
 // src/core/llm/gemini-provider.ts
 var gemini_provider_exports = {};
 __export(gemini_provider_exports, {
@@ -2110,6 +1871,264 @@ var init_config = __esm({
   }
 });
 
+// src/core/llm/batch-extract-prompt.ts
+function buildBatchExtractPrompt(events, previousObservations) {
+  let prompt = "";
+  if (previousObservations.length > 0) {
+    const lastThree = previousObservations.slice(-3);
+    prompt += "<previous_observations>\n";
+    for (const obs of lastThree) {
+      prompt += `- ${obs.title}: ${obs.content}
+`;
+    }
+    prompt += "</previous_observations>\n\n";
+  }
+  prompt += "<tool_events>\n";
+  for (const event of events) {
+    prompt += `[${event.timestamp}] ${event.toolName}: ${event.compressed}
+`;
+  }
+  prompt += "</tool_events>\n\n";
+  prompt += `Extract meaningful observations from these tool events.
+
+Remember:
+- title (under 50 characters)
+- content (under 200 characters)
+- Return empty array [] if this batch is low-value
+- Avoid duplicating information from previous observations above
+
+Return only a JSON array.`;
+  return prompt;
+}
+function parseBatchExtractResponse(response) {
+  try {
+    let jsonText = response.trim();
+    if (jsonText.startsWith("```")) {
+      const lines = jsonText.split("\n");
+      let startIndex = 0;
+      let endIndex = lines.length;
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith("```")) {
+          startIndex = i + 1;
+          break;
+        }
+      }
+      for (let i = startIndex; i < lines.length; i++) {
+        if (lines[i].trim().startsWith("```")) {
+          endIndex = i;
+          break;
+        }
+      }
+      jsonText = lines.slice(startIndex, endIndex).join("\n").trim();
+    }
+    const parsed = JSON.parse(jsonText);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter((item) => {
+      return typeof item === "object" && item !== null && typeof item.title === "string" && typeof item.content === "string" && item.title.trim().length > 0 && item.content.trim().length > 0;
+    }).map((item) => ({
+      title: item.title.trim(),
+      content: item.content.trim()
+    }));
+  } catch (error) {
+    return [];
+  }
+}
+async function extractObservationsFromBatch(provider, events, previousObservations) {
+  const startTime = Date.now();
+  logDebug("extractObservationsFromBatch: starting batch extraction", {
+    eventsCount: events.length,
+    previousObservationsCount: previousObservations.length
+  });
+  try {
+    const prompt = buildBatchExtractPrompt(events, previousObservations);
+    logDebug("extractObservationsFromBatch: built prompt", {
+      promptLength: prompt.length
+    });
+    const result = await provider.complete(prompt, {
+      systemPrompt: BATCH_EXTRACT_SYSTEM_PROMPT,
+      maxTokens: 2048
+    });
+    const extracted = parseBatchExtractResponse(result.text);
+    const duration = Date.now() - startTime;
+    logInfo("extractObservationsFromBatch: successfully extracted observations", {
+      extractedCount: extracted.length,
+      responseLength: result.text.length,
+      duration: `${duration}ms`
+    });
+    return extracted;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const promptLength = events.length > 0 ? JSON.stringify(events).length : 0;
+    logError("extractObservationsFromBatch: batch extraction failed", error, {
+      eventsCount: events.length,
+      promptLength,
+      duration: `${duration}ms`
+    });
+    return [];
+  }
+}
+var BATCH_EXTRACT_SYSTEM_PROMPT;
+var init_batch_extract_prompt = __esm({
+  "src/core/llm/batch-extract-prompt.ts"() {
+    "use strict";
+    init_logger();
+    BATCH_EXTRACT_SYSTEM_PROMPT = `You are an observation extractor that analyzes Claude Code tool events and identifies meaningful insights.
+
+Your task:
+1. Analyze the batch of tool events
+2. Extract meaningful observations as {title, content} pairs
+3. Avoid duplicating information from previous observations
+4. Return an empty JSON array if the batch contains only low-value events
+
+Guidelines:
+- Title: Keep under 50 characters, descriptive and concise
+- Content: Keep under 200 characters, informative but brief
+- Focus on: decisions, learnings, bugfixes, features, refactoring, debugging
+- Skip: trivial operations, simple file reads, status checks, repetitive tasks
+- Return JSON array only, no markdown, no explanations
+
+Response format:
+[
+  {"title": "Fixed authentication bug", "content": "Resolved JWT token validation in login flow"},
+  {"title": "Added test coverage", "content": "Added unit tests for auth module"}
+]`;
+  }
+});
+
+// src/core/llm/index.ts
+var init_llm = __esm({
+  "src/core/llm/index.ts"() {
+    "use strict";
+    init_gemini_provider();
+    init_zai_provider();
+    init_config();
+    init_batch_extract_prompt();
+  }
+});
+
+// src/core/embeddings.ts
+import { pipeline, env } from "@huggingface/transformers";
+async function initEmbeddings() {
+  if (!embeddingPipeline) {
+    console.log("Loading embedding model (first run may take time)...");
+    env.cacheDir = "./.cache";
+    embeddingPipeline = await pipeline(
+      "feature-extraction",
+      "onnx-community/embeddinggemma-300m-ONNX",
+      { dtype: "q4" }
+    );
+    console.log("Embedding model loaded");
+  }
+}
+async function generateEmbedding(text) {
+  if (!embeddingPipeline) {
+    await initEmbeddings();
+  }
+  const prefixedText = `title: none | text: ${text}`;
+  const truncated = prefixedText.substring(0, 8e3);
+  const output = await embeddingPipeline(truncated, {
+    pooling: "mean",
+    normalize: true
+  });
+  return Array.from(output.data);
+}
+var embeddingPipeline;
+var init_embeddings = __esm({
+  "src/core/embeddings.ts"() {
+    "use strict";
+    embeddingPipeline = null;
+  }
+});
+
+// src/core/observations.v3.ts
+async function create(db, title, content, project, sessionId, timestamp) {
+  const now = Date.now();
+  const obsTimestamp = timestamp ?? now;
+  const observation = {
+    title,
+    content,
+    project,
+    sessionId,
+    timestamp: obsTimestamp,
+    createdAt: now
+  };
+  await initEmbeddings();
+  const embeddingText = `${title}
+${content}`;
+  const embedding = await generateEmbedding(embeddingText);
+  return insertObservationV3(db, observation, embedding);
+}
+var init_observations_v3 = __esm({
+  "src/core/observations.v3.ts"() {
+    "use strict";
+    init_db_v3();
+    init_embeddings();
+  }
+});
+
+// src/hooks/stop.ts
+async function handleStop(db, options) {
+  const { provider, sessionId, project, batchSize = DEFAULT_BATCH_SIZE } = options;
+  const allEvents = getAllPendingEventsV3(db, sessionId);
+  if (allEvents.length < MIN_EVENT_THRESHOLD) {
+    return;
+  }
+  const batches = createBatches(allEvents, batchSize);
+  const allExtractedObservations = [];
+  for (const batch of batches) {
+    try {
+      const compressedEvents = batch.map((event) => ({
+        toolName: event.toolName,
+        compressed: event.compressed,
+        timestamp: event.timestamp
+      }));
+      const extracted = await extractObservationsFromBatch(
+        provider,
+        compressedEvents,
+        allExtractedObservations
+        // Pass all previous observations for deduplication
+      );
+      for (const obs of extracted) {
+        try {
+          await create(
+            db,
+            obs.title,
+            obs.content,
+            project,
+            sessionId,
+            Date.now()
+          );
+        } catch (error) {
+          console.warn(`Failed to store observation: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      allExtractedObservations.push(...extracted);
+    } catch (error) {
+      console.warn(`Failed to process batch: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+}
+function createBatches(events, batchSize) {
+  const batches = [];
+  for (let i = 0; i < events.length; i += batchSize) {
+    batches.push(events.slice(i, i + batchSize));
+  }
+  return batches;
+}
+var DEFAULT_BATCH_SIZE, MIN_EVENT_THRESHOLD;
+var init_stop = __esm({
+  "src/hooks/stop.ts"() {
+    "use strict";
+    init_llm();
+    init_observations_v3();
+    init_db_v3();
+    DEFAULT_BATCH_SIZE = 15;
+    MIN_EVENT_THRESHOLD = 3;
+  }
+});
+
 // src/cli/observe-cli.ts
 var observe_cli_exports = {};
 function readStdin2() {
@@ -2125,12 +2144,18 @@ function getSessionId() {
 function getProject2() {
   return process.env.CLAUDE_PROJECT || process.env.CLAUDE_PROJECT_NAME || "default";
 }
-async function handleObserve(toolName, result) {
+async function handleObserve(toolName, toolInput, toolResponse) {
   const db = openDatabase();
   try {
     const sessionId = getSessionId();
     const project = getProject2();
-    handlePostToolUse(db, sessionId, project, toolName, result);
+    const mergedData = {
+      ...toolInput && typeof toolInput === "object" ? toolInput : {},
+      ...typeof toolResponse === "object" && toolResponse !== null ? toolResponse : {},
+      // Include primitive responses as 'result' field
+      ...typeof toolResponse !== "object" ? { result: toolResponse } : {}
+    };
+    handlePostToolUse(db, sessionId, project, toolName, mergedData);
   } finally {
     db.close();
   }
@@ -2167,7 +2192,7 @@ async function main2() {
         return;
       }
       const input = JSON.parse(stdinData);
-      await handleObserve(input.tool_name, input.result);
+      await handleObserve(input.tool_name, input.tool_input, input.tool_response);
     }
   } catch (error) {
     console.error(`[conversation-memory] Error in observe: ${error instanceof Error ? error.message : String(error)}`);
@@ -2180,7 +2205,7 @@ var init_observe_cli = __esm({
     init_db_v3();
     init_post_tool_use();
     init_stop();
-    init_config();
+    init_llm();
     main2();
   }
 });
