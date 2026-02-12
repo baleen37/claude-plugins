@@ -177,6 +177,8 @@ async function main() {
   log('EXPERIMENTAL: This migration helper is provided for advanced users.', colors.yellow);
   log('Please ensure you have backed up any important data before proceeding.\n', colors.yellow);
 
+  await waitForConfirmation('Press Enter to continue (Ctrl+C to cancel)...');
+
   const dbPath = getDbPath();
   const backupPath = getBackupPath();
 
