@@ -14,8 +14,9 @@ information about each plugin, see the respective plugin's README.md file.
   bypasses (automatic, no commands needed)
 - **me**: Personal development workflow automation with 8 commands, 1 agent,
   and 7 skills (TDD, debugging, git, code review, research, orchestration)
-- **jira**: Jira integration for issue tracking and project management
-  (requires MCP server setup)
+- **jira**: Jira integration with 5 powerful skills - triage bugs, capture
+  tasks from meeting notes, generate status reports, search company knowledge,
+  and convert specs to backlogs. Uses Atlassian's MCP server with OAuth 2.1.
 - **strategic-compact**: Strategic content compaction and organization tools
   (automatic PreToolUse hook)
 

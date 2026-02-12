@@ -193,6 +193,21 @@
         "mcp"
       ],
       "version": "5.20.3"
+    },
+    {
+      "name": "jira",
+      "description": "Jira and Confluence integration via Atlassian MCP server - issue management, status reports, meeting notes, and backlog creation",
+      "source": "./plugins/jira",
+      "category": "productivity",
+      "tags": [
+        "jira",
+        "confluence",
+        "atlassian",
+        "issue-tracking",
+        "mcp",
+        "project-management"
+      ],
+      "version": "5.20.3"
     }
   ]
 }
