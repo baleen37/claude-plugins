@@ -81,7 +81,7 @@ const db = initDatabaseV3();
 **LLM Configuration:**
 
 - Requires `~/.config/conversation-memory/config.json`
-- Supported providers: `gemini`, `zhipu-ai`
+- Supported providers: `gemini`, `zai`
 - If no config found, indexing works but summarization is skipped
 
 **Storage Locations:**
@@ -123,7 +123,6 @@ const db = initDatabaseV3();
 - **sqlite-vec** (^0.1.6) - Vector similarity search extension
 - **@huggingface/transformers** (^3.8.1) - EmbeddingGemma for embeddings
 - **@google/generative-ai** (^0.24.1) - Gemini API for summarization
-- **zhipuai-sdk-nodejs-v4** (^0.1.12) - Zhipu AI API for summarization
 - **@modelcontextprotocol/sdk** (^1.0.4) - MCP protocol implementation
 - **zod** (^3.22.4) - Schema validation
 - **marked** (^17.0.1) - Markdown parsing
