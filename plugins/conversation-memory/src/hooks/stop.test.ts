@@ -15,7 +15,7 @@ import Database from 'better-sqlite3';
 import { initDatabaseV3, getPendingEventsV3, getObservationV3 } from '../core/db.v3.js';
 import { handlePostToolUse } from './post-tool-use.js';
 import { handleStop, type StopHookOptions } from './stop.js';
-import type { LLMProvider } from '../core/llm/types.js';
+import type { LLMProvider } from '../core/llm/index.js';
 
 // Mock LLM provider
 const mockLLMProvider = {

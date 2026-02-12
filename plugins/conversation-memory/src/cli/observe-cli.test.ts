@@ -12,7 +12,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
-import type { LLMProvider } from '../core/llm/types.js';
+import type { LLMProvider } from '../core/llm/index.js';
 
 // Mock the modules
 vi.mock('../core/db.v3.js', () => ({

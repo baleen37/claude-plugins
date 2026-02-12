@@ -18,7 +18,7 @@ import {
   trackTokenUsage,
 } from './summarizer.js';
 import type { ConversationExchange } from './types.js';
-import type { LLMProvider, LLMResult } from './llm/types.js';
+import type { LLMProvider, LLMResult } from './llm/index.js';
 
 // Helper to create test exchanges
 function createExchange(overrides: Partial<ConversationExchange> = {}): ConversationExchange {

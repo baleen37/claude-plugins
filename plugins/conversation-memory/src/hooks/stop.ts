@@ -15,7 +15,7 @@
  */
 
 import Database from 'better-sqlite3';
-import type { LLMProvider } from '../core/llm/types.js';
+import type { LLMProvider } from '../core/llm/index.js';
 import { extractObservationsFromBatch, type CompressedEvent, type PreviousObservation } from '../core/llm/batch-extract-prompt.js';
 import { create as createObservation } from '../core/observations.v3.js';
 import { getAllPendingEventsV3, type PendingEventV3 } from '../core/db.v3.js';
