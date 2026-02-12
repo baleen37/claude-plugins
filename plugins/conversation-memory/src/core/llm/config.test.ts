@@ -53,9 +53,9 @@ describe('loadConfig', () => {
       expect(config).toEqual(validConfig);
     });
 
-    it('should return LLMConfig with zhipu-ai provider', () => {
+    it('should return LLMConfig with zai provider', () => {
       const validConfig = {
-        provider: 'zhipu-ai',
+        provider: 'zai',
         apiKey: 'test-api-key',
         model: 'glm-4.7',
       };
@@ -170,9 +170,9 @@ describe('createProvider', () => {
       expect(typeof provider.complete).toBe('function');
     });
 
-    it('should create ZhipuAIProvider with zhipu-ai provider', async () => {
+    it('should create ZAIProvider with zai provider', async () => {
       const config: LLMConfig = {
-        provider: 'zhipu-ai',
+        provider: 'zai',
         apiKey: 'test-api-key',
       };
 

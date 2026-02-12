@@ -59,8 +59,8 @@ async function testConfigLoading() {
   success('Config loaded successfully');
   info(`Provider: ${config.provider}`);
 
-  if (config.provider !== 'gemini' && config.provider !== 'zhipu-ai') {
-    error(`Expected provider "gemini" or "zhipu-ai", got "${config.provider}"`);
+  if (config.provider !== 'gemini' && config.provider !== 'zai') {
+    error(`Expected provider "gemini" or "zai", got "${config.provider}"`);
     return false;
   }
 

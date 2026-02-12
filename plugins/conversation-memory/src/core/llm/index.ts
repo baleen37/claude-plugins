@@ -22,9 +22,6 @@ export type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js'
 // Classes from gemini-provider.ts
 export { GeminiProvider } from './gemini-provider.js';
 
-// Classes from zhipu-provider.ts
-export { ZhipuAIProvider } from './zhipu-provider.js';
-
 // Classes from zai-provider.ts
 export { ZAIProvider } from './zai-provider.js';
 

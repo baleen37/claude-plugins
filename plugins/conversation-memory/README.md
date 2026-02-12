@@ -223,7 +223,7 @@ The entire conversation will be excluded from indexing when any of these markers
 
 Summarization requires an LLM provider configuration. Create a config file at `~/.config/conversation-memory/config.json`:
 
-**Supported providers:** `gemini`, `zhipu-ai`
+**Supported providers:** `gemini`, `zai`
 
 #### Gemini Configuration
 
@@ -241,30 +241,21 @@ Summarization requires an LLM provider configuration. Create a config file at `~
 2. Create a new API key
 3. Add it to your config.json
 
-#### Zhipu AI Configuration
+#### Z.AI Configuration
 
 ```json
 {
-  "provider": "zhipu-ai",
-  "apiKey": "your-zhipu-ai-api-key",
+  "provider": "zai",
+  "apiKey": "your-zai-api-key",
   "model": "glm-4.7"
 }
 ```
 
-**Getting a Zhipu AI API key:**
-
-1. Visit the [Zhipu AI Open Platform](https://docs.bigmodel.cn/cn/guide/start/quick-start)
-2. Create an account and complete verification
-3. Generate an API key from the dashboard
-4. Add it to your config.json
-
-See [docs/zhipu-ai-setup.md](docs/zhipu-ai-setup.md) for detailed Zhipu AI setup instructions.
-
 **Configuration options:**
 
-- **`provider`**: LLM provider name (`gemini` or `zhipu-ai`)
+- **`provider`**: LLM provider name (`gemini` or `zai`)
 - **`apiKey`**: API key for the provider
-- **`model`**: Optional model name (defaults: `gemini-2.0-flash` for Gemini, `glm-4.7` for Zhipu AI)
+- **`model`**: Optional model name (defaults: `gemini-2.0-flash` for Gemini, `glm-4.7` for Z.AI)
 
 **Note**: If no config file is found, conversations will still be indexed but not summarized.
 You'll see `[Not summarized - no LLM config found]` placeholders instead of summaries.
