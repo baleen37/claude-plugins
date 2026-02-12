@@ -5,26 +5,40 @@
  * and triggering background npm install.
  */
 
-import { existsSync } from 'fs';
+import { checkDependencies, installDependencies } from '../scripts/lib/check-dependencies.mjs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { spawn } from 'child_process';
+import { dirname, resolve, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const pluginRoot = join(__dirname, '..');
-const nodeModules = join(pluginRoot, 'node_modules');
+const CLI_PATH = resolve(__dirname, 'cli-internal.mjs');
 
-if (!existsSync(nodeModules)) {
-  // Start npm install in background, silent
-  spawn('npm', ['install', '--silent', '--no-audit', '--no-fund'], {
-    cwd: pluginRoot,
-    detached: true,
-    stdio: 'ignore',
-    shell: true
-  }).unref();
-  // Silent exit - will work on next run
-  process.exit(0);
+async function main() {
+  const { installed, missing } = checkDependencies();
+
+  if (!installed) {
+    // Install in background, don't block CLI
+    installDependencies(true).catch(() => {
+      // Silent failure - CLI might still work with partial deps
+    });
+  }
+
+  // Run CLI regardless
+  try {
+    await import(CLI_PATH);
+  } catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      console.error('Error: Missing dependencies. Installing now...');
+      console.error('Please run: npm install');
+      if (missing.length > 0) {
+        console.error(`Missing: ${missing.join(', ')}`);
+      }
+      process.exit(1);
+    }
+    throw error;
+  }
 }
 
-// Import actual CLI
-await import('./cli-internal.mjs');
+main().catch((error) => {
+  console.error('CLI failed:', error.message);
+  process.exit(1);
+});
