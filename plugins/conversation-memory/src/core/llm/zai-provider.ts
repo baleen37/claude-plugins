@@ -7,6 +7,7 @@
 
 import type { LLMProvider, LLMOptions, LLMResult, TokenUsage } from './types.js';
 import { logInfo, logError, logDebug } from '../logger.js';
+import { getLLMRateLimiter } from '../ratelimiter.js';
 
 /**
  * Type definition for Z.AI completion request message.
@@ -100,6 +101,9 @@ export class ZAIProvider implements LLMProvider {
    * @throws {Error} If the API call fails
    */
   async complete(prompt: string, options?: LLMOptions): Promise<LLMResult> {
+    // Acquire rate limit token before making API call
+    await getLLMRateLimiter().acquire();
+
     const startTime = Date.now();
 
     logInfo('[ZAIProvider] Starting completion', {

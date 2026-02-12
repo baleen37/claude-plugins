@@ -77,6 +77,43 @@ describe('loadConfig', () => {
       const config = loadConfig();
       expect(config).toEqual(validConfig);
     });
+
+    it('should return LLMConfig with ratelimit settings', () => {
+      const validConfig = {
+        provider: 'gemini',
+        apiKey: 'test-api-key',
+        ratelimit: {
+          embedding: { requestsPerSecond: 10, burstSize: 20 },
+          llm: { requestsPerSecond: 3, burstSize: 6 },
+        },
+      };
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(validConfig);
+
+      const config = loadConfig();
+      expect(config).toEqual(validConfig);
+      expect(config?.ratelimit?.embedding?.requestsPerSecond).toBe(10);
+      expect(config?.ratelimit?.embedding?.burstSize).toBe(20);
+      expect(config?.ratelimit?.llm?.requestsPerSecond).toBe(3);
+      expect(config?.ratelimit?.llm?.burstSize).toBe(6);
+    });
+
+    it('should return LLMConfig with partial ratelimit settings', () => {
+      const validConfig = {
+        provider: 'gemini',
+        apiKey: 'test-api-key',
+        ratelimit: {
+          embedding: { requestsPerSecond: 10 },
+        },
+      };
+      mockExistsSyncReturnValue = true;
+      mockReadFileSyncReturnValue = JSON.stringify(validConfig);
+
+      const config = loadConfig();
+      expect(config).toEqual(validConfig);
+      expect(config?.ratelimit?.embedding?.requestsPerSecond).toBe(10);
+      expect(config?.ratelimit?.llm).toBeUndefined();
+    });
   });
 
   describe('when config file exists but is invalid', () => {

@@ -13,6 +13,7 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 // Track calls to verify mock behavior
 let mockPipelineCalls: Array<{ task: string; model: string; options: unknown }> = [];
 let mockEmbeddingCalls: Array<{ text: string; options: unknown }> = [];
+let mockAcquireCalls = 0;
 
 // Create a mock pipeline function that returns predictable output
 const createMockPipeline = () => {
@@ -47,6 +48,18 @@ vi.mock('@huggingface/transformers', () => {
   };
 });
 
+// Mock ratelimiter module
+vi.mock('./ratelimiter.js', () => {
+  return {
+    getEmbeddingRateLimiter: () => ({
+      acquire: async () => {
+        mockAcquireCalls++;
+        return Promise.resolve();
+      },
+    }),
+  };
+});
+
 describe('embeddings', () => {
   // We'll dynamically import the module in each test or describe block
   // to ensure fresh state after resetModules
@@ -55,6 +68,7 @@ describe('embeddings', () => {
     // Reset all tracking arrays
     mockPipelineCalls = [];
     mockEmbeddingCalls = [];
+    mockAcquireCalls = 0;
     // Create a fresh mock pipeline function for each test
     mockPipelineFn = createMockPipeline();
     // Reset modules to clear the singleton state
@@ -246,6 +260,15 @@ describe('embeddings', () => {
 
       expect(mockEmbeddingCalls[0].text).toBe('title: none | text: Line 1\nLine 2\nLine 3');
     });
+
+    test('calls rate limiter acquire before generating embedding', async () => {
+      const { generateEmbedding } = await import('./embeddings.js');
+
+      await generateEmbedding('test');
+
+      // Rate limiter acquire should have been called
+      expect(mockAcquireCalls).toBe(1);
+    });
   });
 
   describe('generateExchangeEmbedding()', () => {
@@ -384,6 +407,15 @@ describe('embeddings', () => {
       const expected = 'title: none | text: User: User question\n\nAssistant: Assistant answer\n\nTools: Tool1, Tool2';
       expect(mockEmbeddingCalls[0].text).toBe(expected);
     });
+
+    test('triggers rate limiter through generateEmbedding', async () => {
+      const { generateExchangeEmbedding } = await import('./embeddings.js');
+
+      await generateExchangeEmbedding('Question', 'Answer');
+
+      // Rate limiter should be called (via generateEmbedding)
+      expect(mockAcquireCalls).toBe(1);
+    });
   });
 
   describe('integration scenarios', () => {
@@ -399,6 +431,8 @@ describe('embeddings', () => {
       expect(mockPipelineCalls).toHaveLength(1);
       // But embedding should be called 3 times
       expect(mockEmbeddingCalls).toHaveLength(3);
+      // And rate limiter should be called 3 times
+      expect(mockAcquireCalls).toBe(3);
     });
 
     test('generateEmbedding auto-initializes on first call', async () => {
