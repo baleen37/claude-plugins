@@ -12,10 +12,7 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     [ -f "${PLUGIN_DIR}/commands/orchestrate.md" ]
     [ -f "${PLUGIN_DIR}/commands/refactor-clean.md" ]
     [ -f "${PLUGIN_DIR}/commands/research.md" ]
-    [ -f "${PLUGIN_DIR}/commands/sdd.md" ]
     [ -f "${PLUGIN_DIR}/commands/verify.md" ]
-    [ -f "${PLUGIN_DIR}/commands/tdd.md" ]
-    [ -f "${PLUGIN_DIR}/commands/spawn.md" ]
 }
 
 @test "me: code-reviewer agent exists with proper model" {
