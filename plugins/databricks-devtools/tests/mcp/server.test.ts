@@ -1,3 +1,4 @@
+import { decode } from '@toon-format/toon';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeSql, resolveWarehouse } from '../../src/sql/executor.js';
 import {
@@ -16,6 +17,20 @@ vi.mock('../../src/sql/executor.js', () => ({
 
 const mockedExecuteSql = vi.mocked(executeSql);
 const mockedResolveWarehouse = vi.mocked(resolveWarehouse);
+
+type ToolPayload = {
+  profile: string;
+  warehouse_id: string;
+  sql: string;
+  columns: Array<{ name: string; type: string }>;
+  rows: Array<Array<string | null>>;
+  row_count: number;
+  truncated: boolean;
+};
+
+function decodeToolPayload(text: string): ToolPayload {
+  return decode(text) as ToolPayload;
+}
 
 describe('MCP SQL explorer tools', () => {
   beforeEach(() => {
@@ -49,6 +64,21 @@ describe('MCP SQL explorer tools', () => {
 
     expect(result).toContain('profile: alpha');
     expect(() => JSON.parse(result)).toThrow();
+  });
+
+  it('listCatalogsTool preserves semantic fields in TOON payload', async () => {
+    const result = await listCatalogsTool('alpha');
+    const payload = decodeToolPayload(result);
+
+    expect(payload).toMatchObject({
+      profile: 'alpha',
+      warehouse_id: 'wh-123',
+      sql: 'SHOW CATALOGS',
+      row_count: 1,
+      truncated: false,
+    });
+    expect(payload.columns).toEqual([{ name: 'catalog', type: 'STRING' }]);
+    expect(payload.rows).toEqual([['unity']]);
   });
 
   it('listSchemasTool quotes catalog identifier', async () => {
