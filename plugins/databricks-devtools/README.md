@@ -70,6 +70,32 @@ The plugin exposes 6 tools:
 5. `table_metadata(table, profile?)` where `table` is fully qualified
 6. `preview_data(table, limit?, profile?)` where `table` is fully qualified
 
+## Tool output format
+
+MCP tools return **TOON (Token-Oriented Object Notation)** text by default.
+The logical response fields are unchanged:
+- profile
+- warehouse_id
+- sql
+- columns
+- rows
+- row_count
+- truncated
+
+Example:
+
+```toon
+profile: alpha
+warehouse_id: wh-123
+sql: SHOW CATALOGS
+columns[1]{name,type}:
+  catalog,STRING
+rows[1]:
+  - [1]: unity
+row_count: 1
+truncated: false
+```
+
 ## SQL execution behavior
 
 Internally the plugin executes:
