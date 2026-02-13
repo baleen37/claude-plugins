@@ -1,9 +1,3 @@
-/**
- * MCP Server for Databricks DevTools.
- *
- * This server provides tools to interact with Databricks workspaces via the CLI.
- */
-
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -11,108 +5,138 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import { runCommand } from '../cli/runner.js';
-import { parseDatabricksConfig } from '../config/databrickscfg.js';
-import { getDefaultConfigPath } from '../config/profiles.js';
-import type { ProfileConfig } from '../config/types.js';
+import { executeSql, resolveWarehouse, type SqlResult } from '../sql/executor.js';
 
-// ==============
-// Tool Implementations
-// ==============
+const FULLY_QUALIFIED_TABLE_ERROR =
+  'table must be fully qualified as <catalog>.<schema>.<table>';
 
-export async function listProfilesTool(): Promise<string> {
-  const configPath = getDefaultConfigPath();
+function quoteIdentifier(identifier: string): string {
+  return `\`${identifier.replace(/`/g, '``')}\``;
+}
 
-  let profiles: Record<string, ProfileConfig>;
-  try {
-    const config = await parseDatabricksConfig(configPath);
-    profiles = config.profiles;
-  } catch (error) {
-    return JSON.stringify(
-      {
-        profiles: [],
-        message: `Failed to read Databricks config at ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
-      },
-      null,
-      2
-    );
+function parseFullyQualifiedTable(table: string): {
+  catalog: string;
+  schema: string;
+  name: string;
+} {
+  const parts = table
+    .split('.')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+
+  if (parts.length !== 3) {
+    throw new Error(FULLY_QUALIFIED_TABLE_ERROR);
   }
 
-  const profileNames = Object.keys(profiles);
-  const profilesWithValidity: Array<{ name: string; host?: string; valid: boolean }> = [];
+  const [catalog, schema, name] = parts;
+  return { catalog, schema, name };
+}
 
-  for (const name of profileNames) {
-    const profile = profiles[name];
-    let valid = false;
-
-    try {
-      await runCommand(['workspace', 'list', '/'], { profile: name });
-      valid = true;
-    } catch {
-      valid = false;
-    }
-
-    profilesWithValidity.push({
-      name,
-      host: profile.host,
-      valid,
-    });
-  }
-
+function formatSqlToolResponse(
+  profile: string,
+  warehouseId: string,
+  sql: string,
+  result: SqlResult
+): string {
   return JSON.stringify(
     {
-      profiles: profilesWithValidity,
-      count: profilesWithValidity.length,
-      config_path: configPath,
+      profile,
+      warehouse_id: warehouseId,
+      sql,
+      columns: result.columns,
+      rows: result.rows,
+      row_count: result.rowCount,
+      truncated: result.truncated,
     },
     null,
     2
   );
 }
 
-export async function getProfileInfoTool(profile: string): Promise<string> {
-  const configPath = getDefaultConfigPath();
-
-  let profiles: Record<string, ProfileConfig>;
-  try {
-    const config = await parseDatabricksConfig(configPath);
-    profiles = config.profiles;
-  } catch (error) {
-    return JSON.stringify(
-      {
-        error: `Failed to read Databricks config: ${error instanceof Error ? error.message : String(error)}`,
-      },
-      null,
-      2
-    );
-  }
-
-  const profileConfig = profiles[profile];
-
-  if (!profileConfig) {
-    return JSON.stringify(
-      {
-        error: `Profile "${profile}" not found in ${configPath}`,
-        available_profiles: Object.keys(profiles),
-      },
-      null,
-      2
-    );
-  }
-
-  return JSON.stringify(
-    {
-      name: profile,
-      ...profileConfig,
-    },
-    null,
-    2
-  );
+export async function listCatalogsTool(profile?: string): Promise<string> {
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = 'SHOW CATALOGS';
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
 }
 
-// ==============
-// Create MCP Server
-// ==============
+export async function listSchemasTool(catalog: string, profile?: string): Promise<string> {
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = `SHOW SCHEMAS IN ${quoteIdentifier(catalog)}`;
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
+}
+
+export async function listTablesTool(
+  catalog: string,
+  schema: string,
+  profile?: string
+): Promise<string> {
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = `SHOW TABLES IN ${quoteIdentifier(catalog)}.${quoteIdentifier(schema)}`;
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
+}
+
+export async function describeTableTool(table: string, profile?: string): Promise<string> {
+  const { catalog, schema, name } = parseFullyQualifiedTable(table);
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = `DESCRIBE TABLE ${quoteIdentifier(catalog)}.${quoteIdentifier(schema)}.${quoteIdentifier(name)}`;
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
+}
+
+export async function tableMetadataTool(table: string, profile?: string): Promise<string> {
+  const { catalog, schema, name } = parseFullyQualifiedTable(table);
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = `DESCRIBE DETAIL ${quoteIdentifier(catalog)}.${quoteIdentifier(schema)}.${quoteIdentifier(name)}`;
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
+}
+
+export async function previewDataTool(
+  table: string,
+  limit = 10,
+  profile?: string
+): Promise<string> {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+    throw new Error('limit must be an integer between 1 and 1000');
+  }
+
+  const { catalog, schema, name } = parseFullyQualifiedTable(table);
+  const { profile: resolvedProfile, warehouseId } = await resolveWarehouse(profile);
+  const sql = `SELECT * FROM ${quoteIdentifier(catalog)}.${quoteIdentifier(schema)}.${quoteIdentifier(name)} LIMIT ${limit}`;
+  const result = await executeSql(sql, warehouseId, resolvedProfile);
+  return formatSqlToolResponse(resolvedProfile, warehouseId, sql, result);
+}
+
+const listCatalogsArgsSchema = z
+  .object({
+    profile: z.string().min(1).optional(),
+  })
+  .default({});
+
+const listSchemasArgsSchema = z.object({
+  catalog: z.string().min(1),
+  profile: z.string().min(1).optional(),
+});
+
+const listTablesArgsSchema = z.object({
+  catalog: z.string().min(1),
+  schema: z.string().min(1),
+  profile: z.string().min(1).optional(),
+});
+
+const tableArgsSchema = z.object({
+  table: z.string().min(1),
+  profile: z.string().min(1).optional(),
+});
+
+const previewDataArgsSchema = z.object({
+  table: z.string().min(1),
+  limit: z.number().int().min(1).max(1000).optional(),
+  profile: z.string().min(1).optional(),
+});
 
 const server = new Server(
   {
@@ -126,67 +150,152 @@ const server = new Server(
   }
 );
 
-// ==============
-// Register Tools
-// ==============
-
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: 'list_profiles',
-        description: 'List all Databricks profiles from ~/.databrickscfg with validity information.',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          additionalProperties: false,
-        },
-        annotations: {
-          title: 'List Databricks Profiles',
-          readOnlyHint: true,
-          destructiveHint: false,
-          idempotentHint: true,
-          openWorldHint: false,
-        },
-      },
-      {
-        name: 'get_profile_info',
-        description: 'Get detailed configuration information for a specific Databricks profile.',
+        name: 'list_catalogs',
+        description: 'List Unity Catalog catalogs.',
         inputSchema: {
           type: 'object',
           properties: {
             profile: {
               type: 'string',
               minLength: 1,
-              description: 'Databricks profile name to look up',
+              description: 'Databricks profile name from ~/.databrickscfg',
             },
           },
-          required: ['profile'],
           additionalProperties: false,
         },
-        annotations: {
-          title: 'Get Profile Configuration',
-          readOnlyHint: true,
-          destructiveHint: false,
-          idempotentHint: true,
-          openWorldHint: false,
+      },
+      {
+        name: 'list_schemas',
+        description: 'List schemas in a catalog.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            catalog: {
+              type: 'string',
+              minLength: 1,
+              description: 'Catalog name',
+            },
+            profile: {
+              type: 'string',
+              minLength: 1,
+              description: 'Databricks profile name from ~/.databrickscfg',
+            },
+          },
+          required: ['catalog'],
+          additionalProperties: false,
+        },
+      },
+      {
+        name: 'list_tables',
+        description: 'List tables in a catalog schema.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            catalog: {
+              type: 'string',
+              minLength: 1,
+              description: 'Catalog name',
+            },
+            schema: {
+              type: 'string',
+              minLength: 1,
+              description: 'Schema name',
+            },
+            profile: {
+              type: 'string',
+              minLength: 1,
+              description: 'Databricks profile name from ~/.databrickscfg',
+            },
+          },
+          required: ['catalog', 'schema'],
+          additionalProperties: false,
+        },
+      },
+      {
+        name: 'describe_table',
+        description: 'Describe table columns for a fully qualified table name.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            table: {
+              type: 'string',
+              minLength: 1,
+              description: 'Fully qualified table: <catalog>.<schema>.<table>',
+            },
+            profile: {
+              type: 'string',
+              minLength: 1,
+              description: 'Databricks profile name from ~/.databrickscfg',
+            },
+          },
+          required: ['table'],
+          additionalProperties: false,
+        },
+      },
+      {
+        name: 'table_metadata',
+        description: 'Return metadata from DESCRIBE DETAIL for a fully qualified table.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            table: {
+              type: 'string',
+              minLength: 1,
+              description: 'Fully qualified table: <catalog>.<schema>.<table>',
+            },
+            profile: {
+              type: 'string',
+              minLength: 1,
+              description: 'Databricks profile name from ~/.databrickscfg',
+            },
+          },
+          required: ['table'],
+          additionalProperties: false,
+        },
+      },
+      {
+        name: 'preview_data',
+        description: 'Preview table rows with SELECT * LIMIT n.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            table: {
+              type: 'string',
+              minLength: 1,
+              description: 'Fully qualified table: <catalog>.<schema>.<table>',
+            },
+            limit: {
+              type: 'number',
+              minimum: 1,
+              maximum: 1000,
+              description: 'Maximum rows to return (default 10)',
+            },
+            profile: {
+              type: 'string',
+              minLength: 1,
+              description: 'Databricks profile name from ~/.databrickscfg',
+            },
+          },
+          required: ['table'],
+          additionalProperties: false,
         },
       },
     ],
   };
 });
 
-// ==============
-// Handle Tool Calls
-// ==============
-
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const { name, arguments: args } = request.params;
 
     switch (name) {
-      case 'list_profiles': {
-        const result = await listProfilesTool();
+      case 'list_catalogs': {
+        const params = listCatalogsArgsSchema.parse(args);
+        const result = await listCatalogsTool(params.profile);
         return {
           content: [
             {
@@ -197,11 +306,61 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'get_profile_info': {
-        const params = z.object({
-          profile: z.string().min(1),
-        }).parse(args);
-        const result = await getProfileInfoTool(params.profile);
+      case 'list_schemas': {
+        const params = listSchemasArgsSchema.parse(args);
+        const result = await listSchemasTool(params.catalog, params.profile);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result,
+            },
+          ],
+        };
+      }
+
+      case 'list_tables': {
+        const params = listTablesArgsSchema.parse(args);
+        const result = await listTablesTool(params.catalog, params.schema, params.profile);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result,
+            },
+          ],
+        };
+      }
+
+      case 'describe_table': {
+        const params = tableArgsSchema.parse(args);
+        const result = await describeTableTool(params.table, params.profile);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result,
+            },
+          ],
+        };
+      }
+
+      case 'table_metadata': {
+        const params = tableArgsSchema.parse(args);
+        const result = await tableMetadataTool(params.table, params.profile);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result,
+            },
+          ],
+        };
+      }
+
+      case 'preview_data': {
+        const params = previewDataArgsSchema.parse(args);
+        const result = await previewDataTool(params.table, params.limit, params.profile);
         return {
           content: [
             {
@@ -236,10 +395,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// ==============
-// Main Function
-// ==============
-
 async function main() {
   console.error('Databricks DevTools MCP server running via stdio');
 
@@ -247,11 +402,11 @@ async function main() {
   await server.connect(transport);
 }
 
-// ==============
-// Run the Server
-// ==============
+const isMain = (import.meta as ImportMeta & { main?: boolean }).main === true;
 
-main().catch((error) => {
-  console.error('Server error:', error);
-  process.exit(1);
-});
+if (isMain) {
+  main().catch((error) => {
+    console.error('Server error:', error);
+    process.exit(1);
+  });
+}

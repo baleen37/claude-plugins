@@ -3,7 +3,7 @@
   "version": "5.17.5",
   "private": true,
   "type": "module",
-  "description": "Databricks CLI wrapper for workspace management and SQL execution",
+  "description": "Databricks SQL schema explorer for Unity Catalog discovery",
   "scripts": {
     "build": "bun scripts/build.mjs",
     "typecheck": "tsc --noEmit",

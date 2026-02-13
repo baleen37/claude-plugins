@@ -15,6 +15,7 @@ export interface RunOptions {
   input?: string;
   env?: Record<string, string>;
   databricksPath?: string;
+  timeoutMs?: number;
 }
 
 export class DatabricksNotFoundError extends Error {
@@ -81,6 +82,13 @@ export async function runCommand(
 
     const child = spawn(databricksPath, commandArgs, spawnOptions);
 
+    const timeout =
+      options?.timeoutMs && Number.isInteger(options.timeoutMs) && options.timeoutMs > 0
+        ? setTimeout(() => {
+            child.kill('SIGTERM');
+          }, options.timeoutMs)
+        : null;
+
     child.stdout?.on('data', (data: Buffer) => {
       stdout += data.toString();
     });
@@ -95,6 +103,10 @@ export async function runCommand(
     }
 
     child.on('close', (code: number | null) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+
       resolve({
         stdout,
         stderr,
@@ -103,6 +115,10 @@ export async function runCommand(
     });
 
     child.on('error', (error: Error) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+
       reject(new Error(`Failed to spawn databricks process: ${error.message}`));
     });
   });
