@@ -1,460 +1,126 @@
-# Databricks DevTools Plugin
+# Databricks SQL Schema Explorer Plugin
 
-Databricks CLI wrapper plugin for Claude Code enabling workspace management
-and SQL execution.
+Databricks SQL schema exploration plugin for Claude Code.
 
 ## Purpose
 
-This plugin provides Claude Code with direct access to Databricks workspaces through
-the Databricks CLI. It enables workspace management, SQL execution, and
-profile-based
-multi-environment support for data engineering and analytics workflows.
+This plugin is focused on SQL schema exploration through Databricks SQL Statements API.
+It helps you browse Unity Catalog hierarchy, inspect table structure, and preview data.
 
 ## Features
 
-- **Workspace Management**: List workspaces, browse directories, manage notebooks
-  and files
-- **SQL Execution**: Run queries against Databricks SQL warehouses with result
-  streaming
-- **Profile-Based Configuration**: Support for multiple Databricks
-  profiles/environments
-- **CLI Wrapper**: Direct access to Databricks CLI commands through MCP tools
+- **Catalog discovery**: list available Unity Catalog catalogs
+- **Schema discovery**: list schemas within a catalog
+- **Table discovery**: list tables within a schema
+- **Table inspection**: describe table columns and metadata
+- **Data preview**: run `SELECT * ... LIMIT n` against a table
+- **Profile-based execution**: optional profile selection from `~/.databrickscfg`
+- **Automatic warehouse resolution**:
+  - use profile `warehouse_id` when configured
+  - otherwise pick the first running SQL warehouse from `databricks warehouses list`
 
 ## Prerequisites
 
 ### Databricks CLI
 
-This plugin requires the Databricks CLI to be installed and configured on your system.
+This plugin uses the Databricks CLI for authentication and command execution.
 
-**Installation:**
+Install and verify:
 
 ```bash
-# Using Homebrew (macOS/Linux)
 brew install databricks
-
-# Using pip
-pip install databricks-cli
-
-# Or download from GitHub releases
-# https://github.com/databricks/cli/releases
-```
-
-**Verify installation:**
-
-```bash
 databricks --version
 ```
 
-### Configuration File
+### Databricks profile configuration
 
-The plugin reads credentials from `~/.databrickscfg`. Create this file with your
-workspace profiles:
+Create `~/.databrickscfg` with one or more profiles.
 
 ```ini
 [default]
 host = https://your-workspace.cloud.databricks.com
-token = dapi123456789abcdef
-cluster_id = 0123-456789-abcde0
-
-[production]
-host = https://prod-workspace.cloud.databricks.com
-token = dapi987654321fedcba
+token = dapiXXXXXXXX
 warehouse_id = 1234567890abcdef
 
-[staging]
-host = https://staging-workspace.cloud.databricks.com
-token = dapiabcdef123456789
-warehouse_id = 0987654321fedcba
+[alpha]
+host = https://your-workspace.cloud.databricks.com
+token = dapiYYYYYYYY
+# warehouse_id optional - plugin can auto-discover running warehouse
 ```
 
-**Required fields per profile:**
+## Slash command
 
-- `host`: Databricks workspace URL (e.g.,
-  `https://your-workspace.cloud.databricks.com`)
-- `token`: Personal access token (generate from Databricks workspace settings)
-- `cluster_id` OR `warehouse_id`: Cluster for workspace operations,
-  warehouse for SQL
+### `/databricks:explore`
 
-**Generate a personal access token:**
+Single entry point for schema exploration.
 
-1. Open your Databricks workspace
-2. Click Settings -> User Settings
-3. Go to Developer -> Generate new token
-4. Copy the token (starts with `dapi`)
-5. Add it to `~/.databrickscfg`
+- no args: list catalogs
+- `catalog`: list schemas
+- `catalog.schema`: list tables
+- `catalog.schema.table`: describe table, show metadata, preview data
 
-## Installation
+## MCP tools
+
+The plugin exposes 6 tools:
+
+1. `list_catalogs(profile?)`
+2. `list_schemas(catalog, profile?)`
+3. `list_tables(catalog, schema, profile?)`
+4. `describe_table(table, profile?)` where `table` is fully qualified: `catalog.schema.table`
+5. `table_metadata(table, profile?)` where `table` is fully qualified
+6. `preview_data(table, limit?, profile?)` where `table` is fully qualified
+
+## SQL execution behavior
+
+Internally the plugin executes:
+
+- `databricks api post /api/2.0/sql/statements --json <payload>`
+
+Payload includes:
+
+- `statement`: SQL text
+- `warehouse_id`
+- `wait_timeout: "30s"`
+
+Errors from SQL statements are returned from `status.error.message`.
+
+## Build and test
 
 ```bash
 cd plugins/databricks-devtools
-bun install
 bun run build
+bun run typecheck
+bun run test
 ```
 
-The plugin automatically:
-
-1. Creates the MCP server bundle
-2. Registers MCP tools for workspace and SQL operations
-3. Provides slash commands for quick access
-
-## Commands
-
-### `/databricks`
-
-Main command for Databricks workspace operations.
-
-**Usage:**
-
-- `databricks --profile <name>`: Specify profile (default: "default")
-- `databricks workspace ls`: List workspace directory contents
-- `databricks workspace mkdir`: Create directory
-- `databricks notebooks export`: Export notebook
-- `databricks repos list`: List Git repos in workspace
-
-**Examples:**
-
-```bash
-# List workspace root
-/databricks workspace ls /
-
-# List notebooks in a folder
-/databricks workspace ls /Users/your-email@example.com
-
-# Use specific profile
-/databricks --profile production workspace ls /
-```
-
-### `/databricks:sql`
-
-Execute SQL queries against Databricks SQL warehouse.
-
-**Usage:**
-
-- `databricks:sql --profile <name>`: Specify profile with SQL warehouse
-- `databricks:sql "SELECT ..."`: Execute SQL query
-
-**Examples:**
-
-```bash
-# Simple query
-/databricks:sql "SELECT * FROM schema.table LIMIT 10"
-
-# With profile
-/databricks:sql --profile production "SHOW TABLES"
-
-# Complex query
-/databricks:sql "
-  SELECT
-    date_column,
-    COUNT(*) as count
-  FROM analytics.events
-  WHERE date_column >= CURRENT_DATE() - INTERVAL 7 DAYS
-  GROUP BY date_column
-  ORDER BY date_column
-"
-```
-
-## MCP Tools
-
-The plugin exposes the following MCP tools for programmatic access:
-
-### `databricks__execute`
-
-Execute any Databricks CLI command.
-
-**Parameters:**
-
-- `profile` (string, optional): Profile name from ~/.databrickscfg (default: "default")
-- `command` (string, required): Databricks CLI command to execute
-
-**Examples:**
-
-```javascript
-// List workspace
-{
-  profile: "default",
-  command: "workspace ls /"
-}
-
-// Export notebook
-{
-  profile: "production",
-  command: "workspace export /Users/user/Notebook ./output.py"
-}
-
-// List clusters
-{
-  profile: "default",
-  command: "clusters list"
-}
-```
-
-### `databricks__sql_execute`
-
-Execute SQL query against Databricks SQL warehouse.
-
-**Parameters:**
-
-- `profile` (string, optional): Profile name with warehouse_id (default: "default")
-- `query` (string, required): SQL query to execute
-- `warehouse_id` (string, optional): Override warehouse ID from profile
-
-**Examples:**
-
-```javascript
-// Simple query
-{
-  profile: "production",
-  query: "SELECT * FROM users LIMIT 10"
-}
-
-// With warehouse override
-{
-  profile: "default",
-  query: "SHOW TABLES",
-  warehouse_id: "1234567890abcdef"
-}
-```
-
-### `databricks__list_profiles`
-
-List all configured profiles from ~/.databrickscfg.
-
-**Returns:**
-
-Array of profile names with their configuration (host, cluster_id, warehouse_id).
-
-**Example:**
-
-```javascript
-{
-  profiles: [
-    {
-      name: "default",
-      host: "https://dev-workspace.cloud.databricks.com",
-      cluster_id: "0123-456789-abcde0"
-    },
-    {
-      name: "production",
-      host: "https://prod-workspace.cloud.databricks.com",
-      warehouse_id: "1234567890abcdef"
-    }
-  ]
-}
-```
-
-## Profile-to-Branch Mapping
-
-For multi-environment workflows, profiles can map to Git branches:
-
-| Profile     | Environment | Git Branch             | Use Case               |
-|-------------|-------------|------------------------|------------------------|
-| `default`   | Development | `main` / `feat/*`      | Local development      |
-| `staging`   | Staging     | `staging`              | Pre-production testing |
-| `production`| Production  | `main` / `release/*`   | Production workloads   |
-
-**Example workflow:**
-
-```bash
-# Work on feature branch (uses default profile)
-git checkout -b feature/new-dashboard
-
-# Test on staging (uses staging profile)
-/databricks --profile staging workspace ls /
-
-# Run production query (uses production profile)
-/databricks:sql --profile production "
-  SELECT COUNT(*) FROM production.analytics.events
-"
-```
-
-## Usage Examples
-
-### Explore Workspace
-
-```bash
-# List workspace root
-/databricks workspace ls /
-
-# Navigate to user folder
-/databricks workspace ls /Users/your-email@example.com
-
-# Export a notebook
-/databricks workspace export /Users/user/Analysis ./analysis.py
-
-# List clusters
-/databricks clusters list
-```
-
-### SQL Analytics
-
-```bash
-# Show tables
-/databricks:sql "SHOW TABLES IN analytics"
-
-# Run aggregation
-/databricks:sql "
-  SELECT
-    product_category,
-    SUM(revenue) as total_revenue
-  FROM analytics.sales
-  GROUP BY product_category
-  ORDER BY total_revenue DESC
-"
-
-# Get table schema
-/databricks:sql "DESCRIBE TABLE analytics.users"
-```
-
-### Multi-Environment Queries
-
-```bash
-# Compare staging vs production
-/databricks:sql --profile staging "SELECT COUNT(*) FROM events"
-/databricks:sql --profile production "SELECT COUNT(*) FROM events"
-```
-
-## Project Structure
+## Project structure
 
 ```text
 plugins/databricks-devtools/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin metadata
-├── .mcp.json                     # MCP server registration
+│   └── plugin.json
+├── .mcp.json
 ├── commands/
-│   └── databricks.md            # Slash command definitions
+│   └── databricks.explore.md
 ├── skills/
-│   └── databricks-ops/          # Skills for Databricks operations
+│   └── using-databricks-explorer/
+│       └── SKILL.md
 ├── src/
-│   ├── config/                  # Configuration management
-│   │   ├── types.ts             # Type definitions
-│   │   └── databrickscfg.ts     # Config parser
-│   ├── cli/                     # CLI runner modules
-│   │   ├── runner.ts            # Databricks CLI execution
-│   │   └── parser.ts            # Output parsing
+│   ├── cli/
+│   │   ├── runner.ts
+│   │   └── parser.ts
+│   ├── config/
+│   │   ├── databrickscfg.ts
+│   │   ├── profiles.ts
+│   │   └── types.ts
+│   ├── sql/
+│   │   └── executor.ts
 │   └── mcp/
-│       └── server.ts            # MCP server (tools: execute, sql_execute, list_profiles)
-├── dist/
-│   ├── mcp-server.mjs           # Bundled MCP server
-│   └── mcp-wrapper.mjs          # Cross-platform wrapper
-├── scripts/
-│   ├── build.mjs                # esbuild config
-│   └── mcp-server-wrapper.mjs   # Wrapper script
-├── package.json
-├── tsconfig.json
+│       └── server.ts
+├── tests/
+│   ├── cli/
+│   ├── config/
+│   ├── mcp/
+│   └── sql/
 └── README.md
 ```
-
-## Development
-
-### Build
-
-```bash
-bun run build
-```
-
-Bundles `src/mcp/server.ts` → `dist/mcp-server.mjs`
-
-### Type Check
-
-```bash
-bun run typecheck
-```
-
-## Troubleshooting
-
-### Databricks CLI Not Found
-
-**Symptoms:** Error "databricks: command not found"
-
-**Fix:**
-
-1. Verify Databricks CLI installation: `databricks --version`
-2. If not installed, follow the installation instructions above
-3. Ensure the CLI is in your PATH: `which databricks`
-
-### Authentication Errors
-
-**Symptoms:** "Error: Invalid token" or "Error: Authentication failed"
-
-**Fix:**
-
-1. Verify your personal access token is valid in the Databricks workspace
-2. Check that `~/.databrickscfg` has the correct format
-3. Regenerate the token if expired
-
-### Permission Denied (EACCES)
-
-**Symptoms:** Error during dependency installation
-
-**Fix:**
-
-```bash
-sudo chown -R $(whoami) ~/.bun
-```
-
-Note: If using npm, you may also need to fix npm's cache directory:
-
-```bash
-sudo chown -R $(whoami) ~/.npm
-```
-
-### Network Errors
-
-**Symptoms:** ETIMEDOUT, ECONNRESET during installation
-
-**Fix:**
-
-1. Check internet connection
-2. Configure package manager proxy if behind firewall:
-
-```bash
-# If using Bun
-bun config set proxy http://your-proxy:port
-bun config set https-proxy http://your-proxy:port
-
-# If using npm
-npm config set proxy http://your-proxy:port
-npm config set https-proxy http://your-proxy:port
-```
-
-### Manual Installation
-
-If automatic installation fails:
-
-```bash
-cd plugins/databricks-devtools
-bun install
-bun run build
-```
-
-## Architecture Notes
-
-- **CLI Wrapper**: Plugin wraps Databricks CLI (not a native SDK)
-- **Configuration**: Reads from `~/.databrickscfg` (standard Databricks location)
-- **Profile Support**: Multi-environment support through profile selection
-- **Execution**: All commands execute through `databricks` CLI subprocess
-- **Security**: Tokens stored in local config file (never transmitted)
-
-## Dependencies
-
-### Runtime
-
-- `@modelcontextprotocol/sdk`: ^1.0.4 - MCP protocol implementation
-- `zod`: ^3.23.8 - Schema validation
-
-### Build Dependencies
-
-- `typescript`: ^5.3.3
-- `esbuild`: ^0.20.0
-- `@types/node`: ^20.0.0
-
-## References
-
-- [Databricks CLI](https://github.com/databricks/cli)
-- [Databricks REST API](https://docs.databricks.com/dev-tools/api/latest/)
-- [MCP Protocol](https://modelcontextprotocol.io)
-
-## License
-
-MIT
