@@ -38,12 +38,17 @@ describe('MCP SQL explorer tools', () => {
     expect(mockedResolveWarehouse).toHaveBeenCalledWith('alpha');
     expect(mockedExecuteSql).toHaveBeenCalledWith('SHOW CATALOGS', 'wh-123', 'alpha');
 
-    expect(JSON.parse(result)).toMatchObject({
-      profile: 'alpha',
-      warehouse_id: 'wh-123',
-      sql: 'SHOW CATALOGS',
-      row_count: 1,
-    });
+    expect(result).toContain('profile: alpha');
+    expect(result).toContain('warehouse_id: wh-123');
+    expect(result).toContain('sql: SHOW CATALOGS');
+    expect(result).toContain('row_count: 1');
+  });
+
+  it('listCatalogsTool returns TOON text instead of JSON text', async () => {
+    const result = await listCatalogsTool('alpha');
+
+    expect(result).toContain('profile: alpha');
+    expect(() => JSON.parse(result)).toThrow();
   });
 
   it('listSchemasTool quotes catalog identifier', async () => {
