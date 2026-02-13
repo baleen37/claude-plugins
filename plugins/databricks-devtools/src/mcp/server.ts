@@ -4,6 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { encode } from '@toon-format/toon';
 import { z } from 'zod';
 import { executeSql, resolveWarehouse, type SqlResult } from '../sql/executor.js';
 
@@ -38,19 +39,17 @@ function formatSqlToolResponse(
   sql: string,
   result: SqlResult
 ): string {
-  return JSON.stringify(
-    {
-      profile,
-      warehouse_id: warehouseId,
-      sql,
-      columns: result.columns,
-      rows: result.rows,
-      row_count: result.rowCount,
-      truncated: result.truncated,
-    },
-    null,
-    2
-  );
+  const payload = {
+    profile,
+    warehouse_id: warehouseId,
+    sql,
+    columns: result.columns,
+    rows: result.rows,
+    row_count: result.rowCount,
+    truncated: result.truncated,
+  };
+
+  return encode(payload);
 }
 
 export async function listCatalogsTool(profile?: string): Promise<string> {
