@@ -23,6 +23,11 @@ setup() {
   # Should accept explicit base branch
 }
 
+@test "check-conflicts.sh: does not print color escape sequences" {
+  run grep -Eq "\\\\033|RED=|GREEN=|YELLOW=" "$SCRIPT"
+  [ "$status" -ne 0 ]
+}
+
 @test "check-conflicts.sh: errors when no base and gh fails" {
   # Create temp directory (not a git repo)
   TEMP_DIR=$(mktemp -d)
