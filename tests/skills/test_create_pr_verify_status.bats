@@ -1,85 +1,49 @@
 #!/usr/bin/env bats
-# Test suite for create-pr skill's verify-pr-status.sh script
+# Test suite for create-pr skill scripts
 
 load '../helpers/bats_helper'
 
 setup() {
-  export SCRIPT="${BATS_TEST_DIRNAME}/../../plugins/me/skills/create-pr/scripts/verify-pr-status.sh"
+  export VERIFY_SCRIPT="${BATS_TEST_DIRNAME}/../../plugins/me/skills/create-pr/scripts/verify-pr-status.sh"
+  export SYNC_SCRIPT="${BATS_TEST_DIRNAME}/../../plugins/me/skills/create-pr/scripts/sync-with-base.sh"
 }
 
-# Test: Script works without base branch argument when gh available
-@test "verify-pr-status.sh works without base argument when gh available" {
-  skip "Requires gh CLI and git repository with PR"
-  # Script should use gh to get default branch
-}
-
-# Test: Script works with explicit base branch
-@test "verify-pr-status.sh works with explicit base branch" {
-  skip "Requires gh CLI and git repository with PR"
-  run "$SCRIPT" main
-  # Should accept explicit base branch
-}
-
-# Test: Script errors when no base and gh fails
-@test "verify-pr-status.sh errors when no base and gh fails" {
-  skip "Requires environment without gh CLI"
-  # Should error appropriately when gh fails
-}
-
-# Test: Script is executable
 @test "verify-pr-status.sh is executable" {
-  [ -x "$SCRIPT" ]
+  [ -x "$VERIFY_SCRIPT" ]
 }
 
-# Test: Script uses set -euo pipefail
 @test "verify-pr-status.sh uses strict error handling" {
-  run grep -q "set -euo pipefail" "$SCRIPT"
-  [ $status -eq 0 ]
+  run grep -q "set -euo pipefail" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
 }
 
-# Test: Script exit codes are documented
 @test "verify-pr-status.sh documents exit codes" {
-  run grep -A 3 "Exit codes:" "$SCRIPT"
-  [ $status -eq 0 ]
+  run grep -A 3 "Exit codes:" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
   [[ "$output" == *"0 - PR is merge-ready"* ]]
-  [[ "$output" == *"1 - Error"* ]]
+  [[ "$output" == *"1 - Action required"* ]]
   [[ "$output" == *"2 - Pending"* ]]
 }
 
-# Test: Script checks required CI checks
 @test "verify-pr-status.sh checks required CI status" {
-  run grep -q "isRequired==true" "$SCRIPT"
-  [ $status -eq 0 ]
+  run grep -q "statusCheckRollup" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
+  run grep -q "isRequired==true" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
 }
 
-# Test: Script handles BEHIND with retry
-@test "verify-pr-status.sh has retry logic for BEHIND" {
-  run grep -q "MAX_RETRIES=3" "$SCRIPT"
-  [ $status -eq 0 ]
-  run grep -q "RETRY_COUNT" "$SCRIPT"
-  [ $status -eq 0 ]
+@test "verify-pr-status.sh handles BEHIND status without auto-merge" {
+  run grep -q "BEHIND)" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
+  run grep -q "sync-with-base.sh" "$VERIFY_SCRIPT"
+  [ "$status" -eq 0 ]
 }
 
-# Test: Script lists conflict files
-@test "verify-pr-status.sh lists conflict files on DIRTY" {
-  run grep -q "git diff --name-only --diff-filter=U" "$SCRIPT"
-  [ $status -eq 0 ]
+@test "verify-pr-status.sh is read-only" {
+  run grep -Eq "^[[:space:]]*git[[:space:]]+(merge|push)\\b" "$VERIFY_SCRIPT"
+  [ "$status" -ne 0 ]
 }
 
-# Mock test: Simulate CLEAN status with passing CI
-@test "verify-pr-status.sh exit 0 on CLEAN with passing CI" {
-  skip "Requires gh CLI mocking"
-  # TODO: Implement with stub
-}
-
-# Mock test: Simulate BEHIND status
-@test "verify-pr-status.sh retries on BEHIND" {
-  skip "Requires gh CLI mocking"
-  # TODO: Implement with stub
-}
-
-# Mock test: Simulate CI failures
-@test "verify-pr-status.sh exit 1 on CI failures" {
-  skip "Requires gh CLI mocking"
-  # TODO: Implement with stub
+@test "sync-with-base.sh exists and is executable" {
+  [ -x "$SYNC_SCRIPT" ]
 }

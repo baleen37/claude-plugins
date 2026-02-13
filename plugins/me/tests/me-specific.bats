@@ -26,6 +26,7 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     [ -f "${PLUGIN_DIR}/skills/create-pr/SKILL.md" ]
     [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh" ]
     [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
+    [ -f "${PLUGIN_DIR}/skills/create-pr/scripts/sync-with-base.sh" ]
 }
 
 @test "me: create-pr skill has proper frontmatter" {
@@ -38,6 +39,7 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
 @test "me: create-pr scripts are executable" {
     [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/check-conflicts.sh" ]
     [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/verify-pr-status.sh" ]
+    [ -x "${PLUGIN_DIR}/skills/create-pr/scripts/sync-with-base.sh" ]
 }
 
 @test "me: create-pr check-conflicts.sh validates git repo" {
@@ -52,5 +54,5 @@ PLUGIN_DIR="${PROJECT_ROOT}/plugins/me"
     grep -q "DIRTY)" "$script"
     grep -q "statusCheckRollup" "$script"
     grep -q "isRequired" "$script"
-    grep -q "MAX_RETRIES" "$script"
+    grep -q "BLOCKED|UNSTABLE" "$script"
 }

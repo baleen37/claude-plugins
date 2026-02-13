@@ -7,119 +7,64 @@ description: Use when the user asks to "create a PR", "create pull request", "op
 
 ## Overview
 
-Complete git workflow with verification at every transition. Prevents broken PRs, wrong target branches, and merge conflicts.
+Use this for full PR flow: pre-flight → commit → conflict check → push → PR creation → verify.
+
+Keep verification read-only. Run sync only when verify reports `BEHIND`.
 
 ## When to Use
 
-User asks for PR creation OR requests commit → push → PR workflow.
+- User asks to create/open/submit a PR
+- User asks for commit → push → PR workflow
 
-## Quick Reference
-
-| Step | Command | Purpose |
-|------|---------|---------|
-| Pre-flight | `git status && git branch --show-current` | Check branch, block main/master, verify changes |
-| Commit | `git add <files> && git commit -m "type(scope): description"` | Stage specific files only |
-| Conflict check | `${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/check-conflicts.sh "$BASE"` | Verify clean merge BEFORE pushing |
-| Push | `git push -u origin HEAD` | Push to remote |
-| Create PR | `gh pr create --base "$BASE" --title "..." --body "..."` | Create with correct target branch |
-| Verify | `${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/verify-pr-status.sh "$BASE"` | Confirm merge-ready (CLEAN + CI passed) |
-
-## Red Flags - STOP
-
-**Critical mistakes that break the workflow:**
-
-- Hardcoding `--base main` → breaks when default branch changes (omit `--base` instead)
-- Skip conflict check → pushes broken PR, breaks remote
-- Stop at PR creation → not verified merge-ready
-- `git add` without `git status` → adds unintended files
-- Proceed from main/master → violates branch protection
-- **No changes to commit** → inform user, don't proceed
-
-**Violating the letter of the rules is violating the spirit of the rules.**
-
-## Common Mistakes
-
-| Mistake | Why It's Wrong | Fix |
-|---------|----------------|-----|
-| Using `git add -A` | Stages untracked files (secrets, temps) | Always `git status` first, add specific files |
-| Hardcoding `--base main` | Wrong target branch | Omit `--base` - `gh pr create` uses default branch automatically |
-| Skipping verify script | PR may be DIRTY, BEHIND, or CI-failing | Always run verify-pr-status.sh after creation |
-| Pushing to main/master | Violates protection rules | Block if `git branch --show-current` shows main/master |
-
-## Implementation
-
-### Pre-flight
+## Minimal Workflow (/writing-skills)
 
 ```bash
-# Check current state
+# 1) pre-flight
 git status
-git log --oneline -5
 git branch --show-current
+git log --oneline -5
 
-# Block if on main/master
-# Block if no changes (working tree clean)
-```
-
-### Commit
-
-```bash
-# Stage specific files only (never -A)
+# 2) commit
 git add <specific-files>
-git commit -m "type(scope): description"
-```
+git commit -m "type(scope): summary"
 
-### Conflict Check (REQUIRED)
-
-```bash
+# 3) conflict check (read-only)
 "${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/check-conflicts.sh"
-```
 
-Exits with:
-- `0` - No conflicts, safe to proceed
-- `1` - Conflicts detected, manual resolution required
-- `2` - Error (missing branch, git errors)
-
-### Push
-
-```bash
+# 4) push
 git push -u origin HEAD
-```
 
-### Create PR
+# 5) create PR (do not hardcode --base main)
+gh pr create --title "$(git log -1 --pretty=%s)" --body "<summary, details, tests>"
 
-```bash
-gh pr create --title "$(git log -1 --pretty=%s)" --body "<comprehensive description>"
-```
-
-`gh pr create` automatically uses the repository's default branch as base.
-
-**PR body must include:**
-- Summary of changes
-- Technical details
-- Testing approach
-- Breaking changes (if any)
-
-Check `.github/PULL_REQUEST_TEMPLATE.md` for project-specific format.
-
-### Verify Merge-Ready (CRITICAL)
-
-```bash
+# 6) verify (read-only)
 "${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/verify-pr-status.sh"
 ```
 
-Handles:
-- **CLEAN** + CI passed → merge-ready, exit 0
-- **BEHIND** → auto-update branch, max 3 retries
-- **DIRTY** → conflicts detected, resolution steps provided
-- **BLOCKED/UNSTABLE** → CI still running or failed, exit 2
-- **CI failures** → shows failed required checks, exit 1
+## Status Handling
 
-## Common Rationalizations
+- verify exit `0`: merge-ready (`CLEAN` + required checks passed)
+- verify exit `1`: action required (`BEHIND`, `DIRTY`, failed checks, unknown)
+- verify exit `2`: pending (`BLOCKED`, `UNSTABLE`, checks running)
 
-| Excuse | Reality |
-|--------|---------|
-| "Conflict check takes too long" | 5 seconds now vs hours of conflict resolution later |
-| "I know the default branch is main" | Hardcoding breaks when default changes |
-| "PR creation is enough" | Unverified PRs break CI, waste reviewer time |
-| "I'll check status manually" | You won't. Script catches BEHIND/DIRTY automatically |
-| "Small changes don't need verification" | Small changes break production too |
+When `BEHIND`:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/sync-with-base.sh"
+"${CLAUDE_PLUGIN_ROOT}/skills/create-pr/scripts/verify-pr-status.sh"
+```
+
+## Stop Conditions
+
+- On `main`/`master`
+- No changes to commit
+- Conflict check failed
+- Required CI failed
+- State-changing follow-up not approved by user
+
+## PR Body Minimum
+
+- Summary
+- Technical details
+- Test evidence
+- Breaking changes (if any)
