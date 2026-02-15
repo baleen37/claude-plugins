@@ -4,7 +4,7 @@
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs'
-import { join, dirname, relative } from 'path'
+import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 // Get the current file path and resolve project root
@@ -183,9 +183,16 @@ export function validatePluginManifestFields(manifest: PluginManifest, path: str
 
 /**
  * Get all plugin manifest paths
+ * Includes both root canonical plugin and plugins directory plugins.
  */
 export function getAllPluginManifests(): string[] {
   const manifests: string[] = []
+
+  // Check for root canonical plugin
+  const rootManifestPath = join(PROJECT_ROOT, '.claude-plugin', 'plugin.json')
+  if (existsSync(rootManifestPath)) {
+    manifests.push(rootManifestPath)
+  }
 
   try {
     const plugins = readdirSync(PLUGINS_DIR, { withFileTypes: true })
@@ -200,7 +207,6 @@ export function getAllPluginManifests(): string[] {
     }
   } catch (error) {
     // Plugins directory might not exist
-    return []
   }
 
   return manifests
@@ -388,25 +394,81 @@ export function getAllPluginDirectories(): string[] {
 
 /**
  * Check if all plugins are listed in marketplace.json
+ * Supports both root canonical plugin (source: "./") and plugins directory plugins (source: "./plugins/<name>")
  */
 export function validateMarketplaceIncludesAllPlugins(
   marketplace: MarketplaceManifest,
   marketplacePath: string
 ): void {
   const pluginDirs = getAllPluginDirectories()
-  const marketplacePlugins = marketplace.plugins
-    .map((p) => {
-      // Extract plugin name from source path like "./plugins/git-guard"
-      const match = p.source.match(/^\.\/plugins\/([^/]+)$/)
-      return match ? match[1] : null
-    })
-    .filter((name): name is string => name !== null)
+
+  // Extract plugin names from marketplace - support both "./" and "./plugins/<name>" formats
+  const marketplacePluginNames = new Set<string>()
+
+  for (const p of marketplace.plugins) {
+    if (p.name) {
+      // Use explicit name if available
+      marketplacePluginNames.add(p.name)
+    } else {
+      // Fallback: extract from source path
+      // "./" means root plugin, "./plugins/<name>" means plugins directory
+      if (p.source === './') {
+        // Root plugin - need to read its name from plugin.json
+        const rootManifestPath = join(PROJECT_ROOT, '.claude-plugin', 'plugin.json')
+        if (existsSync(rootManifestPath)) {
+          try {
+            const manifest = validateJson<PluginManifest>(rootManifestPath)
+            if (manifest.name) {
+              marketplacePluginNames.add(manifest.name)
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      } else {
+        // Extract from "./plugins/<name>" format
+        const match = p.source.match(/^\.\/plugins\/([^/]+)$/)
+        if (match) {
+          marketplacePluginNames.add(match[1])
+        }
+      }
+    }
+  }
+
+  // Check for root canonical plugin
+  const rootPluginJsonPath = join(PROJECT_ROOT, '.claude-plugin', 'plugin.json')
+  if (existsSync(rootPluginJsonPath)) {
+    try {
+      const rootManifest = validateJson<PluginManifest>(rootPluginJsonPath)
+      if (rootManifest.name && !marketplacePluginNames.has(rootManifest.name)) {
+        throw new Error(
+          `Root plugin '${rootManifest.name}' missing from ${marketplacePath}`
+        )
+      }
+    } catch (error) {
+      // Re-throw if it's our validation error
+      if (error instanceof Error && error.message.includes('missing from')) {
+        throw error
+      }
+      // Ignore other parse errors
+    }
+  }
 
   const missingPlugins: string[] = []
 
   for (const pluginDir of pluginDirs) {
-    if (!marketplacePlugins.includes(pluginDir)) {
-      missingPlugins.push(pluginDir)
+    // Get the actual plugin name from its manifest
+    const manifestPath = join(PLUGINS_DIR, pluginDir, '.claude-plugin', 'plugin.json')
+    try {
+      const manifest = validateJson<PluginManifest>(manifestPath)
+      if (manifest.name && !marketplacePluginNames.has(manifest.name)) {
+        missingPlugins.push(manifest.name)
+      }
+    } catch {
+      // Fallback to directory name if manifest is invalid
+      if (!marketplacePluginNames.has(pluginDir)) {
+        missingPlugins.push(pluginDir)
+      }
     }
   }
 
