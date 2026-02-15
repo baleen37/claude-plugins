@@ -24,7 +24,7 @@
         "databricks",
         "mcp"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "git-guard",
@@ -38,7 +38,7 @@
         "pr",
         "security"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-bash",
@@ -51,7 +51,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-typescript",
@@ -65,7 +65,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-python",
@@ -78,7 +78,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-go",
@@ -91,7 +91,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-kotlin",
@@ -104,7 +104,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-lua",
@@ -117,7 +117,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "lsp-nix",
@@ -130,7 +130,7 @@
         "autocomplete",
         "diagnostics"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "handoff",
@@ -143,7 +143,7 @@
         "context",
         "pickup"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "databricks-devtools",
@@ -157,7 +157,7 @@
         "mcp",
         "cli"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     },
     {
       "name": "jira",
@@ -172,7 +172,7 @@
         "mcp",
         "project-management"
       ],
-      "version": "5.23.4"
+      "version": "5.23.5"
     }
   ]
 }
