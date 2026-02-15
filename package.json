@@ -1,7 +1,7 @@
 {
-  "name": "claude-plugins",
+  "name": "everything-agent",
   "version": "5.5.0",
-  "description": "Baleen Claude Plugins - Claude Code plugin collection - Testing semantic-release workflow",
+  "description": "Everything Agent - AI coding assistant toolkit (Claude Code, OpenCode, and more)",
   "private": true,
   "type": "module",
   "workspaces": [
