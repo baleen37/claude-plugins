@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# run-all-tests.sh: Run all tests (root + plugins) and collect failures
+# run-all-tests.sh: Run all tests for consolidated plugin structure
 #
 # This script runs all tests in the project:
 # 1. Root tests in tests/
-# 2. Plugin tests in plugins/*/tests/
-# 3. All tests run sequentially (no parallel execution)
+# 2. Consolidated plugin structure tests
 #
 # Exit code: 0 if all tests pass, 1 if any test fails
 
@@ -22,7 +21,6 @@ NC='\033[0m' # No Color
 
 # Track failures
 FAILED_TESTS=()
-FAILED_PLUGINS=()
 
 # Function to run bats tests and track failures
 run_tests() {
@@ -43,42 +41,32 @@ run_tests() {
     fi
 }
 
-# Function to run plugin tests sequentially
-run_plugin_tests() {
-    local plugin_dir="$1"
-    local plugin_name
-    plugin_name=$(basename "${plugin_dir}")
+# Function to run consolidated structure tests
+run_consolidated_tests() {
+    echo "========================================"
+    echo "Running consolidated plugin structure tests..."
+    echo "========================================"
 
-    if [ -d "${plugin_dir}tests" ]; then
-        echo "========================================"
-        echo "Running plugin tests: ${plugin_name}"
-        echo "========================================"
-
-        if bats "${plugin_dir}tests"; then
-            echo -e "${GREEN}✓ ${plugin_name} tests passed${NC}"
-        else
-            echo -e "${RED}✗ ${plugin_name} tests failed${NC}"
-            FAILED_TESTS+=("${plugin_name}")
-            FAILED_PLUGINS+=("${plugin_name}")
-            return 1
+    # Run tests for each subdirectory in tests/
+    local test_dirs=("integration" "skills" "performance" "me" "jira" "git-guard")
+    
+    for dir in "${test_dirs[@]}"; do
+        if [ -d "${SCRIPT_DIR}/${dir}" ]; then
+            run_tests "${SCRIPT_DIR}/${dir}" "${dir} tests"
         fi
-    fi
+    done
 }
 
 # Main execution
 main() {
-    echo -e "${YELLOW}Running all tests...${NC}"
+    echo -e "${YELLOW}Running all tests for consolidated plugin structure...${NC}"
     echo ""
 
     # 1. Run root tests
     run_tests "${SCRIPT_DIR}" "Root tests"
 
-    # 2. Run plugin tests sequentially
-    for plugin_dir in "${PROJECT_ROOT}"/plugins/*/; do
-        if [ -d "${plugin_dir}" ]; then
-            run_plugin_tests "${plugin_dir}"
-        fi
-    done
+    # 2. Run consolidated structure tests
+    run_consolidated_tests
 
     # 3. Report results
     echo ""
@@ -94,8 +82,6 @@ main() {
         for failed_test in "${FAILED_TESTS[@]}"; do
             echo "  - ${failed_test}"
         done
-        echo ""
-        echo -e "${RED}Failed plugins: ${FAILED_PLUGINS[*]:-None}${NC}"
         exit 1
     fi
 }

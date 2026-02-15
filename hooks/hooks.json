@@ -1,0 +1,29 @@
+{
+  "$schema": "../schemas/hooks-schema.json",
+  "description": "Consolidated hooks for everything-agent - git-guard and handoff",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash:git",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/commit-guard.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

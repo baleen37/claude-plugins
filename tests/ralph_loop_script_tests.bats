@@ -5,8 +5,8 @@ load helpers/bats_helper
 
 setup() {
   # Get script paths
-  RALPH_SCRIPT="${PROJECT_ROOT}/plugins/ralph-loop/scripts/ralph.sh"
-  PROMPT_TEMPLATE="${PROJECT_ROOT}/plugins/ralph-loop/scripts/prompt.md"
+  RALPH_SCRIPT="${PROJECT_ROOT}/scripts/ralph/ralph.sh"
+  PROMPT_TEMPLATE="${PROJECT_ROOT}/scripts/ralph/prompt.md"
 
   # Create temp directory for test files
   TEST_TEMP_DIR=$(mktemp -d -t ralph-test.XXXXXX)

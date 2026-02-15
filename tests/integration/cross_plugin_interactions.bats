@@ -1,61 +1,34 @@
 #!/usr/bin/env bats
-# Cross-Plugin Integration Tests
-# Tests interactions between plugins and shared resources
+# Integration Tests for Consolidated Plugin Structure
+# Tests for component interactions and consistency in single plugin structure
 
-load helpers/bats_helper
+load ../helpers/bats_helper
 
 @test "plugins have unique hook event types" {
-    # Check that plugins don't conflict on hook types
-    declare -A hook_events
+    # Check hooks.json in consolidated structure
+    local hooks_file="${PROJECT_ROOT}/hooks/hooks.json"
 
-    for hooks_file in "${PROJECT_ROOT}"/plugins/*/hooks/hooks.json; do
-        if [ -f "$hooks_file" ]; then
-            local plugin_name
-            plugin_name=$(echo "$hooks_file" | sed -E 's|.*/plugins/([^/]+)/.*|\1|')
-
-            # Get event types from hooks.json
-            while IFS= read -r event; do
-                if [ -n "$event" ]; then
-                    local existing_plugin="${hook_events[$event]:-}"
-                    if [ -n "$existing_plugin" ] && [ "$existing_plugin" != "$plugin_name" ]; then
-                        echo "Warning: Event $event used by both $existing_plugin and $plugin_name"
-                        # This is actually OK - multiple plugins can use same events
-                    fi
-                    hook_events["$event"]="$plugin_name"
-                fi
-            done < <($JQ_BIN -r '.hooks | keys[]' "$hooks_file" 2>/dev/null)
-        fi
-    done
-
-    true  # Just checking, no assertion needed
+    if [ -f "$hooks_file" ]; then
+        # Just verify it's valid JSON with hooks structure
+        $JQ_BIN -e '.hooks' "$hooks_file" >/dev/null 2>&1
+    fi
 }
 
 @test "all plugin manifests have unique names" {
-    declare -A plugin_names
+    # In consolidated structure, there's only one plugin.json
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_json in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
-        if [ -f "$plugin_json" ]; then
-            local name
-            name=$($JQ_BIN -r '.name' "$plugin_json")
-
-            if [ -n "${plugin_names[$name]:-}" ]; then
-                echo "Error: Duplicate plugin name '$name'"
-                echo "  Existing: ${plugin_names[$name]}"
-                echo "  Duplicate: $plugin_json"
-                return 1
-            fi
-
-            plugin_names["$name"]="$plugin_json"
-        fi
-    done
-
-    true
+    if [ -f "$plugin_json" ]; then
+        local name
+        name=$($JQ_BIN -r '.name' "$plugin_json")
+        [ -n "$name" ]
+    fi
 }
 
 @test "plugins with skills have valid SKILL.md structure" {
     local found_skills=0
 
-    for skill_file in "${PROJECT_ROOT}"/plugins/*/skills/*/SKILL.md; do
+    for skill_file in "${PROJECT_ROOT}"/skills/*/SKILL.md; do
         if [ -f "$skill_file" ]; then
             found_skills=$((found_skills + 1))
 
@@ -73,6 +46,11 @@ load helpers/bats_helper
 
 @test "marketplace plugins match actual plugin directories" {
     local marketplace_json="${PROJECT_ROOT}/.claude-plugin/marketplace.json"
+
+    if [ ! -f "$marketplace_json" ]; then
+        skip "marketplace.json not present in consolidated structure"
+    fi
+
     local found_mismatch=0
 
     while IFS= read -r source; do
@@ -92,58 +70,67 @@ load helpers/bats_helper
 }
 
 @test "hooks use portable paths consistently" {
+    local hooks_file="${PROJECT_ROOT}/hooks/hooks.json"
     local found_hardcoded=0
 
-    for hooks_file in "${PROJECT_ROOT}"/plugins/*/hooks/hooks.json; do
-        if [ -f "$hooks_file" ]; then
-            # Check for hardcoded absolute paths in command hooks
-            if grep -qE '"/(Users|home|var)/' "$hooks_file" 2>/dev/null; then
-                echo "Found hardcoded path in: $hooks_file"
-                found_hardcoded=$((found_hardcoded + 1))
-            fi
+    if [ -f "$hooks_file" ]; then
+        # Check for hardcoded absolute paths in command hooks
+        if grep -qE '"/(Users|home|var)/' "$hooks_file" 2>/dev/null; then
+            echo "Found hardcoded path in: $hooks_file"
+            grep -E '"/(Users|home|var)/' "$hooks_file"
+            found_hardcoded=1
         fi
-    done
+    fi
 
     assert_eq "$found_hardcoded" "0" "Hooks should use portable paths"
 }
 
 @test "plugin commands follow naming conventions" {
-    local found_invalid=0
-    local found_exemptions=0
+    local invalid_count=0
 
-    for command_file in "${PROJECT_ROOT}"/plugins/*/commands/*.md; do
+    for command_file in "${PROJECT_ROOT}"/commands/*.md; do
         if [ -f "$command_file" ]; then
-            local command_name
-            command_name=$(basename "$command_file" .md)
+            local filename
+            filename=$(basename "$command_file")
 
-            # Skip CLAUDE.md files
-            [[ "$command_name" == "CLAUDE" ]] && continue
-
-            # Command names should generally be lowercase with hyphens
-            # But we allow some exemptions (e.g., databricks.sql for SQL commands)
-            if ! is_valid_plugin_name "$command_name"; then
-                # Allow dots in command names (e.g., for language-specific commands)
-                if [[ "$command_name" =~ ^[a-z0-9.-]+$ ]]; then
-                    echo "Exempt command name: $command_name"
-                    found_exemptions=$((found_exemptions + 1))
-                else
-                    echo "Invalid command name: $command_name"
-                    found_invalid=$((found_invalid + 1))
-                fi
+            # Commands should be lowercase with hyphens or dots (for namespaced commands like databricks.explore.md)
+            if ! [[ "$filename" =~ ^[a-z][a-z0-9.-]*\.md$ ]]; then
+                echo "Invalid command filename: $filename"
+                invalid_count=$((invalid_count + 1))
             fi
         fi
     done
 
-    assert_eq "$found_invalid" "0" "All command names should be valid or exempt"
+    assert_eq "$invalid_count" "0" "All commands should follow naming conventions"
 }
 
 @test "plugin agents have valid frontmatter" {
     local found_agents=0
 
-    for agent_file in "${PROJECT_ROOT}"/plugins/*/agents/*.md; do
+    # Check agents in the top-level agents/ directory
+    for agent_file in "${PROJECT_ROOT}"/agents/*.md; do
         if [ -f "$agent_file" ]; then
             # Skip CLAUDE.md files
             [[ "$(basename "$agent_file")" == "CLAUDE.md" ]] && continue
+
+            found_agents=$((found_agents + 1))
+
+            # Verify frontmatter delimiter
+            has_frontmatter_delimiter "$agent_file"
+
+            # Verify required fields
+            has_frontmatter_field "$agent_file" "name"
+            has_frontmatter_field "$agent_file" "description"
+            has_frontmatter_field "$agent_file" "model"
+        fi
+    done
+
+    # Also check subdirectories like agents/ralph/
+    for agent_file in "${PROJECT_ROOT}"/agents/*/*.md; do
+        if [ -f "$agent_file" ]; then
+            # Skip CLAUDE.md files and non-.md files
+            [[ "$(basename "$agent_file")" == "CLAUDE.md" ]] && continue
+            [[ "$agent_file" == *.md ]] || continue
 
             found_agents=$((found_agents + 1))
 
@@ -161,61 +148,34 @@ load helpers/bats_helper
 }
 
 @test "all plugins have valid license field" {
-    local missing_license=0
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_json in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
-        if [ -f "$plugin_json" ]; then
-            if ! $JQ_BIN -e '.license' "$plugin_json" &>/dev/null; then
-                local name
-                name=$($JQ_BIN -r '.name' "$plugin_json")
-                echo "Plugin missing license: $name"
-                missing_license=$((missing_license + 1))
-            fi
+    if [ -f "$plugin_json" ]; then
+        if ! $JQ_BIN -e '.license' "$plugin_json" &>/dev/null; then
+            skip "License field is optional"
         fi
-    done
-
-    # It's OK if some plugins don't have license (it's optional)
-    # Just report the count
-    echo "Plugins without license field: $missing_license"
-    true
+    fi
 }
 
 @test "plugin descriptions are not empty" {
-    local empty_count=0
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_json in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
-        if [ -f "$plugin_json" ]; then
-            local description
-            description=$($JQ_BIN -r '.description' "$plugin_json")
+    if [ -f "$plugin_json" ]; then
+        local description
+        description=$($JQ_BIN -r '.description' "$plugin_json")
 
-            if [ -z "$description" ] || [ "$description" = "null" ]; then
-                local name
-                name=$($JQ_BIN -r '.name' "$plugin_json")
-                echo "Plugin with empty description: $name"
-                empty_count=$((empty_count + 1))
-            fi
-        fi
-    done
-
-    assert_eq "$empty_count" "0" "All plugins should have descriptions"
+        [ -n "$description" ]
+        [ "$description" != "null" ]
+    fi
 }
 
 @test "plugin versions are valid semantic versions" {
-    local invalid_count=0
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_json in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
-        if [ -f "$plugin_json" ]; then
-            local version
-            version=$($JQ_BIN -r '.version' "$plugin_json")
+    if [ -f "$plugin_json" ]; then
+        local version
+        version=$($JQ_BIN -r '.version' "$plugin_json")
 
-            if ! is_valid_semver "$version"; then
-                local name
-                name=$($JQ_BIN -r '.name' "$plugin_json")
-                echo "Plugin with invalid version: $name ($version)"
-                invalid_count=$((invalid_count + 1))
-            fi
-        fi
-    done
-
-    assert_eq "$invalid_count" "0" "All plugin versions should be valid semver"
+        is_valid_semver "$version"
+    fi
 }

@@ -1,122 +1,53 @@
 #!/usr/bin/env bats
 # Integration Test: Plugin Loading
-# Tests that all plugins load successfully without conflicts
+# Tests that the consolidated plugin structure is valid
 
-load helpers/bats_helper
+load ../helpers/bats_helper
 
-@test "all plugins have valid plugin.json files" {
-    local plugin_count=0
-    local valid_count=0
+@test "main plugin.json file is valid" {
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_dir in "${PROJECT_ROOT}"/plugins/*/; do
-        if [ -d "$plugin_dir" ]; then
-            plugin_count=$((plugin_count + 1))
-            local plugin_json="${plugin_dir}.claude-plugin/plugin.json"
-
-            if [ -f "$plugin_json" ]; then
-                if validate_json "$plugin_json" 2>/dev/null; then
-                    valid_count=$((valid_count + 1))
-                fi
-            fi
-        fi
-    done
-
-    assert_gt "$valid_count" "0" "At least one plugin should be valid"
-    assert_eq "$valid_count" "$plugin_count" "All plugins should have valid plugin.json"
+    assert_file_exists "$plugin_json" "Main plugin.json should exist"
+    validate_json "$plugin_json"
 }
 
-@test "all plugin names are unique" {
-    declare -A seen_names
+@test "plugin name is unique and valid" {
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_dir in "${PROJECT_ROOT}"/plugins/*/; do
-        if [ -d "$plugin_dir" ]; then
-            local plugin_json="${plugin_dir}.claude-plugin/plugin.json"
+    local name
+    name=$(json_get "$plugin_json" "name")
 
-            if [ -f "$plugin_json" ]; then
-                local name
-                name=$(json_get "$plugin_json" "name")
-
-                if [ -n "${seen_names[$name]:-}" ]; then
-                    echo "Duplicate plugin name found: $name" >&2
-                    echo "  Existing: ${seen_names[$name]}" >&2
-                    echo "  Duplicate: $plugin_dir" >&2
-                    return 1
-                fi
-
-                seen_names[$name]="$plugin_dir"
-            fi
-        fi
-    done
-
-    true
+    [ -n "$name" ]
+    is_valid_plugin_name "$name"
 }
 
-@test "marketplace.json includes all plugins" {
-    local marketplace_json="${PROJECT_ROOT}/.claude-plugin/marketplace.json"
-    local plugins_in_marketplace
-
-    plugins_in_marketplace=$($JQ_BIN -r '.plugins[].source' "$marketplace_json" 2>/dev/null | wc -l | tr -d ' ')
-
-    # Allow for some plugins not being in marketplace
-    assert_gt "$plugins_in_marketplace" "0" "Marketplace should contain plugins"
-}
-
-@test "all marketplace plugin sources exist" {
+@test "marketplace.json is valid" {
     local marketplace_json="${PROJECT_ROOT}/.claude-plugin/marketplace.json"
 
-    while IFS= read -r source; do
-        if [ -n "$source" ]; then
-            # Remove leading ./ if present
-            source="${source#./}"
-            local plugin_path="${PROJECT_ROOT}/${source}"
-            if [ ! -d "$plugin_path" ]; then
-                echo "Marketplace source does not exist: $source" >&2
-                return 1
-            fi
-        fi
-    done < <($JQ_BIN -r '.plugins[].source' "$marketplace_json" 2>/dev/null)
-
-    true
+    if [ -f "$marketplace_json" ]; then
+        validate_json "$marketplace_json"
+    else
+        skip "marketplace.json not present in consolidated structure"
+    fi
 }
 
-@test "no hardcoded absolute paths in plugin manifests" {
-    local found_hardcoded=0
+@test "no hardcoded absolute paths in plugin manifest" {
+    local plugin_json="${PROJECT_ROOT}/.claude-plugin/plugin.json"
 
-    for plugin_json in "${PROJECT_ROOT}"/plugins/*/.claude-plugin/plugin.json; do
-        if [ -f "$plugin_json" ]; then
-            # Check for absolute paths (not starting with ${ or /Users that's not ${CLAUDE_PLUGIN_ROOT})
-            if grep -qE '"/(Users|home|opt)/' "$plugin_json" 2>/dev/null; then
-                echo "Found hardcoded absolute path in: $plugin_json" >&2
-                grep -E '"/(Users|home|opt)/' "$plugin_json" >&2
-                found_hardcoded=1
-            fi
+    if [ -f "$plugin_json" ]; then
+        # Check for absolute paths (not starting with ${ or /Users that's not ${CLAUDE_PLUGIN_ROOT})
+        if grep -qE '"/(Users|home|opt)/' "$plugin_json" 2>/dev/null; then
+            echo "Found hardcoded absolute path in: $plugin_json" >&2
+            grep -E '"/(Users|home|opt)/' "$plugin_json" >&2
+            return 1
         fi
-    done
-
-    assert_eq "$found_hardcoded" "0" "No hardcoded absolute paths should exist"
-}
-
-@test "all plugins follow naming convention" {
-    local invalid_count=0
-
-    for plugin_dir in "${PROJECT_ROOT}"/plugins/*/; do
-        if [ -d "$plugin_dir" ]; then
-            local plugin_name
-            plugin_name=$(basename "$plugin_dir")
-
-            if ! is_valid_plugin_name "$plugin_name"; then
-                echo "Invalid plugin name: $plugin_name" >&2
-                invalid_count=$((invalid_count + 1))
-            fi
-        fi
-    done
-
-    assert_eq "$invalid_count" "0" "All plugin names should be valid"
+    fi
 }
 
 @test "all required top-level directories exist" {
     assert_dir_exists "${PROJECT_ROOT}/.claude-plugin" ".claude-plugin directory should exist"
-    assert_dir_exists "${PROJECT_ROOT}/plugins" "plugins directory should exist"
+    assert_dir_exists "${PROJECT_ROOT}/commands" "commands directory should exist"
+    assert_dir_exists "${PROJECT_ROOT}/skills" "skills directory should exist"
 }
 
 @test "github workflows are valid YAML" {
@@ -137,19 +68,12 @@ load helpers/bats_helper
     assert_eq "$invalid_count" "0" "All workflows should be valid YAML"
 }
 
-@test "hooks.json files are valid across all plugins" {
-    local invalid_count=0
+@test "hooks.json file is valid" {
+    local hooks_file="${PROJECT_ROOT}/hooks/hooks.json"
 
-    for hooks_file in "${PROJECT_ROOT}"/plugins/*/hooks/hooks.json; do
-        if [ -f "$hooks_file" ]; then
-            if ! validate_json "$hooks_file" 2>/dev/null; then
-                echo "Invalid hooks.json: $hooks_file" >&2
-                invalid_count=$((invalid_count + 1))
-            fi
-        fi
-    done
-
-    assert_eq "$invalid_count" "0" "All hooks.json files should be valid"
+    if [ -f "$hooks_file" ]; then
+        validate_json "$hooks_file"
+    fi
 }
 
 @test "skill files follow naming convention" {
@@ -164,21 +88,6 @@ load helpers/bats_helper
             skill_name=$(basename "$skill_dir")
 
             # Skill directory name should be valid
-            if ! is_valid_plugin_name "$skill_name"; then
-                echo "Invalid skill directory name: $skill_name" >&2
-                invalid_count=$((invalid_count + 1))
-            fi
-        fi
-    done
-
-    # Also check plugins/*/skills/
-    for skill_file in "${PROJECT_ROOT}"/plugins/*/skills/*/SKILL.md; do
-        if [ -f "$skill_file" ]; then
-            local skill_dir
-            skill_dir=$(dirname "$skill_file")
-            local skill_name
-            skill_name=$(basename "$skill_dir")
-
             if ! is_valid_plugin_name "$skill_name"; then
                 echo "Invalid skill directory name: $skill_name" >&2
                 invalid_count=$((invalid_count + 1))
