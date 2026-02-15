@@ -1,7 +1,6 @@
-# Baleen Claude Plugins
+# Everything Agent
 
-Claude Code plugin collection by baleen, featuring useful tools for AI-assisted
-development.
+AI coding assistant toolkit - Claude Code, OpenCode, and more.
 
 ## Available Plugins
 
@@ -26,11 +25,11 @@ information about each plugin, see the respective plugin's README.md file.
 
 ```bash
 # Add this repository as a marketplace
-claude plugin marketplace add https://github.com/baleen37/claude-plugins
+claude plugin marketplace add https://github.com/baleen37/everything-agent
 
 # Install a plugin
-claude plugin install ralph-loop@baleen-plugins
-claude plugin install git-guard@baleen-plugins
+claude plugin install ralph-loop@everything-agent
+claude plugin install git-guard@everything-agent
 ```
 
 ### Using Ralph Loop
@@ -86,9 +85,9 @@ The "me" plugin provides comprehensive development workflow automation:
 ## Project Structure
 
 ```text
-claude-plugins/
+everything-agent/
 ├── .claude-plugin/
-│   └── marketplace.json          # Marketplace configuration (baleen-plugins)
+│   └── marketplace.json          # Marketplace configuration (everything-agent)
 ├── plugins/                      # Plugins (auto-discovered)
 │   ├── ralph-loop/              # Ralph Wiggum technique implementation
 │   │   ├── commands/             # Slash commands (/ralph-init, /ralph-loop, /cancel-ralph, /help)

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "baleen-plugins",
-  "description": "Claude Code plugins collection by baleen",
+  "name": "everything-agent",
+  "description": "AI coding assistant toolkit - Claude Code, OpenCode, and more",
   "owner": {
     "name": "baleen",
     "email": "git@baleen.me"
