@@ -1,8 +1,0 @@
-{
-  "name": "conversation-memory",
-  "version": "5.23.1",
-  "description": "Conversation memory plugin with semantic search across Claude Code sessions",
-  "author": {
-    "name": "Baleen"
-  }
-}
